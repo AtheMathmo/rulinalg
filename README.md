@@ -1,5 +1,10 @@
 # rulinalg
 
+
+The crate is currently on [version 0.1.0](https://crates.io/crates/rulinalg).
+
+Read the [API Documentation](https://athemathmo.github.io/rulinalg) to learn more. 
+
 ---
 
 ## Summary
