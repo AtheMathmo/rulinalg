@@ -1,5 +1,6 @@
 # rulinalg
 
+[![Build Status](https://travis-ci.org/AtheMathmo/rulinalg.svg?branch=master)](https://travis-ci.org/AtheMathmo/rulinalg)
 
 The crate is currently on [version 0.1.0](https://crates.io/crates/rulinalg).
 
