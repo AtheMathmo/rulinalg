@@ -285,10 +285,10 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// let a = Matrix::new(3,3,vec![1.,2.,3.,4.,5.,6.,7.,8.,9.]);
     ///
     /// // u is the transform, h is the upper hessenberg form.
-    /// let (u,h) = a.upper_hess_decomp().expect("This matrix should decompose!");
+    /// let (u,h) = a.clone().upper_hess_decomp().expect("This matrix should decompose!");
     ///
     /// println!("The hess : {:?}", h.data());
-    /// println!("Manual hess : {:?}", (u.transpose() * &a * u).data());
+    /// println!("Manual hess : {:?}", (u.transpose() * a * u).data());
     /// ```
     ///
     /// # Panics
