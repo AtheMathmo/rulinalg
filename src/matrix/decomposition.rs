@@ -330,7 +330,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
 
     /// Converts matrix to bidiagonal form
     ///
-    /// Returns (B, U, V), where B is bidiagonal and A = U<sup>T</sup>BV.
+    /// Returns (B, U, V), where B is bidiagonal and `self = U B V_T`.
     pub fn bidiagonal_decomp(mut self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
         let m = self.rows;
         let n = self.cols;
@@ -346,25 +346,28 @@ impl<T: Any + Float + Signed> Matrix<T> {
         }
 
         for k in 0..n {
-            let h_holder: Matrix<T>;
-            {
-                let lower_slice = MatrixSlice::from_matrix(&self, [k, k], m - k, 1);
-                h_holder = try!(Matrix::make_householder(&lower_slice.iter()
-                        .cloned()
-                        .collect::<Vec<_>>())
-                    .map_err(|_| {
-                        Error::new(ErrorKind::DecompFailure, "Cannot compute bidiagonal form.")
-                    }));
-            }
+            if k < m {
+                let h_holder: Matrix<T>;
+                {
+                    let lower_slice = MatrixSlice::from_matrix(&self, [k, k], m - k, 1);
+                    h_holder = try!(Matrix::make_householder(&lower_slice.iter()
+                            .cloned()
+                            .collect::<Vec<_>>())
+                        .map_err(|_| {
+                            Error::new(ErrorKind::DecompFailure, "Cannot compute bidiagonal form.")
+                        }));
+                }
 
-            {
-                // Apply householder on the left to kill under diag.
-                let lower_self_block = MatrixSliceMut::from_matrix(&mut self, [k, k], m - k, n - k);
-                let transformed_self = &h_holder * &lower_self_block;
-                lower_self_block.set_to(transformed_self.as_slice());
-                let lower_u_block = MatrixSliceMut::from_matrix(&mut u, [k, 0], m - k, n);
-                let transformed_u = h_holder * &lower_u_block;
-                lower_u_block.set_to(transformed_u.as_slice());
+                {
+                    // Apply householder on the left to kill under diag.
+                    let lower_self_block =
+                        MatrixSliceMut::from_matrix(&mut self, [k, k], m - k, n - k);
+                    let transformed_self = &h_holder * &lower_self_block;
+                    lower_self_block.set_to(transformed_self.as_slice());
+                    let lower_u_block = MatrixSliceMut::from_matrix(&mut u, [k, 0], m - k, n);
+                    let transformed_u = h_holder * &lower_u_block;
+                    lower_u_block.set_to(transformed_u.as_slice());
+                }
             }
 
             if k < n - 2 {
@@ -397,7 +400,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
             }
         }
 
-        Ok((self, u, v))
+        Ok((self, u.transpose(), v.transpose()))
     }
 
     fn balance_matrix(&mut self) {
@@ -867,17 +870,18 @@ mod tests {
             assert!(!row.iter().skip(idx + 2).any(|&x| x > 1e-10));
         }
 
-        let recovered = u.transpose() * b * v;
+        let recovered = u * b * v.transpose();
 
         assert!(!mat.data()
-            .iter().zip(recovered.data().iter())
+            .iter()
+            .zip(recovered.data().iter())
             .any(|(&x, &y)| (x - y).abs() > 1e-10));
     }
 
     #[test]
     fn test_bidiagonal_non_square() {
-        let mat = Matrix::new(5,
-                              3,
+        let mat = Matrix::new(3,
+                              5,
                               vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
                                    7.0, 1.0, 1.0]);
         let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
@@ -887,10 +891,11 @@ mod tests {
             assert!(!row.iter().skip(idx + 2).any(|&x| x > 1e-10));
         }
 
-        let recovered = u.transpose() * b * v;
+        let recovered = u * b * v.transpose();
 
         assert!(!mat.data()
-            .iter().zip(recovered.data().iter())
+            .iter()
+            .zip(recovered.data().iter())
             .any(|(&x, &y)| (x - y).abs() > 1e-10));
     }
 
