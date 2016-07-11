@@ -4,9 +4,10 @@
 //! 1. [On Matrix Balancing and EigenVector computation]
 //! (http://arxiv.org/pdf/1401.5766v1.pdf), James, Langou and Lowery
 
-use std::ops::{Mul, Add, Div, Sub, Neg};
-use std::cmp;
 use std::any::Any;
+use std::cmp;
+use std::ops::{Mul, Add, Div, Sub, Neg};
+use std::slice;
 
 use matrix::{Matrix, MatrixSlice, MatrixSliceMut};
 use vector::Vector;
@@ -223,17 +224,15 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// # Failures
     ///
     /// - The matrix cannot be reduced to upper hessenberg form.
-    pub fn upper_hessenberg(&self) -> Result<Matrix<T>, Error> {
+    pub fn upper_hessenberg(mut self) -> Result<Matrix<T>, Error> {
         let n = self.rows;
         assert!(n == self.cols,
                 "Matrix must be square to produce upper hessenberg.");
 
-        let mut dummy = self.clone();
-
         for i in 0..n - 2 {
             let h_holder_vec: Matrix<T>;
             {
-                let lower_slice = MatrixSlice::from_matrix(&dummy, [i + 1, i], n - i - 1, 1);
+                let lower_slice = MatrixSlice::from_matrix(&self, [i + 1, i], n - i - 1, 1);
                 // Try to get the house holder transform - else map error and pass up.
                 h_holder_vec = try!(Matrix::make_householder_vec(&lower_slice.iter()
                         .cloned()
@@ -246,18 +245,17 @@ impl<T: Any + Float + Signed> Matrix<T> {
 
             {
                 // Apply holder on the left
-                let mut dummy_block =
-                    MatrixSliceMut::from_matrix(&mut dummy, [i + 1, i], n - i - 1, n - i);
-                dummy_block -= &h_holder_vec * (h_holder_vec.transpose() * &dummy_block) *
-                               (T::one() + T::one());
+                let mut block =
+                    MatrixSliceMut::from_matrix(&mut self, [i + 1, i], n - i - 1, n - i);
+                block -= &h_holder_vec * (h_holder_vec.transpose() * &block) *
+                         (T::one() + T::one());
             }
 
             {
                 // Apply holder on the right
-                let mut dummy_block =
-                    MatrixSliceMut::from_matrix(&mut dummy, [0, i + 1], n, n - i - 1);
-                dummy_block -= (&dummy_block * &h_holder_vec) * h_holder_vec.transpose() *
-                               (T::one() + T::one());
+                let mut block = MatrixSliceMut::from_matrix(&mut self, [0, i + 1], n, n - i - 1);
+                block -= (&block * &h_holder_vec) * h_holder_vec.transpose() *
+                         (T::one() + T::one());
             }
 
         }
@@ -265,11 +263,13 @@ impl<T: Any + Float + Signed> Matrix<T> {
         // Enforce upper hessenberg
         for i in 0..self.cols - 2 {
             for j in i + 2..self.rows {
-                dummy.data[j * self.cols + i] = T::zero();
+                unsafe {
+                    *self.get_unchecked_mut([j, i]) = T::zero();
+                }
             }
         }
 
-        Ok(dummy)
+        Ok(self)
     }
 
     /// Returns (U,H), where H is the upper hessenberg form
@@ -298,7 +298,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// # Failures
     ///
     /// - The matrix cannot be reduced to upper hessenberg form.
-    pub fn upper_hess_decomp(&self) -> Result<(Matrix<T>, Matrix<T>), Error> {
+    pub fn upper_hess_decomp(self) -> Result<(Matrix<T>, Matrix<T>), Error> {
         let n = self.rows;
         assert!(n == self.cols,
                 "Matrix must be square to produce upper hessenberg.");
@@ -314,8 +314,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
                         .cloned()
                         .collect::<Vec<_>>())
                     .map_err(|_| {
-                        Error::new(ErrorKind::DecompFailure,
-                                   "Cannot compute upper Hessenberg decomposition.")
+                        Error::new(ErrorKind::DecompFailure, "Could not compute eigenvalues.")
                     }));
             }
 
@@ -327,6 +326,78 @@ impl<T: Any + Float + Signed> Matrix<T> {
 
         // Now we reduce to upper hessenberg
         Ok((transform, try!(self.upper_hessenberg())))
+    }
+
+    /// Converts matrix to bidiagonal form
+    ///
+    /// Returns (B, U, V), where B is bidiagonal and A = U<sup>T</sup>BV.
+    pub fn bidiagonal_decomp(mut self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
+        let m = self.rows;
+        let n = self.cols;
+
+        let mut u = Matrix::zeros(m, n);
+        let mut v = Matrix::identity(n);
+
+        // Build the u identity matrix
+        for row_idx in 0..cmp::min(m, n) {
+            unsafe {
+                *u.get_unchecked_mut([row_idx, row_idx]) = T::one();
+            }
+        }
+
+        for k in 0..n {
+            let h_holder: Matrix<T>;
+            {
+                let lower_slice = MatrixSlice::from_matrix(&self, [k, k], m - k, 1);
+                h_holder = try!(Matrix::make_householder(&lower_slice.iter()
+                        .cloned()
+                        .collect::<Vec<_>>())
+                    .map_err(|_| {
+                        Error::new(ErrorKind::DecompFailure, "Cannot compute bidiagonal form.")
+                    }));
+            }
+
+            {
+                // Apply householder on the left to kill under diag.
+                let lower_self_block = MatrixSliceMut::from_matrix(&mut self, [k, k], m - k, n - k);
+                let transformed_self = &h_holder * &lower_self_block;
+                lower_self_block.set_to(transformed_self.as_slice());
+                let lower_u_block = MatrixSliceMut::from_matrix(&mut u, [k, 0], m - k, n);
+                let transformed_u = h_holder * &lower_u_block;
+                lower_u_block.set_to(transformed_u.as_slice());
+            }
+
+            if k < n - 2 {
+                let row: &[T];
+                unsafe {
+                    // Get the kth row from column k+1 to end.
+                    row = slice::from_raw_parts(self.data
+                                                    .as_ptr()
+                                                    .offset((k * self.cols + k + 1) as isize),
+                                                n - k - 1);
+                }
+
+                let row_h_holder = try!(Matrix::make_householder(row).map_err(|_| {
+                    Error::new(ErrorKind::DecompFailure, "Cannot compute bidiagonal form.")
+                }));
+
+                {
+                    // Apply householder on the right to kill right of super diag.
+                    let lower_self_block =
+                        MatrixSliceMut::from_matrix(&mut self, [k, k + 1], m - k, n - k - 1);
+
+                    let transformed_self = &lower_self_block * &row_h_holder;
+                    lower_self_block.set_to(transformed_self.as_slice());
+                    let lower_v_block =
+                        MatrixSliceMut::from_matrix(&mut v, [k + 1, 0], n - k - 1, n);
+                    let transformed_v = row_h_holder * &lower_v_block;
+                    lower_v_block.set_to(transformed_v.as_slice());
+
+                }
+            }
+        }
+
+        Ok((self, u, v))
     }
 
     fn balance_matrix(&mut self) {
@@ -411,7 +482,8 @@ impl<T: Any + Float + Signed> Matrix<T> {
                       "Francis shift only works on matrices greater than 2x2.");
         debug_assert!(n == self.cols, "Matrix must be square for Francis shift.");
 
-        let mut h = try!(self.upper_hessenberg()
+        let mut h = try!(self.clone()
+            .upper_hessenberg()
             .map_err(|_| Error::new(ErrorKind::DecompFailure, "Could not compute eigenvalues.")));
         h.balance_matrix();
 
@@ -551,7 +623,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
                       "Francis shift only works on matrices greater than 2x2.");
         debug_assert!(n == self.cols, "Matrix must be square for Francis shift.");
 
-        let (u, mut h) = try!(self.upper_hess_decomp().map_err(|_| {
+        let (u, mut h) = try!(self.clone().upper_hess_decomp().map_err(|_| {
             Error::new(ErrorKind::DecompFailure,
                        "Could not compute eigen decomposition.")
         }));
@@ -780,6 +852,47 @@ impl<T> Matrix<T> where T: Any + Copy + One + Zero + Neg<Output=T> +
 mod tests {
     use matrix::Matrix;
     use vector::Vector;
+
+    #[test]
+    fn test_bidiagonal_square() {
+        let mat = Matrix::new(5,
+                              5,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0, 4.0, 2.0, 1.0, -1.0, 3.0, 5.0, 1.0, 1.0, 3.0,
+                                   2.0]);
+        let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
+
+        for (idx, row) in b.iter_rows().enumerate() {
+            assert!(!row.iter().take(idx).any(|&x| x > 1e-10));
+            assert!(!row.iter().skip(idx + 2).any(|&x| x > 1e-10));
+        }
+
+        let recovered = u.transpose() * b * v;
+
+        assert!(!mat.data()
+            .iter().zip(recovered.data().iter())
+            .any(|(&x, &y)| (x - y).abs() > 1e-10));
+    }
+
+    #[test]
+    fn test_bidiagonal_non_square() {
+        let mat = Matrix::new(5,
+                              3,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0]);
+        let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
+
+        for (idx, row) in b.iter_rows().enumerate() {
+            assert!(!row.iter().take(idx).any(|&x| x > 1e-10));
+            assert!(!row.iter().skip(idx + 2).any(|&x| x > 1e-10));
+        }
+
+        let recovered = u.transpose() * b * v;
+
+        assert!(!mat.data()
+            .iter().zip(recovered.data().iter())
+            .any(|(&x, &y)| (x - y).abs() > 1e-10));
+    }
 
     #[test]
     fn test_1_by_1_matrix_eigenvalues() {

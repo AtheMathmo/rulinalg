@@ -133,7 +133,7 @@ impl<T> Matrix<T> {
     }
 
     /// Get a mutable reference to a point in the matrix without bounds checks.
-    pub unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &T {
+    pub unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut T {
         self.data.get_unchecked_mut(index[0] * self.cols + index[1])
     }
 
