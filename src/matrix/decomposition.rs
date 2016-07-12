@@ -83,6 +83,15 @@ impl<T: Any + Float> Matrix<T> {
         })
     }
 
+    /// Compute the cos and sin values for the givens rotation.
+    ///
+    /// Returns a tuple (c, s).
+    fn givens_rot(a: T, b: T) -> (T, T) {
+        let r = a.hypot(b);
+
+        (a / r, -b / r)
+    }
+
     fn make_householder(column: &[T]) -> Result<Matrix<T>, Error> {
         let size = column.len();
 
@@ -198,9 +207,253 @@ impl<T: Any + Float> Matrix<T> {
 
         Ok((q, r))
     }
+
+    /// Converts matrix to bidiagonal form
+    ///
+    /// Returns (B, U, V), where B is bidiagonal and `self = U B V_T`.
+    ///
+    /// Note that if `self` has `self.rows() > self.cols()` the matrix will
+    /// be transposed and then reduced - this will lead to a sub-diagonal instead
+    /// of super-diagonal.
+    ///
+    /// # Failures
+    ///
+    /// - The matrix cannot be reduced to bidiagonal form.
+    pub fn bidiagonal_decomp(mut self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
+        let mut flipped = false;
+
+        if self.rows < self.cols {
+            flipped = true;
+            self = self.transpose()
+        }
+
+        let m = self.rows;
+        let n = self.cols;
+
+        let mut u = Matrix::identity(m);
+        let mut v = Matrix::identity(n);
+
+        for k in 0..n {
+            let h_holder: Matrix<T>;
+            {
+                let lower_slice = MatrixSlice::from_matrix(&self, [k, k], m - k, 1);
+                h_holder = try!(Matrix::make_householder(&lower_slice.iter()
+                        .cloned()
+                        .collect::<Vec<_>>())
+                    .map_err(|_| {
+                        Error::new(ErrorKind::DecompFailure, "Cannot compute bidiagonal form.")
+                    }));
+            }
+
+            {
+                // Apply householder on the left to kill under diag.
+                let lower_self_block = MatrixSliceMut::from_matrix(&mut self, [k, k], m - k, n - k);
+                let transformed_self = &h_holder * &lower_self_block;
+                lower_self_block.set_to(transformed_self.as_slice());
+                let lower_u_block = MatrixSliceMut::from_matrix(&mut u, [0, k], m, m - k);
+                let transformed_u = &lower_u_block * h_holder;
+                lower_u_block.set_to(transformed_u.as_slice());
+            }
+
+            if k < n - 2 {
+                let row: &[T];
+                unsafe {
+                    // Get the kth row from column k+1 to end.
+                    row = slice::from_raw_parts(self.data
+                                                    .as_ptr()
+                                                    .offset((k * self.cols + k + 1) as isize),
+                                                n - k - 1);
+                }
+
+                let row_h_holder = try!(Matrix::make_householder(row).map_err(|_| {
+                    Error::new(ErrorKind::DecompFailure, "Cannot compute bidiagonal form.")
+                }));
+
+                {
+                    // Apply householder on the right to kill right of super diag.
+                    let lower_self_block =
+                        MatrixSliceMut::from_matrix(&mut self, [k, k + 1], m - k, n - k - 1);
+
+                    let transformed_self = &lower_self_block * &row_h_holder;
+                    lower_self_block.set_to(transformed_self.as_slice());
+                    let lower_v_block =
+                        MatrixSliceMut::from_matrix(&mut v, [0, k + 1], n, n - k - 1);
+                    let transformed_v = &lower_v_block * row_h_holder;
+                    lower_v_block.set_to(transformed_v.as_slice());
+
+                }
+            }
+        }
+
+        // Trim off the zerod blocks.
+        self.data.truncate(n * n);
+        self.rows = n;
+        u = MatrixSlice::from_matrix(&u, [0, 0], m, n).into_matrix();
+
+        if flipped {
+            Ok((self.transpose(), v, u))
+        } else {
+            Ok((self, u, v))
+        }
+
+    }
 }
 
 impl<T: Any + Float + Signed> Matrix<T> {
+    /// Golub-Reinsch SVD
+    ///
+    /// Returns Sigma, U, V where self = U Sigma V<sup>T</sup>.
+    pub fn svd(mut self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
+        if self.cols > self.rows {
+            self = self.transpose();
+        }
+
+        let n = self.cols;
+
+        let (mut b, mut u, mut v) = try!(self.bidiagonal_decomp()
+            .map_err(|_| Error::new(ErrorKind::DecompFailure, "Could not compute SVD.")));
+
+        loop {
+            // Values to count the size of lower diagonal block
+            let mut q = 1;
+            let mut on_lower = true;
+            let mut on_middle = false;
+
+            // Values to count top block
+            let mut p = n - 1;
+
+            // Iterate through and hard set the super diag if converged
+            for i in (0..n - 1).rev() {
+                let (b_ii, b_sup_diag): (T, T);
+                unsafe {
+                    b_ii = *b.get_unchecked([i, i]);
+                    b_sup_diag = b.get_unchecked([i, i + 1]).abs();
+                }
+                let diag_abs_sum = (T::min_positive_value() + T::min_positive_value()) *
+                                   (b_ii.abs() + b_sup_diag);
+                if b_sup_diag <= diag_abs_sum {
+                    // Lower diag is one bigger
+                    if on_lower {
+                        q += 1;
+                    } else if on_middle {
+                        on_middle = false;
+                        p = i;
+                    }
+                    unsafe {
+                        *b.get_unchecked_mut([i, i + 1]) = T::zero();
+                    }
+                } else {
+                    if on_lower {
+                        // No longer on the lower diagonal
+                        on_middle = true;
+                        on_lower = false;
+                    }
+                }
+            }
+
+            // We have converged!
+            if q == n {
+                break;
+            }
+
+            // Zero off diagonals if needed.
+            for i in p..n - q - 1 {
+                let (b_ii, b_sup_diag): (T, T);
+                unsafe {
+                    b_ii = *b.get_unchecked([i, i]);
+                    b_sup_diag = *b.get_unchecked([i, i + 1]);
+                }
+
+                if b_ii.abs() < T::min_positive_value() {
+                    let (c, s) = Matrix::<T>::givens_rot(b_ii, b_sup_diag);
+                    let givens = Matrix::new(2, 2, vec![c, s, -s, c]);
+                    let b_i = MatrixSliceMut::from_matrix(&mut b, [i, i], 1, 2);
+                    let zerod_line = &b_i * givens;
+
+                    b_i.set_to(zerod_line.as_slice());
+                }
+            }
+
+            // Apply Golub-Kahan svd step
+            unsafe {
+                try!(Matrix::<T>::golub_kahan_svd_step(&mut b, &mut u, &mut v, p, q));
+            }
+        }
+
+        Ok((b, u, v))
+
+    }
+
+    unsafe fn golub_kahan_svd_step(b: &mut Matrix<T>,
+                                   u: &mut Matrix<T>,
+                                   v: &mut Matrix<T>,
+                                   p: usize,
+                                   q: usize)
+                                   -> Result<(), Error> {
+        let n = b.rows();
+
+        // let b_22 = MatrixSliceMut::from_matrix(b, [p, p], n - q - p, n - q - p);
+        let c: Matrix<T>;
+        {
+            let y = MatrixSlice::from_matrix(&b, [n - q - 2, n - q - 2], 2, 2).into_matrix();
+            let x = MatrixSlice::from_matrix(&b, [p, n - q - 2], n - q - p - 2, 2);
+            c = x.into_matrix().transpose() * x + y.transpose() * y;
+        }
+
+        let c_eigs = try!(c.eigenvalues());
+
+        let lambda: T;
+        if (c_eigs[0] - *c.get_unchecked([2, 2])).abs() <
+           (c_eigs[1] - *c.get_unchecked([2, 2])).abs() {
+            lambda = c_eigs[0];
+        } else {
+            lambda = c_eigs[1];
+        }
+
+        let mut alpha = *b.get_unchecked([p + 1, p + 1]) - lambda;
+        let mut beta = *b.get_unchecked([p + 1, p + 1]) * *b.get_unchecked([p + 1, p + 2]);
+        for k in p + 1..n - q - 1 {
+            // Givens rot on columns k and k + 1
+            let (c, s) = Matrix::<T>::givens_rot(alpha, beta);
+            let givens_mat = Matrix::new(2, 2, vec![c, s, -s, c]);
+
+            {
+                // We pick only these 3 rows as the rest are zerod.
+                let b_block = MatrixSliceMut::from_matrix(b, [k - 1, k], 3, 2);
+                let transformed = &b_block * &givens_mat;
+                b_block.set_to(transformed.as_slice());
+
+                let v_block = MatrixSliceMut::from_matrix(v, [k, 0], 2, n);
+                let transformed = givens_mat * &v_block;
+                v_block.set_to(transformed.as_slice());
+            }
+
+            alpha = *b.get_unchecked([k, k]);
+            beta = *b.get_unchecked([k + 1, k]);
+
+            let (c, s) = Matrix::<T>::givens_rot(alpha, beta);
+            let givens_mat = Matrix::new(2, 2, vec![c, -s, s, c]);
+
+            {
+                // We pick only these 3 rows as the rest are zerod.
+                let b_block = MatrixSliceMut::from_matrix(b, [k, k], 2, 3);
+                let transformed = &givens_mat * &b_block;
+                b_block.set_to(transformed.as_slice());
+
+                let m = u.rows();
+                let u_block = MatrixSliceMut::from_matrix(u, [0, k], m, 2);
+                let transformed = &u_block * givens_mat;
+                u_block.set_to(transformed.as_slice());
+            }
+
+            if k < n - q - 1 {
+                alpha = *b.get_unchecked([k, k + 1]);
+                beta = *b.get_unchecked([k, k + 2]);
+            }
+        }
+        Ok(())
+    }
+
     /// Returns H, where H is the upper hessenberg form.
     ///
     /// If the transformation matrix is also required, you should
@@ -328,96 +581,6 @@ impl<T: Any + Float + Signed> Matrix<T> {
         Ok((transform, try!(self.upper_hessenberg())))
     }
 
-    /// Converts matrix to bidiagonal form
-    ///
-    /// Returns (B, U, V), where B is bidiagonal and `self = U B V_T`.
-    ///
-    /// Note that if `self` has `self.rows() > self.cols()` the matrix will
-    /// be transposed and then reduced - this will lead to a sub-diagonal instead
-    /// of super-diagonal.
-    ///
-    /// # Failures
-    ///
-    /// - The matrix cannot be reduced to bidiagonal form.
-    pub fn bidiagonal_decomp(mut self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
-        let mut flipped = false;
-        
-        if self.rows < self.cols {
-            flipped = true;
-            self = self.transpose()
-        }
-
-        let m = self.rows;
-        let n = self.cols;
-
-        let mut u = Matrix::identity(m);
-        let mut v = Matrix::identity(n);
-
-        for k in 0..n {
-            let h_holder: Matrix<T>;
-            {
-                let lower_slice = MatrixSlice::from_matrix(&self, [k, k], m - k, 1);
-                h_holder = try!(Matrix::make_householder(&lower_slice.iter()
-                        .cloned()
-                        .collect::<Vec<_>>())
-                    .map_err(|_| {
-                        Error::new(ErrorKind::DecompFailure, "Cannot compute bidiagonal form.")
-                    }));
-            }
-
-            {
-                // Apply householder on the left to kill under diag.
-                let lower_self_block = MatrixSliceMut::from_matrix(&mut self, [k, k], m - k, n - k);
-                let transformed_self = &h_holder * &lower_self_block;
-                lower_self_block.set_to(transformed_self.as_slice());
-                let lower_u_block = MatrixSliceMut::from_matrix(&mut u, [0, k], m, m - k);
-                let transformed_u = &lower_u_block * h_holder;
-                lower_u_block.set_to(transformed_u.as_slice());
-            }
-
-            if k < n - 2 {
-                let row: &[T];
-                unsafe {
-                    // Get the kth row from column k+1 to end.
-                    row = slice::from_raw_parts(self.data
-                                                    .as_ptr()
-                                                    .offset((k * self.cols + k + 1) as isize),
-                                                n - k - 1);
-                }
-
-                let row_h_holder = try!(Matrix::make_householder(row).map_err(|_| {
-                    Error::new(ErrorKind::DecompFailure, "Cannot compute bidiagonal form.")
-                }));
-
-                {
-                    // Apply householder on the right to kill right of super diag.
-                    let lower_self_block =
-                        MatrixSliceMut::from_matrix(&mut self, [k, k + 1], m - k, n - k - 1);
-
-                    let transformed_self = &lower_self_block * &row_h_holder;
-                    lower_self_block.set_to(transformed_self.as_slice());
-                    let lower_v_block =
-                        MatrixSliceMut::from_matrix(&mut v, [0, k + 1], n, n - k - 1);
-                    let transformed_v = &lower_v_block * row_h_holder;
-                    lower_v_block.set_to(transformed_v.as_slice());
-
-                }
-            }
-        }
-
-        // Trim off the zerod blocks.
-        self.data.truncate(n * n);
-        self.rows = n;
-        u = MatrixSlice::from_matrix(&u, [0,0], m, n).into_matrix();
-
-        if flipped {
-            Ok((self.transpose(), v, u))
-        } else {
-            Ok((self, u, v))
-        }
-        
-    }
-
     fn balance_matrix(&mut self) {
         let n = self.rows();
         let radix = T::one() + T::one();
@@ -461,15 +624,6 @@ impl<T: Any + Float + Signed> Matrix<T> {
                 }
             }
         }
-    }
-
-    /// Compute the cos and sin values for the givens rotation.
-    ///
-    /// Returns a tuple (c,s).
-    fn givens_rot(a: T, b: T) -> (T, T) {
-        let r = a.hypot(b);
-
-        (a / r, -b / r)
     }
 
     fn direct_2_by_2_eigenvalues(&self) -> Result<Vec<T>, Error> {
@@ -871,9 +1025,17 @@ mod tests {
     use matrix::Matrix;
     use vector::Vector;
 
-    fn validate_bidiag(mat: &Matrix<f64>, b: &Matrix<f64>, u: &Matrix<f64>, v: &Matrix<f64>, upper: bool) {
+    fn validate_bidiag(mat: &Matrix<f64>,
+                       b: &Matrix<f64>,
+                       u: &Matrix<f64>,
+                       v: &Matrix<f64>,
+                       upper: bool) {
         for (idx, row) in b.iter_rows().enumerate() {
-            let pair_start = if upper { idx } else { idx.saturating_sub(1) };
+            let pair_start = if upper {
+                idx
+            } else {
+                idx.saturating_sub(1)
+            };
             assert!(!row.iter().take(pair_start).any(|&x| x > 1e-10));
             assert!(!row.iter().skip(pair_start + 2).any(|&x| x > 1e-10));
         }
