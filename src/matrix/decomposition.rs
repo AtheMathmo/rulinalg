@@ -335,15 +335,8 @@ impl<T: Any + Float + Signed> Matrix<T> {
         let m = self.rows;
         let n = self.cols;
 
-        let mut u = Matrix::zeros(m, n);
+        let mut u = Matrix::identity(m);
         let mut v = Matrix::identity(n);
-
-        // Build the u identity matrix
-        for row_idx in 0..cmp::min(m, n) {
-            unsafe {
-                *u.get_unchecked_mut([row_idx, row_idx]) = T::one();
-            }
-        }
 
         for k in 0..n {
             if k < m {
@@ -364,8 +357,8 @@ impl<T: Any + Float + Signed> Matrix<T> {
                         MatrixSliceMut::from_matrix(&mut self, [k, k], m - k, n - k);
                     let transformed_self = &h_holder * &lower_self_block;
                     lower_self_block.set_to(transformed_self.as_slice());
-                    let lower_u_block = MatrixSliceMut::from_matrix(&mut u, [k, 0], m - k, n);
-                    let transformed_u = h_holder * &lower_u_block;
+                    let lower_u_block = MatrixSliceMut::from_matrix(&mut u, [0, k], m, m - k);
+                    let transformed_u = &lower_u_block * h_holder;
                     lower_u_block.set_to(transformed_u.as_slice());
                 }
             }
@@ -392,15 +385,15 @@ impl<T: Any + Float + Signed> Matrix<T> {
                     let transformed_self = &lower_self_block * &row_h_holder;
                     lower_self_block.set_to(transformed_self.as_slice());
                     let lower_v_block =
-                        MatrixSliceMut::from_matrix(&mut v, [k + 1, 0], n - k - 1, n);
-                    let transformed_v = row_h_holder * &lower_v_block;
+                        MatrixSliceMut::from_matrix(&mut v, [0, k + 1], n, n - k - 1);
+                    let transformed_v = &lower_v_block * row_h_holder;
                     lower_v_block.set_to(transformed_v.as_slice());
 
                 }
             }
         }
 
-        Ok((self, u.transpose(), v.transpose()))
+        Ok((self, u, v))
     }
 
     fn balance_matrix(&mut self) {
@@ -856,21 +849,16 @@ mod tests {
     use matrix::Matrix;
     use vector::Vector;
 
-    #[test]
-    fn test_bidiagonal_square() {
-        let mat = Matrix::new(5,
-                              5,
-                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
-                                   7.0, 1.0, 1.0, 4.0, 2.0, 1.0, -1.0, 3.0, 5.0, 1.0, 1.0, 3.0,
-                                   2.0]);
-        let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
-
+    fn validate_bidiag(mat: &Matrix<f64>, b: &Matrix<f64>, u: &Matrix<f64>, v: &Matrix<f64>) {
         for (idx, row) in b.iter_rows().enumerate() {
             assert!(!row.iter().take(idx).any(|&x| x > 1e-10));
             assert!(!row.iter().skip(idx + 2).any(|&x| x > 1e-10));
         }
 
         let recovered = u * b * v.transpose();
+
+        assert_eq!(recovered.rows(), mat.rows());
+        assert_eq!(recovered.cols(), mat.cols());
 
         assert!(!mat.data()
             .iter()
@@ -879,24 +867,31 @@ mod tests {
     }
 
     #[test]
+    fn test_bidiagonal_square() {
+        let mat = Matrix::new(5,
+                              5,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0, 4.0, 2.0, 1.0, -1.0, 3.0, 5.0, 1.0, 1.0, 3.0,
+                                   2.0]);
+        let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
+        validate_bidiag(&mat, &b, &u, &v);
+    }
+
+    #[test]
     fn test_bidiagonal_non_square() {
+        let mat = Matrix::new(5,
+                              3,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0]);
+        let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
+        validate_bidiag(&mat, &b, &u, &v);
+
         let mat = Matrix::new(3,
                               5,
                               vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
                                    7.0, 1.0, 1.0]);
         let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
-
-        for (idx, row) in b.iter_rows().enumerate() {
-            assert!(!row.iter().take(idx).any(|&x| x > 1e-10));
-            assert!(!row.iter().skip(idx + 2).any(|&x| x > 1e-10));
-        }
-
-        let recovered = u * b * v.transpose();
-
-        assert!(!mat.data()
-            .iter()
-            .zip(recovered.data().iter())
-            .any(|(&x, &y)| (x - y).abs() > 1e-10));
+        validate_bidiag(&mat, &b, &u, &v);
     }
 
     #[test]
