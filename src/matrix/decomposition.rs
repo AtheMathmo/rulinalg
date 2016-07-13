@@ -300,12 +300,19 @@ impl<T: Any + Float> Matrix<T> {
 }
 
 impl<T: Any + Float + Signed> Matrix<T> {
-    /// Golub-Reinsch SVD
+    /// Singular Value Decomposition
     ///
-    /// Returns Sigma, U, V where self = U Sigma V<sup>T</sup>.
+    /// Returns Σ, U, V where self = U Σ V<sup>T</sup>.
+    ///
+    /// # Failures
+    ///
+    /// This function may fail in some cases. The current decomposition whilst being
+    /// efficient is fairly basic. Hopefully the algorithm can be made not to fail in the near future.
     pub fn svd(mut self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
+        let mut flipped = false;
         if self.cols > self.rows {
             self = self.transpose();
+            flipped = true;
         }
 
         let n = self.cols;
@@ -315,29 +322,29 @@ impl<T: Any + Float + Signed> Matrix<T> {
 
         loop {
             // Values to count the size of lower diagonal block
-            let mut q = 1;
+            let mut q = 0;
             let mut on_lower = true;
             let mut on_middle = false;
 
             // Values to count top block
-            let mut p = n - 1;
+            let mut p = 0;
 
             // Iterate through and hard set the super diag if converged
             for i in (0..n - 1).rev() {
-                let (b_ii, b_sup_diag): (T, T);
+                let (b_ii, b_sup_diag, diag_abs_sum): (T, T, T);
                 unsafe {
                     b_ii = *b.get_unchecked([i, i]);
                     b_sup_diag = b.get_unchecked([i, i + 1]).abs();
+                    diag_abs_sum = T::min_positive_value() *
+                                   (b_ii.abs() + *b.get_unchecked([i + 1, i + 1]));
                 }
-                let diag_abs_sum = (T::min_positive_value() + T::min_positive_value()) *
-                                   (b_ii.abs() + b_sup_diag);
                 if b_sup_diag <= diag_abs_sum {
-                    // Lower diag is one bigger
+                    // Adjust q or p to define which block we will work on next
                     if on_lower {
                         q += 1;
                     } else if on_middle {
                         on_middle = false;
-                        p = i;
+                        p = i + 1;
                     }
                     unsafe {
                         *b.get_unchecked_mut([i, i + 1]) = T::zero();
@@ -352,7 +359,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
             }
 
             // We have converged!
-            if q == n {
+            if q == n - 1 {
                 break;
             }
 
@@ -376,14 +383,22 @@ impl<T: Any + Float + Signed> Matrix<T> {
 
             // Apply Golub-Kahan svd step
             unsafe {
-                try!(Matrix::<T>::golub_kahan_svd_step(&mut b, &mut u, &mut v, p, q));
+                try!(Matrix::<T>::golub_kahan_svd_step(&mut b, &mut u, &mut v, p, q)
+                    .map_err(|_| Error::new(ErrorKind::DecompFailure, "Could not compute SVD.")));
             }
         }
 
-        Ok((b, u, v))
+        if flipped {
+            Ok((b.transpose(), v, u))
+        } else {
+            Ok((b, u, v))
+        }
 
     }
 
+    /// This function is unsafe as it makes assumptions about the dimensions
+    /// of the inputs matrices and does not check them. As a result if misused
+    /// this function can call `get_unchecked` on invalid indices.
     unsafe fn golub_kahan_svd_step(b: &mut Matrix<T>,
                                    u: &mut Matrix<T>,
                                    v: &mut Matrix<T>,
@@ -392,39 +407,52 @@ impl<T: Any + Float + Signed> Matrix<T> {
                                    -> Result<(), Error> {
         let n = b.rows();
 
-        // let b_22 = MatrixSliceMut::from_matrix(b, [p, p], n - q - p, n - q - p);
+        // C is the lower, right 2x2 square of aTa, where a is the
+        // middle block of b (between p and n-q).
+        //
+        // Computed as xTx + yTy, where y is the bottom 2x2 block of a
+        // and x are the two columns above it within a.
+        //
         let c: Matrix<T>;
         {
             let y = MatrixSlice::from_matrix(&b, [n - q - 2, n - q - 2], 2, 2).into_matrix();
-            let x = MatrixSlice::from_matrix(&b, [p, n - q - 2], n - q - p - 2, 2);
-            c = x.into_matrix().transpose() * x + y.transpose() * y;
+            if n - q - p - 2 > 0 {
+                let x = MatrixSlice::from_matrix(&b, [p, n - q - 2], n - q - p - 2, 2);
+                c = x.into_matrix().transpose() * x + y.transpose() * y;
+            } else {
+                c = y.transpose() * y;
+            }
         }
 
         let c_eigs = try!(c.eigenvalues());
 
         let lambda: T;
-        if (c_eigs[0] - *c.get_unchecked([2, 2])).abs() <
-           (c_eigs[1] - *c.get_unchecked([2, 2])).abs() {
+        if (c_eigs[0] - *c.get_unchecked([1, 1])).abs() <
+           (c_eigs[1] - *c.get_unchecked([1, 1])).abs() {
             lambda = c_eigs[0];
         } else {
             lambda = c_eigs[1];
         }
 
-        let mut alpha = *b.get_unchecked([p + 1, p + 1]) - lambda;
-        let mut beta = *b.get_unchecked([p + 1, p + 1]) * *b.get_unchecked([p + 1, p + 2]);
-        for k in p + 1..n - q - 1 {
+        let b_pp = *b.get_unchecked([p, p]);
+        let mut alpha = (b_pp * b_pp) - lambda;
+        let mut beta = b_pp * *b.get_unchecked([p, p + 1]);
+        for k in p..n - q - 1 {
             // Givens rot on columns k and k + 1
             let (c, s) = Matrix::<T>::givens_rot(alpha, beta);
             let givens_mat = Matrix::new(2, 2, vec![c, s, -s, c]);
 
             {
                 // We pick only these 3 rows as the rest are zerod.
-                let b_block = MatrixSliceMut::from_matrix(b, [k - 1, k], 3, 2);
+                let b_block = MatrixSliceMut::from_matrix(b,
+                                                          [k.saturating_sub(1), k],
+                                                          cmp::min(3, n - k.saturating_sub(1)),
+                                                          2);
                 let transformed = &b_block * &givens_mat;
                 b_block.set_to(transformed.as_slice());
 
-                let v_block = MatrixSliceMut::from_matrix(v, [k, 0], 2, n);
-                let transformed = givens_mat * &v_block;
+                let v_block = MatrixSliceMut::from_matrix(v, [0, k], n, 2);
+                let transformed = &v_block * &givens_mat;
                 v_block.set_to(transformed.as_slice());
             }
 
@@ -436,17 +464,17 @@ impl<T: Any + Float + Signed> Matrix<T> {
 
             {
                 // We pick only these 3 rows as the rest are zerod.
-                let b_block = MatrixSliceMut::from_matrix(b, [k, k], 2, 3);
+                let b_block = MatrixSliceMut::from_matrix(b, [k, k], 2, cmp::min(3, n - k));
                 let transformed = &givens_mat * &b_block;
                 b_block.set_to(transformed.as_slice());
 
                 let m = u.rows();
                 let u_block = MatrixSliceMut::from_matrix(u, [0, k], m, 2);
-                let transformed = &u_block * givens_mat;
+                let transformed = &u_block * givens_mat.transpose();
                 u_block.set_to(transformed.as_slice());
             }
 
-            if k < n - q - 1 {
+            if k + 2 < n - q {
                 alpha = *b.get_unchecked([k, k + 1]);
                 beta = *b.get_unchecked([k, k + 2]);
             }
@@ -1077,6 +1105,54 @@ mod tests {
                                    7.0, 1.0, 1.0]);
         let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
         validate_bidiag(&mat, &b, &u, &v, false);
+    }
+
+    fn validate_svd(mat: &Matrix<f64>, b: &Matrix<f64>, u: &Matrix<f64>, v: &Matrix<f64>) {
+        // b is diagonal (the singular values)
+        for (idx, row) in b.iter_rows().enumerate() {
+            assert!(!row.iter().take(idx).any(|&x| x > 1e-10));
+            assert!(!row.iter().skip(idx + 1).any(|&x| x > 1e-10));
+        }
+
+        let recovered = u * b * v.transpose();
+
+        assert_eq!(recovered.rows(), mat.rows());
+        assert_eq!(recovered.cols(), mat.cols());
+
+        assert!(!mat.data()
+            .iter()
+            .zip(recovered.data().iter())
+            .any(|(&x, &y)| (x - y).abs() > 1e-10));
+    }
+
+    #[test]
+    fn test_svd_non_square() {
+        let mat = Matrix::new(5,
+                              3,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0]);
+        let (b, u, v) = mat.clone().svd().unwrap();
+
+        validate_svd(&mat, &b, &u, &v);
+
+        let mat = Matrix::new(3,
+                              5,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0]);
+        let (b, u, v) = mat.clone().svd().unwrap();
+
+        validate_svd(&mat, &b, &u, &v);
+    }
+
+    #[test]
+    fn test_svd_square() {
+        let mat = Matrix::new(5,
+                              5,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0, 4.0, 2.0, 1.0, -1.0, 3.0, 5.0, 1.0, 1.0, 3.0,
+                                   2.0]);
+        let (b, u, v) = mat.clone().svd().unwrap();
+        validate_svd(&mat, &b, &u, &v);
     }
 
     #[test]
