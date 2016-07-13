@@ -3,6 +3,12 @@
 //! References:
 //! 1. [On Matrix Balancing and EigenVector computation]
 //! (http://arxiv.org/pdf/1401.5766v1.pdf), James, Langou and Lowery
+//!
+//! 2. [The QR algorithm for eigen decomposition]
+//! (http://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf)
+//!
+//! 3. [Computation of the SVD]
+//! (http://www.cs.utexas.edu/users/inderjit/public_papers/HLA_SVD.pdf)
 
 use std::any::Any;
 use std::cmp;
@@ -302,6 +308,8 @@ impl<T: Any + Float> Matrix<T> {
 impl<T: Any + Float + Signed> Matrix<T> {
     /// Singular Value Decomposition
     ///
+    /// Computes the SVD using Golub-Reinsch algorithm.
+    ///
     /// Returns Σ, U, V where self = U Σ V<sup>T</sup>.
     ///
     /// # Failures
@@ -310,6 +318,8 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// efficient is fairly basic. Hopefully the algorithm can be made not to fail in the near future.
     pub fn svd(mut self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
         let mut flipped = false;
+
+        // The algorithm assumes rows > cols. If this is not the case we transpose and fix later.
         if self.cols > self.rows {
             self = self.transpose();
             flipped = true;
@@ -317,6 +327,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
 
         let n = self.cols;
 
+        // Get the bidiagonal decomposition
         let (mut b, mut u, mut v) = try!(self.bidiagonal_decomp()
             .map_err(|_| Error::new(ErrorKind::DecompFailure, "Could not compute SVD.")));
 
@@ -324,10 +335,10 @@ impl<T: Any + Float + Signed> Matrix<T> {
             // Values to count the size of lower diagonal block
             let mut q = 0;
             let mut on_lower = true;
-            let mut on_middle = false;
 
             // Values to count top block
             let mut p = 0;
+            let mut on_middle = false;
 
             // Iterate through and hard set the super diag if converged
             for i in (0..n - 1).rev() {
@@ -339,7 +350,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
                                    (b_ii.abs() + *b.get_unchecked([i + 1, i + 1]));
                 }
                 if b_sup_diag <= diag_abs_sum {
-                    // Adjust q or p to define which block we will work on next
+                    // Adjust q or p to define boundaries of sup-diagonal box
                     if on_lower {
                         q += 1;
                     } else if on_middle {
@@ -412,7 +423,6 @@ impl<T: Any + Float + Signed> Matrix<T> {
         //
         // Computed as xTx + yTy, where y is the bottom 2x2 block of a
         // and x are the two columns above it within a.
-        //
         let c: Matrix<T>;
         {
             let y = MatrixSlice::from_matrix(&b, [n - q - 2, n - q - 2], 2, 2).into_matrix();
@@ -426,6 +436,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
 
         let c_eigs = try!(c.eigenvalues());
 
+        // Choose eigenvalue closes to c[1,1].
         let lambda: T;
         if (c_eigs[0] - *c.get_unchecked([1, 1])).abs() <
            (c_eigs[1] - *c.get_unchecked([1, 1])).abs() {
@@ -443,7 +454,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
             let givens_mat = Matrix::new(2, 2, vec![c, s, -s, c]);
 
             {
-                // We pick only these 3 rows as the rest are zerod.
+                // Pick the rows from b to be zerod.
                 let b_block = MatrixSliceMut::from_matrix(b,
                                                           [k.saturating_sub(1), k],
                                                           cmp::min(3, n - k.saturating_sub(1)),
@@ -463,7 +474,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
             let givens_mat = Matrix::new(2, 2, vec![c, -s, s, c]);
 
             {
-                // We pick only these 3 rows as the rest are zerod.
+                // Pick the columns from b to be zerod.
                 let b_block = MatrixSliceMut::from_matrix(b, [k, k], 2, cmp::min(3, n - k));
                 let transformed = &givens_mat * &b_block;
                 b_block.set_to(transformed.as_slice());
