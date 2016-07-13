@@ -15,6 +15,7 @@
 //! - Matrix inversion
 //! - LUP decomposition
 //! - QR decomposition
+//! - SVD decomposition
 //! - Cholesky decomposition
 //! - Eigenvalue decomposition
 //! - Upper Hessenberg decomposition
