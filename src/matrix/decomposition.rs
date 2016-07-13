@@ -3,10 +3,17 @@
 //! References:
 //! 1. [On Matrix Balancing and EigenVector computation]
 //! (http://arxiv.org/pdf/1401.5766v1.pdf), James, Langou and Lowery
+//!
+//! 2. [The QR algorithm for eigen decomposition]
+//! (http://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf)
+//!
+//! 3. [Computation of the SVD]
+//! (http://www.cs.utexas.edu/users/inderjit/public_papers/HLA_SVD.pdf)
 
-use std::ops::{Mul, Add, Div, Sub, Neg};
-use std::cmp;
 use std::any::Any;
+use std::cmp;
+use std::ops::{Mul, Add, Div, Sub, Neg};
+use std::slice;
 
 use matrix::{Matrix, MatrixSlice, MatrixSliceMut};
 use vector::Vector;
@@ -80,6 +87,15 @@ impl<T: Any + Float> Matrix<T> {
             cols: self.cols(),
             data: new_data,
         })
+    }
+
+    /// Compute the cos and sin values for the givens rotation.
+    ///
+    /// Returns a tuple (c, s).
+    fn givens_rot(a: T, b: T) -> (T, T) {
+        let r = a.hypot(b);
+
+        (a / r, -b / r)
     }
 
     fn make_householder(column: &[T]) -> Result<Matrix<T>, Error> {
@@ -197,9 +213,286 @@ impl<T: Any + Float> Matrix<T> {
 
         Ok((q, r))
     }
+
+    /// Converts matrix to bidiagonal form
+    ///
+    /// Returns (B, U, V), where B is bidiagonal and `self = U B V_T`.
+    ///
+    /// Note that if `self` has `self.rows() > self.cols()` the matrix will
+    /// be transposed and then reduced - this will lead to a sub-diagonal instead
+    /// of super-diagonal.
+    ///
+    /// # Failures
+    ///
+    /// - The matrix cannot be reduced to bidiagonal form.
+    pub fn bidiagonal_decomp(mut self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
+        let mut flipped = false;
+
+        if self.rows < self.cols {
+            flipped = true;
+            self = self.transpose()
+        }
+
+        let m = self.rows;
+        let n = self.cols;
+
+        let mut u = Matrix::identity(m);
+        let mut v = Matrix::identity(n);
+
+        for k in 0..n {
+            let h_holder: Matrix<T>;
+            {
+                let lower_slice = MatrixSlice::from_matrix(&self, [k, k], m - k, 1);
+                h_holder = try!(Matrix::make_householder(&lower_slice.iter()
+                        .cloned()
+                        .collect::<Vec<_>>())
+                    .map_err(|_| {
+                        Error::new(ErrorKind::DecompFailure, "Cannot compute bidiagonal form.")
+                    }));
+            }
+
+            {
+                // Apply householder on the left to kill under diag.
+                let lower_self_block = MatrixSliceMut::from_matrix(&mut self, [k, k], m - k, n - k);
+                let transformed_self = &h_holder * &lower_self_block;
+                lower_self_block.set_to(transformed_self.as_slice());
+                let lower_u_block = MatrixSliceMut::from_matrix(&mut u, [0, k], m, m - k);
+                let transformed_u = &lower_u_block * h_holder;
+                lower_u_block.set_to(transformed_u.as_slice());
+            }
+
+            if k < n - 2 {
+                let row: &[T];
+                unsafe {
+                    // Get the kth row from column k+1 to end.
+                    row = slice::from_raw_parts(self.data
+                                                    .as_ptr()
+                                                    .offset((k * self.cols + k + 1) as isize),
+                                                n - k - 1);
+                }
+
+                let row_h_holder = try!(Matrix::make_householder(row).map_err(|_| {
+                    Error::new(ErrorKind::DecompFailure, "Cannot compute bidiagonal form.")
+                }));
+
+                {
+                    // Apply householder on the right to kill right of super diag.
+                    let lower_self_block =
+                        MatrixSliceMut::from_matrix(&mut self, [k, k + 1], m - k, n - k - 1);
+
+                    let transformed_self = &lower_self_block * &row_h_holder;
+                    lower_self_block.set_to(transformed_self.as_slice());
+                    let lower_v_block =
+                        MatrixSliceMut::from_matrix(&mut v, [0, k + 1], n, n - k - 1);
+                    let transformed_v = &lower_v_block * row_h_holder;
+                    lower_v_block.set_to(transformed_v.as_slice());
+
+                }
+            }
+        }
+
+        // Trim off the zerod blocks.
+        self.data.truncate(n * n);
+        self.rows = n;
+        u = MatrixSlice::from_matrix(&u, [0, 0], m, n).into_matrix();
+
+        if flipped {
+            Ok((self.transpose(), v, u))
+        } else {
+            Ok((self, u, v))
+        }
+
+    }
 }
 
 impl<T: Any + Float + Signed> Matrix<T> {
+    /// Singular Value Decomposition
+    ///
+    /// Computes the SVD using Golub-Reinsch algorithm.
+    ///
+    /// Returns Σ, U, V where self = U Σ V<sup>T</sup>.
+    ///
+    /// # Failures
+    ///
+    /// This function may fail in some cases. The current decomposition whilst being
+    /// efficient is fairly basic. Hopefully the algorithm can be made not to fail in the near future.
+    pub fn svd(mut self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
+        let mut flipped = false;
+
+        // The algorithm assumes rows > cols. If this is not the case we transpose and fix later.
+        if self.cols > self.rows {
+            self = self.transpose();
+            flipped = true;
+        }
+
+        let n = self.cols;
+
+        // Get the bidiagonal decomposition
+        let (mut b, mut u, mut v) = try!(self.bidiagonal_decomp()
+            .map_err(|_| Error::new(ErrorKind::DecompFailure, "Could not compute SVD.")));
+
+        loop {
+            // Values to count the size of lower diagonal block
+            let mut q = 0;
+            let mut on_lower = true;
+
+            // Values to count top block
+            let mut p = 0;
+            let mut on_middle = false;
+
+            // Iterate through and hard set the super diag if converged
+            for i in (0..n - 1).rev() {
+                let (b_ii, b_sup_diag, diag_abs_sum): (T, T, T);
+                unsafe {
+                    b_ii = *b.get_unchecked([i, i]);
+                    b_sup_diag = b.get_unchecked([i, i + 1]).abs();
+                    diag_abs_sum = T::min_positive_value() *
+                                   (b_ii.abs() + *b.get_unchecked([i + 1, i + 1]));
+                }
+                if b_sup_diag <= diag_abs_sum {
+                    // Adjust q or p to define boundaries of sup-diagonal box
+                    if on_lower {
+                        q += 1;
+                    } else if on_middle {
+                        on_middle = false;
+                        p = i + 1;
+                    }
+                    unsafe {
+                        *b.get_unchecked_mut([i, i + 1]) = T::zero();
+                    }
+                } else {
+                    if on_lower {
+                        // No longer on the lower diagonal
+                        on_middle = true;
+                        on_lower = false;
+                    }
+                }
+            }
+
+            // We have converged!
+            if q == n - 1 {
+                break;
+            }
+
+            // Zero off diagonals if needed.
+            for i in p..n - q - 1 {
+                let (b_ii, b_sup_diag): (T, T);
+                unsafe {
+                    b_ii = *b.get_unchecked([i, i]);
+                    b_sup_diag = *b.get_unchecked([i, i + 1]);
+                }
+
+                if b_ii.abs() < T::min_positive_value() {
+                    let (c, s) = Matrix::<T>::givens_rot(b_ii, b_sup_diag);
+                    let givens = Matrix::new(2, 2, vec![c, s, -s, c]);
+                    let b_i = MatrixSliceMut::from_matrix(&mut b, [i, i], 1, 2);
+                    let zerod_line = &b_i * givens;
+
+                    b_i.set_to(zerod_line.as_slice());
+                }
+            }
+
+            // Apply Golub-Kahan svd step
+            unsafe {
+                try!(Matrix::<T>::golub_kahan_svd_step(&mut b, &mut u, &mut v, p, q)
+                    .map_err(|_| Error::new(ErrorKind::DecompFailure, "Could not compute SVD.")));
+            }
+        }
+
+        if flipped {
+            Ok((b.transpose(), v, u))
+        } else {
+            Ok((b, u, v))
+        }
+
+    }
+
+    /// This function is unsafe as it makes assumptions about the dimensions
+    /// of the inputs matrices and does not check them. As a result if misused
+    /// this function can call `get_unchecked` on invalid indices.
+    unsafe fn golub_kahan_svd_step(b: &mut Matrix<T>,
+                                   u: &mut Matrix<T>,
+                                   v: &mut Matrix<T>,
+                                   p: usize,
+                                   q: usize)
+                                   -> Result<(), Error> {
+        let n = b.rows();
+
+        // C is the lower, right 2x2 square of aTa, where a is the
+        // middle block of b (between p and n-q).
+        //
+        // Computed as xTx + yTy, where y is the bottom 2x2 block of a
+        // and x are the two columns above it within a.
+        let c: Matrix<T>;
+        {
+            let y = MatrixSlice::from_matrix(&b, [n - q - 2, n - q - 2], 2, 2).into_matrix();
+            if n - q - p - 2 > 0 {
+                let x = MatrixSlice::from_matrix(&b, [p, n - q - 2], n - q - p - 2, 2);
+                c = x.into_matrix().transpose() * x + y.transpose() * y;
+            } else {
+                c = y.transpose() * y;
+            }
+        }
+
+        let c_eigs = try!(c.eigenvalues());
+
+        // Choose eigenvalue closes to c[1,1].
+        let lambda: T;
+        if (c_eigs[0] - *c.get_unchecked([1, 1])).abs() <
+           (c_eigs[1] - *c.get_unchecked([1, 1])).abs() {
+            lambda = c_eigs[0];
+        } else {
+            lambda = c_eigs[1];
+        }
+
+        let b_pp = *b.get_unchecked([p, p]);
+        let mut alpha = (b_pp * b_pp) - lambda;
+        let mut beta = b_pp * *b.get_unchecked([p, p + 1]);
+        for k in p..n - q - 1 {
+            // Givens rot on columns k and k + 1
+            let (c, s) = Matrix::<T>::givens_rot(alpha, beta);
+            let givens_mat = Matrix::new(2, 2, vec![c, s, -s, c]);
+
+            {
+                // Pick the rows from b to be zerod.
+                let b_block = MatrixSliceMut::from_matrix(b,
+                                                          [k.saturating_sub(1), k],
+                                                          cmp::min(3, n - k.saturating_sub(1)),
+                                                          2);
+                let transformed = &b_block * &givens_mat;
+                b_block.set_to(transformed.as_slice());
+
+                let v_block = MatrixSliceMut::from_matrix(v, [0, k], n, 2);
+                let transformed = &v_block * &givens_mat;
+                v_block.set_to(transformed.as_slice());
+            }
+
+            alpha = *b.get_unchecked([k, k]);
+            beta = *b.get_unchecked([k + 1, k]);
+
+            let (c, s) = Matrix::<T>::givens_rot(alpha, beta);
+            let givens_mat = Matrix::new(2, 2, vec![c, -s, s, c]);
+
+            {
+                // Pick the columns from b to be zerod.
+                let b_block = MatrixSliceMut::from_matrix(b, [k, k], 2, cmp::min(3, n - k));
+                let transformed = &givens_mat * &b_block;
+                b_block.set_to(transformed.as_slice());
+
+                let m = u.rows();
+                let u_block = MatrixSliceMut::from_matrix(u, [0, k], m, 2);
+                let transformed = &u_block * givens_mat.transpose();
+                u_block.set_to(transformed.as_slice());
+            }
+
+            if k + 2 < n - q {
+                alpha = *b.get_unchecked([k, k + 1]);
+                beta = *b.get_unchecked([k, k + 2]);
+            }
+        }
+        Ok(())
+    }
+
     /// Returns H, where H is the upper hessenberg form.
     ///
     /// If the transformation matrix is also required, you should
@@ -223,17 +516,15 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// # Failures
     ///
     /// - The matrix cannot be reduced to upper hessenberg form.
-    pub fn upper_hessenberg(&self) -> Result<Matrix<T>, Error> {
+    pub fn upper_hessenberg(mut self) -> Result<Matrix<T>, Error> {
         let n = self.rows;
         assert!(n == self.cols,
                 "Matrix must be square to produce upper hessenberg.");
 
-        let mut dummy = self.clone();
-
         for i in 0..n - 2 {
             let h_holder_vec: Matrix<T>;
             {
-                let lower_slice = MatrixSlice::from_matrix(&dummy, [i + 1, i], n - i - 1, 1);
+                let lower_slice = MatrixSlice::from_matrix(&self, [i + 1, i], n - i - 1, 1);
                 // Try to get the house holder transform - else map error and pass up.
                 h_holder_vec = try!(Matrix::make_householder_vec(&lower_slice.iter()
                         .cloned()
@@ -246,18 +537,17 @@ impl<T: Any + Float + Signed> Matrix<T> {
 
             {
                 // Apply holder on the left
-                let mut dummy_block =
-                    MatrixSliceMut::from_matrix(&mut dummy, [i + 1, i], n - i - 1, n - i);
-                dummy_block -= &h_holder_vec * (h_holder_vec.transpose() * &dummy_block) *
-                               (T::one() + T::one());
+                let mut block =
+                    MatrixSliceMut::from_matrix(&mut self, [i + 1, i], n - i - 1, n - i);
+                block -= &h_holder_vec * (h_holder_vec.transpose() * &block) *
+                         (T::one() + T::one());
             }
 
             {
                 // Apply holder on the right
-                let mut dummy_block =
-                    MatrixSliceMut::from_matrix(&mut dummy, [0, i + 1], n, n - i - 1);
-                dummy_block -= (&dummy_block * &h_holder_vec) * h_holder_vec.transpose() *
-                               (T::one() + T::one());
+                let mut block = MatrixSliceMut::from_matrix(&mut self, [0, i + 1], n, n - i - 1);
+                block -= (&block * &h_holder_vec) * h_holder_vec.transpose() *
+                         (T::one() + T::one());
             }
 
         }
@@ -265,11 +555,13 @@ impl<T: Any + Float + Signed> Matrix<T> {
         // Enforce upper hessenberg
         for i in 0..self.cols - 2 {
             for j in i + 2..self.rows {
-                dummy.data[j * self.cols + i] = T::zero();
+                unsafe {
+                    *self.get_unchecked_mut([j, i]) = T::zero();
+                }
             }
         }
 
-        Ok(dummy)
+        Ok(self)
     }
 
     /// Returns (U,H), where H is the upper hessenberg form
@@ -285,10 +577,10 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// let a = Matrix::new(3,3,vec![1.,2.,3.,4.,5.,6.,7.,8.,9.]);
     ///
     /// // u is the transform, h is the upper hessenberg form.
-    /// let (u,h) = a.upper_hess_decomp().expect("This matrix should decompose!");
+    /// let (u,h) = a.clone().upper_hess_decomp().expect("This matrix should decompose!");
     ///
     /// println!("The hess : {:?}", h.data());
-    /// println!("Manual hess : {:?}", (u.transpose() * &a * u).data());
+    /// println!("Manual hess : {:?}", (u.transpose() * a * u).data());
     /// ```
     ///
     /// # Panics
@@ -298,7 +590,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// # Failures
     ///
     /// - The matrix cannot be reduced to upper hessenberg form.
-    pub fn upper_hess_decomp(&self) -> Result<(Matrix<T>, Matrix<T>), Error> {
+    pub fn upper_hess_decomp(self) -> Result<(Matrix<T>, Matrix<T>), Error> {
         let n = self.rows;
         assert!(n == self.cols,
                 "Matrix must be square to produce upper hessenberg.");
@@ -314,8 +606,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
                         .cloned()
                         .collect::<Vec<_>>())
                     .map_err(|_| {
-                        Error::new(ErrorKind::DecompFailure,
-                                   "Cannot compute upper Hessenberg decomposition.")
+                        Error::new(ErrorKind::DecompFailure, "Could not compute eigenvalues.")
                     }));
             }
 
@@ -374,15 +665,6 @@ impl<T: Any + Float + Signed> Matrix<T> {
         }
     }
 
-    /// Compute the cos and sin values for the givens rotation.
-    ///
-    /// Returns a tuple (c,s).
-    fn givens_rot(a: T, b: T) -> (T, T) {
-        let r = a.hypot(b);
-
-        (a / r, -b / r)
-    }
-
     fn direct_2_by_2_eigenvalues(&self) -> Result<Vec<T>, Error> {
         // The characteristic polynomial of a 2x2 matrix A is
         // λ² − (a₁₁ + a₂₂)λ + (a₁₁a₂₂ − a₁₂a₂₁);
@@ -411,7 +693,8 @@ impl<T: Any + Float + Signed> Matrix<T> {
                       "Francis shift only works on matrices greater than 2x2.");
         debug_assert!(n == self.cols, "Matrix must be square for Francis shift.");
 
-        let mut h = try!(self.upper_hessenberg()
+        let mut h = try!(self.clone()
+            .upper_hessenberg()
             .map_err(|_| Error::new(ErrorKind::DecompFailure, "Could not compute eigenvalues.")));
         h.balance_matrix();
 
@@ -551,7 +834,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
                       "Francis shift only works on matrices greater than 2x2.");
         debug_assert!(n == self.cols, "Matrix must be square for Francis shift.");
 
-        let (u, mut h) = try!(self.upper_hess_decomp().map_err(|_| {
+        let (u, mut h) = try!(self.clone().upper_hess_decomp().map_err(|_| {
             Error::new(ErrorKind::DecompFailure,
                        "Could not compute eigen decomposition.")
         }));
@@ -780,6 +1063,108 @@ impl<T> Matrix<T> where T: Any + Copy + One + Zero + Neg<Output=T> +
 mod tests {
     use matrix::Matrix;
     use vector::Vector;
+
+    fn validate_bidiag(mat: &Matrix<f64>,
+                       b: &Matrix<f64>,
+                       u: &Matrix<f64>,
+                       v: &Matrix<f64>,
+                       upper: bool) {
+        for (idx, row) in b.iter_rows().enumerate() {
+            let pair_start = if upper {
+                idx
+            } else {
+                idx.saturating_sub(1)
+            };
+            assert!(!row.iter().take(pair_start).any(|&x| x > 1e-10));
+            assert!(!row.iter().skip(pair_start + 2).any(|&x| x > 1e-10));
+        }
+
+        let recovered = u * b * v.transpose();
+
+        assert_eq!(recovered.rows(), mat.rows());
+        assert_eq!(recovered.cols(), mat.cols());
+
+        assert!(!mat.data()
+            .iter()
+            .zip(recovered.data().iter())
+            .any(|(&x, &y)| (x - y).abs() > 1e-10));
+    }
+
+    #[test]
+    fn test_bidiagonal_square() {
+        let mat = Matrix::new(5,
+                              5,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0, 4.0, 2.0, 1.0, -1.0, 3.0, 5.0, 1.0, 1.0, 3.0,
+                                   2.0]);
+        let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
+        validate_bidiag(&mat, &b, &u, &v, true);
+    }
+
+    #[test]
+    fn test_bidiagonal_non_square() {
+        let mat = Matrix::new(5,
+                              3,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0]);
+        let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
+        validate_bidiag(&mat, &b, &u, &v, true);
+
+        let mat = Matrix::new(3,
+                              5,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0]);
+        let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
+        validate_bidiag(&mat, &b, &u, &v, false);
+    }
+
+    fn validate_svd(mat: &Matrix<f64>, b: &Matrix<f64>, u: &Matrix<f64>, v: &Matrix<f64>) {
+        // b is diagonal (the singular values)
+        for (idx, row) in b.iter_rows().enumerate() {
+            assert!(!row.iter().take(idx).any(|&x| x > 1e-10));
+            assert!(!row.iter().skip(idx + 1).any(|&x| x > 1e-10));
+        }
+
+        let recovered = u * b * v.transpose();
+
+        assert_eq!(recovered.rows(), mat.rows());
+        assert_eq!(recovered.cols(), mat.cols());
+
+        assert!(!mat.data()
+            .iter()
+            .zip(recovered.data().iter())
+            .any(|(&x, &y)| (x - y).abs() > 1e-10));
+    }
+
+    #[test]
+    fn test_svd_non_square() {
+        let mat = Matrix::new(5,
+                              3,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0]);
+        let (b, u, v) = mat.clone().svd().unwrap();
+
+        validate_svd(&mat, &b, &u, &v);
+
+        let mat = Matrix::new(3,
+                              5,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0]);
+        let (b, u, v) = mat.clone().svd().unwrap();
+
+        validate_svd(&mat, &b, &u, &v);
+    }
+
+    #[test]
+    fn test_svd_square() {
+        let mat = Matrix::new(5,
+                              5,
+                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+                                   7.0, 1.0, 1.0, 4.0, 2.0, 1.0, -1.0, 3.0, 5.0, 1.0, 1.0, 3.0,
+                                   2.0]);
+        let (b, u, v) = mat.clone().svd().unwrap();
+        validate_svd(&mat, &b, &u, &v);
+    }
 
     #[test]
     fn test_1_by_1_matrix_eigenvalues() {

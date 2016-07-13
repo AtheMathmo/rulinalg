@@ -1,13 +1,13 @@
 [package]
 name = "rulinalg"
-version = "0.0.2"
+version = "0.2.0"
 authors = ["AtheMathmo"]
 
 description = "A linear algebra library."
 repository = "https://github.com/AtheMathmo/rulinalg"
 documentation = "https://AtheMathmo.github.io/rulinalg/"
 keywords = ["linalg","linear","algebra","linear-algebra","matrix"]
-readme = "../README.md"
+readme = "README.md"
 license = "MIT"
 
 [dependencies]
