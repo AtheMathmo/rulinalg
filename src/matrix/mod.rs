@@ -332,7 +332,7 @@ impl<T> Matrix<T> {
             return None;
         }
 
-        unsafe { Some(self.get_row_mut_unchecked(index)) }
+        unsafe { Some(self.get_row_unchecked_mut(index)) }
     }
 
     /// Returns a mutable reference to the row of a `Matrix` at the given index
@@ -344,11 +344,11 @@ impl<T> Matrix<T> {
     /// use rulinalg::matrix::Matrix;
     ///
     /// let mut a = Matrix::new(3, 4, vec![2.0; 12]);
-    /// let row = unsafe { a.get_row_mut_unchecked(1) };
+    /// let row = unsafe { a.get_row_unchecked_mut(1) };
     /// let mut expected = vec![2.0; 4];
     /// assert_eq!(row, &mut *expected);
     /// ```
-    pub unsafe fn get_row_mut_unchecked(&mut self, index: usize) -> &mut [T] {
+    pub unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> &mut [T] {
         let ptr = self.data.as_mut_ptr().offset((self.cols * index) as isize);
         ::std::slice::from_raw_parts_mut(ptr, self.cols)
     }

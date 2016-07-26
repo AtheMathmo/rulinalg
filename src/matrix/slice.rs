@@ -412,7 +412,7 @@ impl<'a, T> MatrixSliceMut<'a, T> {
             return None;
         }
 
-        unsafe { Some(self.get_row_mut_unchecked(index)) }
+        unsafe { Some(self.get_row_unchecked_mut(index)) }
     }
 
     /// Returns a mutable reference to the row of a `MatrixSliceMut` at the given index
@@ -426,11 +426,11 @@ impl<'a, T> MatrixSliceMut<'a, T> {
     ///
     /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     /// let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
-    /// let row = unsafe { slice.get_row_mut_unchecked(1) };
+    /// let row = unsafe { slice.get_row_unchecked_mut(1) };
     /// let mut expected = vec![7usize, 8];
     /// assert_eq!(row, &mut *expected);
     /// ```
-    pub unsafe fn get_row_mut_unchecked(&mut self, index: usize) -> &mut [T] {
+    pub unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> &mut [T] {
         let ptr = self.ptr.offset((self.row_stride * index) as isize);
         ::std::slice::from_raw_parts_mut(ptr, self.cols)
     }
