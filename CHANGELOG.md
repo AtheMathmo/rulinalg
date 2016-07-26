@@ -2,6 +2,26 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
+## 0.2.1
+
+### New Contributors
+
+- [brendan-rius](https://github.com/brendan-rius)
+- [tafia](https://github.com/tafia)
+
+### Breaking Changes
+
+- None
+
+### Features
+
+- Adding new `get_row_*` methods for all `Matrix` types. Includes
+mutable and unchecked `get` functions.
+
+### Minor Changes
+
+- None
+
 ## 0.2.0
 
 ### Breaking Changes
