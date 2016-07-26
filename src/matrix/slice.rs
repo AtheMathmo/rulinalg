@@ -45,16 +45,42 @@ pub trait BaseSlice<T> {
 
     /// Returns the row of a `Matrix` at the given index.
     /// `None` if the index is out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, MatrixSlice};
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut slice = MatrixSlice::from_matrix(&mut a, [1,1], 2, 2);
+    /// let row = slice.get_row(1);
+    /// let mut expected = vec![7usize, 8];
+    /// assert_eq!(row, Some(&*expected));
+    /// assert!(slice.get_row(5).is_none());
+    /// ```
     fn get_row(&self, index: usize) -> Option<&[T]> {
-
-        if index >= self.rows() {
-            return None;
+        if index < self.rows() {
+            unsafe { Some(self.get_row_unchecked(index)) }
+        } else {
+            None
         }
-
-        unsafe { Some(self.get_row_unchecked(index)) }
     }
     
     /// Returns the row of a `BaseSlice` at the given index without doing unbounds checking
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, MatrixSlice};
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut slice = MatrixSlice::from_matrix(&mut a, [1,1], 2, 2);
+    /// let row = unsafe { slice.get_row_unchecked(1) };
+    /// let mut expected = vec![7usize, 8];
+    /// assert_eq!(row, &*expected);
+    /// ```
     unsafe fn get_row_unchecked(&self, index: usize) -> &[T] {
         let ptr = self.as_ptr().offset((self.row_stride() * index) as isize);
         ::std::slice::from_raw_parts(ptr, self.cols())
@@ -407,12 +433,11 @@ impl<'a, T> MatrixSliceMut<'a, T> {
     /// assert!(slice.get_row_mut(5).is_none());
     /// ```
     pub fn get_row_mut(&mut self, index: usize) -> Option<&mut [T]> {
-
-        if index >= self.rows {
-            return None;
+        if index < self.rows {
+            unsafe { Some(self.get_row_unchecked_mut(index)) }
+        } else {
+            None
         }
-
-        unsafe { Some(self.get_row_unchecked_mut(index)) }
     }
 
     /// Returns a mutable reference to the row of a `MatrixSliceMut` at the given index

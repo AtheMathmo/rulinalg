@@ -285,12 +285,11 @@ impl<T> Matrix<T> {
     /// assert!(a.get_row(5).is_none());
     /// ```
     pub fn get_row(&self, index: usize) -> Option<&[T]> {
-
-        if index >= self.rows {
-            return None;
+        if index < self.rows {
+            unsafe { Some(self.get_row_unchecked(index)) }
+        } else {
+            None
         }
-
-        unsafe { Some(self.get_row_unchecked(index)) }
     }
 
     /// Returns the row of a `Matrix` at the given index without doing unbounds checking
@@ -327,12 +326,11 @@ impl<T> Matrix<T> {
     /// assert!(a.get_row_mut(5).is_none());
     /// ```
     pub fn get_row_mut(&mut self, index: usize) -> Option<&mut [T]> {
-
-        if index >= self.rows {
-            return None;
+        if index < self.rows {
+            unsafe { Some(self.get_row_unchecked_mut(index)) }
+        } else {
+            None
         }
-
-        unsafe { Some(self.get_row_unchecked_mut(index)) }
     }
 
     /// Returns a mutable reference to the row of a `Matrix` at the given index
