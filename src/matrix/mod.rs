@@ -269,6 +269,89 @@ impl<T> Matrix<T> {
         let cols = self.cols;
         MatrixSliceMut::from_matrix(self, [0, 0], rows, cols)
     }
+
+    /// Returns the row of a `Matrix` at the given index.
+    /// `None` if the index is out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    ///
+    /// let a = Matrix::new(3, 4, vec![2.0; 12]);
+    /// let row = a.get_row(1);
+    /// let expected = vec![2.0; 4];
+    /// assert_eq!(row, Some(&*expected));
+    /// assert!(a.get_row(5).is_none());
+    /// ```
+    pub fn get_row(&self, index: usize) -> Option<&[T]> {
+
+        if index >= self.rows {
+            return None;
+        }
+
+        unsafe { Some(self.get_row_unchecked(index)) }
+    }
+
+    /// Returns the row of a `Matrix` at the given index without doing unbounds checking
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    ///
+    /// let a = Matrix::new(3, 4, vec![2.0; 12]);
+    /// let row = unsafe { a.get_row_unchecked(1) };
+    /// let expected = vec![2.0; 4];
+    /// assert_eq!(row, &*expected);
+    /// ```
+    pub unsafe fn get_row_unchecked(&self, index: usize) -> &[T] {
+        let ptr = self.data.as_ptr().offset((self.cols * index) as isize);
+        ::std::slice::from_raw_parts(ptr, self.cols)
+    }
+
+    /// Returns a mutable reference to the row of a `Matrix` at the given index.
+    /// `None` if the index is out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    ///
+    /// let mut a = Matrix::new(3, 4, vec![2.0; 12]);
+    /// {
+    ///     let row = a.get_row_mut(1);
+    ///     let mut expected = vec![2.0; 4];
+    ///     assert_eq!(row, Some(&mut *expected));
+    /// }
+    /// assert!(a.get_row_mut(5).is_none());
+    /// ```
+    pub fn get_row_mut(&mut self, index: usize) -> Option<&mut [T]> {
+
+        if index >= self.rows {
+            return None;
+        }
+
+        unsafe { Some(self.get_row_mut_unchecked(index)) }
+    }
+
+    /// Returns a mutable reference to the row of a `Matrix` at the given index
+    /// without doing unbounds checking
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    ///
+    /// let mut a = Matrix::new(3, 4, vec![2.0; 12]);
+    /// let row = unsafe { a.get_row_mut_unchecked(1) };
+    /// let mut expected = vec![2.0; 4];
+    /// assert_eq!(row, &mut *expected);
+    /// ```
+    pub unsafe fn get_row_mut_unchecked(&mut self, index: usize) -> &mut [T] {
+        let ptr = self.data.as_mut_ptr().offset((self.cols * index) as isize);
+        ::std::slice::from_raw_parts_mut(ptr, self.cols)
+    }
 }
 
 impl<T: Clone> Clone for Matrix<T> {
