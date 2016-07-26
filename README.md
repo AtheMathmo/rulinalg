@@ -43,7 +43,7 @@ The library is most easily used with [cargo](http://doc.crates.io/guide.html). S
 
 ```toml
 [dependencies]
-rulinalg="0.1.0"
+rulinalg="0.2.0"
 ```
 
 And then import the library using:
