@@ -1751,6 +1751,87 @@
 <span id="1707">1707</span>
 <span id="1708">1708</span>
 <span id="1709">1709</span>
+<span id="1710">1710</span>
+<span id="1711">1711</span>
+<span id="1712">1712</span>
+<span id="1713">1713</span>
+<span id="1714">1714</span>
+<span id="1715">1715</span>
+<span id="1716">1716</span>
+<span id="1717">1717</span>
+<span id="1718">1718</span>
+<span id="1719">1719</span>
+<span id="1720">1720</span>
+<span id="1721">1721</span>
+<span id="1722">1722</span>
+<span id="1723">1723</span>
+<span id="1724">1724</span>
+<span id="1725">1725</span>
+<span id="1726">1726</span>
+<span id="1727">1727</span>
+<span id="1728">1728</span>
+<span id="1729">1729</span>
+<span id="1730">1730</span>
+<span id="1731">1731</span>
+<span id="1732">1732</span>
+<span id="1733">1733</span>
+<span id="1734">1734</span>
+<span id="1735">1735</span>
+<span id="1736">1736</span>
+<span id="1737">1737</span>
+<span id="1738">1738</span>
+<span id="1739">1739</span>
+<span id="1740">1740</span>
+<span id="1741">1741</span>
+<span id="1742">1742</span>
+<span id="1743">1743</span>
+<span id="1744">1744</span>
+<span id="1745">1745</span>
+<span id="1746">1746</span>
+<span id="1747">1747</span>
+<span id="1748">1748</span>
+<span id="1749">1749</span>
+<span id="1750">1750</span>
+<span id="1751">1751</span>
+<span id="1752">1752</span>
+<span id="1753">1753</span>
+<span id="1754">1754</span>
+<span id="1755">1755</span>
+<span id="1756">1756</span>
+<span id="1757">1757</span>
+<span id="1758">1758</span>
+<span id="1759">1759</span>
+<span id="1760">1760</span>
+<span id="1761">1761</span>
+<span id="1762">1762</span>
+<span id="1763">1763</span>
+<span id="1764">1764</span>
+<span id="1765">1765</span>
+<span id="1766">1766</span>
+<span id="1767">1767</span>
+<span id="1768">1768</span>
+<span id="1769">1769</span>
+<span id="1770">1770</span>
+<span id="1771">1771</span>
+<span id="1772">1772</span>
+<span id="1773">1773</span>
+<span id="1774">1774</span>
+<span id="1775">1775</span>
+<span id="1776">1776</span>
+<span id="1777">1777</span>
+<span id="1778">1778</span>
+<span id="1779">1779</span>
+<span id="1780">1780</span>
+<span id="1781">1781</span>
+<span id="1782">1782</span>
+<span id="1783">1783</span>
+<span id="1784">1784</span>
+<span id="1785">1785</span>
+<span id="1786">1786</span>
+<span id="1787">1787</span>
+<span id="1788">1788</span>
+<span id="1789">1789</span>
+<span id="1790">1790</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! The matrix module.</span>
 <span class='doccomment'>//!</span>
@@ -2022,6 +2103,87 @@
         <span class='kw'>let</span> <span class='ident'>rows</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>rows</span>;
         <span class='kw'>let</span> <span class='ident'>cols</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>cols</span>;
         <span class='ident'>MatrixSliceMut</span>::<span class='ident'>from_matrix</span>(<span class='self'>self</span>, [<span class='number'>0</span>, <span class='number'>0</span>], <span class='ident'>rows</span>, <span class='ident'>cols</span>)
+    }
+
+    <span class='doccomment'>/// Returns the row of a `Matrix` at the given index.</span>
+    <span class='doccomment'>/// `None` if the index is out of bounds.</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// # Examples</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// ```</span>
+    <span class='doccomment'>/// use rulinalg::matrix::Matrix;</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// let a = Matrix::new(3, 4, vec![2.0; 12]);</span>
+    <span class='doccomment'>/// let row = a.get_row(1);</span>
+    <span class='doccomment'>/// let expected = vec![2.0; 4];</span>
+    <span class='doccomment'>/// assert_eq!(row, Some(&amp;*expected));</span>
+    <span class='doccomment'>/// assert!(a.get_row(5).is_none());</span>
+    <span class='doccomment'>/// ```</span>
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>get_row</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>index</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span>[<span class='ident'>T</span>]<span class='op'>&gt;</span> {
+        <span class='kw'>if</span> <span class='ident'>index</span> <span class='op'>&lt;</span> <span class='self'>self</span>.<span class='ident'>rows</span> {
+            <span class='kw'>unsafe</span> { <span class='prelude-val'>Some</span>(<span class='self'>self</span>.<span class='ident'>get_row_unchecked</span>(<span class='ident'>index</span>)) }
+        } <span class='kw'>else</span> {
+            <span class='prelude-val'>None</span>
+        }
+    }
+
+    <span class='doccomment'>/// Returns the row of a `Matrix` at the given index without doing unbounds checking</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// # Examples</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// ```</span>
+    <span class='doccomment'>/// use rulinalg::matrix::Matrix;</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// let a = Matrix::new(3, 4, vec![2.0; 12]);</span>
+    <span class='doccomment'>/// let row = unsafe { a.get_row_unchecked(1) };</span>
+    <span class='doccomment'>/// let expected = vec![2.0; 4];</span>
+    <span class='doccomment'>/// assert_eq!(row, &amp;*expected);</span>
+    <span class='doccomment'>/// ```</span>
+    <span class='kw'>pub</span> <span class='kw'>unsafe</span> <span class='kw'>fn</span> <span class='ident'>get_row_unchecked</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>index</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span>[<span class='ident'>T</span>] {
+        <span class='kw'>let</span> <span class='ident'>ptr</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>data</span>.<span class='ident'>as_ptr</span>().<span class='ident'>offset</span>((<span class='self'>self</span>.<span class='ident'>cols</span> <span class='op'>*</span> <span class='ident'>index</span>) <span class='kw'>as</span> <span class='ident'>isize</span>);
+        ::<span class='ident'>std</span>::<span class='ident'>slice</span>::<span class='ident'>from_raw_parts</span>(<span class='ident'>ptr</span>, <span class='self'>self</span>.<span class='ident'>cols</span>)
+    }
+
+    <span class='doccomment'>/// Returns a mutable reference to the row of a `Matrix` at the given index.</span>
+    <span class='doccomment'>/// `None` if the index is out of bounds.</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// # Examples</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// ```</span>
+    <span class='doccomment'>/// use rulinalg::matrix::Matrix;</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// let mut a = Matrix::new(3, 4, vec![2.0; 12]);</span>
+    <span class='doccomment'>/// {</span>
+    <span class='doccomment'>///     let row = a.get_row_mut(1);</span>
+    <span class='doccomment'>///     let mut expected = vec![2.0; 4];</span>
+    <span class='doccomment'>///     assert_eq!(row, Some(&amp;mut *expected));</span>
+    <span class='doccomment'>/// }</span>
+    <span class='doccomment'>/// assert!(a.get_row_mut(5).is_none());</span>
+    <span class='doccomment'>/// ```</span>
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>get_row_mut</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>index</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> [<span class='ident'>T</span>]<span class='op'>&gt;</span> {
+        <span class='kw'>if</span> <span class='ident'>index</span> <span class='op'>&lt;</span> <span class='self'>self</span>.<span class='ident'>rows</span> {
+            <span class='kw'>unsafe</span> { <span class='prelude-val'>Some</span>(<span class='self'>self</span>.<span class='ident'>get_row_unchecked_mut</span>(<span class='ident'>index</span>)) }
+        } <span class='kw'>else</span> {
+            <span class='prelude-val'>None</span>
+        }
+    }
+
+    <span class='doccomment'>/// Returns a mutable reference to the row of a `Matrix` at the given index</span>
+    <span class='doccomment'>/// without doing unbounds checking</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// # Examples</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// ```</span>
+    <span class='doccomment'>/// use rulinalg::matrix::Matrix;</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// let mut a = Matrix::new(3, 4, vec![2.0; 12]);</span>
+    <span class='doccomment'>/// let row = unsafe { a.get_row_unchecked_mut(1) };</span>
+    <span class='doccomment'>/// let mut expected = vec![2.0; 4];</span>
+    <span class='doccomment'>/// assert_eq!(row, &amp;mut *expected);</span>
+    <span class='doccomment'>/// ```</span>
+    <span class='kw'>pub</span> <span class='kw'>unsafe</span> <span class='kw'>fn</span> <span class='ident'>get_row_unchecked_mut</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>index</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> [<span class='ident'>T</span>] {
+        <span class='kw'>let</span> <span class='ident'>ptr</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>data</span>.<span class='ident'>as_mut_ptr</span>().<span class='ident'>offset</span>((<span class='self'>self</span>.<span class='ident'>cols</span> <span class='op'>*</span> <span class='ident'>index</span>) <span class='kw'>as</span> <span class='ident'>isize</span>);
+        ::<span class='ident'>std</span>::<span class='ident'>slice</span>::<span class='ident'>from_raw_parts_mut</span>(<span class='ident'>ptr</span>, <span class='self'>self</span>.<span class='ident'>cols</span>)
     }
 }
 
@@ -2465,12 +2627,12 @@
             <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> <span class='number'>0</span>..<span class='self'>self</span>.<span class='ident'>rows</span> {
                 <span class='kw'>for</span> <span class='ident'>j</span> <span class='kw'>in</span> <span class='number'>0</span>..<span class='self'>self</span>.<span class='ident'>cols</span> {
                     <span class='kw'>if</span> (<span class='ident'>i</span> <span class='op'>!=</span> <span class='ident'>j</span>) <span class='op'>&amp;&amp;</span> (<span class='op'>*</span><span class='self'>self</span>.<span class='ident'>data</span>.<span class='ident'>get_unchecked</span>(<span class='ident'>i</span> <span class='op'>*</span> <span class='self'>self</span>.<span class='ident'>cols</span> <span class='op'>+</span> <span class='ident'>j</span>) <span class='op'>!=</span> <span class='ident'>T</span>::<span class='ident'>zero</span>()) {
-                        <span class='kw'>return</span> <span class='boolval'>false</span>;
+                        <span class='kw'>return</span> <span class='boolvalue'>false</span>;
                     }
                 }
             }
         }
-        <span class='boolval'>true</span>
+        <span class='boolvalue'>true</span>
     }
 }
 
@@ -2841,7 +3003,7 @@
 
     <span class='doccomment'>/// Computes the parity of a permutation matrix.</span>
     <span class='kw'>fn</span> <span class='ident'>parity</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>T</span> {
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>visited</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[<span class='boolval'>false</span>; <span class='self'>self</span>.<span class='ident'>rows</span>];
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>visited</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[<span class='boolvalue'>false</span>; <span class='self'>self</span>.<span class='ident'>rows</span>];
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>sgn</span> <span class='op'>=</span> <span class='ident'>T</span>::<span class='ident'>one</span>();
 
         <span class='kw'>for</span> <span class='ident'>k</span> <span class='kw'>in</span> <span class='number'>0</span>..<span class='self'>self</span>.<span class='ident'>rows</span> {
@@ -2851,7 +3013,7 @@
 
                 <span class='kw'>while</span> <span class='op'>!</span><span class='ident'>visited</span>[<span class='ident'>next</span>] {
                     <span class='ident'>len</span> <span class='op'>+=</span> <span class='number'>1</span>;
-                    <span class='ident'>visited</span>[<span class='ident'>next</span>] <span class='op'>=</span> <span class='boolval'>true</span>;
+                    <span class='ident'>visited</span>[<span class='ident'>next</span>] <span class='op'>=</span> <span class='boolvalue'>true</span>;
                     <span class='ident'>next</span> <span class='op'>=</span> <span class='ident'>utils</span>::<span class='ident'>find</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>data</span>[<span class='ident'>next</span> <span class='op'>*</span> <span class='self'>self</span>.<span class='ident'>cols</span>..(<span class='ident'>next</span> <span class='op'>+</span> <span class='number'>1</span>) <span class='op'>*</span> <span class='self'>self</span>.<span class='ident'>cols</span>],
                                        <span class='ident'>T</span>::<span class='ident'>one</span>());
                 }
@@ -3162,10 +3324,10 @@
 
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
 <span class='kw'>mod</span> <span class='ident'>tests</span> {
-    <span class='kw'>use</span> <span class='ident'>super</span>::<span class='ident'>super</span>::<span class='ident'>vector</span>::<span class='ident'>Vector</span>;
-    <span class='kw'>use</span> <span class='ident'>super</span>::<span class='ident'>Matrix</span>;
-    <span class='kw'>use</span> <span class='ident'>super</span>::<span class='ident'>Axes</span>;
-    <span class='kw'>use</span> <span class='ident'>super</span>::<span class='ident'>slice</span>::<span class='ident'>BaseSlice</span>;
+    <span class='kw'>use</span> <span class='kw'>super</span>::<span class='kw'>super</span>::<span class='ident'>vector</span>::<span class='ident'>Vector</span>;
+    <span class='kw'>use</span> <span class='kw'>super</span>::<span class='ident'>Matrix</span>;
+    <span class='kw'>use</span> <span class='kw'>super</span>::<span class='ident'>Axes</span>;
+    <span class='kw'>use</span> <span class='kw'>super</span>::<span class='ident'>slice</span>::<span class='ident'>BaseSlice</span>;
     <span class='kw'>use</span> <span class='ident'>libnum</span>::<span class='ident'>abs</span>;
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
@@ -3485,6 +3647,8 @@
                     <dd>Move down in search results</dd>
                     <dt>&#9166;</dt>
                     <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
                 </dl>
             </div>
 

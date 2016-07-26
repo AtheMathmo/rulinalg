@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-4153' class='srclink' href='../src/rulinalg/src/lib.rs.html#76-79' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-3860' class='srclink' href='../src/rulinalg/src/lib.rs.html#76-79' title='goto source code'>[src]</a></span></h1>
 <pre class='rust trait'>pub trait Metric&lt;T&gt; {
     fn <a href='#tymethod.norm' class='fnname'>norm</a>(&amp;self) -&gt; T;
 }</pre><div class='docblock'><p>Trait for linear algebra metrics.</p>
@@ -60,10 +60,10 @@
 </div></div>
         <h2 id='implementors'>Implementors</h2>
         <ul class='item-list' id='implementors-list'>
-    <li><code>impl&lt;T: <a class='trait' href='../num_traits/float/trait.Float.html' title='num_traits::float::Float'>Float</a>&gt; <a class='trait' href='../rulinalg/trait.Metric.html' title='rulinalg::Metric'>Metric</a>&lt;T&gt; for <a class='struct' href='../rulinalg/matrix/struct.Matrix.html' title='rulinalg::matrix::Matrix'>Matrix</a>&lt;T&gt;</code></li>
-<li><code>impl&lt;'a, T: <a class='trait' href='../num_traits/float/trait.Float.html' title='num_traits::float::Float'>Float</a>&gt; <a class='trait' href='../rulinalg/trait.Metric.html' title='rulinalg::Metric'>Metric</a>&lt;T&gt; for <a class='struct' href='../rulinalg/matrix/struct.MatrixSlice.html' title='rulinalg::matrix::MatrixSlice'>MatrixSlice</a>&lt;'a, T&gt;</code></li>
-<li><code>impl&lt;'a, T: <a class='trait' href='../num_traits/float/trait.Float.html' title='num_traits::float::Float'>Float</a>&gt; <a class='trait' href='../rulinalg/trait.Metric.html' title='rulinalg::Metric'>Metric</a>&lt;T&gt; for <a class='struct' href='../rulinalg/matrix/struct.MatrixSliceMut.html' title='rulinalg::matrix::MatrixSliceMut'>MatrixSliceMut</a>&lt;'a, T&gt;</code></li>
-<li><code>impl&lt;T: <a class='trait' href='../num_traits/float/trait.Float.html' title='num_traits::float::Float'>Float</a>&gt; <a class='trait' href='../rulinalg/trait.Metric.html' title='rulinalg::Metric'>Metric</a>&lt;T&gt; for <a class='struct' href='../rulinalg/vector/struct.Vector.html' title='rulinalg::vector::Vector'>Vector</a>&lt;T&gt;</code></li>
+    <li><code>impl&lt;T: Float&gt; Metric&lt;T&gt; for <a class='struct' href='../rulinalg/matrix/struct.Matrix.html' title='rulinalg::matrix::Matrix'>Matrix</a>&lt;T&gt;</code></li>
+<li><code>impl&lt;'a, T: Float&gt; Metric&lt;T&gt; for <a class='struct' href='../rulinalg/matrix/struct.MatrixSlice.html' title='rulinalg::matrix::MatrixSlice'>MatrixSlice</a>&lt;'a, T&gt;</code></li>
+<li><code>impl&lt;'a, T: Float&gt; Metric&lt;T&gt; for <a class='struct' href='../rulinalg/matrix/struct.MatrixSliceMut.html' title='rulinalg::matrix::MatrixSliceMut'>MatrixSliceMut</a>&lt;'a, T&gt;</code></li>
+<li><code>impl&lt;T: Float&gt; Metric&lt;T&gt; for <a class='struct' href='../rulinalg/vector/struct.Vector.html' title='rulinalg::vector::Vector'>Vector</a>&lt;T&gt;</code></li>
 </ul><script type="text/javascript" async
                          src="../implementors/rulinalg/trait.Metric.js">
                  </script></section>
@@ -89,6 +89,8 @@
                     <dd>Move down in search results</dd>
                     <dt>&#9166;</dt>
                     <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
                 </dl>
             </div>
 
