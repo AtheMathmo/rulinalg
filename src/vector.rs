@@ -12,7 +12,7 @@ use utils;
 /// The Vector struct.
 ///
 /// Can be instantiated with any type.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Hash)]
 pub struct Vector<T> {
     size: usize,
     data: Vec<T>,
