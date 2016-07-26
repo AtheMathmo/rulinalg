@@ -33,7 +33,7 @@ pub enum Axes {
 /// The `Matrix` struct.
 ///
 /// Can be instantiated with any type.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Hash)]
 pub struct Matrix<T> {
     rows: usize,
     cols: usize,
