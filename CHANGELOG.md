@@ -2,6 +2,21 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
+## 0.2.2
+
+### Breaking Changes
+
+-None
+
+### Features
+
+- Vector and Matrix now derive the `Eq` trait.
+- Vector and Matrix now derive the `Hash` trait.
+
+### Minor Changes
+
+- None
+
 ## 0.2.1
 
 ### New Contributors
