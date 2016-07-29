@@ -1868,7 +1868,7 @@
 <span class='doccomment'>/// The `Matrix` struct.</span>
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// Can be instantiated with any type.</span>
-<span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Debug</span>, <span class='ident'>PartialEq</span>)]</span>
+<span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Debug</span>, <span class='ident'>PartialEq</span>, <span class='ident'>Eq</span>, <span class='ident'>Hash</span>)]</span>
 <span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
     <span class='ident'>rows</span>: <span class='ident'>usize</span>,
     <span class='ident'>cols</span>: <span class='ident'>usize</span>,
