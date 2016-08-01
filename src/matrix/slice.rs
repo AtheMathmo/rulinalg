@@ -25,7 +25,8 @@ use std::marker::PhantomData;
 use std::mem;
 
 /// Trait for Matrix Slices.
-pub trait BaseSlice<T> {
+pub trait BaseSlice<'a, T: 'a> {
+
     /// Rows in the slice.
     fn rows(&self) -> usize;
 
@@ -86,9 +87,35 @@ pub trait BaseSlice<T> {
         ::std::slice::from_raw_parts(ptr, self.cols())
     }
 
+    /// Returns an iterator over the matrix slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::MatrixSlice;
+    ///
+    /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
+    ///
+    /// let slice_data = slice.iter().map(|v| *v).collect::<Vec<usize>>();
+    /// assert_eq!(slice_data, vec![4,5,7,8]);
+    /// ```
+    fn iter(&self) -> SliceIter<'a, T> {
+        SliceIter {
+            slice_start: self.as_ptr(),
+            row_pos: 0,
+            col_pos: 0,
+            slice_rows: self.rows(),
+            slice_cols: self.cols(),
+            row_stride: self.row_stride(),
+            _marker: PhantomData::<&'a T>,
+        }
+    }
+
 }
 
-impl<'a, T> BaseSlice<T> for MatrixSlice<'a, T> {
+impl<'a, T> BaseSlice<'a, T> for MatrixSlice<'a, T> {
     fn rows(&self) -> usize {
         self.rows
     }
@@ -106,7 +133,7 @@ impl<'a, T> BaseSlice<T> for MatrixSlice<'a, T> {
     }
 }
 
-impl<'a, T> BaseSlice<T> for MatrixSliceMut<'a, T> {
+impl<'a, T> BaseSlice<'a, T> for MatrixSliceMut<'a, T> {
     fn rows(&self) -> usize {
         self.rows
     }
@@ -221,31 +248,6 @@ impl<'a, T> MatrixSlice<'a, T> {
         self
     }
 
-    /// Returns an iterator over the matrix slice.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSlice;
-    ///
-    /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
-    ///
-    /// let slice_data = slice.iter().map(|v| *v).collect::<Vec<usize>>();
-    /// assert_eq!(slice_data, vec![4,5,7,8]);
-    /// ```
-    pub fn iter(&self) -> SliceIter<'a, T> {
-        SliceIter {
-            slice_start: self.ptr,
-            row_pos: 0,
-            col_pos: 0,
-            slice_rows: self.rows,
-            slice_cols: self.cols,
-            row_stride: self.row_stride,
-            _marker: PhantomData::<&'a T>,
-        }
-    }
 }
 
 impl<'a, T: Copy> MatrixSlice<'a, T> {
@@ -353,32 +355,6 @@ impl<'a, T> MatrixSliceMut<'a, T> {
         self.cols = cols;
 
         self
-    }
-
-    /// Returns an iterator over the matrix slice.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSliceMut;
-    ///
-    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
-    ///
-    /// let slice_data = slice.iter().map(|v| *v).collect::<Vec<usize>>();
-    /// assert_eq!(slice_data, vec![4,5,7,8]);
-    /// ```
-    pub fn iter(&self) -> SliceIter<'a, T> {
-        SliceIter {
-            slice_start: self.ptr as *const T,
-            row_pos: 0,
-            col_pos: 0,
-            slice_rows: self.rows,
-            slice_cols: self.cols,
-            row_stride: self.row_stride,
-            _marker: PhantomData::<&T>,
-        }
     }
 
     /// Returns a mutable iterator over the matrix slice.

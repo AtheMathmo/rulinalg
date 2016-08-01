@@ -16,6 +16,7 @@ use std::ops::{Mul, Add, Div, Sub, Neg};
 use std::slice;
 
 use matrix::{Matrix, MatrixSlice, MatrixSliceMut};
+use matrix::slice::BaseSlice;
 use vector::Vector;
 use Metric;
 use utils;

@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use std::slice;
 
 use super::{Matrix, MatrixSlice, MatrixSliceMut};
-use super::slice::{SliceIter, SliceIterMut};
+use super::slice::{BaseSlice, SliceIter, SliceIterMut};
 
 /// Row iterator.
 #[derive(Debug)]
