@@ -31,8 +31,9 @@ impl_matrix_from!(MatrixSliceMut);
 
 #[cfg(test)]
 mod tests {
-    use super::super::matrix::{Matrix, MatrixSlice, MatrixSliceMut};
-    use super::super::vector::Vector;
+    use matrix::{Matrix, MatrixSlice, MatrixSliceMut};
+    use matrix::slice::BaseSlice;
+    use vector::Vector;
 
     #[test]
     fn inner_product_as_matrix_multiplication() {

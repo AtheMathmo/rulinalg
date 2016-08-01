@@ -256,6 +256,7 @@ impl<'a, T> MatrixSliceMut<'a, T> {
 ///
 /// ```
 /// use rulinalg::matrix::Matrix;
+/// use rulinalg::matrix::slice::BaseSlice;
 ///
 /// let a : Matrix<f64> = vec![4f64; 16].chunks(4).collect();
 ///

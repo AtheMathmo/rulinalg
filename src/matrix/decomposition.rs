@@ -1064,6 +1064,7 @@ impl<T> Matrix<T> where T: Any + Copy + One + Zero + Neg<Output=T> +
 mod tests {
     use matrix::Matrix;
     use vector::Vector;
+    use matrix::slice::BaseSlice;
 
     fn validate_bidiag(mat: &Matrix<f64>,
                        b: &Matrix<f64>,

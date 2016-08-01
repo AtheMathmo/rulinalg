@@ -289,6 +289,7 @@ mod tests {
     use super::super::Matrix;
     use super::super::MatrixSlice;
     use super::super::MatrixSliceMut;
+    use matrix::slice::BaseSlice;
 
     #[test]
     fn matrix_mul_f32() {

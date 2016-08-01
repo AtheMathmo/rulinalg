@@ -94,6 +94,7 @@ pub trait BaseSlice<'a, T: 'a> {
     /// ```
     /// use rulinalg::matrix::Matrix;
     /// use rulinalg::matrix::MatrixSlice;
+    /// use rulinalg::matrix::slice::BaseSlice;
     ///
     /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
@@ -125,7 +126,7 @@ impl<'a, T: 'a> BaseSlice<'a, T> for Matrix<T> {
     }
 
     fn row_stride(&self) -> usize {
-        self.rows
+        self.cols
     }
 
     fn as_ptr(&self) -> *const T {
@@ -382,6 +383,7 @@ impl<'a, T> MatrixSliceMut<'a, T> {
     /// ```
     /// use rulinalg::matrix::Matrix;
     /// use rulinalg::matrix::MatrixSliceMut;
+    /// use rulinalg::matrix::slice::BaseSlice;
     ///
     /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     ///

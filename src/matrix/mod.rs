@@ -14,6 +14,7 @@ use Metric;
 use error::{Error, ErrorKind};
 use utils;
 use vector::Vector;
+use self::slice::BaseSlice;
 
 mod decomposition;
 mod impl_ops;
@@ -79,6 +80,7 @@ impl<T> Matrix<T> {
     ///
     /// ```
     /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
     ///
     /// let mat = Matrix::new(2,2, vec![1.0,2.0,3.0,4.0]);
     ///
@@ -109,11 +111,6 @@ impl<T> Matrix<T> {
     /// Returns a mutable slice of the underlying data.
     pub fn mut_data(&mut self) -> &mut [T] {
         &mut self.data
-    }
-
-    /// Get a reference to a point in the matrix without bounds checks.
-    pub unsafe fn get_unchecked(&self, index: [usize; 2]) -> &T {
-        self.data.get_unchecked(index[0] * self.cols + index[1])
     }
 
     /// Get a mutable reference to a point in the matrix without bounds checks.
@@ -269,6 +266,7 @@ impl<T: Copy> Matrix<T> {
     ///
     /// ```
     /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
     ///
     /// let a = Matrix::<f64>::ones(3,3);
     ///
@@ -310,6 +308,7 @@ impl<T: Copy> Matrix<T> {
     ///
     /// ```
     /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
     ///
     /// let a = Matrix::<f64>::ones(3,3);
     /// let b = &a.select_cols(&[2]);
@@ -354,6 +353,7 @@ impl<T: Copy> Matrix<T> {
     ///
     /// ```
     /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
     ///
     /// let a = Matrix::<f64>::identity(3);
     /// let b = &a.select(&[0,1], &[1,2]);
@@ -404,6 +404,7 @@ impl<T: Copy> Matrix<T> {
     ///
     /// ```
     /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
     ///
     /// let a = Matrix::new(3,2, vec![1.0,2.0,3.0,4.0,5.0,6.0]);
     /// let b = Matrix::new(3,1, vec![4.0,5.0,6.0]);
@@ -446,6 +447,7 @@ impl<T: Copy> Matrix<T> {
     ///
     /// ```
     /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
     ///
     /// let a = Matrix::new(2,3, vec![1.0,2.0,3.0,4.0,5.0,6.0]);
     /// let b = Matrix::new(1,3, vec![4.0,5.0,6.0]);

@@ -56,15 +56,15 @@ fn qr() {
                                   0.285715, -0.171429, 0.942857]);
     let true_r = Matrix::new(3, 3, vec![-14., -21., 14., 0., -175., 70., 0., 0., -35.]);
 
-    let q_diff = (q - true_q).into_vec();
-    let r_diff = (r - true_r).into_vec();
+    let q_diff = (q - &true_q).into_vec();
+    let r_diff = (r - &true_r).into_vec();
 
-    for val in q_diff {
-        assert!(val < tol, format!("val is {0}", val));
+    for (val, expected) in q_diff.into_iter().zip(true_q.data().iter()) {
+        assert!(val < tol, format!("diff is {0}, expecting {1}", val, expected));
     }
 
-
-    for val in r_diff {
-        assert!(val < tol, format!("val is {0}", val));
+    for (val, expected) in r_diff.into_iter().zip(true_r.data().iter()) {
+        assert!(val < tol, format!("diff is {0}, expecting {1}", val, expected));
     }
+
 }
