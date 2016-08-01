@@ -115,6 +115,24 @@ pub trait BaseSlice<'a, T: 'a> {
 
 }
 
+impl<'a, T: 'a> BaseSlice<'a, T> for Matrix<T> {
+    fn rows(&self) -> usize {
+        self.rows
+    }
+
+    fn cols(&self) -> usize {
+        self.cols
+    }
+
+    fn row_stride(&self) -> usize {
+        self.rows
+    }
+
+    fn as_ptr(&self) -> *const T {
+        self.data.as_ptr()
+    }
+}
+
 impl<'a, T> BaseSlice<'a, T> for MatrixSlice<'a, T> {
     fn rows(&self) -> usize {
         self.rows
