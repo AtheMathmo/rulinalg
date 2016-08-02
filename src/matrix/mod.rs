@@ -113,11 +113,6 @@ impl<T> Matrix<T> {
         &mut self.data
     }
 
-    /// Get a mutable reference to a point in the matrix without bounds checks.
-    pub unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut T {
-        self.data.get_unchecked_mut(index[0] * self.cols + index[1])
-    }
-
     /// Consumes the Matrix and returns the Vec of data.
     pub fn into_vec(self) -> Vec<T> {
         self.data

@@ -116,6 +116,100 @@ pub trait BaseSlice<'a, T: 'a> {
 
 }
 
+/// Trait for Mutable Matrix Slices.
+pub trait BaseSliceMut<'a, T: 'a>: BaseSlice<'a, T> {
+
+    /// Top left index of the slice.
+    fn as_mut_ptr(&mut self) -> *mut T;
+
+    /// Get a mutable reference to a point in the matrix without bounds checks.
+    unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut T {
+        &mut *(self.as_mut_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
+    }
+
+    /// Returns a mutable iterator over the matrix slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::MatrixSliceMut;
+    /// use rulinalg::matrix::slice::BaseSliceMut;
+    ///
+    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    ///
+    /// {
+    ///     let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
+    ///
+    ///     for d in slice.iter_mut() {
+    ///         *d = *d + 2;
+    ///     }
+    /// }
+    ///
+    /// // Only the matrix slice is updated.
+    /// assert_eq!(a.into_vec(), vec![0,1,2,3,6,7,6,9,10]);
+    /// ```
+    fn iter_mut(&mut self) -> SliceIterMut<'a, T> {
+        SliceIterMut {
+            slice_start: self.as_mut_ptr(),
+            row_pos: 0,
+            col_pos: 0,
+            slice_rows: self.rows(),
+            slice_cols: self.cols(),
+            row_stride: self.row_stride(),
+            _marker: PhantomData::<&mut T>,
+        }
+    }
+
+    /// Returns a mutable reference to the row of a `MatrixSliceMut` at the given index.
+    /// `None` if the index is out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::MatrixSliceMut;
+    /// use rulinalg::matrix::slice::BaseSliceMut;
+    ///
+    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
+    /// {
+    ///     let row = slice.get_row_mut(1);
+    ///     let mut expected = vec![7usize, 8];
+    ///     assert_eq!(row, Some(&mut *expected));
+    /// }
+    /// assert!(slice.get_row_mut(5).is_none());
+    /// ```
+    fn get_row_mut(&mut self, index: usize) -> Option<&mut [T]> {
+        if index < self.rows() {
+            unsafe { Some(self.get_row_unchecked_mut(index)) }
+        } else {
+            None
+        }
+    }
+
+    /// Returns a mutable reference to the row of a `MatrixSliceMut` at the given index
+    /// without doing unbounds checking
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::MatrixSliceMut;
+    /// use rulinalg::matrix::slice::BaseSliceMut;
+    ///
+    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
+    /// let row = unsafe { slice.get_row_unchecked_mut(1) };
+    /// let mut expected = vec![7usize, 8];
+    /// assert_eq!(row, &mut *expected);
+    /// ```
+    unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> &mut [T] {
+        let ptr = self.as_mut_ptr().offset((self.row_stride() * index) as isize);
+        ::std::slice::from_raw_parts_mut(ptr, self.cols())
+    }
+}
+
 impl<'a, T: 'a> BaseSlice<'a, T> for Matrix<T> {
     fn rows(&self) -> usize {
         self.rows
@@ -167,6 +261,20 @@ impl<'a, T> BaseSlice<'a, T> for MatrixSliceMut<'a, T> {
 
     fn as_ptr(&self) -> *const T {
         self.ptr as *const T
+    }
+}
+
+impl<'a, T: 'a> BaseSliceMut<'a, T> for Matrix<T> {
+    /// Top left index of the slice.
+    fn as_mut_ptr(&mut self) -> *mut T {
+        self.data.as_mut_ptr()
+    }
+}
+
+impl<'a, T: 'a> BaseSliceMut<'a, T> for MatrixSliceMut<'a, T> {
+    /// Top left index of the slice.
+    fn as_mut_ptr(&mut self) -> *mut T {
+        self.ptr
     }
 }
 
@@ -374,86 +482,6 @@ impl<'a, T> MatrixSliceMut<'a, T> {
         self.cols = cols;
 
         self
-    }
-
-    /// Returns a mutable iterator over the matrix slice.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSliceMut;
-    /// use rulinalg::matrix::slice::BaseSlice;
-    ///
-    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    ///
-    /// {
-    ///     let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
-    ///
-    ///     for d in slice.iter_mut() {
-    ///         *d = *d + 2;
-    ///     }
-    /// }
-    ///
-    /// // Only the matrix slice is updated.
-    /// assert_eq!(a.into_vec(), vec![0,1,2,3,6,7,6,9,10]);
-    /// ```
-    pub fn iter_mut(&mut self) -> SliceIterMut<'a, T> {
-        SliceIterMut {
-            slice_start: self.ptr,
-            row_pos: 0,
-            col_pos: 0,
-            slice_rows: self.rows,
-            slice_cols: self.cols,
-            row_stride: self.row_stride,
-            _marker: PhantomData::<&mut T>,
-        }
-    }
-
-    /// Returns a mutable reference to the row of a `MatrixSliceMut` at the given index.
-    /// `None` if the index is out of bounds.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSliceMut;
-    ///
-    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
-    /// {
-    ///     let row = slice.get_row_mut(1);
-    ///     let mut expected = vec![7usize, 8];
-    ///     assert_eq!(row, Some(&mut *expected));
-    /// }
-    /// assert!(slice.get_row_mut(5).is_none());
-    /// ```
-    pub fn get_row_mut(&mut self, index: usize) -> Option<&mut [T]> {
-        if index < self.rows {
-            unsafe { Some(self.get_row_unchecked_mut(index)) }
-        } else {
-            None
-        }
-    }
-
-    /// Returns a mutable reference to the row of a `MatrixSliceMut` at the given index
-    /// without doing unbounds checking
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSliceMut;
-    ///
-    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
-    /// let row = unsafe { slice.get_row_unchecked_mut(1) };
-    /// let mut expected = vec![7usize, 8];
-    /// assert_eq!(row, &mut *expected);
-    /// ```
-    pub unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> &mut [T] {
-        let ptr = self.ptr.offset((self.row_stride * index) as isize);
-        ::std::slice::from_raw_parts_mut(ptr, self.cols)
     }
 }
 

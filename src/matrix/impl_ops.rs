@@ -1,7 +1,7 @@
 use super::Matrix;
 use super::MatrixSlice;
 use super::MatrixSliceMut;
-use super::slice::BaseSlice;
+use super::slice::{BaseSlice, BaseSliceMut};
 
 use super::super::utils;
 use super::super::vector::Vector;
