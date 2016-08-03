@@ -71,6 +71,28 @@ pub struct MatrixSliceMut<'a, T: 'a> {
     marker: PhantomData<&'a mut T>,
 }
 
+/// Row iterator.
+#[derive(Debug)]
+pub struct Rows<'a, T: 'a> {
+    slice_start: *const T,
+    row_pos: usize,
+    slice_rows: usize,
+    slice_cols: usize,
+    row_stride: isize,
+    _marker: PhantomData<&'a T>,
+}
+
+/// Mutable row iterator.
+#[derive(Debug)]
+pub struct RowsMut<'a, T: 'a> {
+    slice_start: *mut T,
+    row_pos: usize,
+    slice_rows: usize,
+    slice_cols: usize,
+    row_stride: isize,
+    _marker: PhantomData<&'a mut T>,
+}
+
 impl<T> Matrix<T> {
     /// Constructor for Matrix struct.
     ///

@@ -6,6 +6,7 @@
 use std::convert::From;
 
 use super::matrix::{Matrix, MatrixSlice, MatrixSliceMut};
+use super::matrix::slice::BaseSlice;
 use super::vector::Vector;
 
 

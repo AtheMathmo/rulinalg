@@ -16,9 +16,7 @@
 //! let new_mat = &mat_slice * &mat_slice;
 //! ```
 
-use super::Matrix;
-use super::MatrixSlice;
-use super::MatrixSliceMut;
+use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut};
 use utils;
 
 use std::marker::PhantomData;
@@ -111,6 +109,32 @@ pub trait BaseSlice<'a, T: 'a> {
             slice_cols: self.cols(),
             row_stride: self.row_stride(),
             _marker: PhantomData::<&'a T>,
+        }
+    }
+
+    /// Iterate over the rows of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
+    ///
+    /// // Prints "2" three times.
+    /// for row in a.iter_rows() {
+    ///     println!("{}", row.len());
+    /// }
+    /// ```
+    fn iter_rows(&self) -> Rows<T> {
+        Rows {
+            slice_start: self.as_ptr(),
+            row_pos: 0,
+            slice_rows: self.rows(),
+            slice_cols: self.cols(),
+            row_stride: self.row_stride() as isize,
+            _marker: PhantomData::<&T>,
         }
     }
 
@@ -207,6 +231,36 @@ pub trait BaseSliceMut<'a, T: 'a>: BaseSlice<'a, T> {
     unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> &mut [T] {
         let ptr = self.as_mut_ptr().offset((self.row_stride() * index) as isize);
         ::std::slice::from_raw_parts_mut(ptr, self.cols())
+    }
+
+    /// Iterate over the mutable rows of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSliceMut;
+    ///
+    /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
+    ///
+    /// for row in a.iter_rows_mut() {
+    ///     for r in row {
+    ///         *r = *r + 1;
+    ///     }
+    /// }
+    ///
+    /// // Now contains the range 1..7
+    /// println!("{}", a);
+    /// ```
+    fn iter_rows_mut(&mut self) -> RowsMut<T> {
+        RowsMut {
+            slice_start: self.as_mut_ptr(),
+            row_pos: 0,
+            slice_rows: self.rows(),
+            slice_cols: self.cols(),
+            row_stride: self.row_stride() as isize,
+            _marker: PhantomData::<&mut T>,
+        }
     }
 }
 
@@ -511,7 +565,7 @@ impl<'a, T: Copy> MatrixSliceMut<'a, T> {
     /// # Panics
     ///
     /// Panics if the dimensions of `self` and `target` are not the same.
-    pub fn set_to(self, target: MatrixSlice<T>) {
+    pub fn set_to(mut self, target: MatrixSlice<T>) {
         // TODO: Should this method take an Into<MatrixSlice> or something similar?
         // So we can use `Matrix` and `MatrixSlice` and `MatrixSliceMut`.
         assert!(self.rows == target.rows,
