@@ -19,8 +19,12 @@
 use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut};
 use vector::Vector;
 use utils;
+use libnum::{One, Zero, Float};
+use error::{Error, ErrorKind};
 
+use std::any::Any;
 use std::cmp::min;
+use std::fmt;
 use std::marker::PhantomData;
 use std::mem;
 
@@ -45,6 +49,111 @@ pub trait BaseSlice: Sized {
     /// Get a reference to a point in the slice without bounds checking.
     unsafe fn get_unchecked(&self, index: [usize; 2]) -> &Self::Item {
         &*(self.as_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
+    }
+
+    /// Returns the row of a `Matrix` at the given index.
+    /// `None` if the index is out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, MatrixSlice};
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut slice = MatrixSlice::from_matrix(&mut a, [1,1], 2, 2);
+    /// let row = slice.get_row(1);
+    /// let mut expected = vec![7usize, 8];
+    /// assert_eq!(row, Some(&*expected));
+    /// assert!(slice.get_row(5).is_none());
+    /// ```
+    fn get_row(&self, index: usize) -> Option<&[Self::Item]> {
+        if index < self.rows() {
+            unsafe { Some(self.get_row_unchecked(index)) }
+        } else {
+            None
+        }
+    }
+    
+    /// Returns the row of a `BaseSlice` at the given index without doing unbounds checking
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, MatrixSlice};
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut slice = MatrixSlice::from_matrix(&mut a, [1,1], 2, 2);
+    /// let row = unsafe { slice.get_row_unchecked(1) };
+    /// let mut expected = vec![7usize, 8];
+    /// assert_eq!(row, &*expected);
+    /// ```
+    unsafe fn get_row_unchecked(&self, index: usize) -> &[Self::Item] {
+        let ptr = self.as_ptr().offset((self.row_stride() * index) as isize);
+        ::std::slice::from_raw_parts(ptr, self.cols())
+    }
+
+    /// Returns an iterator over the matrix slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::MatrixSlice;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
+    ///
+    /// let slice_data = slice.iter().map(|v| *v).collect::<Vec<usize>>();
+    /// assert_eq!(slice_data, vec![4,5,7,8]);
+    /// ```
+    fn iter<'a>(&self) -> SliceIter<'a, Self::Item> 
+        where Self::Item: 'a
+    {
+        SliceIter {
+            slice_start: self.as_ptr(),
+            row_pos: 0,
+            col_pos: 0,
+            slice_rows: self.rows(),
+            slice_cols: self.cols(),
+            row_stride: self.row_stride(),
+            _marker: PhantomData::<&Self::Item>,
+        }
+    }
+
+    /// Iterate over the rows of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
+    ///
+    /// // Prints "2" three times.
+    /// for row in a.iter_rows() {
+    ///     println!("{}", row.len());
+    /// }
+    /// ```
+    fn iter_rows(&self) -> Rows<Self::Item> {
+        Rows {
+            slice_start: self.as_ptr(),
+            row_pos: 0,
+            slice_rows: self.rows(),
+            slice_cols: self.cols(),
+            row_stride: self.row_stride() as isize,
+            _marker: PhantomData::<&Self::Item>,
+        }
+    }
+
+    /// Convert the matrix slice into a new Matrix.
+    fn into_matrix(self) -> Matrix<Self::Item>
+        where Self::Item: Copy
+    {
+        self.iter_rows().collect()
     }
 
     /// Select rows from matrix
@@ -351,102 +460,221 @@ pub trait BaseSlice: Sized {
         }
     }
 
-    /// Returns the row of a `Matrix` at the given index.
-    /// `None` if the index is out of bounds.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSlice};
-    /// use rulinalg::matrix::slice::BaseSlice;
-    ///
-    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let mut slice = MatrixSlice::from_matrix(&mut a, [1,1], 2, 2);
-    /// let row = slice.get_row(1);
-    /// let mut expected = vec![7usize, 8];
-    /// assert_eq!(row, Some(&*expected));
-    /// assert!(slice.get_row(5).is_none());
-    /// ```
-    fn get_row(&self, index: usize) -> Option<&[Self::Item]> {
-        if index < self.rows() {
-            unsafe { Some(self.get_row_unchecked(index)) }
-        } else {
-            None
-        }
-    }
-    
-    /// Returns the row of a `BaseSlice` at the given index without doing unbounds checking
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSlice};
-    /// use rulinalg::matrix::slice::BaseSlice;
-    ///
-    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let mut slice = MatrixSlice::from_matrix(&mut a, [1,1], 2, 2);
-    /// let row = unsafe { slice.get_row_unchecked(1) };
-    /// let mut expected = vec![7usize, 8];
-    /// assert_eq!(row, &*expected);
-    /// ```
-    unsafe fn get_row_unchecked(&self, index: usize) -> &[Self::Item] {
-        let ptr = self.as_ptr().offset((self.row_stride() * index) as isize);
-        ::std::slice::from_raw_parts(ptr, self.cols())
-    }
-
-    /// Returns an iterator over the matrix slice.
+    /// Checks if matrix is diagonal.
     ///
     /// # Examples
     ///
     /// ```
     /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSlice;
     /// use rulinalg::matrix::slice::BaseSlice;
     ///
-    /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
+    /// let a = Matrix::new(2,2, vec![1.0,0.0,0.0,1.0]);
+    /// let a_diag = a.is_diag();
     ///
-    /// let slice_data = slice.iter().map(|v| *v).collect::<Vec<usize>>();
-    /// assert_eq!(slice_data, vec![4,5,7,8]);
+    /// assert_eq!(a_diag, true);
+    ///
+    /// let b = Matrix::new(2,2, vec![1.0,0.0,1.0,0.0]);
+    /// let b_diag = b.is_diag();
+    ///
+    /// assert_eq!(b_diag, false);
     /// ```
-    fn iter<'a>(&self) -> SliceIter<'a, Self::Item> 
-        where Self::Item: 'a
+    fn is_diag(&self) -> bool 
+        where Self::Item: Copy + Zero + One + PartialEq,
     {
-        SliceIter {
-            slice_start: self.as_ptr(),
-            row_pos: 0,
-            col_pos: 0,
-            slice_rows: self.rows(),
-            slice_cols: self.cols(),
-            row_stride: self.row_stride(),
-            _marker: PhantomData::<&Self::Item>,
+        unsafe {
+            for i in 0..self.rows() {
+                for j in 0..self.cols() {
+                    if (i != j) && (*self.get_unchecked([i, j]) != Self::Item::zero()) {
+                        return false;
+                    }
+                }
+            }
         }
+        true
     }
 
-    /// Iterate over the rows of the matrix.
+    /// Solves an upper triangular linear system.
+    ///
+    /// Given a matrix `U`, which is upper triangular, and a vector `y`, this function returns `x`
+    /// such that `Ux = y`.
     ///
     /// # Examples
     ///
     /// ```
     /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::vector::Vector;
     /// use rulinalg::matrix::slice::BaseSlice;
+    /// use std::f32;
     ///
-    /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
+    /// let u = Matrix::new(2,2, vec![1.0, 2.0, 0.0, 1.0]);
+    /// let y = Vector::new(vec![3.0, 1.0]);
     ///
-    /// // Prints "2" three times.
-    /// for row in a.iter_rows() {
-    ///     println!("{}", row.len());
-    /// }
+    /// let x = u.solve_u_triangular(y).expect("A solution should exist!");
+    /// assert!((x[0] - 1.0) < f32::EPSILON);
+    /// assert!((x[1] - 1.0) < f32::EPSILON);
     /// ```
-    fn iter_rows(&self) -> Rows<Self::Item> {
-        Rows {
-            slice_start: self.as_ptr(),
-            row_pos: 0,
-            slice_rows: self.rows(),
-            slice_cols: self.cols(),
-            row_stride: self.row_stride() as isize,
-            _marker: PhantomData::<&Self::Item>,
+    ///
+    /// # Panics
+    ///
+    /// - Vector size and matrix column count are not equal.
+    /// - Matrix is not upper triangular.
+    ///
+    /// # Failures
+    ///
+    /// Fails if there is no valid solution to the system (matrix is singular).
+    fn solve_u_triangular(&self, y: Vector<Self::Item>) -> Result<Vector<Self::Item>, Error>
+        where Self::Item: Any + Float,
+    {
+        assert!(self.cols() == y.size(),
+                format!("Vector size {0} != {1} Matrix column count.",
+                        y.size(),
+                        self.cols()));
+
+        // Make sure we are upper triangular.
+        for (row_idx, row) in self.iter_rows().enumerate() {
+            for i in 0..row_idx {
+                unsafe {
+                    assert!(*row.get_unchecked(i) == Self::Item::zero(),
+                            "Matrix is not upper triangular.");
+                }
+            }
         }
+
+        self.back_substitution(y)
+    }
+
+    /// Back substitution
+    fn back_substitution(&self, y: Vector<Self::Item>) -> Result<Vector<Self::Item>, Error>
+        where Self::Item: Any + Float,
+    {
+        let mut x = vec![Self::Item::zero(); y.size()];
+
+        unsafe {
+            x[y.size() - 1] = y[y.size() - 1] / *self.get_unchecked([y.size() - 1, y.size() - 1]);
+
+            for i in (0..y.size() - 1).rev() {
+                let mut holding_u_sum = Self::Item::zero();
+                for j in (i + 1..y.size()).rev() {
+                    holding_u_sum = holding_u_sum + *self.get_unchecked([i, j]) * x[j];
+                }
+
+                let diag = *self.get_unchecked([i, i]);
+                if diag.abs() < Self::Item::min_positive_value() + 
+                    Self::Item::min_positive_value() 
+                {
+                    return Err(Error::new(ErrorKind::AlgebraFailure,
+                                          "Linear system cannot be solved (matrix is singular)."));
+                }
+                x[i] = (y[i] - holding_u_sum) / diag;
+            }
+        }
+
+        Ok(Vector::new(x))
+    }
+
+    /// Solves a lower triangular linear system.
+    ///
+    /// Given a matrix `L`, which is lower triangular, and a vector `y`, this function returns `x`
+    /// such that `Lx = y`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::vector::Vector;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    /// use std::f32;
+    ///
+    /// let l = Matrix::new(2,2, vec![1.0, 0.0, 2.0, 1.0]);
+    /// let y = Vector::new(vec![1.0, 3.0]);
+    ///
+    /// let x = l.solve_l_triangular(y).expect("A solution should exist!");
+    /// println!("{:?}", x);
+    /// assert!((x[0] - 1.0) < f32::EPSILON);
+    /// assert!((x[1] - 1.0) < f32::EPSILON);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// - Vector size and matrix column count are not equal.
+    /// - Matrix is not lower triangular.
+    ///
+    /// # Failures
+    ///
+    /// Fails if there is no valid solution to the system (matrix is singular).
+    fn solve_l_triangular(&self, y: Vector<Self::Item>) -> Result<Vector<Self::Item>, Error>
+        where Self::Item: Any + Float,
+    {
+        assert!(self.cols() == y.size(),
+                format!("Vector size {0} != {1} Matrix column count.",
+                        y.size(),
+                        self.cols()));
+
+        // Make sure we are lower triangular.
+        for (row_idx, row) in self.iter_rows().enumerate() {
+            for i in row_idx + 1..self.cols() {
+                unsafe {
+                    assert!(*row.get_unchecked(i) == Self::Item::zero(),
+                            "Matrix is not lower triangular.");
+                }
+            }
+        }
+
+        self.forward_substitution(y)
+    }
+
+    /// forward substitution
+    fn forward_substitution(&self, y: Vector<Self::Item>) -> Result<Vector<Self::Item>, Error>
+        where Self::Item: Any + Float,
+    {
+        let mut x = Vec::with_capacity(y.size());
+
+        unsafe {
+            x.push(y[0] / *self.get_unchecked([0, 0]));
+            for (i, y_item) in y.data().iter().enumerate().take(y.size()).skip(1) {
+                let mut holding_l_sum = Self::Item::zero();
+                for (j, x_item) in x.iter().enumerate().take(i) {
+                    holding_l_sum = holding_l_sum + *self.get_unchecked([i, j]) * *x_item;
+                }
+
+                let diag = *self.get_unchecked([i, i]);
+
+                if diag.abs() < Self::Item::min_positive_value() + Self::Item::min_positive_value() {
+                    return Err(Error::new(ErrorKind::AlgebraFailure,
+                                          "Linear system cannot be solved (matrix is singular)."));
+                }
+                x.push((*y_item - holding_l_sum) / diag);
+            }
+        }
+
+        Ok(Vector::new(x))
+    }
+
+    /// Computes the parity of a permutation matrix.
+    fn parity(&self) -> Self::Item
+        where Self::Item: Any + Float,
+    {
+        let mut visited = vec![false; self.rows()];
+        let mut sgn = Self::Item::one();
+
+        for k in 0..self.rows() {
+            if !visited[k] {
+                let mut next = k;
+                let mut len = 0;
+
+                while !visited[next] {
+                    len += 1;
+                    visited[next] = true;
+                    next = utils::find(&self.get_row(next).unwrap(),
+                                       Self::Item::one());
+                }
+
+                if len % 2 == 0 {
+                    sgn = -sgn;
+                }
+            }
+        }
+        sgn
     }
 
 }
@@ -581,20 +809,16 @@ impl<T> BaseSlice for Matrix<T> {
 
     type Item = T;
 
-    fn rows(&self) -> usize {
-        self.rows
-    }
+    fn rows(&self) -> usize { self.rows } 
+    fn cols(&self) -> usize { self.cols } 
+    fn row_stride(&self) -> usize { self.cols } 
+    fn as_ptr(&self) -> *const T { self.data.as_ptr() }
 
-    fn cols(&self) -> usize {
-        self.cols
-    }
-
-    fn row_stride(&self) -> usize {
-        self.cols
-    }
-
-    fn as_ptr(&self) -> *const T {
-        self.data.as_ptr()
+    fn into_matrix(self) -> Matrix<Self::Item>
+        where Self::Item: Copy
+    {
+        // for Matrix, this is a no-op
+        self
     }
 }
 
@@ -602,56 +826,30 @@ impl<'a, T> BaseSlice for MatrixSlice<'a, T> {
 
     type Item = T;
 
-    fn rows(&self) -> usize {
-        self.rows
-    }
-
-    fn cols(&self) -> usize {
-        self.cols
-    }
-
-    fn row_stride(&self) -> usize {
-        self.row_stride
-    }
-
-    fn as_ptr(&self) -> *const T {
-        self.ptr
-    }
+    fn rows(&self) -> usize { self.rows } 
+    fn cols(&self) -> usize { self.cols } 
+    fn row_stride(&self) -> usize { self.row_stride } 
+    fn as_ptr(&self) -> *const T { self.ptr }
 }
 
 impl<'a, T> BaseSlice for MatrixSliceMut<'a, T> {
 
     type Item = T;
 
-    fn rows(&self) -> usize {
-        self.rows
-    }
-
-    fn cols(&self) -> usize {
-        self.cols
-    }
-
-    fn row_stride(&self) -> usize {
-        self.row_stride
-    }
-
-    fn as_ptr(&self) -> *const T {
-        self.ptr as *const T
-    }
+    fn rows(&self) -> usize { self.rows } 
+    fn cols(&self) -> usize { self.cols } 
+    fn row_stride(&self) -> usize { self.row_stride } 
+    fn as_ptr(&self) -> *const T { self.ptr as *const T }
 }
 
 impl<T> BaseSliceMut for Matrix<T> {
     /// Top left index of the slice.
-    fn as_mut_ptr(&mut self) -> *mut T {
-        self.data.as_mut_ptr()
-    }
+    fn as_mut_ptr(&mut self) -> *mut T { self.data.as_mut_ptr() }
 }
 
 impl<'a, T> BaseSliceMut for MatrixSliceMut<'a, T> {
     /// Top left index of the slice.
-    fn as_mut_ptr(&mut self) -> *mut T {
-        self.ptr
-    }
+    fn as_mut_ptr(&mut self) -> *mut T { self.ptr }
 }
 
 impl<'a, T> MatrixSlice<'a, T> {
@@ -751,13 +949,6 @@ impl<'a, T> MatrixSlice<'a, T> {
         self
     }
 
-}
-
-impl<'a, T: Copy> MatrixSlice<'a, T> {
-    /// Convert the matrix slice into a new Matrix.
-    pub fn into_matrix(self) -> Matrix<T> {
-        self.iter_rows().collect::<Matrix<T>>()
-    }
 }
 
 impl<'a, T> MatrixSliceMut<'a, T> {
@@ -862,10 +1053,6 @@ impl<'a, T> MatrixSliceMut<'a, T> {
 }
 
 impl<'a, T: Copy> MatrixSliceMut<'a, T> {
-    /// Convert the matrix slice into a new Matrix.
-    pub fn into_matrix(self) -> Matrix<T> {
-        self.iter_rows().collect::<Matrix<T>>()
-    }
 
     /// Sets the underlying matrix data to the target data.
     ///
