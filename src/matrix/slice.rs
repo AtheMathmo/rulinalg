@@ -16,14 +16,16 @@
 //! let new_mat = &mat_slice * &mat_slice;
 //! ```
 
-use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut};
+use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut};
+use vector::Vector;
 use utils;
 
+use std::cmp::min;
 use std::marker::PhantomData;
 use std::mem;
 
 /// Trait for Matrix Slices.
-pub trait BaseSlice {
+pub trait BaseSlice: Sized {
 
     /// Matrix Item type
     type Item;
@@ -43,6 +45,310 @@ pub trait BaseSlice {
     /// Get a reference to a point in the slice without bounds checking.
     unsafe fn get_unchecked(&self, index: [usize; 2]) -> &Self::Item {
         &*(self.as_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
+    }
+
+    /// Select rows from matrix
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::<f64>::ones(3,3);
+    ///
+    /// let b = &a.select_rows(&[2]);
+    /// assert_eq!(b.rows(), 1);
+    /// assert_eq!(b.cols(), 3);
+    ///
+    /// let c = &a.select_rows(&[1,2]);
+    /// assert_eq!(c.rows(), 2);
+    /// assert_eq!(c.cols(), 3);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// - Panics if row indices exceed the matrix dimensions.
+    fn select_rows(&self, rows: &[usize]) -> Matrix<Self::Item> 
+        where Self::Item: Copy
+    {
+
+        let mut mat_vec = Vec::with_capacity(rows.len() * self.cols());
+
+        for row in rows {
+            assert!(*row < self.rows(),
+                    "Row index is greater than number of rows.");
+        }
+
+        for row in rows {
+            unsafe {
+                let slice = self.get_row_unchecked(*row);
+                mat_vec.extend_from_slice(slice);
+            }
+        }
+
+        Matrix {
+            cols: self.cols(),
+            rows: rows.len(),
+            data: mat_vec,
+        }
+    }
+
+    /// Select columns from matrix
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::<f64>::ones(3,3);
+    /// let b = &a.select_cols(&[2]);
+    /// assert_eq!(b.rows(), 3);
+    /// assert_eq!(b.cols(), 1);
+    ///
+    /// let c = &a.select_cols(&[1,2]);
+    /// assert_eq!(c.rows(), 3);
+    /// assert_eq!(c.cols(), 2);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// - Panics if column indices exceed the matrix dimensions.
+    fn select_cols(&self, cols: &[usize]) -> Matrix<Self::Item>
+        where Self::Item: Copy
+    {
+        let mut mat_vec = Vec::with_capacity(cols.len() * self.rows());
+
+        for col in cols {
+            assert!(*col < self.cols(),
+                    "Column index is greater than number of columns.");
+        }
+
+        unsafe {
+            for i in 0..self.rows() {
+                for col in cols {
+                    mat_vec.push(*self.get_unchecked([i, *col]));
+                }
+            }
+        }
+
+        Matrix {
+            cols: cols.len(),
+            rows: self.rows(),
+            data: mat_vec,
+        }
+    }
+
+    /// Select block matrix from matrix
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::<f64>::identity(3);
+    /// let b = &a.select(&[0,1], &[1,2]);
+    ///
+    /// // We get the 2x2 block matrix in the upper right corner.
+    /// assert_eq!(b.rows(), 2);
+    /// assert_eq!(b.cols(), 2);
+    ///
+    /// // Prints [0,0,1,0]
+    /// println!("{:?}", b.data());
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// - Panics if row or column indices exceed the matrix dimensions.
+    fn select(&self, rows: &[usize], cols: &[usize]) -> Matrix<Self::Item>
+        where Self::Item: Copy
+    {
+
+        let mut mat_vec = Vec::with_capacity(cols.len() * rows.len());
+
+        for col in cols {
+            assert!(*col < self.cols(),
+                    "Column index is greater than number of columns.");
+        }
+
+        for row in rows {
+            assert!(*row < self.rows(),
+                    "Row index is greater than number of columns.");
+        }
+
+        unsafe {
+            for row in rows {
+                for col in cols {
+                    mat_vec.push(*self.get_unchecked([*row, *col]));
+                }
+            }
+        }
+
+        Matrix {
+            cols: cols.len(),
+            rows: rows.len(),
+            data: mat_vec,
+        }
+    }
+
+    /// Horizontally concatenates two matrices. With self on the left.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(3,2, vec![1.0,2.0,3.0,4.0,5.0,6.0]);
+    /// let b = Matrix::new(3,1, vec![4.0,5.0,6.0]);
+    ///
+    /// let c = &a.hcat(&b);
+    /// assert_eq!(c.cols(), a.cols() + b.cols());
+    /// assert_eq!(c[[1, 2]], 5.0);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// - Self and m have different row counts.
+    fn hcat<S>(&self, m: &S) -> Matrix<Self::Item>
+        where Self::Item: Copy,
+              S: BaseSlice<Item=Self::Item>,
+    {
+        assert!(self.rows() == m.rows(), "Matrix row counts are not equal.");
+
+        let mut new_data = Vec::with_capacity((self.cols() + m.cols()) * self.rows());
+
+        unsafe {
+            for i in 0..self.rows() {
+                let self_row = self.get_row_unchecked(i);
+                new_data.extend_from_slice(self_row);
+                let m_row = m.get_row_unchecked(i);
+                new_data.extend_from_slice(m_row);
+            }
+        }
+
+        Matrix {
+            cols: (self.cols() + m.cols()),
+            rows: self.rows(),
+            data: new_data,
+        }
+    }
+
+    /// Vertically concatenates two matrices. With self on top.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(2,3, vec![1.0,2.0,3.0,4.0,5.0,6.0]);
+    /// let b = Matrix::new(1,3, vec![4.0,5.0,6.0]);
+    ///
+    /// let c = &a.vcat(&b);
+    /// assert_eq!(c.rows(), a.rows() + b.rows());
+    /// assert_eq!(c[[2, 2]], 6.0);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// - Self and m have different column counts.
+    fn vcat<S>(&self, m: &S) -> Matrix<Self::Item>
+        where Self::Item: Copy,
+              S: BaseSlice<Item=Self::Item>,
+    {
+        assert!(self.cols() == m.cols(), "Matrix column counts are not equal.");
+
+        let mut new_data = Vec::with_capacity((self.rows() + m.rows()) * self.cols());
+
+        unsafe {
+            for i in 0..self.rows() {
+                let row = self.get_row_unchecked(i);
+                new_data.extend_from_slice(row);
+            }
+
+            for i in 0..m.rows() {
+                let row = m.get_row_unchecked(i);
+                new_data.extend_from_slice(row);
+            }
+        }
+
+        Matrix {
+            cols: self.cols(),
+            rows: (self.rows() + m.rows()),
+            data: new_data,
+        }
+    }
+
+    /// Extract the diagonal of the matrix
+    ///
+    /// Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::vector::Vector;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(3,3,vec![1,2,3,4,5,6,7,8,9]);
+    /// let b = Matrix::new(3,2,vec![1,2,3,4,5,6]);
+    /// let c = Matrix::new(2,3,vec![1,2,3,4,5,6]);
+    ///
+    /// let d = &a.diag(); // 1,5,9
+    /// let e = &b.diag(); // 1,4
+    /// let f = &c.diag(); // 1,5
+    ///
+    /// assert_eq!(*d.data(), vec![1,5,9]);
+    /// assert_eq!(*e.data(), vec![1,4]);
+    /// assert_eq!(*f.data(), vec![1,5]);
+    /// ```
+    fn diag(&self) -> Vector<Self::Item>
+        where Self::Item: Copy,
+    {
+        let mat_min = min(self.rows(), self.cols());
+
+        let mut diagonal = Vec::with_capacity(mat_min);
+        unsafe {
+            for i in 0..mat_min {
+                diagonal.push(*self.get_unchecked([i, i]));
+            }
+        }
+        Vector::new(diagonal)
+    }
+
+    /// Tranposes the given matrix
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let mat = Matrix::new(2,3, vec![1.0,2.0,3.0,4.0,5.0,6.0]);
+    ///
+    /// let mt = mat.transpose();
+    /// ```
+    fn transpose(&self) -> Matrix<Self::Item>
+        where Self::Item: Copy,
+    {
+        let mut new_data = Vec::with_capacity(self.rows() * self.cols());
+
+        unsafe {
+            new_data.set_len(self.rows() * self.cols());
+            for i in 0..self.cols() {
+                for j in 0..self.rows() {
+                    *new_data.get_unchecked_mut(i * self.rows() + j) = 
+                        *self.get_unchecked([j, i]);
+                }
+            }
+        }
+
+        Matrix {
+            cols: self.rows(),
+            rows: self.cols(),
+            data: new_data,
+        }
     }
 
     /// Returns the row of a `Matrix` at the given index.
@@ -632,14 +938,14 @@ impl<'a, T> Iterator for $slice_iter<'a, T> {
     type Item = $data_type;
 
     fn next(&mut self) -> Option<Self::Item> {
-// Set the position of the next element
+        // Set the position of the next element
         if self.row_pos < self.slice_rows {
             unsafe {
                 let iter_ptr = self.slice_start.offset((
                                 self.row_pos * self.row_stride + self.col_pos)
                                 as isize);
 
-// If end of row, set to start of next row
+                // If end of row, set to start of next row
                 if self.col_pos == self.slice_cols - 1 {
                     self.row_pos += 1usize;
                     self.col_pos = 0usize;

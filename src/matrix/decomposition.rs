@@ -574,6 +574,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
     ///
     /// ```
     /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
     ///
     /// let a = Matrix::new(3,3,vec![1.,2.,3.,4.,5.,6.,7.,8.,9.]);
     ///
