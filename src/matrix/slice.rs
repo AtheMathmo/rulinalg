@@ -23,7 +23,10 @@ use std::marker::PhantomData;
 use std::mem;
 
 /// Trait for Matrix Slices.
-pub trait BaseSlice<'a, T: 'a> {
+pub trait BaseSlice {
+
+    /// Matrix Item type
+    type Item;
 
     /// Rows in the slice.
     fn rows(&self) -> usize;
@@ -35,10 +38,10 @@ pub trait BaseSlice<'a, T: 'a> {
     fn row_stride(&self) -> usize;
 
     /// Top left index of the slice.
-    fn as_ptr(&self) -> *const T;
+    fn as_ptr(&self) -> *const Self::Item;
 
     /// Get a reference to a point in the slice without bounds checking.
-    unsafe fn get_unchecked(&self, index: [usize; 2]) -> &T {
+    unsafe fn get_unchecked(&self, index: [usize; 2]) -> &Self::Item {
         &*(self.as_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
     }
 
@@ -58,7 +61,7 @@ pub trait BaseSlice<'a, T: 'a> {
     /// assert_eq!(row, Some(&*expected));
     /// assert!(slice.get_row(5).is_none());
     /// ```
-    fn get_row(&self, index: usize) -> Option<&[T]> {
+    fn get_row(&self, index: usize) -> Option<&[Self::Item]> {
         if index < self.rows() {
             unsafe { Some(self.get_row_unchecked(index)) }
         } else {
@@ -80,7 +83,7 @@ pub trait BaseSlice<'a, T: 'a> {
     /// let mut expected = vec![7usize, 8];
     /// assert_eq!(row, &*expected);
     /// ```
-    unsafe fn get_row_unchecked(&self, index: usize) -> &[T] {
+    unsafe fn get_row_unchecked(&self, index: usize) -> &[Self::Item] {
         let ptr = self.as_ptr().offset((self.row_stride() * index) as isize);
         ::std::slice::from_raw_parts(ptr, self.cols())
     }
@@ -100,7 +103,9 @@ pub trait BaseSlice<'a, T: 'a> {
     /// let slice_data = slice.iter().map(|v| *v).collect::<Vec<usize>>();
     /// assert_eq!(slice_data, vec![4,5,7,8]);
     /// ```
-    fn iter(&self) -> SliceIter<'a, T> {
+    fn iter<'a>(&self) -> SliceIter<'a, Self::Item> 
+        where Self::Item: 'a
+    {
         SliceIter {
             slice_start: self.as_ptr(),
             row_pos: 0,
@@ -108,7 +113,7 @@ pub trait BaseSlice<'a, T: 'a> {
             slice_rows: self.rows(),
             slice_cols: self.cols(),
             row_stride: self.row_stride(),
-            _marker: PhantomData::<&'a T>,
+            _marker: PhantomData::<&Self::Item>,
         }
     }
 
@@ -127,27 +132,27 @@ pub trait BaseSlice<'a, T: 'a> {
     ///     println!("{}", row.len());
     /// }
     /// ```
-    fn iter_rows(&self) -> Rows<T> {
+    fn iter_rows(&self) -> Rows<Self::Item> {
         Rows {
             slice_start: self.as_ptr(),
             row_pos: 0,
             slice_rows: self.rows(),
             slice_cols: self.cols(),
             row_stride: self.row_stride() as isize,
-            _marker: PhantomData::<&T>,
+            _marker: PhantomData::<&Self::Item>,
         }
     }
 
 }
 
 /// Trait for Mutable Matrix Slices.
-pub trait BaseSliceMut<'a, T: 'a>: BaseSlice<'a, T> {
+pub trait BaseSliceMut: BaseSlice {
 
     /// Top left index of the slice.
-    fn as_mut_ptr(&mut self) -> *mut T;
+    fn as_mut_ptr(&mut self) -> *mut Self::Item;
 
     /// Get a mutable reference to a point in the matrix without bounds checks.
-    unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut T {
+    unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut Self::Item {
         &mut *(self.as_mut_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
     }
 
@@ -173,7 +178,9 @@ pub trait BaseSliceMut<'a, T: 'a>: BaseSlice<'a, T> {
     /// // Only the matrix slice is updated.
     /// assert_eq!(a.into_vec(), vec![0,1,2,3,6,7,6,9,10]);
     /// ```
-    fn iter_mut(&mut self) -> SliceIterMut<'a, T> {
+    fn iter_mut<'a>(&mut self) -> SliceIterMut<'a, Self::Item> 
+        where Self::Item: 'a,
+    {
         SliceIterMut {
             slice_start: self.as_mut_ptr(),
             row_pos: 0,
@@ -181,7 +188,7 @@ pub trait BaseSliceMut<'a, T: 'a>: BaseSlice<'a, T> {
             slice_rows: self.rows(),
             slice_cols: self.cols(),
             row_stride: self.row_stride(),
-            _marker: PhantomData::<&mut T>,
+            _marker: PhantomData::<&mut Self::Item>,
         }
     }
 
@@ -204,7 +211,7 @@ pub trait BaseSliceMut<'a, T: 'a>: BaseSlice<'a, T> {
     /// }
     /// assert!(slice.get_row_mut(5).is_none());
     /// ```
-    fn get_row_mut(&mut self, index: usize) -> Option<&mut [T]> {
+    fn get_row_mut(&mut self, index: usize) -> Option<&mut [Self::Item]> {
         if index < self.rows() {
             unsafe { Some(self.get_row_unchecked_mut(index)) }
         } else {
@@ -228,7 +235,7 @@ pub trait BaseSliceMut<'a, T: 'a>: BaseSlice<'a, T> {
     /// let mut expected = vec![7usize, 8];
     /// assert_eq!(row, &mut *expected);
     /// ```
-    unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> &mut [T] {
+    unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> &mut [Self::Item] {
         let ptr = self.as_mut_ptr().offset((self.row_stride() * index) as isize);
         ::std::slice::from_raw_parts_mut(ptr, self.cols())
     }
@@ -252,19 +259,22 @@ pub trait BaseSliceMut<'a, T: 'a>: BaseSlice<'a, T> {
     /// // Now contains the range 1..7
     /// println!("{}", a);
     /// ```
-    fn iter_rows_mut(&mut self) -> RowsMut<T> {
+    fn iter_rows_mut(&mut self) -> RowsMut<Self::Item> {
         RowsMut {
             slice_start: self.as_mut_ptr(),
             row_pos: 0,
             slice_rows: self.rows(),
             slice_cols: self.cols(),
             row_stride: self.row_stride() as isize,
-            _marker: PhantomData::<&mut T>,
+            _marker: PhantomData::<&mut Self::Item>,
         }
     }
 }
 
-impl<'a, T: 'a> BaseSlice<'a, T> for Matrix<T> {
+impl<T> BaseSlice for Matrix<T> {
+
+    type Item = T;
+
     fn rows(&self) -> usize {
         self.rows
     }
@@ -282,7 +292,10 @@ impl<'a, T: 'a> BaseSlice<'a, T> for Matrix<T> {
     }
 }
 
-impl<'a, T> BaseSlice<'a, T> for MatrixSlice<'a, T> {
+impl<'a, T> BaseSlice for MatrixSlice<'a, T> {
+
+    type Item = T;
+
     fn rows(&self) -> usize {
         self.rows
     }
@@ -300,7 +313,10 @@ impl<'a, T> BaseSlice<'a, T> for MatrixSlice<'a, T> {
     }
 }
 
-impl<'a, T> BaseSlice<'a, T> for MatrixSliceMut<'a, T> {
+impl<'a, T> BaseSlice for MatrixSliceMut<'a, T> {
+
+    type Item = T;
+
     fn rows(&self) -> usize {
         self.rows
     }
@@ -318,14 +334,14 @@ impl<'a, T> BaseSlice<'a, T> for MatrixSliceMut<'a, T> {
     }
 }
 
-impl<'a, T: 'a> BaseSliceMut<'a, T> for Matrix<T> {
+impl<T> BaseSliceMut for Matrix<T> {
     /// Top left index of the slice.
     fn as_mut_ptr(&mut self) -> *mut T {
         self.data.as_mut_ptr()
     }
 }
 
-impl<'a, T: 'a> BaseSliceMut<'a, T> for MatrixSliceMut<'a, T> {
+impl<'a, T> BaseSliceMut for MatrixSliceMut<'a, T> {
     /// Top left index of the slice.
     fn as_mut_ptr(&mut self) -> *mut T {
         self.ptr
