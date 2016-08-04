@@ -24,15 +24,11 @@ use error::{Error, ErrorKind};
 
 use std::any::Any;
 use std::cmp::min;
-use std::fmt;
 use std::marker::PhantomData;
 use std::mem;
 
 /// Trait for Matrix Slices.
-pub trait BaseSlice: Sized {
-
-    /// Matrix Item type
-    type Item;
+pub trait BaseSlice<T>: Sized {
 
     /// Rows in the slice.
     fn rows(&self) -> usize;
@@ -44,10 +40,10 @@ pub trait BaseSlice: Sized {
     fn row_stride(&self) -> usize;
 
     /// Top left index of the slice.
-    fn as_ptr(&self) -> *const Self::Item;
+    fn as_ptr(&self) -> *const T;
 
     /// Get a reference to a point in the slice without bounds checking.
-    unsafe fn get_unchecked(&self, index: [usize; 2]) -> &Self::Item {
+    unsafe fn get_unchecked(&self, index: [usize; 2]) -> &T {
         &*(self.as_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
     }
 
@@ -67,7 +63,7 @@ pub trait BaseSlice: Sized {
     /// assert_eq!(row, Some(&*expected));
     /// assert!(slice.get_row(5).is_none());
     /// ```
-    fn get_row(&self, index: usize) -> Option<&[Self::Item]> {
+    fn get_row(&self, index: usize) -> Option<&[T]> {
         if index < self.rows() {
             unsafe { Some(self.get_row_unchecked(index)) }
         } else {
@@ -89,7 +85,7 @@ pub trait BaseSlice: Sized {
     /// let mut expected = vec![7usize, 8];
     /// assert_eq!(row, &*expected);
     /// ```
-    unsafe fn get_row_unchecked(&self, index: usize) -> &[Self::Item] {
+    unsafe fn get_row_unchecked(&self, index: usize) -> &[T] {
         let ptr = self.as_ptr().offset((self.row_stride() * index) as isize);
         ::std::slice::from_raw_parts(ptr, self.cols())
     }
@@ -109,8 +105,8 @@ pub trait BaseSlice: Sized {
     /// let slice_data = slice.iter().map(|v| *v).collect::<Vec<usize>>();
     /// assert_eq!(slice_data, vec![4,5,7,8]);
     /// ```
-    fn iter<'a>(&self) -> SliceIter<'a, Self::Item> 
-        where Self::Item: 'a
+    fn iter<'a>(&self) -> SliceIter<'a, T> 
+        where T: 'a
     {
         SliceIter {
             slice_start: self.as_ptr(),
@@ -119,7 +115,7 @@ pub trait BaseSlice: Sized {
             slice_rows: self.rows(),
             slice_cols: self.cols(),
             row_stride: self.row_stride(),
-            _marker: PhantomData::<&Self::Item>,
+            _marker: PhantomData::<&T>,
         }
     }
 
@@ -138,20 +134,20 @@ pub trait BaseSlice: Sized {
     ///     println!("{}", row.len());
     /// }
     /// ```
-    fn iter_rows(&self) -> Rows<Self::Item> {
+    fn iter_rows(&self) -> Rows<T> {
         Rows {
             slice_start: self.as_ptr(),
             row_pos: 0,
             slice_rows: self.rows(),
             slice_cols: self.cols(),
             row_stride: self.row_stride() as isize,
-            _marker: PhantomData::<&Self::Item>,
+            _marker: PhantomData::<&T>,
         }
     }
 
     /// Convert the matrix slice into a new Matrix.
-    fn into_matrix(self) -> Matrix<Self::Item>
-        where Self::Item: Copy
+    fn into_matrix(self) -> Matrix<T>
+        where T: Copy
     {
         self.iter_rows().collect()
     }
@@ -178,8 +174,8 @@ pub trait BaseSlice: Sized {
     /// # Panics
     ///
     /// - Panics if row indices exceed the matrix dimensions.
-    fn select_rows(&self, rows: &[usize]) -> Matrix<Self::Item> 
-        where Self::Item: Copy
+    fn select_rows(&self, rows: &[usize]) -> Matrix<T> 
+        where T: Copy
     {
 
         let mut mat_vec = Vec::with_capacity(rows.len() * self.cols());
@@ -224,8 +220,8 @@ pub trait BaseSlice: Sized {
     /// # Panics
     ///
     /// - Panics if column indices exceed the matrix dimensions.
-    fn select_cols(&self, cols: &[usize]) -> Matrix<Self::Item>
-        where Self::Item: Copy
+    fn select_cols(&self, cols: &[usize]) -> Matrix<T>
+        where T: Copy
     {
         let mut mat_vec = Vec::with_capacity(cols.len() * self.rows());
 
@@ -271,8 +267,8 @@ pub trait BaseSlice: Sized {
     /// # Panics
     ///
     /// - Panics if row or column indices exceed the matrix dimensions.
-    fn select(&self, rows: &[usize], cols: &[usize]) -> Matrix<Self::Item>
-        where Self::Item: Copy
+    fn select(&self, rows: &[usize], cols: &[usize]) -> Matrix<T>
+        where T: Copy
     {
 
         let mut mat_vec = Vec::with_capacity(cols.len() * rows.len());
@@ -321,9 +317,9 @@ pub trait BaseSlice: Sized {
     /// # Panics
     ///
     /// - Self and m have different row counts.
-    fn hcat<S>(&self, m: &S) -> Matrix<Self::Item>
-        where Self::Item: Copy,
-              S: BaseSlice<Item=Self::Item>,
+    fn hcat<S>(&self, m: &S) -> Matrix<T>
+        where T: Copy,
+              S: BaseSlice<T>,
     {
         assert!(self.rows() == m.rows(), "Matrix row counts are not equal.");
 
@@ -364,9 +360,9 @@ pub trait BaseSlice: Sized {
     /// # Panics
     ///
     /// - Self and m have different column counts.
-    fn vcat<S>(&self, m: &S) -> Matrix<Self::Item>
-        where Self::Item: Copy,
-              S: BaseSlice<Item=Self::Item>,
+    fn vcat<S>(&self, m: &S) -> Matrix<T>
+        where T: Copy,
+              S: BaseSlice<T>,
     {
         assert!(self.cols() == m.cols(), "Matrix column counts are not equal.");
 
@@ -412,8 +408,8 @@ pub trait BaseSlice: Sized {
     /// assert_eq!(*e.data(), vec![1,4]);
     /// assert_eq!(*f.data(), vec![1,5]);
     /// ```
-    fn diag(&self) -> Vector<Self::Item>
-        where Self::Item: Copy,
+    fn diag(&self) -> Vector<T>
+        where T: Copy,
     {
         let mat_min = min(self.rows(), self.cols());
 
@@ -438,8 +434,8 @@ pub trait BaseSlice: Sized {
     ///
     /// let mt = mat.transpose();
     /// ```
-    fn transpose(&self) -> Matrix<Self::Item>
-        where Self::Item: Copy,
+    fn transpose(&self) -> Matrix<T>
+        where T: Copy,
     {
         let mut new_data = Vec::with_capacity(self.rows() * self.cols());
 
@@ -479,12 +475,12 @@ pub trait BaseSlice: Sized {
     /// assert_eq!(b_diag, false);
     /// ```
     fn is_diag(&self) -> bool 
-        where Self::Item: Copy + Zero + One + PartialEq,
+        where T: Copy + Zero + One + PartialEq,
     {
         unsafe {
             for i in 0..self.rows() {
                 for j in 0..self.cols() {
-                    if (i != j) && (*self.get_unchecked([i, j]) != Self::Item::zero()) {
+                    if (i != j) && (*self.get_unchecked([i, j]) != T::zero()) {
                         return false;
                     }
                 }
@@ -522,8 +518,8 @@ pub trait BaseSlice: Sized {
     /// # Failures
     ///
     /// Fails if there is no valid solution to the system (matrix is singular).
-    fn solve_u_triangular(&self, y: Vector<Self::Item>) -> Result<Vector<Self::Item>, Error>
-        where Self::Item: Any + Float,
+    fn solve_u_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
+        where T: Any + Float,
     {
         assert!(self.cols() == y.size(),
                 format!("Vector size {0} != {1} Matrix column count.",
@@ -534,7 +530,7 @@ pub trait BaseSlice: Sized {
         for (row_idx, row) in self.iter_rows().enumerate() {
             for i in 0..row_idx {
                 unsafe {
-                    assert!(*row.get_unchecked(i) == Self::Item::zero(),
+                    assert!(*row.get_unchecked(i) == T::zero(),
                             "Matrix is not upper triangular.");
                 }
             }
@@ -544,23 +540,23 @@ pub trait BaseSlice: Sized {
     }
 
     /// Back substitution
-    fn back_substitution(&self, y: Vector<Self::Item>) -> Result<Vector<Self::Item>, Error>
-        where Self::Item: Any + Float,
+    fn back_substitution(&self, y: Vector<T>) -> Result<Vector<T>, Error>
+        where T: Any + Float,
     {
-        let mut x = vec![Self::Item::zero(); y.size()];
+        let mut x = vec![T::zero(); y.size()];
 
         unsafe {
             x[y.size() - 1] = y[y.size() - 1] / *self.get_unchecked([y.size() - 1, y.size() - 1]);
 
             for i in (0..y.size() - 1).rev() {
-                let mut holding_u_sum = Self::Item::zero();
+                let mut holding_u_sum = T::zero();
                 for j in (i + 1..y.size()).rev() {
                     holding_u_sum = holding_u_sum + *self.get_unchecked([i, j]) * x[j];
                 }
 
                 let diag = *self.get_unchecked([i, i]);
-                if diag.abs() < Self::Item::min_positive_value() + 
-                    Self::Item::min_positive_value() 
+                if diag.abs() < T::min_positive_value() + 
+                    T::min_positive_value() 
                 {
                     return Err(Error::new(ErrorKind::AlgebraFailure,
                                           "Linear system cannot be solved (matrix is singular)."));
@@ -602,8 +598,8 @@ pub trait BaseSlice: Sized {
     /// # Failures
     ///
     /// Fails if there is no valid solution to the system (matrix is singular).
-    fn solve_l_triangular(&self, y: Vector<Self::Item>) -> Result<Vector<Self::Item>, Error>
-        where Self::Item: Any + Float,
+    fn solve_l_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
+        where T: Any + Float,
     {
         assert!(self.cols() == y.size(),
                 format!("Vector size {0} != {1} Matrix column count.",
@@ -614,7 +610,7 @@ pub trait BaseSlice: Sized {
         for (row_idx, row) in self.iter_rows().enumerate() {
             for i in row_idx + 1..self.cols() {
                 unsafe {
-                    assert!(*row.get_unchecked(i) == Self::Item::zero(),
+                    assert!(*row.get_unchecked(i) == T::zero(),
                             "Matrix is not lower triangular.");
                 }
             }
@@ -624,22 +620,22 @@ pub trait BaseSlice: Sized {
     }
 
     /// forward substitution
-    fn forward_substitution(&self, y: Vector<Self::Item>) -> Result<Vector<Self::Item>, Error>
-        where Self::Item: Any + Float,
+    fn forward_substitution(&self, y: Vector<T>) -> Result<Vector<T>, Error>
+        where T: Any + Float,
     {
         let mut x = Vec::with_capacity(y.size());
 
         unsafe {
             x.push(y[0] / *self.get_unchecked([0, 0]));
             for (i, y_item) in y.data().iter().enumerate().take(y.size()).skip(1) {
-                let mut holding_l_sum = Self::Item::zero();
+                let mut holding_l_sum = T::zero();
                 for (j, x_item) in x.iter().enumerate().take(i) {
                     holding_l_sum = holding_l_sum + *self.get_unchecked([i, j]) * *x_item;
                 }
 
                 let diag = *self.get_unchecked([i, i]);
 
-                if diag.abs() < Self::Item::min_positive_value() + Self::Item::min_positive_value() {
+                if diag.abs() < T::min_positive_value() + T::min_positive_value() {
                     return Err(Error::new(ErrorKind::AlgebraFailure,
                                           "Linear system cannot be solved (matrix is singular)."));
                 }
@@ -651,11 +647,11 @@ pub trait BaseSlice: Sized {
     }
 
     /// Computes the parity of a permutation matrix.
-    fn parity(&self) -> Self::Item
-        where Self::Item: Any + Float,
+    fn parity(&self) -> T
+        where T: Any + Float,
     {
         let mut visited = vec![false; self.rows()];
-        let mut sgn = Self::Item::one();
+        let mut sgn = T::one();
 
         for k in 0..self.rows() {
             if !visited[k] {
@@ -666,7 +662,7 @@ pub trait BaseSlice: Sized {
                     len += 1;
                     visited[next] = true;
                     next = utils::find(&self.get_row(next).unwrap(),
-                                       Self::Item::one());
+                                       T::one());
                 }
 
                 if len % 2 == 0 {
@@ -680,13 +676,13 @@ pub trait BaseSlice: Sized {
 }
 
 /// Trait for Mutable Matrix Slices.
-pub trait BaseSliceMut: BaseSlice {
+pub trait BaseSliceMut<T>: BaseSlice<T> {
 
     /// Top left index of the slice.
-    fn as_mut_ptr(&mut self) -> *mut Self::Item;
+    fn as_mut_ptr(&mut self) -> *mut T;
 
     /// Get a mutable reference to a point in the matrix without bounds checks.
-    unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut Self::Item {
+    unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut T {
         &mut *(self.as_mut_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
     }
 
@@ -712,8 +708,8 @@ pub trait BaseSliceMut: BaseSlice {
     /// // Only the matrix slice is updated.
     /// assert_eq!(a.into_vec(), vec![0,1,2,3,6,7,6,9,10]);
     /// ```
-    fn iter_mut<'a>(&mut self) -> SliceIterMut<'a, Self::Item> 
-        where Self::Item: 'a,
+    fn iter_mut<'a>(&mut self) -> SliceIterMut<'a, T> 
+        where T: 'a,
     {
         SliceIterMut {
             slice_start: self.as_mut_ptr(),
@@ -722,7 +718,7 @@ pub trait BaseSliceMut: BaseSlice {
             slice_rows: self.rows(),
             slice_cols: self.cols(),
             row_stride: self.row_stride(),
-            _marker: PhantomData::<&mut Self::Item>,
+            _marker: PhantomData::<&mut T>,
         }
     }
 
@@ -745,7 +741,7 @@ pub trait BaseSliceMut: BaseSlice {
     /// }
     /// assert!(slice.get_row_mut(5).is_none());
     /// ```
-    fn get_row_mut(&mut self, index: usize) -> Option<&mut [Self::Item]> {
+    fn get_row_mut(&mut self, index: usize) -> Option<&mut [T]> {
         if index < self.rows() {
             unsafe { Some(self.get_row_unchecked_mut(index)) }
         } else {
@@ -769,7 +765,7 @@ pub trait BaseSliceMut: BaseSlice {
     /// let mut expected = vec![7usize, 8];
     /// assert_eq!(row, &mut *expected);
     /// ```
-    unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> &mut [Self::Item] {
+    unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> &mut [T] {
         let ptr = self.as_mut_ptr().offset((self.row_stride() * index) as isize);
         ::std::slice::from_raw_parts_mut(ptr, self.cols())
     }
@@ -793,61 +789,52 @@ pub trait BaseSliceMut: BaseSlice {
     /// // Now contains the range 1..7
     /// println!("{}", a);
     /// ```
-    fn iter_rows_mut(&mut self) -> RowsMut<Self::Item> {
+    fn iter_rows_mut(&mut self) -> RowsMut<T> {
         RowsMut {
             slice_start: self.as_mut_ptr(),
             row_pos: 0,
             slice_rows: self.rows(),
             slice_cols: self.cols(),
             row_stride: self.row_stride() as isize,
-            _marker: PhantomData::<&mut Self::Item>,
+            _marker: PhantomData::<&mut T>,
         }
     }
 }
 
-impl<T> BaseSlice for Matrix<T> {
-
-    type Item = T;
-
+impl<T> BaseSlice<T> for Matrix<T> {
     fn rows(&self) -> usize { self.rows } 
     fn cols(&self) -> usize { self.cols } 
     fn row_stride(&self) -> usize { self.cols } 
     fn as_ptr(&self) -> *const T { self.data.as_ptr() }
 
-    fn into_matrix(self) -> Matrix<Self::Item>
-        where Self::Item: Copy
+    fn into_matrix(self) -> Matrix<T>
+        where T: Copy
     {
         // for Matrix, this is a no-op
         self
     }
 }
 
-impl<'a, T> BaseSlice for MatrixSlice<'a, T> {
-
-    type Item = T;
-
+impl<'a, T> BaseSlice<T> for MatrixSlice<'a, T> {
     fn rows(&self) -> usize { self.rows } 
     fn cols(&self) -> usize { self.cols } 
     fn row_stride(&self) -> usize { self.row_stride } 
     fn as_ptr(&self) -> *const T { self.ptr }
 }
 
-impl<'a, T> BaseSlice for MatrixSliceMut<'a, T> {
-
-    type Item = T;
-
+impl<'a, T> BaseSlice<T> for MatrixSliceMut<'a, T> {
     fn rows(&self) -> usize { self.rows } 
     fn cols(&self) -> usize { self.cols } 
     fn row_stride(&self) -> usize { self.row_stride } 
     fn as_ptr(&self) -> *const T { self.ptr as *const T }
 }
 
-impl<T> BaseSliceMut for Matrix<T> {
+impl<T> BaseSliceMut<T> for Matrix<T> {
     /// Top left index of the slice.
     fn as_mut_ptr(&mut self) -> *mut T { self.data.as_mut_ptr() }
 }
 
-impl<'a, T> BaseSliceMut for MatrixSliceMut<'a, T> {
+impl<'a, T> BaseSliceMut<T> for MatrixSliceMut<'a, T> {
     /// Top left index of the slice.
     fn as_mut_ptr(&mut self) -> *mut T { self.ptr }
 }
@@ -1124,7 +1111,7 @@ macro_rules! impl_slice_iter (
 impl<'a, T> Iterator for $slice_iter<'a, T> {
     type Item = $data_type;
 
-    fn next(&mut self) -> Option<Self::Item> {
+    fn next(&mut self) -> Option<$data_type> {
         // Set the position of the next element
         if self.row_pos < self.slice_rows {
             unsafe {
