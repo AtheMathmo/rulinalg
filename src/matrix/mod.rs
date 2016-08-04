@@ -647,8 +647,8 @@ impl<T: Any + Float> Matrix<T> {
     pub fn solve(&self, y: Vector<T>) -> Result<Vector<T>, Error> {
         let (l, u, p) = try!(self.lup_decomp());
 
-        let b = try!(l.forward_substitution(p * y));
-        u.back_substitution(b)
+        let b = try!(forward_substitution(&l, p * y));
+        back_substitution(&u, b)
     }
 
     /// Computes the inverse of the matrix.
@@ -701,9 +701,9 @@ impl<T: Any + Float> Matrix<T> {
             let mut id_col = vec![T::zero(); self.cols];
             id_col[i] = T::one();
 
-            let b = l.forward_substitution(&p * Vector::new(id_col))
+            let b = forward_substitution(&l, &p * Vector::new(id_col))
                 .expect("Matrix is singular AND has non-zero determinant!?");
-            inv_t_data.append(&mut u.back_substitution(b)
+            inv_t_data.append(&mut back_substitution(&u, b)
                 .expect("Matrix is singular AND has non-zero determinant!?")
                 .into_vec());
 
@@ -768,7 +768,7 @@ impl<T: Any + Float> Matrix<T> {
                 }
             }
 
-            let sgn = p.parity();
+            let sgn = parity(&p);
 
             sgn * d
         }
@@ -910,6 +910,91 @@ impl<T: fmt::Display> fmt::Display for Matrix<T> {
         }
 
     }
+}
+
+/// Back substitution
+fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
+    where T: Any + Float,
+          M: BaseSlice<T>,
+{
+    let mut x = vec![T::zero(); y.size()];
+
+    unsafe {
+        x[y.size() - 1] = y[y.size() - 1] / *m.get_unchecked([y.size() - 1, y.size() - 1]);
+
+        for i in (0..y.size() - 1).rev() {
+            let mut holding_u_sum = T::zero();
+            for j in (i + 1..y.size()).rev() {
+                holding_u_sum = holding_u_sum + *m.get_unchecked([i, j]) * x[j];
+            }
+
+            let diag = *m.get_unchecked([i, i]);
+            if diag.abs() < T::min_positive_value() + 
+                T::min_positive_value() 
+            {
+                return Err(Error::new(ErrorKind::AlgebraFailure,
+                                      "Linear system cannot be solved (matrix is singular)."));
+            }
+            x[i] = (y[i] - holding_u_sum) / diag;
+        }
+    }
+
+    Ok(Vector::new(x))
+}
+
+/// forward substitution
+fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
+    where T: Any + Float,
+          M: BaseSlice<T>,
+{
+    let mut x = Vec::with_capacity(y.size());
+
+    unsafe {
+        x.push(y[0] / *m.get_unchecked([0, 0]));
+        for (i, y_item) in y.data().iter().enumerate().take(y.size()).skip(1) {
+            let mut holding_l_sum = T::zero();
+            for (j, x_item) in x.iter().enumerate().take(i) {
+                holding_l_sum = holding_l_sum + *m.get_unchecked([i, j]) * *x_item;
+            }
+
+            let diag = *m.get_unchecked([i, i]);
+
+            if diag.abs() < T::min_positive_value() + T::min_positive_value() {
+                return Err(Error::new(ErrorKind::AlgebraFailure,
+                                      "Linear system cannot be solved (matrix is singular)."));
+            }
+            x.push((*y_item - holding_l_sum) / diag);
+        }
+    }
+
+    Ok(Vector::new(x))
+}
+
+/// Computes the parity of a permutation matrix.
+fn parity<T, M>(m: &M) -> T
+    where T: Any + Float,
+          M: BaseSlice<T>,
+{
+    let mut visited = vec![false; m.rows()];
+    let mut sgn = T::one();
+
+    for k in 0..m.rows() {
+        if !visited[k] {
+            let mut next = k;
+            let mut len = 0;
+
+            while !visited[next] {
+                len += 1;
+                visited[next] = true;
+                next = utils::find(&m.get_row(next).unwrap(), T::one());
+            }
+
+            if len % 2 == 0 {
+                sgn = -sgn;
+            }
+        }
+    }
+    sgn
 }
 
 

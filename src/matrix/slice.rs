@@ -17,10 +17,11 @@
 //! ```
 
 use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut};
+use matrix::{back_substitution, forward_substitution};
 use vector::Vector;
 use utils;
 use libnum::{Zero, Float};
-use error::{Error, ErrorKind};
+use error::Error;
 
 use std::any::Any;
 use std::cmp::min;
@@ -518,36 +519,7 @@ pub trait BaseSlice<T>: Sized {
             }
         }
 
-        self.back_substitution(y)
-    }
-
-    /// Back substitution
-    fn back_substitution(&self, y: Vector<T>) -> Result<Vector<T>, Error>
-        where T: Any + Float,
-    {
-        let mut x = vec![T::zero(); y.size()];
-
-        unsafe {
-            x[y.size() - 1] = y[y.size() - 1] / *self.get_unchecked([y.size() - 1, y.size() - 1]);
-
-            for i in (0..y.size() - 1).rev() {
-                let mut holding_u_sum = T::zero();
-                for j in (i + 1..y.size()).rev() {
-                    holding_u_sum = holding_u_sum + *self.get_unchecked([i, j]) * x[j];
-                }
-
-                let diag = *self.get_unchecked([i, i]);
-                if diag.abs() < T::min_positive_value() + 
-                    T::min_positive_value() 
-                {
-                    return Err(Error::new(ErrorKind::AlgebraFailure,
-                                          "Linear system cannot be solved (matrix is singular)."));
-                }
-                x[i] = (y[i] - holding_u_sum) / diag;
-            }
-        }
-
-        Ok(Vector::new(x))
+        back_substitution(self, y)
     }
 
     /// Solves a lower triangular linear system.
@@ -595,63 +567,8 @@ pub trait BaseSlice<T>: Sized {
             }
         }
 
-        self.forward_substitution(y)
+        forward_substitution(self, y)
     }
-
-    /// forward substitution
-    fn forward_substitution(&self, y: Vector<T>) -> Result<Vector<T>, Error>
-        where T: Any + Float,
-    {
-        let mut x = Vec::with_capacity(y.size());
-
-        unsafe {
-            x.push(y[0] / *self.get_unchecked([0, 0]));
-            for (i, y_item) in y.data().iter().enumerate().take(y.size()).skip(1) {
-                let mut holding_l_sum = T::zero();
-                for (j, x_item) in x.iter().enumerate().take(i) {
-                    holding_l_sum = holding_l_sum + *self.get_unchecked([i, j]) * *x_item;
-                }
-
-                let diag = *self.get_unchecked([i, i]);
-
-                if diag.abs() < T::min_positive_value() + T::min_positive_value() {
-                    return Err(Error::new(ErrorKind::AlgebraFailure,
-                                          "Linear system cannot be solved (matrix is singular)."));
-                }
-                x.push((*y_item - holding_l_sum) / diag);
-            }
-        }
-
-        Ok(Vector::new(x))
-    }
-
-    /// Computes the parity of a permutation matrix.
-    fn parity(&self) -> T
-        where T: Any + Float,
-    {
-        let mut visited = vec![false; self.rows()];
-        let mut sgn = T::one();
-
-        for k in 0..self.rows() {
-            if !visited[k] {
-                let mut next = k;
-                let mut len = 0;
-
-                while !visited[next] {
-                    len += 1;
-                    visited[next] = true;
-                    next = utils::find(&self.get_row(next).unwrap(),
-                                       T::one());
-                }
-
-                if len % 2 == 0 {
-                    sgn = -sgn;
-                }
-            }
-        }
-        sgn
-    }
-
 }
 
 /// Trait for Mutable Matrix Slices.
