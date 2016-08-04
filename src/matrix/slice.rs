@@ -220,11 +220,18 @@ pub trait BaseSlice<T>: Sized {
             .fold(T::zero(), |sum, row| sum + utils::unrolled_sum(row))
     }
 
+    /// Creates a new matrix based out of rows
+    fn as_matrix(&self) -> Matrix<T>
+        where T: Copy
+    {
+        self.iter_rows().collect()
+    }
+
     /// Convert the matrix slice into a new Matrix.
     fn into_matrix(self) -> Matrix<T>
         where T: Copy
     {
-        self.iter_rows().collect()
+        self.as_matrix()
     }
 
     /// Select rows from matrix

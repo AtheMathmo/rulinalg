@@ -13,8 +13,9 @@ use error::{Error, ErrorKind};
 use utils;
 use vector::Vector;
 use self::slice::BaseSlice;
+use self::decomposition::Decomposition;
 
-mod decomposition;
+pub mod decomposition;
 mod impl_ops;
 mod mat_mul;
 mod iter;
