@@ -5,7 +5,6 @@
 
 use std::any::Any;
 use std::fmt;
-use std::ops::{Mul, Add, Div};
 use std::marker::PhantomData;
 use libnum::{One, Zero, Float, FromPrimitive};
 
@@ -367,128 +366,6 @@ impl<T: Clone + Zero + One> Matrix<T> {
             rows: size,
             data: data,
         }
-    }
-}
-
-impl<T: Copy + Zero + Add<T, Output = T>> Matrix<T> {
-    /// The sum of the rows of the matrix.
-    ///
-    /// Returns a Vector equal to the sum of the matrices rows.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = a.sum_rows();
-    /// assert_eq!(*c.data(), vec![4.0, 6.0]);
-    /// ```
-    pub fn sum_rows(&self) -> Vector<T> {
-        let mut row_sum = vec![T::zero(); self.cols];
-
-        unsafe {
-            for i in 0..self.rows {
-                for (j, item) in row_sum.iter_mut().enumerate().take(self.cols) {
-                    *item = *item + *self.data.get_unchecked(i * self.cols + j);
-                }
-            }
-        }
-        Vector::new(row_sum)
-    }
-
-    /// The sum of the columns of the matrix.
-    ///
-    /// Returns a Vector equal to the sum of the matrices columns.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = a.sum_cols();
-    /// assert_eq!(*c.data(), vec![3.0, 7.0]);
-    /// ```
-    pub fn sum_cols(&self) -> Vector<T> {
-        let mut col_sum = Vec::with_capacity(self.rows);
-
-        for row in self.iter_rows() {
-            col_sum.push(utils::unrolled_sum(row));
-        }
-        Vector::new(col_sum)
-    }
-
-    /// The sum of all elements in the matrix
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = a.sum();
-    /// assert_eq!(c, 10.0);
-    /// ```
-    pub fn sum(&self) -> T {
-        utils::unrolled_sum(&self.data[..])
-    }
-}
-
-impl<T: Copy + Mul<T, Output = T>> Matrix<T> {
-    /// The elementwise product of two matrices.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    /// let b = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = &a.elemul(&b);
-    /// assert_eq!(*c.data(), vec![1.0, 4.0, 9.0, 16.0]);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - The matrices have different row counts.
-    /// - The matrices have different column counts.
-    pub fn elemul(&self, m: &Matrix<T>) -> Matrix<T> {
-        assert!(self.rows == m.rows, "Matrix row counts not equal.");
-        assert!(self.cols == m.cols, "Matrix column counts not equal.");
-
-        Matrix::new(self.rows, self.cols, utils::ele_mul(&self.data, &m.data))
-    }
-}
-
-impl<T: Copy + Div<T, Output = T>> Matrix<T> {
-    /// The elementwise division of two matrices.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    /// let b = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = &a.elediv(&b);
-    /// assert_eq!(*c.data(), vec![1.0; 4]);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - The matrices have different row counts.
-    /// - The matrices have different column counts.
-    pub fn elediv(&self, m: &Matrix<T>) -> Matrix<T> {
-        assert!(self.rows == m.rows, "Matrix row counts not equal.");
-        assert!(self.cols == m.cols, "Matrix column counts not equal.");
-
-        Matrix::new(self.rows, self.cols, utils::ele_div(&self.data, &m.data))
     }
 }
 

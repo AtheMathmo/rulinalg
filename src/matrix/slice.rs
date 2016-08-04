@@ -27,6 +27,7 @@ use std::any::Any;
 use std::cmp::min;
 use std::marker::PhantomData;
 use std::mem;
+use std::ops::{Add, Mul, Div};
 
 /// Trait for Matrix Slices.
 pub trait BaseSlice<T>: Sized {
@@ -146,6 +147,79 @@ pub trait BaseSlice<T>: Sized {
         }
     }
 
+    /// The sum of the rows of the matrix.
+    ///
+    /// Returns a Vector equal to the sum of the matrices rows.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
+    ///
+    /// let c = a.sum_rows();
+    /// assert_eq!(*c.data(), vec![4.0, 6.0]);
+    /// ```
+    fn sum_rows(&self) -> Vector<T>
+        where T: Copy + Zero + Add<T, Output = T>
+    {
+        let mut row_sum = vec![T::zero(); self.cols()];
+
+        unsafe {
+            for i in 0..self.rows() {
+                for (j, item) in row_sum.iter_mut().enumerate().take(self.cols()) {
+                    *item = *item + *self.get_unchecked([i, j]);
+                }
+            }
+        }
+        Vector::new(row_sum)
+    }
+
+    /// The sum of the columns of the matrix.
+    ///
+    /// Returns a Vector equal to the sum of the matrices columns.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
+    ///
+    /// let c = a.sum_cols();
+    /// assert_eq!(*c.data(), vec![3.0, 7.0]);
+    /// ```
+    fn sum_cols(&self) -> Vector<T>
+        where T: Copy + Zero + Add<T, Output = T>
+    {
+        let mut col_sum = Vec::with_capacity(self.rows());
+        col_sum.extend(self.iter_rows().map(|row| utils::unrolled_sum(row)));
+        Vector::new(col_sum)
+    }
+
+    /// The sum of all elements in the matrix
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
+    ///
+    /// let c = a.sum();
+    /// assert_eq!(c, 10.0);
+    /// ```
+    fn sum(&self) -> T
+        where T: Copy + Zero + Add<T, Output = T>
+    {
+        self.iter_rows()
+            .fold(T::zero(), |sum, row| sum + utils::unrolled_sum(row))
+    }
+
     /// Convert the matrix slice into a new Matrix.
     fn into_matrix(self) -> Matrix<T>
         where T: Copy
@@ -244,6 +318,68 @@ pub trait BaseSlice<T>: Sized {
             rows: self.rows(),
             data: mat_vec,
         }
+    }
+
+    /// The elementwise product of two matrices.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
+    /// let b = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
+    ///
+    /// let c = &a.elemul(&b);
+    /// assert_eq!(*c.data(), vec![1.0, 4.0, 9.0, 16.0]);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// - The matrices have different row counts.
+    /// - The matrices have different column counts.
+    fn elemul<M>(&self, m: &M) -> Matrix<T>
+        where T: Copy + Mul<T, Output = T>,
+              M: BaseSlice<T>,
+    {
+        assert!(self.rows() == m.rows(), "Matrix row counts not equal.");
+        assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
+
+        let mut data = Vec::with_capacity(self.rows() * self.cols());
+        data.extend(self.iter().zip(m.iter()).map(|(self_i, m_i)| *self_i * *m_i));
+        Matrix::new(self.rows(), self.cols(), data)
+    }
+
+    /// The elementwise division of two matrices.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
+    /// let b = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
+    ///
+    /// let c = &a.elediv(&b);
+    /// assert_eq!(*c.data(), vec![1.0; 4]);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// - The matrices have different row counts.
+    /// - The matrices have different column counts.
+    fn elediv<M>(&self, m: &M) -> Matrix<T>
+        where T: Copy + Div<T, Output = T>,
+              M: BaseSlice<T>,
+    {
+        assert!(self.rows() == m.rows(), "Matrix row counts not equal.");
+        assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
+
+        let mut data = Vec::with_capacity(self.rows() * self.cols());
+        data.extend(self.iter().zip(m.iter()).map(|(self_i, m_i)| *self_i / *m_i));
+        Matrix::new(self.rows(), self.cols(), data)
     }
 
     /// Select block matrix from matrix
@@ -767,8 +903,13 @@ impl<T> BaseSlice<T> for Matrix<T> {
     fn into_matrix(self) -> Matrix<T>
         where T: Copy
     {
-        // for Matrix, this is a no-op
-        self
+        self // for Matrix, this is a no-op
+    }
+
+    fn sum(&self) -> T
+        where T: Copy + Zero + Add<T, Output = T>
+    {
+        utils::unrolled_sum(&self.data[..])
     }
 }
 
