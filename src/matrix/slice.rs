@@ -19,7 +19,7 @@
 use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut};
 use vector::Vector;
 use utils;
-use libnum::{One, Zero, Float};
+use libnum::{Zero, Float};
 use error::{Error, ErrorKind};
 
 use std::any::Any;
@@ -325,13 +325,9 @@ pub trait BaseSlice<T>: Sized {
 
         let mut new_data = Vec::with_capacity((self.cols() + m.cols()) * self.rows());
 
-        unsafe {
-            for i in 0..self.rows() {
-                let self_row = self.get_row_unchecked(i);
-                new_data.extend_from_slice(self_row);
-                let m_row = m.get_row_unchecked(i);
-                new_data.extend_from_slice(m_row);
-            }
+        for (self_row, m_row) in self.iter_rows().zip(m.iter_rows()) {
+            new_data.extend_from_slice(self_row);
+            new_data.extend_from_slice(m_row);
         }
 
         Matrix {
@@ -368,16 +364,8 @@ pub trait BaseSlice<T>: Sized {
 
         let mut new_data = Vec::with_capacity((self.rows() + m.rows()) * self.cols());
 
-        unsafe {
-            for i in 0..self.rows() {
-                let row = self.get_row_unchecked(i);
-                new_data.extend_from_slice(row);
-            }
-
-            for i in 0..m.rows() {
-                let row = m.get_row_unchecked(i);
-                new_data.extend_from_slice(row);
-            }
+        for row in self.iter_rows().chain(m.iter_rows()) {
+            new_data.extend_from_slice(row);
         }
 
         Matrix {
@@ -475,18 +463,15 @@ pub trait BaseSlice<T>: Sized {
     /// assert_eq!(b_diag, false);
     /// ```
     fn is_diag(&self) -> bool 
-        where T: Copy + Zero + One + PartialEq,
+        where T: Zero + PartialEq,
     {
-        unsafe {
-            for i in 0..self.rows() {
-                for j in 0..self.cols() {
-                    if (i != j) && (*self.get_unchecked([i, j]) != T::zero()) {
-                        return false;
-                    }
-                }
-            }
-        }
-        true
+        let mut next_diag = 0usize;
+        self.iter().enumerate().all(|(i, data)| if i == next_diag {
+            next_diag += self.cols() + 1;
+            true
+        } else {
+            data == &T::zero()
+        })
     }
 
     /// Solves an upper triangular linear system.
@@ -528,11 +513,8 @@ pub trait BaseSlice<T>: Sized {
 
         // Make sure we are upper triangular.
         for (row_idx, row) in self.iter_rows().enumerate() {
-            for i in 0..row_idx {
-                unsafe {
-                    assert!(*row.get_unchecked(i) == T::zero(),
-                            "Matrix is not upper triangular.");
-                }
+            if row.iter().take(row_idx).any(|data| data != &T::zero()) {
+                panic!("Matrix is not upper triangular");
             }
         }
 
@@ -608,11 +590,8 @@ pub trait BaseSlice<T>: Sized {
 
         // Make sure we are lower triangular.
         for (row_idx, row) in self.iter_rows().enumerate() {
-            for i in row_idx + 1..self.cols() {
-                unsafe {
-                    assert!(*row.get_unchecked(i) == T::zero(),
-                            "Matrix is not lower triangular.");
-                }
+            if row.iter().skip(row_idx + 1).any(|data| data != &T::zero()) {
+                panic!("Matrix is not lower triangular.");
             }
         }
 
