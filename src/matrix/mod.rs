@@ -275,32 +275,6 @@ impl<T: Clone> Clone for Matrix<T> {
     }
 }
 
-impl<T: Copy> Matrix<T> {
-    /// Applies a function to each element in the matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// fn add_two(a: f64) -> f64 {
-    ///     a + 2f64
-    /// }
-    ///
-    /// let a = Matrix::new(2, 2, vec![0.;4]);
-    ///
-    /// let b = a.apply(&add_two);
-    ///
-    /// assert_eq!(*b.data(), vec![2.0; 4]);
-    /// ```
-    pub fn apply(mut self, f: &Fn(T) -> T) -> Matrix<T> {
-        for val in &mut self.data {
-            *val = f(*val);
-        }
-
-        self
-    }
-}
-
 impl<T: Clone + Zero> Matrix<T> {
     /// Constructs matrix of all zeros.
     ///

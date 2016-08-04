@@ -730,6 +730,32 @@ pub trait BaseSliceMut<T>: BaseSlice<T> {
         }
     }
 
+    /// Applies a function to each element in the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSliceMut;
+    /// fn add_two(a: f64) -> f64 {
+    ///     a + 2f64
+    /// }
+    ///
+    /// let a = Matrix::new(2, 2, vec![0.;4]);
+    ///
+    /// let b = a.apply(&add_two);
+    ///
+    /// assert_eq!(*b.data(), vec![2.0; 4]);
+    /// ```
+    fn apply(mut self, f: &Fn(T) -> T) -> Self
+        where T: Copy,
+    {
+        for val in self.iter_mut() {
+            *val = f(*val);
+        }
+        self
+    }
+
 }
 
 impl<T> BaseSlice<T> for Matrix<T> {
