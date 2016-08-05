@@ -1110,13 +1110,6 @@ impl<T> BaseSlice<T> for Matrix<T> {
     }
 }
 
-impl<T> BaseSlice<T> for Vector<T> {
-    fn rows(&self) -> usize { self.size() } 
-    fn cols(&self) -> usize { 1 } 
-    fn row_stride(&self) -> usize { 1 } 
-    fn as_ptr(&self) -> *const T { self.data().as_ptr() }
-}
-
 impl<'a, T> BaseSlice<T> for MatrixSlice<'a, T> {
     fn rows(&self) -> usize { self.rows } 
     fn cols(&self) -> usize { self.cols } 
@@ -1134,11 +1127,6 @@ impl<'a, T> BaseSlice<T> for MatrixSliceMut<'a, T> {
 impl<T> BaseSliceMut<T> for Matrix<T> {
     /// Top left index of the slice.
     fn as_mut_ptr(&mut self) -> *mut T { self.data.as_mut_ptr() }
-}
-
-impl<T> BaseSliceMut<T> for Vector<T> {
-    /// Top left index of the slice.
-    fn as_mut_ptr(&mut self) -> *mut T { self.mut_data().as_mut_ptr() }
 }
 
 impl<'a, T> BaseSliceMut<T> for MatrixSliceMut<'a, T> {
