@@ -6,14 +6,13 @@
 use std::any::Any;
 use std::fmt;
 use std::marker::PhantomData;
-use libnum::{One, Zero, Float, FromPrimitive};
+use libnum::{One, Zero, Float};
 
 use Metric;
 use error::{Error, ErrorKind};
 use utils;
 use vector::Vector;
 use self::slice::BaseSlice;
-use self::decomposition::Decomposition;
 
 pub mod decomposition;
 mod impl_ops;
@@ -370,263 +369,6 @@ impl<T: Clone + Zero + One> Matrix<T> {
     }
 }
 
-impl<T: Float + FromPrimitive> Matrix<T> {
-    /// The mean of the matrix along the specified axis.
-    ///
-    /// Axis Row - Arithmetic mean of rows.
-    /// Axis Col - Arithmetic mean of columns.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, Axes};
-    ///
-    /// let a = Matrix::<f64>::new(2,2, vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = a.mean(Axes::Row);
-    /// assert_eq!(*c.data(), vec![2.0, 3.0]);
-    ///
-    /// let d = a.mean(Axes::Col);
-    /// assert_eq!(*d.data(), vec![1.5, 3.5]);
-    /// ```
-    pub fn mean(&self, axis: Axes) -> Vector<T> {
-        let m: Vector<T>;
-        let n: T;
-        match axis {
-            Axes::Row => {
-                m = self.sum_rows();
-                n = FromPrimitive::from_usize(self.rows).unwrap();
-            }
-            Axes::Col => {
-                m = self.sum_cols();
-                n = FromPrimitive::from_usize(self.cols).unwrap();
-            }
-        }
-        m / n
-    }
-
-    /// The variance of the matrix along the specified axis.
-    ///
-    /// Axis Row - Sample variance of rows.
-    /// Axis Col - Sample variance of columns.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, Axes};
-    ///
-    /// let a = Matrix::<f32>::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = a.variance(Axes::Row);
-    /// assert_eq!(*c.data(), vec![2.0, 2.0]);
-    ///
-    /// let d = a.variance(Axes::Col);
-    /// assert_eq!(*d.data(), vec![0.5, 0.5]);
-    /// ```
-    pub fn variance(&self, axis: Axes) -> Vector<T> {
-        let mean = self.mean(axis);
-
-        let n: usize;
-        let m: usize;
-
-        match axis {
-            Axes::Row => {
-                n = self.rows;
-                m = self.cols;
-            }
-            Axes::Col => {
-                n = self.cols;
-                m = self.rows;
-            }
-        }
-
-        let mut variance = Vector::zeros(m);
-
-        for i in 0..n {
-            let mut t = Vec::<T>::with_capacity(m);
-
-            unsafe {
-                t.set_len(m);
-
-                for j in 0..m {
-                    t[j] = match axis {
-                        Axes::Row => *self.data.get_unchecked(i * m + j),
-                        Axes::Col => *self.data.get_unchecked(j * n + i),
-                    }
-
-                }
-            }
-
-            let v = Vector::new(t);
-
-            variance = variance + &(&v - &mean).elemul(&(&v - &mean));
-        }
-
-        let var_size: T = FromPrimitive::from_usize(n - 1).unwrap();
-        variance / var_size
-    }
-}
-
-impl<T: Any + Float> Matrix<T> {
-
-    /// Solves the equation `Ax = y`.
-    ///
-    /// Requires a Vector `y` as input.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::vector::Vector;
-    ///
-    /// let a = Matrix::new(2,2, vec![2.0,3.0,1.0,2.0]);
-    /// let y = Vector::new(vec![13.0,8.0]);
-    ///
-    /// let x = a.solve(y).unwrap();
-    ///
-    /// assert_eq!(*x.data(), vec![2.0, 3.0]);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - The matrix column count and vector size are different.
-    /// - The matrix is not square.
-    ///
-    /// # Failures
-    ///
-    /// - The matrix cannot be decomposed into an LUP form to solve.
-    /// - There is no valid solution as the matrix is singular.
-    pub fn solve(&self, y: Vector<T>) -> Result<Vector<T>, Error> {
-        let (l, u, p) = try!(self.lup_decomp());
-
-        let b = try!(forward_substitution(&l, p * y));
-        back_substitution(&u, b)
-    }
-
-    /// Computes the inverse of the matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,2, vec![2.,3.,1.,2.]);
-    /// let inv = a.inverse().expect("This matrix should have an inverse!");
-    ///
-    /// let I = a * inv;
-    ///
-    /// assert_eq!(*I.data(), vec![1.0,0.0,0.0,1.0]);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - The matrix is not square.
-    ///
-    /// # Failures
-    ///
-    /// - The matrix could not be LUP decomposed.
-    /// - The matrix has zero determinant.
-    pub fn inverse(&self) -> Result<Matrix<T>, Error> {
-        assert!(self.rows == self.cols, "Matrix is not square.");
-
-        let mut inv_t_data = Vec::<T>::new();
-        let (l, u, p) = try!(self.lup_decomp().map_err(|_| {
-            Error::new(ErrorKind::DecompFailure,
-                       "Could not compute LUP factorization for inverse.")
-        }));
-
-        let mut d = T::one();
-
-        unsafe {
-            for i in 0..l.cols {
-                d = d * *l.get_unchecked([i, i]);
-                d = d * *u.get_unchecked([i, i]);
-            }
-        }
-
-        if d == T::zero() {
-            return Err(Error::new(ErrorKind::DecompFailure,
-                                  "Matrix is singular and cannot be inverted."));
-        }
-
-        for i in 0..self.rows {
-            let mut id_col = vec![T::zero(); self.cols];
-            id_col[i] = T::one();
-
-            let b = forward_substitution(&l, &p * Vector::new(id_col))
-                .expect("Matrix is singular AND has non-zero determinant!?");
-            inv_t_data.append(&mut back_substitution(&u, b)
-                .expect("Matrix is singular AND has non-zero determinant!?")
-                .into_vec());
-
-        }
-
-        Ok(Matrix::new(self.rows, self.cols, inv_t_data).transpose())
-    }
-
-    /// Computes the determinant of the matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(3,3, vec![1.0,2.0,0.0,
-    ///                               0.0,3.0,4.0,
-    ///                               5.0, 1.0, 2.0]);
-    ///
-    /// let det = a.det();
-    ///
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - The matrix is not square.
-    pub fn det(&self) -> T {
-        assert!(self.rows == self.cols, "Matrix is not square.");
-
-        let n = self.cols;
-
-        if self.is_diag() {
-            let mut d = T::one();
-
-            unsafe {
-                for i in 0..n {
-                    d = d * *self.get_unchecked([i, i]);
-                }
-            }
-
-            return d;
-        }
-
-        if n == 2 {
-            (self[[0, 0]] * self[[1, 1]]) - (self[[0, 1]] * self[[1, 0]])
-        } else if n == 3 {
-            (self[[0, 0]] * self[[1, 1]] * self[[2, 2]]) +
-            (self[[0, 1]] * self[[1, 2]] * self[[2, 0]]) +
-            (self[[0, 2]] * self[[1, 0]] * self[[2, 1]]) -
-            (self[[0, 0]] * self[[1, 2]] * self[[2, 1]]) -
-            (self[[0, 1]] * self[[1, 0]] * self[[2, 2]]) -
-            (self[[0, 2]] * self[[1, 1]] * self[[2, 0]])
-        } else {
-            let (l, u, p) = self.lup_decomp().expect("Could not compute LUP decomposition.");
-
-            let mut d = T::one();
-
-            unsafe {
-                for i in 0..l.cols {
-                    d = d * *l.get_unchecked([i, i]);
-                    d = d * *u.get_unchecked([i, i]);
-                }
-            }
-
-            let sgn = parity(&p);
-
-            sgn * d
-        }
-    }
-}
-
 impl<T: Float> Metric<T> for Matrix<T> {
     /// Compute euclidean norm for matrix.
     ///
@@ -849,13 +591,13 @@ fn parity<T, M>(m: &M) -> T
     sgn
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::super::vector::Vector;
     use super::Matrix;
     use super::Axes;
     use super::slice::BaseSlice;
+    use super::decomposition::Decomposition;
     use libnum::abs;
 
     #[test]

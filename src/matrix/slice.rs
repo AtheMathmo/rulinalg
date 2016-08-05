@@ -16,11 +16,11 @@
 //! let new_mat = &mat_slice * &mat_slice;
 //! ```
 
-use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut};
+use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Axes};
 use matrix::{back_substitution, forward_substitution};
 use vector::Vector;
 use utils;
-use libnum::{Zero, Float};
+use libnum::{Zero, Float, FromPrimitive};
 use error::Error;
 
 use std::any::Any;
@@ -218,6 +218,107 @@ pub trait BaseSlice<T>: Sized {
     {
         self.iter_rows()
             .fold(T::zero(), |sum, row| sum + utils::unrolled_sum(row))
+    }
+
+    /// The mean of the matrix along the specified axis.
+    ///
+    /// Axis Row - Arithmetic mean of rows.
+    /// Axis Col - Arithmetic mean of columns.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, Axes};
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::<f64>::new(2,2, vec![1.0,2.0,3.0,4.0]);
+    ///
+    /// let c = a.mean(Axes::Row);
+    /// assert_eq!(*c.data(), vec![2.0, 3.0]);
+    ///
+    /// let d = a.mean(Axes::Col);
+    /// assert_eq!(*d.data(), vec![1.5, 3.5]);
+    /// ```
+    fn mean(&self, axis: Axes) -> Vector<T>
+        where T: Float + FromPrimitive
+    {
+        let m: Vector<T>;
+        let n: T;
+        match axis {
+            Axes::Row => {
+                m = self.sum_rows();
+                n = FromPrimitive::from_usize(self.rows()).unwrap();
+            }
+            Axes::Col => {
+                m = self.sum_cols();
+                n = FromPrimitive::from_usize(self.cols()).unwrap();
+            }
+        }
+        m / n
+    }
+
+    /// The variance of the matrix along the specified axis.
+    ///
+    /// Axis Row - Sample variance of rows.
+    /// Axis Col - Sample variance of columns.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, Axes};
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::<f32>::new(2,2,vec![1.0,2.0,3.0,4.0]);
+    ///
+    /// let c = a.variance(Axes::Row);
+    /// assert_eq!(*c.data(), vec![2.0, 2.0]);
+    ///
+    /// let d = a.variance(Axes::Col);
+    /// assert_eq!(*d.data(), vec![0.5, 0.5]);
+    /// ```
+    fn variance(&self, axis: Axes) -> Vector<T>
+        where T: Float + FromPrimitive
+    {
+        let mean = self.mean(axis);
+
+        let n: usize;
+        let m: usize;
+
+        match axis {
+            Axes::Row => {
+                n = self.rows();
+                m = self.cols();
+            }
+            Axes::Col => {
+                n = self.cols();
+                m = self.rows();
+            }
+        }
+
+        let mut variance = Vector::zeros(m);
+
+        for i in 0..n {
+            let mut t = Vec::<T>::with_capacity(m);
+
+            unsafe {
+                t.set_len(m);
+
+                for j in 0..m {
+                    t[j] = match axis {
+                        Axes::Row => *self.get_unchecked([i, j]),
+                        Axes::Col => *self.get_unchecked([j, i]),
+                    }
+
+                }
+            }
+
+            let v = Vector::new(t);
+
+            variance = variance + &(&v - &mean).elemul(&(&v - &mean));
+        }
+
+        let var_size: T = FromPrimitive::from_usize(n - 1).unwrap();
+        variance / var_size
     }
 
     /// Creates a new matrix based out of rows
