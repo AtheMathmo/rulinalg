@@ -1401,10 +1401,8 @@ impl_slice_iter!(SliceIterMut, &'a mut T);
 
 #[cfg(test)]
 mod tests {
-    use super::BaseSlice;
-    use super::super::MatrixSlice;
-    use super::super::MatrixSliceMut;
-    use super::super::Matrix;
+    use super::{BaseSlice, BaseSliceMut};
+    use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Axes};
 
     #[test]
     #[should_panic]
@@ -1467,5 +1465,128 @@ mod tests {
         let e = d.into_matrix();
         assert_eq!(e.rows(), 2);
         assert_eq!(e.cols(), 2);
+    }
+
+    #[test]
+    fn test_split_matrix() {
+        let a = Matrix::new(3, 3, (0..9).collect::<Vec<_>>());
+
+        let (b, c) = a.split_at(1, Axes::Row);
+
+        assert_eq!(b.rows(), 1);
+        assert_eq!(b.cols(), 3);
+        assert_eq!(c.rows(), 2);
+        assert_eq!(c.cols(), 3);
+
+        assert_eq!(b[[0, 0]], 0);
+        assert_eq!(b[[0, 1]], 1);
+        assert_eq!(b[[0, 2]], 2);
+        assert_eq!(c[[0, 0]], 3);
+        assert_eq!(c[[0, 1]], 4);
+        assert_eq!(c[[0, 2]], 5);
+        assert_eq!(c[[1, 0]], 6);
+        assert_eq!(c[[1, 1]], 7);
+        assert_eq!(c[[1, 2]], 8);
+    }
+
+    #[test]
+    fn test_split_matrix_mut() {
+        let mut a = Matrix::new(3, 3, (0..9).collect::<Vec<_>>());
+
+        {
+            let (mut b, mut c) = a.split_at_mut(1, Axes::Row);
+
+            assert_eq!(b.rows(), 1);
+            assert_eq!(b.cols(), 3);
+            assert_eq!(c.rows(), 2);
+            assert_eq!(c.cols(), 3);
+
+            assert_eq!(b[[0, 0]], 0);
+            assert_eq!(b[[0, 1]], 1);
+            assert_eq!(b[[0, 2]], 2);
+            assert_eq!(c[[0, 0]], 3);
+            assert_eq!(c[[0, 1]], 4);
+            assert_eq!(c[[0, 2]], 5);
+            assert_eq!(c[[1, 0]], 6);
+            assert_eq!(c[[1, 1]], 7);
+            assert_eq!(c[[1, 2]], 8);
+
+            b[[0, 0]] = 4;
+            c[[0, 0]] = 5;
+        }
+
+        assert_eq!(a[[0, 0]], 4);
+        assert_eq!(a[[0, 1]], 1);
+        assert_eq!(a[[0, 2]], 2);
+        assert_eq!(a[[1, 0]], 5);
+        assert_eq!(a[[1, 1]], 4);
+        assert_eq!(a[[1, 2]], 5);
+        assert_eq!(a[[2, 0]], 6);
+        assert_eq!(a[[2, 1]], 7);
+        assert_eq!(a[[2, 2]], 8);
+
+    }
+
+    #[test]
+    fn test_matrix_select_rows() {
+        let a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
+
+        let b = a.select_rows(&[0, 2, 3]);
+
+        assert_eq!(b.into_vec(), vec![0, 1, 4, 5, 6, 7]);
+    }
+
+    #[test]
+    fn test_matrix_select_cols() {
+        let a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
+
+        let b = a.select_cols(&[1]);
+
+        assert_eq!(b.into_vec(), vec![1, 3, 5, 7]);
+    }
+
+    #[test]
+    fn test_matrix_select() {
+        let a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
+
+        let b = a.select(&[0, 2], &[1]);
+
+        assert_eq!(b.into_vec(), vec![1, 5]);
+    }
+
+    #[test]
+    fn matrix_diag() {
+        let a = Matrix::new(3, 3, vec![1., 3., 5., 2., 4., 7., 1., 1., 0.]);
+
+        let b = a.is_diag();
+
+        assert!(!b);
+
+        let c = Matrix::new(3, 3, vec![1., 0., 0., 0., 2., 0., 0., 0., 3.]);
+        let d = c.is_diag();
+
+        assert!(d);
+    }
+
+    #[test]
+    fn transpose_mat() {
+        let a = Matrix::new(5, 2, vec![1., 2., 3., 4., 5., 6., 7., 8., 9., 10.]);
+
+        let c = a.transpose();
+
+        assert_eq!(c.cols(), a.rows());
+        assert_eq!(c.rows(), a.cols());
+
+        assert_eq!(a[[0, 0]], c[[0, 0]]);
+        assert_eq!(a[[1, 0]], c[[0, 1]]);
+        assert_eq!(a[[2, 0]], c[[0, 2]]);
+        assert_eq!(a[[3, 0]], c[[0, 3]]);
+        assert_eq!(a[[4, 0]], c[[0, 4]]);
+        assert_eq!(a[[0, 1]], c[[1, 0]]);
+        assert_eq!(a[[1, 1]], c[[1, 1]]);
+        assert_eq!(a[[2, 1]], c[[1, 2]]);
+        assert_eq!(a[[3, 1]], c[[1, 3]]);
+        assert_eq!(a[[4, 1]], c[[1, 4]]);
+
     }
 }
