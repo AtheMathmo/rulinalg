@@ -813,6 +813,50 @@ pub trait BaseSlice<T>: Sized {
 
         forward_substitution(self, y)
     }
+
+    /// Split the matrix at the specified axis returning two `MatrixSlice`s.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::Axes;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(3,3, vec![2.0; 9]);
+    /// let (b,c) = a.split_at(1, Axes::Row);
+    /// ```
+    fn split_at(&self, mid: usize, axis: Axes) -> (MatrixSlice<T>, MatrixSlice<T>) {
+        let slice_1: MatrixSlice<T>;
+        let slice_2: MatrixSlice<T>;
+
+        match axis {
+            Axes::Row => {
+                assert!(mid < self.rows());
+                unsafe {
+                    slice_1 = MatrixSlice::from_raw_parts(
+                        self.as_ptr(), 
+                        mid, self.cols(), self.row_stride());
+                    slice_2 = MatrixSlice::from_raw_parts(
+                        self.as_ptr().offset((mid * self.row_stride()) as isize),
+                        self.rows() - mid, self.cols(), self.row_stride());
+                }
+            }
+            Axes::Col => {
+                assert!(mid < self.cols());
+                unsafe {
+                    slice_1 = MatrixSlice::from_raw_parts(
+                        self.as_ptr(), 
+                        self.rows(), mid, self.row_stride());
+                    slice_2 = MatrixSlice::from_raw_parts(
+                        self.as_ptr().offset(mid as isize),
+                        self.rows(), self.cols() - mid, self.row_stride());
+                }
+            }
+        }
+
+        (slice_1, slice_2)
+    }
 }
 
 /// Trait for Mutable Matrix Slices.
@@ -1000,6 +1044,51 @@ pub trait BaseSliceMut<T>: BaseSlice<T> {
         self
     }
 
+    /// Split the matrix at the specified axis returning two `MatrixSlice`s.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::Axes;
+    /// use rulinalg::matrix::slice::BaseSliceMut;
+    ///
+    /// let mut a = Matrix::new(3,3, vec![2.0; 9]);
+    /// let (b,c) = a.split_at_mut(1, Axes::Col);
+    /// ```
+    fn split_at_mut(&mut self, mid: usize, axis: Axes) -> 
+        (MatrixSliceMut<T>, MatrixSliceMut<T>) {
+
+        let slice_1: MatrixSliceMut<T>;
+        let slice_2: MatrixSliceMut<T>;
+
+        match axis {
+            Axes::Row => {
+                assert!(mid < self.rows());
+                unsafe {
+                    slice_1 = MatrixSliceMut::from_raw_parts(
+                        self.as_mut_ptr(), 
+                        mid, self.cols(), self.row_stride());
+                    slice_2 = MatrixSliceMut::from_raw_parts(
+                        self.as_mut_ptr().offset((mid * self.row_stride()) as isize),
+                        self.rows() - mid, self.cols(), self.row_stride());
+                }
+            }
+            Axes::Col => {
+                assert!(mid < self.cols());
+                unsafe {
+                    slice_1 = MatrixSliceMut::from_raw_parts(
+                        self.as_mut_ptr(), 
+                        self.rows(), mid, self.row_stride());
+                    slice_2 = MatrixSliceMut::from_raw_parts(
+                        self.as_mut_ptr().offset(mid as isize),
+                        self.rows(), self.cols() - mid, self.row_stride());
+                }
+            }
+        }
+
+        (slice_1, slice_2)
+    }
 }
 
 impl<T> BaseSlice<T> for Matrix<T> {

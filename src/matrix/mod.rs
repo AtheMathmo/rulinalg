@@ -138,99 +138,6 @@ impl<T> Matrix<T> {
         self.data
     }
 
-    /// Split the matrix at the specified axis returning two `MatrixSlice`s.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::Axes;
-    ///
-    /// let a = Matrix::new(3,3, vec![2.0; 9]);
-    /// let (b,c) = a.split_at(1, Axes::Row);
-    /// ```
-    pub fn split_at(&self, mid: usize, axis: Axes) -> (MatrixSlice<T>, MatrixSlice<T>) {
-        let slice_1: MatrixSlice<T>;
-        let slice_2: MatrixSlice<T>;
-
-        match axis {
-            Axes::Row => {
-                assert!(mid < self.rows);
-
-                slice_1 = MatrixSlice::from_matrix(self, [0, 0], mid, self.cols);
-                slice_2 = MatrixSlice::from_matrix(self, [mid, 0], self.rows - mid, self.cols);
-            }
-            Axes::Col => {
-                assert!(mid < self.cols);
-
-                slice_1 = MatrixSlice::from_matrix(self, [0, 0], self.rows, mid);
-                slice_2 = MatrixSlice::from_matrix(self, [0, mid], self.rows, self.cols - mid);
-            }
-        }
-
-        (slice_1, slice_2)
-    }
-
-    /// Split the matrix at the specified axis returning two `MatrixSlice`s.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::Axes;
-    ///
-    /// let mut a = Matrix::new(3,3, vec![2.0; 9]);
-    /// let (b,c) = a.split_at_mut(1, Axes::Col);
-    /// ```
-    pub fn split_at_mut(&mut self,
-                        mid: usize,
-                        axis: Axes)
-                        -> (MatrixSliceMut<T>, MatrixSliceMut<T>) {
-
-        let mat_cols = self.cols;
-        let mat_rows = self.rows;
-
-        let slice_1: MatrixSliceMut<T>;
-        let slice_2: MatrixSliceMut<T>;
-
-        match axis {
-            Axes::Row => {
-                assert!(mid < self.rows);
-
-                unsafe {
-                    slice_1 = MatrixSliceMut::from_raw_parts(self.data.as_mut_ptr(),
-                                                             mid,
-                                                             mat_cols,
-                                                             mat_cols);
-                    slice_2 =
-                        MatrixSliceMut::from_raw_parts(self.data
-                                                           .as_mut_ptr()
-                                                           .offset((mid * mat_cols) as isize),
-                                                       mat_rows - mid,
-                                                       mat_cols,
-                                                       mat_cols);
-                }
-            }
-            Axes::Col => {
-                assert!(mid < self.cols);
-                unsafe {
-                    slice_1 = MatrixSliceMut::from_raw_parts(self.data.as_mut_ptr(),
-                                                             mat_rows,
-                                                             mid,
-                                                             mat_cols);
-                    slice_2 = MatrixSliceMut::from_raw_parts(self.data
-                                                                 .as_mut_ptr()
-                                                                 .offset(mid as isize),
-                                                             mat_rows,
-                                                             mat_cols - mid,
-                                                             mat_cols);
-                }
-            }
-        }
-
-        (slice_1, slice_2)
-    }
-
     /// Returns a `MatrixSlice` over the whole matrix.
     ///
     /// # Examples
@@ -596,7 +503,7 @@ mod tests {
     use super::super::vector::Vector;
     use super::Matrix;
     use super::Axes;
-    use super::slice::BaseSlice;
+    use super::slice::{BaseSlice, BaseSliceMut};
     use super::decomposition::Decomposition;
     use libnum::abs;
 
