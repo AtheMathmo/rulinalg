@@ -15,6 +15,7 @@ use vector::Vector;
 use self::slice::BaseSlice;
 
 pub mod decomposition;
+pub mod invertible;
 mod impl_ops;
 mod mat_mul;
 mod iter;
@@ -500,12 +501,9 @@ fn parity<T, M>(m: &M) -> T
 
 #[cfg(test)]
 mod tests {
-    use super::super::vector::Vector;
     use super::Matrix;
     use super::Axes;
     use super::slice::{BaseSlice, BaseSliceMut};
-    use super::decomposition::Decomposition;
-    use libnum::abs;
 
     #[test]
     fn test_new_mat() {
@@ -690,44 +688,6 @@ mod tests {
         let d = c.is_diag();
 
         assert!(d);
-    }
-
-    #[test]
-    fn matrix_det() {
-        let a = Matrix::new(2, 2, vec![2., 3., 1., 2.]);
-        let b = a.det();
-
-        assert_eq!(b, 1.);
-
-        let c = Matrix::new(3, 3, vec![1., 2., 3., 4., 5., 6., 7., 8., 9.]);
-        let d = c.det();
-
-        assert_eq!(d, 0.);
-
-        let e = Matrix::<f64>::new(5,
-                                   5,
-                                   vec![1., 2., 3., 4., 5., 3., 0., 4., 5., 6., 2., 1., 2., 3.,
-                                        4., 0., 0., 0., 6., 5., 0., 0., 0., 5., 6.]);
-
-        let f = e.det();
-
-        println!("det is {0}", f);
-        let error = abs(f - 99.);
-        assert!(error < 1e-10);
-    }
-
-    #[test]
-    fn matrix_solve() {
-        let a = Matrix::new(2, 2, vec![2., 3., 1., 2.]);
-
-        let y = Vector::new(vec![8., 5.]);
-
-        let x = a.solve(y).unwrap();
-
-        assert_eq!(x.size(), 2);
-
-        assert_eq!(x[0], 1.);
-        assert_eq!(x[1], 2.);
     }
 
     #[test]
