@@ -447,9 +447,8 @@ pub trait BaseSlice<T>: Sized {
     ///
     /// - The matrices have different row counts.
     /// - The matrices have different column counts.
-    fn elemul<M>(&self, m: &M) -> Matrix<T>
+    fn elemul(&self, m: &Self) -> Matrix<T>
         where T: Copy + Mul<T, Output = T>,
-              M: BaseSlice<T>,
     {
         assert!(self.rows() == m.rows(), "Matrix row counts not equal.");
         assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
@@ -480,9 +479,8 @@ pub trait BaseSlice<T>: Sized {
     ///
     /// - The matrices have different row counts.
     /// - The matrices have different column counts.
-    fn elediv<M>(&self, m: &M) -> Matrix<T>
+    fn elediv(&self, m: &Self) -> Matrix<T>
         where T: Copy + Div<T, Output = T>,
-              M: BaseSlice<T>,
     {
         assert!(self.rows() == m.rows(), "Matrix row counts not equal.");
         assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
@@ -1113,6 +1111,25 @@ impl<T> BaseSlice<T> for Matrix<T> {
         utils::unrolled_sum(&self.data[..])
     }
 
+    fn elemul(&self, m: &Self) -> Matrix<T>
+        where T: Copy + Mul<T, Output = T>,
+    {
+        assert!(self.rows() == m.rows(), "Matrix row counts not equal.");
+        assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
+
+        let data = utils::vec_bin_op(self.data(), m.data(), T::mul);
+        Matrix::new(self.rows(), self.cols(), data)
+    }
+
+    fn elediv(&self, m: &Self) -> Matrix<T>
+        where T: Copy + Div<T, Output = T>,
+    {
+        assert!(self.rows() == m.rows(), "Matrix row counts not equal.");
+        assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
+
+        let data = utils::vec_bin_op(self.data(), m.data(), T::div);
+        Matrix::new(self.rows(), self.cols(), data)
+    }
 }
 
 impl<'a, T> BaseSlice<T> for MatrixSlice<'a, T> {
