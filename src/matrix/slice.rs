@@ -455,7 +455,9 @@ pub trait BaseSlice<T>: Sized {
         assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
 
         let mut data = Vec::with_capacity(self.rows() * self.cols());
-        data.extend(self.iter().zip(m.iter()).map(|(self_i, m_i)| *self_i * *m_i));
+        for (self_r, m_r) in self.iter_rows().zip(m.iter_rows()) {
+            data.extend_from_slice(&utils::vec_bin_op(self_r, m_r, T::mul));
+        }
         Matrix::new(self.rows(), self.cols(), data)
     }
 
@@ -486,7 +488,9 @@ pub trait BaseSlice<T>: Sized {
         assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
 
         let mut data = Vec::with_capacity(self.rows() * self.cols());
-        data.extend(self.iter().zip(m.iter()).map(|(self_i, m_i)| *self_i / *m_i));
+        for (self_r, m_r) in self.iter_rows().zip(m.iter_rows()) {
+            data.extend_from_slice(&utils::vec_bin_op(self_r, m_r, T::div));
+        }
         Matrix::new(self.rows(), self.cols(), data)
     }
 
@@ -1108,6 +1112,7 @@ impl<T> BaseSlice<T> for Matrix<T> {
     {
         utils::unrolled_sum(&self.data[..])
     }
+
 }
 
 impl<'a, T> BaseSlice<T> for MatrixSlice<'a, T> {

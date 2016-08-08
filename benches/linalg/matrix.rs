@@ -65,6 +65,39 @@ fn mat_mul_128_1000(b: &mut Bencher) {
 }
 
 #[bench]
+fn mat_elemul_63_1000(b: &mut Bencher) {
+
+    let a = Matrix::new(63, 1000, vec![2f32; 63000]);
+    let c = Matrix::new(63, 1000, vec![3f32; 63000]);
+
+    b.iter(|| a.elemul(&c))
+}
+
+
+#[bench]
+fn mat_mat_elemul_63_1000(b: &mut Bencher) {
+
+    use rulinalg::utils;
+    use std::ops::Mul;
+
+    let a = Matrix::new(63, 1000, vec![2f32; 63000]);
+    let c = Matrix::new(63, 1000, vec![3f32; 63000]);
+
+    b.iter(|| {
+        utils::vec_bin_op(a.data(), c.data(), f32::mul)
+    })
+}
+
+#[bench]
+fn mat_elediv_63_1000(b: &mut Bencher) {
+
+    let a = Matrix::new(63, 1000, vec![2f32; 63000]);
+    let c = Matrix::new(63, 1000, vec![3f32; 63000]);
+
+    b.iter(|| a.elediv(&c))
+}
+
+#[bench]
 fn mat_sum_rows_and_cols_128_100(b: &mut Bencher) {
 
     let v = (0..100).collect::<Vec<_>>();
