@@ -138,37 +138,6 @@ impl<T> Matrix<T> {
     pub fn into_vec(self) -> Vec<T> {
         self.data
     }
-
-    /// Returns a `MatrixSlice` over the whole matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(3, 3, vec![2.0; 9]);
-    /// let b = a.as_slice();
-    /// ```
-    pub fn as_slice(&self) -> MatrixSlice<T> {
-        MatrixSlice::from_matrix(self, [0, 0], self.rows, self.cols)
-    }
-
-    /// Returns a mutable `MatrixSlice` over the whole matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let mut a = Matrix::new(3, 3, vec![2.0; 9]);
-    /// let b = a.as_mut_slice();
-    /// ```
-    pub fn as_mut_slice(&mut self) -> MatrixSliceMut<T> {
-        let rows = self.rows;
-        let cols = self.cols;
-        MatrixSliceMut::from_matrix(self, [0, 0], rows, cols)
-    }
-
 }
 
 impl<T: Clone> Clone for Matrix<T> {

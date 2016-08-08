@@ -44,6 +44,23 @@ pub trait BaseSlice<T>: Sized {
     /// Top left index of the slice.
     fn as_ptr(&self) -> *const T;
 
+    /// Returns a `MatrixSlice` over the whole matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(3, 3, vec![2.0; 9]);
+    /// let b = a.as_slice();
+    /// ```
+    fn as_slice(&self) -> MatrixSlice<T> {
+        unsafe {
+            MatrixSlice::from_raw_parts(self.as_ptr(), self.rows(), self.cols(), self.row_stride())
+        }
+    }
+
     /// Get a reference to a point in the slice without bounds checking.
     unsafe fn get_unchecked(&self, index: [usize; 2]) -> &T {
         &*(self.as_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
@@ -867,6 +884,23 @@ pub trait BaseSliceMut<T>: BaseSlice<T> {
     /// Top left index of the slice.
     fn as_mut_ptr(&mut self) -> *mut T;
 
+    /// Returns a `MatrixSliceMut` over the whole matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::slice::BaseSliceMut;
+    ///
+    /// let mut a = Matrix::new(3, 3, vec![2.0; 9]);
+    /// let b = a.as_mut_slice();
+    /// ```
+    fn as_mut_slice(&mut self) -> MatrixSliceMut<T> {
+        unsafe {
+            MatrixSliceMut::from_raw_parts(self.as_mut_ptr(), self.rows(), self.cols(), self.row_stride())
+        }
+    }
+
     /// Get a mutable reference to a point in the matrix without bounds checks.
     unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut T {
         &mut *(self.as_mut_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
@@ -992,7 +1026,7 @@ pub trait BaseSliceMut<T>: BaseSlice<T> {
     ///
     /// ```
     /// use rulinalg::matrix::{Matrix, MatrixSliceMut};
-    /// use rulinalg::matrix::slice::BaseSliceMut;
+    /// use rulinalg::matrix::slice::{BaseSlice, BaseSliceMut};
     ///
     /// let mut mat = Matrix::<f32>::zeros(4,4);
     /// let one_block = Matrix::<f32>::ones(2,2);
