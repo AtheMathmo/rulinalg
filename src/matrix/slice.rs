@@ -876,6 +876,32 @@ pub trait BaseSlice<T>: Sized {
 
         (slice_1, slice_2)
     }
+
+    /// Produce a matrix slice from an existing matrix slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, MatrixSlice};
+    /// use rulinalg::matrix::slice::BaseSlice;
+    ///
+    /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
+    /// let new_slice = slice.sub_slice([0,0], 1, 1);
+    /// ```
+    fn sub_slice<'a>(&self, start: [usize; 2], rows: usize, cols: usize) -> MatrixSlice<'a, T> 
+        where T: 'a
+    {
+        assert!(start[0] + rows <= self.rows(),
+                "View dimensions exceed matrix dimensions.");
+        assert!(start[1] + cols <= self.cols(),
+                "View dimensions exceed matrix dimensions.");
+
+        unsafe {
+            MatrixSlice::from_raw_parts(self.as_ptr().offset((start[0] * self.cols() + start[1]) as isize),
+                                        rows, cols, self.row_stride())
+        }
+    }
 }
 
 /// Trait for Mutable Matrix Slices.
@@ -1125,6 +1151,32 @@ pub trait BaseSliceMut<T>: BaseSlice<T> {
 
         (slice_1, slice_2)
     }
+
+    /// Produce a matrix slice from an existing matrix slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, MatrixSliceMut};
+    /// use rulinalg::matrix::slice::BaseSliceMut;
+    ///
+    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
+    /// let new_slice = slice.sub_slice_mut([0,0], 1, 1);
+    /// ```
+    fn sub_slice_mut<'a>(&mut self, start: [usize; 2], rows: usize, cols: usize) -> MatrixSliceMut<'a, T>
+        where T: 'a
+    {
+        assert!(start[0] + rows <= self.rows(),
+                "View dimensions exceed matrix dimensions.");
+        assert!(start[1] + cols <= self.cols(),
+                "View dimensions exceed matrix dimensions.");
+
+        unsafe {
+            MatrixSliceMut::from_raw_parts(self.as_mut_ptr().offset((start[0] * self.cols() + start[1]) as isize),
+                                           rows, cols, self.row_stride())
+        }
+    }
 }
 
 impl<T> BaseSlice<T> for Matrix<T> {
@@ -1265,28 +1317,15 @@ impl<'a, T> MatrixSlice<'a, T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSlice;
+    /// use rulinalg::matrix::{Matrix, MatrixSlice};
     ///
     /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
     /// let new_slice = slice.reslice([0,0], 1, 1);
     /// ```
-    pub fn reslice(mut self, start: [usize; 2], rows: usize, cols: usize) -> MatrixSlice<'a, T> {
-        assert!(start[0] + rows <= self.rows,
-                "View dimensions exceed matrix dimensions.");
-        assert!(start[1] + cols <= self.cols,
-                "View dimensions exceed matrix dimensions.");
-
-        unsafe {
-            self.ptr = self.ptr.offset((start[0] * self.cols + start[1]) as isize);
-        }
-        self.rows = rows;
-        self.cols = cols;
-
-        self
+    pub fn reslice(self, start: [usize; 2], rows: usize, cols: usize) -> MatrixSlice<'a, T> {
+        self.sub_slice(start, rows, cols)
     }
-
 }
 
 impl<'a, T> MatrixSliceMut<'a, T> {
@@ -1375,18 +1414,7 @@ impl<'a, T> MatrixSliceMut<'a, T> {
     /// let new_slice = slice.reslice([0,0], 1, 1);
     /// ```
     pub fn reslice(mut self, start: [usize; 2], rows: usize, cols: usize) -> MatrixSliceMut<'a, T> {
-        assert!(start[0] + rows <= self.rows,
-                "View dimensions exceed matrix dimensions.");
-        assert!(start[1] + cols <= self.cols,
-                "View dimensions exceed matrix dimensions.");
-
-        unsafe {
-            self.ptr = self.ptr.offset((start[0] * self.cols + start[1]) as isize);
-        }
-        self.rows = rows;
-        self.cols = cols;
-
-        self
+        self.sub_slice_mut(start, rows, cols)
     }
 }
 
