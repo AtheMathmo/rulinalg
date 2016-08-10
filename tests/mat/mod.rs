@@ -1,6 +1,5 @@
 use rulinalg::matrix::Matrix;
 use rulinalg::matrix::slice::BaseSlice;
-use rulinalg::matrix::decomposition::Decomposition;
 
 #[test]
 fn matrix_lup_decomp() {
