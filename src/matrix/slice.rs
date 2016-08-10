@@ -790,7 +790,7 @@ pub trait BaseMatrix<T>: Sized {
                 "View dimensions exceed matrix dimensions.");
 
         unsafe {
-            MatrixSlice::from_raw_parts(self.as_ptr().offset((start[0] * self.cols() + start[1]) as isize),
+            MatrixSlice::from_raw_parts(self.as_ptr().offset((start[0] * self.row_stride() + start[1]) as isize),
                                         rows, cols, self.row_stride())
         }
     }
@@ -1065,7 +1065,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
                 "View dimensions exceed matrix dimensions.");
 
         unsafe {
-            MatrixSliceMut::from_raw_parts(self.as_mut_ptr().offset((start[0] * self.cols() + start[1]) as isize),
+            MatrixSliceMut::from_raw_parts(self.as_mut_ptr().offset((start[0] * self.row_stride() + start[1]) as isize),
                                            rows, cols, self.row_stride())
         }
     }
@@ -1424,6 +1424,27 @@ mod tests {
         assert_eq!(c[[0, 1]], 7);
         assert_eq!(c[[1, 0]], 10);
         assert_eq!(c[[1, 1]], 11);
+    }
+
+    #[test]
+    fn test_sub_slice() {
+
+        let mut a = Matrix::new(4, 4, (0..16).collect::<Vec<_>>());
+        {
+            let slice = a.sub_slice([1, 1], 3, 2);
+            assert_eq!(&slice.iter().cloned().collect::<Vec<_>>(), &vec![5, 6, 9, 10, 13, 14]);
+
+            let slice = slice.sub_slice([1, 1], 2, 1);
+            assert_eq!(&slice.iter().cloned().collect::<Vec<_>>(), &vec![10, 14]);
+        }
+        {
+            let mut slice_mut = a.sub_slice_mut([3, 1], 1, 1);
+            unsafe {
+                *slice_mut.get_unchecked_mut([0, 0]) = 25;
+                assert_eq!(*a.get_unchecked([3, 1]), 25);
+            }
+        }
+
     }
 
     #[test]
