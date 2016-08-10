@@ -2,7 +2,7 @@ use std::iter::{ExactSizeIterator, FromIterator};
 use std::slice;
 
 use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut};
-use super::slice::{BaseSlice, BaseSliceMut, SliceIter, SliceIterMut};
+use super::slice::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
 
 macro_rules! impl_iter_rows (
     ($rows:ident, $row_type:ty, $slice_from_parts:ident) => (
@@ -87,7 +87,7 @@ impl<'a, T> ExactSizeIterator for RowsMut<'a, T> {}
 ///
 /// ```
 /// use rulinalg::matrix::Matrix;
-/// use rulinalg::matrix::slice::BaseSlice;
+/// use rulinalg::matrix::slice::BaseMatrix;
 ///
 /// let a : Matrix<f64> = vec![4f64; 16].chunks(4).collect();
 ///
@@ -99,7 +99,7 @@ impl<'a, T> ExactSizeIterator for RowsMut<'a, T> {}
 ///
 /// ```
 /// use rulinalg::matrix::Matrix;
-/// use rulinalg::matrix::slice::BaseSlice;
+/// use rulinalg::matrix::slice::BaseMatrix;
 ///
 /// let a = Matrix::new(4,2, (0..8).collect::<Vec<usize>>());
 ///
@@ -214,7 +214,7 @@ impl<'a, T> IntoIterator for &'a mut MatrixSliceMut<'a, T> {
 mod tests {
 
     use super::super::{Matrix, MatrixSlice, MatrixSliceMut};
-    use super::super::slice::{BaseSlice, BaseSliceMut};
+    use super::super::slice::{BaseMatrix, BaseMatrixMut};
 
     #[test]
     fn test_matrix_rows() {

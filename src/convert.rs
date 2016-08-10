@@ -6,7 +6,7 @@
 use std::convert::From;
 
 use super::matrix::{Matrix, MatrixSlice, MatrixSliceMut};
-use super::matrix::slice::BaseSlice;
+use super::matrix::slice::BaseMatrix;
 use super::vector::Vector;
 
 
@@ -33,7 +33,7 @@ impl_matrix_from!(MatrixSliceMut);
 #[cfg(test)]
 mod tests {
     use matrix::{Matrix, MatrixSlice, MatrixSliceMut};
-    use matrix::slice::BaseSlice;
+    use matrix::slice::BaseMatrix;
     use vector::Vector;
 
     #[test]

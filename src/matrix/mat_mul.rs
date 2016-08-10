@@ -1,5 +1,5 @@
 use super::{Matrix, MatrixSlice, MatrixSliceMut};
-use super::slice::BaseSlice;
+use super::slice::BaseMatrix;
 
 use std::any::{Any, TypeId};
 use std::ops::{Add, Mul};
@@ -289,7 +289,7 @@ mod tests {
     use super::super::Matrix;
     use super::super::MatrixSlice;
     use super::super::MatrixSliceMut;
-    use matrix::slice::BaseSlice;
+    use matrix::slice::BaseMatrix;
 
     #[test]
     fn matrix_mul_f32() {

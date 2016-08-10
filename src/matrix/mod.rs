@@ -12,7 +12,7 @@ use Metric;
 use error::{Error, ErrorKind};
 use utils;
 use vector::Vector;
-use self::slice::BaseSlice;
+use self::slice::BaseMatrix;
 
 mod decomposition;
 mod impl_ops;
@@ -100,7 +100,7 @@ impl<T> Matrix<T> {
     ///
     /// ```
     /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseSlice;
+    /// use rulinalg::matrix::slice::BaseMatrix;
     ///
     /// let mat = Matrix::new(2,2, vec![1.0,2.0,3.0,4.0]);
     ///
@@ -642,7 +642,7 @@ impl<T: fmt::Display> fmt::Display for Matrix<T> {
 /// Back substitution
 fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     where T: Any + Float,
-          M: BaseSlice<T>,
+          M: BaseMatrix<T>,
 {
     let mut x = vec![T::zero(); y.size()];
 
@@ -672,7 +672,7 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
 /// forward substitution
 fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     where T: Any + Float,
-          M: BaseSlice<T>,
+          M: BaseMatrix<T>,
 {
     let mut x = Vec::with_capacity(y.size());
 
@@ -700,7 +700,7 @@ fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
 /// Computes the parity of a permutation matrix.
 fn parity<T, M>(m: &M) -> T
     where T: Any + Float,
-          M: BaseSlice<T>,
+          M: BaseMatrix<T>,
 {
     let mut visited = vec![false; m.rows()];
     let mut sgn = T::one();
@@ -729,7 +729,7 @@ fn parity<T, M>(m: &M) -> T
 mod tests {
     use super::super::vector::Vector;
     use super::Matrix;
-    use super::slice::BaseSlice;
+    use super::slice::BaseMatrix;
     use libnum::abs;
 
     #[test]
