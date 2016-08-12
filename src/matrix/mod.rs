@@ -19,6 +19,7 @@ mod decomposition;
 mod impl_ops;
 mod mat_mul;
 mod iter;
+mod transpose;
 pub mod slice;
 
 /// Matrix dimensions
