@@ -5,4 +5,5 @@ extern crate test;
 
 mod linalg {
 	mod matrix;
+	mod transpose;
 }

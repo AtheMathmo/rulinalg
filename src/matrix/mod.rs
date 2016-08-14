@@ -660,9 +660,11 @@ impl<T: Copy> Matrix<T> {
             new_data.set_len(self.rows * self.cols);
         }
 
-        for i in 0..self.cols {
-            for j in 0..self.rows {
-                new_data[i * self.rows + j] = self.data[j * self.cols + i];
+        unsafe {
+            for i in 0..self.cols {
+                for j in 0..self.rows {
+                    *new_data.get_unchecked_mut(i * self.rows + j) = *self.get_unchecked([j, i]);
+                }
             }
         }
 
