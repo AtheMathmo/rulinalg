@@ -1,5 +1,4 @@
 //! Transposing
-#![allow(dead_code)]
 
 use super::Matrix;
 use std::cmp;
@@ -120,16 +119,6 @@ fn gather_rot_col(i: usize, x: u32, red_m: &ReducedDivisor) -> usize {
     red_m.modulus(i as u32 + x) as usize
 }
 
-// #[inline(always)]
-// fn gather_rot_col(i: usize, j: usize, b: usize, rows: usize) -> usize {
-//     (i + j / b) % rows
-// }
-
-#[inline(always)]
-fn scatter_row(i: usize, j: usize, b: usize, rows: usize, cols: usize) -> usize {
-    ((i + j / b) % rows + j * rows) % cols
-}
-
 #[inline(always)]
 fn f_helper(i: usize,
             j: usize,
@@ -217,8 +206,6 @@ impl<T: Copy> Matrix<T> {
                 for j in 0..n {
                     let x = red_b.div(j as u32);
                     for i in 0..m {
-                        // *tmp.get_unchecked_mut(i) =
-                        //     *self.get_unchecked([gather_rot_col(i, j, b, m), j]);
                         *tmp.get_unchecked_mut(i) =
                             *self.get_unchecked([gather_rot_col(i, x, &red_m), j]);
                     }
@@ -231,8 +218,6 @@ impl<T: Copy> Matrix<T> {
 
             for i in 0..m {
                 for j in 0..n {
-                    // *tmp.get_unchecked_mut(scatter_row(i, j, b, m, n)) =
-                    //     *self.get_unchecked([i, j]);
                     *tmp.get_unchecked_mut(j) =
                         *self.get_unchecked([i, d_inverse(i, j, b, a_inv, m, n, c, &red_b, &red_c)]);
                 }
