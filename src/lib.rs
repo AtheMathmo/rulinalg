@@ -59,9 +59,12 @@
 
 #![deny(missing_docs)]
 #![warn(missing_debug_implementations)]
+#![feature(asm)]
 
 extern crate num as libnum;
 extern crate matrixmultiply;
+#[cfg(target_pointer_width = "64")]
+extern crate extprim;
 
 pub mod matrix;
 pub mod convert;

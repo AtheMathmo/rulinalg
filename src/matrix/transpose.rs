@@ -4,15 +4,29 @@ use super::Matrix;
 use std::cmp;
 use utils;
 
+#[cfg(target_pointer_width = "64")]
+use extprim::u128::u128;
+
 struct ReducedDivisor {
-    _mul_coeff: u32,
-    _shift_coeff: u32,
-    y: u32,
+    _mul_coeff: usize,
+    _shift_coeff: usize,
+    y: usize,
 }
 
 impl ReducedDivisor {
-    fn find_log_2(x: i32) -> u32 {
-        let a = 31 - x.leading_zeros();
+    #[cfg(target_pointer_width = "32")]
+    fn find_log_2(x: usize) -> usize {
+        let a = 31 - x.leading_zeros() as usize;
+        if !a.is_power_of_two() {
+            (a + 1)
+        } else {
+            a
+        }
+    }
+
+    #[cfg(target_pointer_width = "64")]
+    fn find_log_2(x: usize) -> usize {
+        let a = 63 - x.leading_zeros() as usize;
         if !a.is_power_of_two() {
             a + 1
         } else {
@@ -20,20 +34,58 @@ impl ReducedDivisor {
         }
     }
 
-    fn find_divisor(denom: u32) -> Result<(u32, u32), &'static str> {
+    #[cfg(target_pointer_width = "32")]
+    #[inline(always)]
+    fn umulhi(x: usize, y: usize) -> usize {
+        ((x as u64 * y as u64) >> 32) as usize
+    }
+
+    #[cfg(target_pointer_width = "64")]
+    #[inline(always)]
+    fn umulhi(x: usize, y: usize) -> usize {
+        let hi: u64;
+        unsafe {
+            asm!("
+                movq $1, %rax
+                mulq $2
+                movq %rdx, $0
+            "
+            : "=r"(hi)
+            : "r"(x), "r"(y)
+            : "rax", "rdx");
+        }
+        hi as usize
+    }
+
+    #[cfg(target_pointer_width = "32")]
+    fn find_divisor(denom: usize) -> Result<(usize, usize), &'static str> {
         if denom == 0 {
             Err("Cannot find reduced divisor for 0")
         } else if denom == 1 {
             Ok((0, 0))
         } else {
-            let p = 31 + ReducedDivisor::find_log_2(denom as i32);
+            let p = 31 + ReducedDivisor::find_log_2(denom);
             let m = ((1u64 << p) + denom as u64 - 1) / denom as u64;
 
-            Ok((m as u32, p - 32))
+            Ok((m as usize, p - 32))
         }
     }
 
-    pub fn new(y: u32) -> Result<ReducedDivisor, &'static str> {
+    #[cfg(target_pointer_width = "64")]
+    fn find_divisor(denom: usize) -> Result<(usize, usize), &'static str> {
+        if denom == 0 {
+            Err("Cannot find reduced divisor for 0")
+        } else if denom == 1 {
+            Ok((0, 0))
+        } else {
+            let p = 63 + ReducedDivisor::find_log_2(denom);
+
+            let m = ((u128::new(1u64) << p) + u128::new((denom - 1) as u64)) / u128::new(denom as u64);
+            Ok((m.low64() as usize, p - 64))
+        }
+    }
+
+    pub fn new(y: usize) -> Result<ReducedDivisor, &'static str> {
         let (m, s) = try!(ReducedDivisor::find_divisor(y));
         Ok(ReducedDivisor {
             _mul_coeff: m,
@@ -43,16 +95,16 @@ impl ReducedDivisor {
     }
 
     #[inline(always)]
-    pub fn div(&self, x: u32) -> u32 {
+    pub fn div(&self, x: usize) -> usize {
         if self._mul_coeff == 0 {
             x
         } else {
-            ((x as u64 * self._mul_coeff as u64) >> 32) as u32 >> self._shift_coeff
+            ReducedDivisor::umulhi(x, self._mul_coeff) >> self._shift_coeff
         }
     }
 
     #[inline(always)]
-    pub fn modulus(&self, x: u32) -> u32 {
+    pub fn modulus(&self, x: usize) -> usize {
         if self._mul_coeff == 0 {
             0
         } else {
@@ -61,7 +113,7 @@ impl ReducedDivisor {
     }
 
     #[inline(always)]
-    pub fn divmod(&self, x: u32) -> (u32, u32) {
+    pub fn divmod(&self, x: usize) -> (usize, usize) {
         if self.y == 1 {
             (x, 0)
         } else {
@@ -115,8 +167,8 @@ fn mmi(a: usize, n: usize) -> Result<usize, &'static str> {
 }
 
 #[inline(always)]
-fn gather_rot_col(i: usize, x: u32, red_m: &ReducedDivisor) -> usize {
-    red_m.modulus(i as u32 + x) as usize
+fn gather_rot_col(i: usize, x: usize, red_m: &ReducedDivisor) -> usize {
+    red_m.modulus(i + x)
 }
 
 #[inline(always)]
@@ -127,7 +179,7 @@ fn f_helper(i: usize,
             c: usize,
             red_c: &ReducedDivisor)
             -> usize {
-    if (i + c) as u32 - red_c.modulus(j as u32) <= rows as u32 {
+    if (i + c) - red_c.modulus(j) <= rows {
         j + i * (cols - 1)
     } else {
         j + i * (cols - 1) + rows
@@ -145,9 +197,9 @@ fn d_inverse(i: usize,
              red_b: &ReducedDivisor,
              red_c: &ReducedDivisor)
              -> usize {
-    let f_ij = f_helper(i, j, rows, cols, c, red_c) as u32;
+    let f_ij = f_helper(i, j, rows, cols, c, red_c);
     let (f_ij_div, f_ij_mod) = red_c.divmod(f_ij);
-    (red_b.modulus((a_inv as u32 * red_b.modulus(f_ij_div))) + f_ij_mod * b as u32) as usize
+    (red_b.modulus((a_inv * f_ij_div)) + f_ij_mod * b)
 }
 
 #[inline(always)]
@@ -157,7 +209,7 @@ fn gather_shuffle_col(i: usize,
                       red_a: &ReducedDivisor,
                       red_m: &ReducedDivisor)
                       -> usize {
-    red_m.modulus((j + i * cols) as u32 - red_a.div(i as u32)) as usize
+    red_m.modulus((j + i * cols)- red_a.div(i))
 }
 
 impl<T: Copy> Matrix<T> {
@@ -198,13 +250,14 @@ impl<T: Copy> Matrix<T> {
         unsafe {
             tmp.set_len(larger);
 
-            let red_a = ReducedDivisor::new(a as u32).unwrap();
-            let red_b = ReducedDivisor::new(b as u32).unwrap();
-            let red_c = ReducedDivisor::new(c as u32).unwrap();
-            let red_m = ReducedDivisor::new(m as u32).unwrap();
+            // Create strength reduction structs for efficient div/mod
+            let red_a = ReducedDivisor::new(a).unwrap();
+            let red_b = ReducedDivisor::new(b).unwrap();
+            let red_c = ReducedDivisor::new(c).unwrap();
+            let red_m = ReducedDivisor::new(m).unwrap();
             if c > 1 {
                 for j in 0..n {
-                    let x = red_b.div(j as u32);
+                    let x = red_b.div(j);
                     for i in 0..m {
                         *tmp.get_unchecked_mut(i) =
                             *self.get_unchecked([gather_rot_col(i, x, &red_m), j]);
@@ -222,6 +275,7 @@ impl<T: Copy> Matrix<T> {
                         *self.get_unchecked([i, d_inverse(i, j, b, a_inv, m, n, c, &red_b, &red_c)]);
                 }
 
+                // This ensures the assignment is vectorized
                 utils::in_place_vec_bin_op(self.get_row_unchecked_mut(i), &tmp[..n], |x, &y| *x = y);
             }
 
