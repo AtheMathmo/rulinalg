@@ -1,19 +1,22 @@
-//! Slices for the `Matrix` struct.
+//! Traits for matrices operations.
 //!
-//! These slices provide a view into the matrix data.
-//! The view must be a contiguous block of the matrix.
+//! These traits defines operations for structs representing matrices arranged in row-major order.
+//!
+//! Implementations are provided for
+//! - `Matrix`: an owned matrix
+//! - `MatrixSlice`: a borrowed immutable block of `Matrix`
+//! - `MatrixSliceMut`: a borrowed mutable block of `Matrix`
 //!
 //! ```
-//! use rulinalg::matrix::Matrix;
-//! use rulinalg::matrix::MatrixSlice;
+//! use rulinalg::matrix::{Matrix, BaseMatrix};
 //!
 //! let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
 //!
 //! // Manually create our slice - [[4,5],[7,8]].
-//! let mat_slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
+//! let mat_slice = a.sub_slice([0,1], 3, 2);
 //!
-//! // We can perform arithmetic with slices.
-//! let new_mat = &mat_slice * &mat_slice;
+//! // We can perform arithmetic with mixing owned and borrowed versions
+//! let _new_mat = &mat_slice.transpose() * &a;
 //! ```
 
 use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Axes};
@@ -29,19 +32,19 @@ use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Add, Mul, Div};
 
-/// Trait for Matrix Slices.
+/// Trait for immutable matrix structs.
 pub trait BaseMatrix<T>: Sized {
 
-    /// Rows in the slice.
+    /// Rows in the matrix.
     fn rows(&self) -> usize;
 
-    /// Columns in the slice.
+    /// Columns in the matrix.
     fn cols(&self) -> usize;
 
-    /// Row stride in the slice.
+    /// Row stride in the matrix.
     fn row_stride(&self) -> usize;
 
-    /// Top left index of the slice.
+    /// Top left index of the matrix.
     fn as_ptr(&self) -> *const T;
 
     /// Returns a `MatrixSlice` over the whole matrix.
@@ -49,8 +52,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(3, 3, vec![2.0; 9]);
     /// let b = a.as_slice();
@@ -61,24 +63,23 @@ pub trait BaseMatrix<T>: Sized {
         }
     }
 
-    /// Get a reference to a point in the slice without bounds checking.
+    /// Get a reference to a point in the matrix without bounds checking.
     unsafe fn get_unchecked(&self, index: [usize; 2]) -> &T {
         &*(self.as_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
     }
 
-    /// Returns the row of a `Matrix` at the given index.
+    /// Returns the row of a matrix at the given index.
     /// `None` if the index is out of bounds.
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSlice};
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let mut slice = MatrixSlice::from_matrix(&mut a, [1,1], 2, 2);
+    /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let slice = a.sub_slice([1,1], 2, 2);
     /// let row = slice.get_row(1);
-    /// let mut expected = vec![7usize, 8];
+    /// let expected = vec![7usize, 8];
     /// assert_eq!(row, Some(&*expected));
     /// assert!(slice.get_row(5).is_none());
     /// ```
@@ -90,16 +91,15 @@ pub trait BaseMatrix<T>: Sized {
         }
     }
     
-    /// Returns the row of a `BaseMatrix` at the given index without doing unbounds checking
+    /// Returns the row of a matrix at the given index without doing unbounds checking
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSlice};
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let mut slice = MatrixSlice::from_matrix(&mut a, [1,1], 2, 2);
+    /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let slice = a.sub_slice([1,1], 2, 2);
     /// let row = unsafe { slice.get_row_unchecked(1) };
     /// let mut expected = vec![7usize, 8];
     /// assert_eq!(row, &*expected);
@@ -109,17 +109,15 @@ pub trait BaseMatrix<T>: Sized {
         ::std::slice::from_raw_parts(ptr, self.cols())
     }
 
-    /// Returns an iterator over the matrix slice.
+    /// Returns an iterator over the matrix data.
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSlice;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
+    /// let slice = a.sub_slice([1,1], 2, 2);
     ///
     /// let slice_data = slice.iter().map(|v| *v).collect::<Vec<usize>>();
     /// assert_eq!(slice_data, vec![4,5,7,8]);
@@ -143,8 +141,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
     ///
@@ -171,8 +168,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
     ///
@@ -182,16 +178,9 @@ pub trait BaseMatrix<T>: Sized {
     fn sum_rows(&self) -> Vector<T>
         where T: Copy + Zero + Add<T, Output = T>
     {
-        let mut row_sum = vec![T::zero(); self.cols()];
-
-        unsafe {
-            for i in 0..self.rows() {
-                for (j, item) in row_sum.iter_mut().enumerate().take(self.cols()) {
-                    *item = *item + *self.get_unchecked([i, j]);
-                }
-            }
-        }
-        Vector::new(row_sum)
+        let sum_rows = self.iter_rows().fold(vec![T::zero(); self.cols()], |row_sum, r|
+            utils::vec_bin_op(&row_sum, r, |sum, val| sum + val));
+        Vector::new(sum_rows)
     }
 
     /// The sum of the columns of the matrix.
@@ -201,8 +190,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
     ///
@@ -222,8 +210,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
     ///
@@ -237,7 +224,7 @@ pub trait BaseMatrix<T>: Sized {
             .fold(T::zero(), |sum, row| sum + utils::unrolled_sum(row))
     }
 
-    /// Convert the matrix slice into a new Matrix.
+    /// Convert the matrix struct into a owned Matrix.
     fn into_matrix(self) -> Matrix<T>
         where T: Copy
     {
@@ -249,8 +236,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::<f64>::ones(3,3);
     ///
@@ -296,8 +282,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::<f64>::ones(3,3);
     /// let b = &a.select_cols(&[2]);
@@ -342,8 +327,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
     /// let b = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
@@ -374,8 +358,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
     /// let b = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
@@ -406,8 +389,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::<f64>::identity(3);
     /// let b = &a.select(&[0,1], &[1,2]);
@@ -459,8 +441,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(3,2, vec![1.0,2.0,3.0,4.0,5.0,6.0]);
     /// let b = Matrix::new(3,1, vec![4.0,5.0,6.0]);
@@ -498,8 +479,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(2,3, vec![1.0,2.0,3.0,4.0,5.0,6.0]);
     /// let b = Matrix::new(1,3, vec![4.0,5.0,6.0]);
@@ -536,9 +516,8 @@ pub trait BaseMatrix<T>: Sized {
     /// Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
     /// use rulinalg::vector::Vector;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(3,3,vec![1,2,3,4,5,6,7,8,9]);
     /// let b = Matrix::new(3,2,vec![1,2,3,4,5,6]);
@@ -571,8 +550,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let mat = Matrix::new(2,3, vec![1.0,2.0,3.0,4.0,5.0,6.0]);
     ///
@@ -605,8 +583,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(2,2, vec![1.0,0.0,0.0,1.0]);
     /// let a_diag = a.is_diag();
@@ -638,9 +615,8 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     /// use rulinalg::vector::Vector;
-    /// use rulinalg::matrix::slice::BaseMatrix;
     /// use std::f32;
     ///
     /// let u = Matrix::new(2,2, vec![1.0, 2.0, 0.0, 1.0]);
@@ -685,9 +661,8 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     /// use rulinalg::vector::Vector;
-    /// use rulinalg::matrix::slice::BaseMatrix;
     /// use std::f32;
     ///
     /// let l = Matrix::new(2,2, vec![1.0, 0.0, 2.0, 1.0]);
@@ -730,9 +705,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::Axes;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Axes, Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(3,3, vec![2.0; 9]);
     /// let (b,c) = a.split_at(1, Axes::Row);
@@ -769,13 +742,12 @@ pub trait BaseMatrix<T>: Sized {
         (slice_1, slice_2)
     }
 
-    /// Produce a matrix slice from an existing matrix slice.
+    /// Produce a `MatrixSlice` from an existing matrix.
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSlice};
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix, MatrixSlice};
     ///
     /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
@@ -796,7 +768,7 @@ pub trait BaseMatrix<T>: Sized {
     }
 }
 
-/// Trait for Mutable Matrix Slices.
+/// Trait for mutable matrices.
 pub trait BaseMatrixMut<T>: BaseMatrix<T> {
 
     /// Top left index of the slice.
@@ -807,8 +779,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrixMut;
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
     /// let mut a = Matrix::new(3, 3, vec![2.0; 9]);
     /// let b = a.as_mut_slice();
@@ -824,19 +795,17 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         &mut *(self.as_mut_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
     }
 
-    /// Returns a mutable iterator over the matrix slice.
+    /// Returns a mutable iterator over the matrix.
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSliceMut;
-    /// use rulinalg::matrix::slice::BaseMatrixMut;
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
     /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     ///
     /// {
-    ///     let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
+    ///     let mut slice = a.sub_slice_mut([1,1], 2, 2);
     ///
     ///     for d in slice.iter_mut() {
     ///         *d = *d + 2;
@@ -860,18 +829,16 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         }
     }
 
-    /// Returns a mutable reference to the row of a `MatrixSliceMut` at the given index.
+    /// Returns a mutable reference to the row of a matrix at the given index.
     /// `None` if the index is out of bounds.
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSliceMut;
-    /// use rulinalg::matrix::slice::BaseMatrixMut;
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
     /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
+    /// let mut slice = a.sub_slice_mut([1,1], 2, 2);
     /// {
     ///     let row = slice.get_row_mut(1);
     ///     let mut expected = vec![7usize, 8];
@@ -887,18 +854,16 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         }
     }
 
-    /// Returns a mutable reference to the row of a `MatrixSliceMut` at the given index
+    /// Returns a mutable reference to the row of a matrix at the given index
     /// without doing unbounds checking
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSliceMut;
-    /// use rulinalg::matrix::slice::BaseMatrixMut;
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
     /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
+    /// let mut slice = a.sub_slice_mut([1,1], 2, 2);
     /// let row = unsafe { slice.get_row_unchecked_mut(1) };
     /// let mut expected = vec![7usize, 8];
     /// assert_eq!(row, &mut *expected);
@@ -913,8 +878,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrixMut;
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
     /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
     ///
@@ -943,17 +907,16 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSliceMut};
-    /// use rulinalg::matrix::slice::{BaseMatrix, BaseMatrixMut};
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
     /// let mut mat = Matrix::<f32>::zeros(4,4);
     /// let one_block = Matrix::<f32>::ones(2,2);
     ///
     /// // Get a mutable slice of the upper left 2x2 block.
-    /// let mat_block = MatrixSliceMut::from_matrix(&mut mat, [0,0], 2, 2);
+    /// let mat_block = mat.sub_slice_mut([0,0], 2, 2);
     ///
     /// // Set the upper left 2x2 block to be ones.
-    /// mat_block.set_to(one_block.as_slice());
+    /// mat_block.set_to(one_block);
     /// ```
     ///
     /// # Panics
@@ -977,8 +940,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrixMut;
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
+    ///
     /// fn add_two(a: f64) -> f64 {
     ///     a + 2f64
     /// }
@@ -998,14 +961,12 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         self
     }
 
-    /// Split the matrix at the specified axis returning two `MatrixSlice`s.
+    /// Split the matrix at the specified axis returning two `MatrixSliceMut`s.
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::Axes;
-    /// use rulinalg::matrix::slice::BaseMatrixMut;
+    /// use rulinalg::matrix::{Axes, Matrix, BaseMatrixMut};
     ///
     /// let mut a = Matrix::new(3,3, vec![2.0; 9]);
     /// let (b,c) = a.split_at_mut(1, Axes::Col);
@@ -1044,13 +1005,12 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         (slice_1, slice_2)
     }
 
-    /// Produce a matrix slice from an existing matrix slice.
+    /// Produce a `MatrixSliceMut` from an existing matrix.
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSliceMut};
-    /// use rulinalg::matrix::slice::BaseMatrixMut;
+    /// use rulinalg::matrix::{Matrix, MatrixSliceMut, BaseMatrixMut};
     ///
     /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     /// let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
@@ -1108,6 +1068,27 @@ impl<T> BaseMatrix<T> for Matrix<T> {
         let data = utils::vec_bin_op(self.data(), m.data(), T::div);
         Matrix::new(self.rows(), self.cols(), data)
     }
+
+    fn vcat<S>(&self, m: &S) -> Matrix<T>
+        where T: Copy,
+              S: BaseMatrix<T>,
+    {
+        assert!(self.cols() == m.cols(), "Matrix column counts are not equal.");
+
+        let mut new_data = self.data.clone();
+        new_data.reserve(m.rows() * m.cols());
+
+        for row in m.iter_rows() {
+            new_data.extend_from_slice(row);
+        }
+
+        Matrix {
+            cols: self.cols(),
+            rows: (self.rows() + m.rows()),
+            data: new_data,
+        }
+    }
+
 }
 
 impl<'a, T> BaseMatrix<T> for MatrixSlice<'a, T> {
@@ -1135,13 +1116,12 @@ impl<'a, T> BaseMatrixMut<T> for MatrixSliceMut<'a, T> {
 }
 
 impl<'a, T> MatrixSlice<'a, T> {
-    /// Produce a matrix slice from a matrix
+    /// Produce a `MatrixSlice` from a `Matrix`
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSlice;
+    /// use rulinalg::matrix::{Matrix, MatrixSlice};
     ///
     /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
@@ -1166,7 +1146,7 @@ impl<'a, T> MatrixSlice<'a, T> {
         }
     }
 
-    /// Creates a matrix slice from raw parts.
+    /// Creates a `MatrixSlice` from raw parts.
     ///
     /// # Examples
     ///
@@ -1204,7 +1184,9 @@ impl<'a, T> MatrixSlice<'a, T> {
         }
     }
 
-    /// Produce a matrix slice from an existing matrix slice.
+    /// Produce a `MatrixSlice` from an existing `MatrixSlice`.
+    ///
+    /// This function will be deprecated. Prefer using `BaseMatrix::sub_slice`.
     ///
     /// # Examples
     ///
@@ -1221,13 +1203,12 @@ impl<'a, T> MatrixSlice<'a, T> {
 }
 
 impl<'a, T> MatrixSliceMut<'a, T> {
-    /// Produce a matrix slice from a matrix
+    /// Produce a `MatrixSliceMut` from a mutable `Matrix`
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSliceMut;
+    /// use rulinalg::matrix::{Matrix, MatrixSliceMut};
     ///
     /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     /// let slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
@@ -1255,7 +1236,7 @@ impl<'a, T> MatrixSliceMut<'a, T> {
         }
     }
 
-    /// Creates a mutable matrix slice from raw parts.
+    /// Creates a `MatrixSliceMut` from raw parts.
     ///
     /// # Examples
     ///
@@ -1293,13 +1274,14 @@ impl<'a, T> MatrixSliceMut<'a, T> {
         }
     }
 
-    /// Produce a matrix slice from an existing matrix slice.
+    /// Produce a `MatrixSliceMut` from an existing `MatrixSliceMut`.
+    ///
+    /// This function will be deprecated. Prefer using `BaseMatrixMut::sub_slice_mut` instead;
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::MatrixSliceMut;
+    /// use rulinalg::matrix::{Matrix, MatrixSliceMut};
     ///
     /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     /// let slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
@@ -1310,7 +1292,7 @@ impl<'a, T> MatrixSliceMut<'a, T> {
     }
 }
 
-/// Iterator for `MatrixSlice`
+/// Iterator for matrix.
 ///
 /// Iterates over the underlying slice data
 /// in row-major order.
@@ -1325,7 +1307,7 @@ pub struct SliceIter<'a, T: 'a> {
     _marker: PhantomData<&'a T>,
 }
 
-/// Iterator for `MatrixSliceMut`.
+/// Iterator for mutable matrix.
 ///
 /// Iterates over the underlying slice data
 /// in row-major order.

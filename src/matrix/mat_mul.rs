@@ -1,5 +1,4 @@
-use super::{Matrix, MatrixSlice, MatrixSliceMut};
-use super::slice::BaseMatrix;
+use super::{Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix};
 
 use std::any::{Any, TypeId};
 use std::ops::{Add, Mul};

@@ -2,6 +2,9 @@
 //!
 //! Currently contains all code
 //! relating to the matrix linear algebra struct.
+//!
+//! Most of the logic for manipulating matrices is generically implemented
+//! via `BaseMatrix` and `BaseMatrixMut` trait.
 
 use std::any::Any;
 use std::fmt;
@@ -12,13 +15,14 @@ use Metric;
 use error::{Error, ErrorKind};
 use utils;
 use vector::Vector;
-use self::slice::BaseMatrix;
 
 mod decomposition;
 mod impl_ops;
 mod mat_mul;
 mod iter;
 pub mod slice;
+
+pub use self::slice::{BaseMatrix, BaseMatrixMut};
 
 /// Matrix dimensions
 #[derive(Debug, Clone, Copy)]
@@ -99,8 +103,7 @@ impl<T> Matrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::slice::BaseMatrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let mat = Matrix::new(2,2, vec![1.0,2.0,3.0,4.0]);
     ///
