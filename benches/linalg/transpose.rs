@@ -1,4 +1,4 @@
-use rulinalg::matrix::Matrix;
+use rulinalg::matrix::{Matrix, BaseMatrix};
 use test::Bencher;
 
 #[bench]
