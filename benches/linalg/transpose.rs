@@ -38,6 +38,15 @@ fn allocating_transpose_100_100(b: &mut Bencher) {
 }
 
 #[bench]
+fn allocating_transpose_1000_1000(b: &mut Bencher) {
+    let a = Matrix::<f64>::zeros(1000, 1000);
+
+    b.iter(|| {
+    	a.transpose()
+    })
+}
+
+#[bench]
 fn allocating_transpose_10000_100(b: &mut Bencher) {
     let a = Matrix::<f64>::zeros(10000, 100);
 
@@ -46,14 +55,14 @@ fn allocating_transpose_10000_100(b: &mut Bencher) {
     })
 }
 
-#[bench]
-fn allocating_transpose_10000_10000(b: &mut Bencher) {
-    let a = Matrix::<f64>::zeros(10000, 10000);
+// #[bench]
+// fn allocating_transpose_10000_10000(b: &mut Bencher) {
+//     let a = Matrix::<f64>::zeros(10000, 10000);
 
-    b.iter(|| {
-    	a.transpose()
-    })
-}
+//     b.iter(|| {
+//     	a.transpose()
+//     })
+// }
 
 #[bench]
 fn inplace_transpose_10_10(b: &mut Bencher) {
@@ -74,6 +83,15 @@ fn inplace_transpose_100_100(b: &mut Bencher) {
 }
 
 #[bench]
+fn inplace_transpose_1000_1000(b: &mut Bencher) {
+    let mut a = Matrix::<f64>::zeros(1000, 1000);
+
+    b.iter(|| {
+    	a.inplace_transpose();
+    })
+}
+
+#[bench]
 fn inplace_transpose_10000_100(b: &mut Bencher) {
     let mut a = Matrix::<f64>::zeros(10000, 100);
 
@@ -82,11 +100,11 @@ fn inplace_transpose_10000_100(b: &mut Bencher) {
     })
 }
 
-#[bench]
-fn inplace_transpose_10000_10000(b: &mut Bencher) {
-    let mut a = Matrix::<f64>::zeros(10000, 10000);
+// #[bench]
+// fn inplace_transpose_10000_10000(b: &mut Bencher) {
+//     let mut a = Matrix::<f64>::zeros(10000, 10000);
 
-    b.iter(|| {
-    	a.inplace_transpose();
-    })
-}
+//     b.iter(|| {
+//     	a.inplace_transpose();
+//     })
+// }

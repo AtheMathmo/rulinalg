@@ -2,6 +2,7 @@
 
 use super::Matrix;
 use std::cmp;
+use std::ptr;
 use utils;
 
 #[cfg(target_pointer_width = "64")]
@@ -43,18 +44,38 @@ impl ReducedDivisor {
     #[cfg(target_pointer_width = "64")]
     #[inline(always)]
     fn umulhi(x: usize, y: usize) -> usize {
-        let hi: u64;
-        unsafe {
-            asm!("
-                movq $1, %rax
-                mulq $2
-                movq %rdx, $0
-            "
-            : "=r"(hi)
-            : "r"(x), "r"(y)
-            : "rax", "rdx");
+        let a = x >> 32;
+        let b = x & 0xffffffff;
+        let c = y >> 32;
+        let d = y & 0xffffffff;
+
+        let lo = b.wrapping_mul(d);
+        let (mid, carry) = a.wrapping_mul(d).overflowing_add(b.wrapping_mul(c));
+        let mut hi = a.wrapping_mul(c);
+        if carry {
+            hi = hi.wrapping_add(1 << 32);
         }
-        hi as usize
+
+        let (_, lo_carry) = lo.overflowing_add(mid << 32);
+
+        if lo_carry {
+            hi = hi.wrapping_add(1);
+        }
+
+        hi.wrapping_add(mid >> 32)
+
+        // let hi: u64;
+        // unsafe {
+        //     asm!("
+        //         movq $1, %rax
+        //         mulq $2
+        //         movq %rdx, $0
+        //     "
+        //     : "=r"(hi)
+        //     : "r"(x), "r"(y)
+        //     : "rax", "rdx");
+        // }
+        // hi as usize
     }
 
     #[cfg(target_pointer_width = "32")]
@@ -80,7 +101,8 @@ impl ReducedDivisor {
         } else {
             let p = 63 + ReducedDivisor::find_log_2(denom);
 
-            let m = ((u128::new(1u64) << p) + u128::new((denom - 1) as u64)) / u128::new(denom as u64);
+            let m = ((u128::new(1u64) << p) + u128::new((denom - 1) as u64)) /
+                    u128::new(denom as u64);
             Ok((m.low64() as usize, p - 64))
         }
     }
@@ -209,7 +231,7 @@ fn gather_shuffle_col(i: usize,
                       red_a: &ReducedDivisor,
                       red_m: &ReducedDivisor)
                       -> usize {
-    red_m.modulus((j + i * cols)- red_a.div(i))
+    red_m.modulus((j + i * cols) - red_a.div(i))
 }
 
 impl<T: Copy> Matrix<T> {
@@ -233,7 +255,22 @@ impl<T: Copy> Matrix<T> {
     /// println!("{}", a);
     /// ```
     pub fn inplace_transpose(&mut self) {
-        self.c2r_transpose();
+        if self.rows == self.cols {
+            self.inplace_square_transpose();
+        } else {
+            self.c2r_transpose();
+        }
+    }
+
+    fn inplace_square_transpose(&mut self) {
+        unsafe {
+            for i in 0..self.rows-1 {
+                for j in i + 1..self.cols {
+                    ptr::swap(self.get_unchecked_mut([i, j]) as *mut T,
+                            self.get_unchecked_mut([j, i]) as *mut T);
+                }
+            }
+        }
     }
 
     fn c2r_transpose(&mut self) {
@@ -276,7 +313,9 @@ impl<T: Copy> Matrix<T> {
                 }
 
                 // This ensures the assignment is vectorized
-                utils::in_place_vec_bin_op(self.get_row_unchecked_mut(i), &tmp[..n], |x, &y| *x = y);
+                utils::in_place_vec_bin_op(self.get_row_unchecked_mut(i),
+                                           &tmp[..n],
+                                           |x, &y| *x = y);
             }
 
             for j in 0..n {
@@ -359,6 +398,16 @@ mod tests {
     fn test_square_c2r_transpose() {
         let mut a = Matrix::new(4, 4, (0..16).collect::<Vec<_>>());
         a.c2r_transpose();
+
+        let transposed = vec![0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15];
+
+        assert_eq!(a.into_vec(), transposed);
+    }
+
+    #[test]
+    fn test_inplace_square_transpose() {
+        let mut a = Matrix::new(4, 4, (0..16).collect::<Vec<_>>());
+        a.inplace_square_transpose();
 
         let transposed = vec![0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15];
 
