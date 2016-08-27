@@ -55,6 +55,7 @@ in place at the moment but please follow these general guidelines:
 - Make lots of small commits as opposed to one large commit.
 - Ensure that all existing (and new) tests pass for each commit.
 - Add new tests for any new functionality you add. This means examples within the documentation, tests in the `tests` module, and integration tests in the _tests_ directory.
+- Wherever possible add new benchmarks for new functionality or modifications to existing functionality. This area is currently lacking in rulinalg.
 - There is (currently) no strict format for commit messages. But please be descriptive about the functionality you have added - this is much easier if using small commits as above!
 
 ### Creating the PR
