@@ -2,11 +2,12 @@
 //!
 //! Currently contains all code
 //! relating to the matrix linear algebra struct.
+//!
+//! Most of the logic for manipulating matrices is generically implemented
+//! via `BaseMatrix` and `BaseMatrixMut` trait.
 
 use std::any::Any;
 use std::fmt;
-use std::ops::{Mul, Add, Div};
-use std::cmp::{PartialEq, min};
 use std::marker::PhantomData;
 use libnum::{One, Zero, Float, FromPrimitive};
 
@@ -20,6 +21,8 @@ mod impl_ops;
 mod mat_mul;
 mod iter;
 pub mod slice;
+
+pub use self::slice::{BaseMatrix, BaseMatrixMut};
 
 /// Matrix dimensions
 #[derive(Debug, Clone, Copy)]
@@ -70,6 +73,28 @@ pub struct MatrixSliceMut<'a, T: 'a> {
     marker: PhantomData<&'a mut T>,
 }
 
+/// Row iterator.
+#[derive(Debug)]
+pub struct Rows<'a, T: 'a> {
+    slice_start: *const T,
+    row_pos: usize,
+    slice_rows: usize,
+    slice_cols: usize,
+    row_stride: isize,
+    _marker: PhantomData<&'a T>,
+}
+
+/// Mutable row iterator.
+#[derive(Debug)]
+pub struct RowsMut<'a, T: 'a> {
+    slice_start: *mut T,
+    row_pos: usize,
+    slice_rows: usize,
+    slice_cols: usize,
+    row_stride: isize,
+    _marker: PhantomData<&'a mut T>,
+}
+
 impl<T> Matrix<T> {
     /// Constructor for Matrix struct.
     ///
@@ -78,7 +103,7 @@ impl<T> Matrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let mat = Matrix::new(2,2, vec![1.0,2.0,3.0,4.0]);
     ///
@@ -101,22 +126,6 @@ impl<T> Matrix<T> {
         }
     }
 
-    /// Returns the number of rows in the Matrix.
-    pub fn rows(&self) -> usize {
-        self.rows
-    }
-
-    /// Returns the number of columns in the Matrix.
-    pub fn cols(&self) -> usize {
-        self.cols
-    }
-
-    /// Returns the row-stride of the matrix. This is simply
-    /// its column count.
-    pub fn row_stride(&self) -> usize {
-        self.cols
-    }
-
     /// Returns a non-mutable reference to the underlying data.
     pub fn data(&self) -> &Vec<T> {
         &self.data
@@ -127,228 +136,9 @@ impl<T> Matrix<T> {
         &mut self.data
     }
 
-    /// Get a reference to a point in the matrix without bounds checks.
-    pub unsafe fn get_unchecked(&self, index: [usize; 2]) -> &T {
-        self.data.get_unchecked(index[0] * self.cols + index[1])
-    }
-
-    /// Get a mutable reference to a point in the matrix without bounds checks.
-    pub unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut T {
-        self.data.get_unchecked_mut(index[0] * self.cols + index[1])
-    }
-
-    /// Returns pointer to first element of underlying data.
-    pub fn as_ptr(&self) -> *const T {
-        self.data.as_ptr()
-    }
-
     /// Consumes the Matrix and returns the Vec of data.
     pub fn into_vec(self) -> Vec<T> {
         self.data
-    }
-
-    /// Split the matrix at the specified axis returning two `MatrixSlice`s.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::Axes;
-    ///
-    /// let a = Matrix::new(3,3, vec![2.0; 9]);
-    /// let (b,c) = a.split_at(1, Axes::Row);
-    /// ```
-    pub fn split_at(&self, mid: usize, axis: Axes) -> (MatrixSlice<T>, MatrixSlice<T>) {
-        let slice_1: MatrixSlice<T>;
-        let slice_2: MatrixSlice<T>;
-
-        match axis {
-            Axes::Row => {
-                assert!(mid < self.rows);
-
-                slice_1 = MatrixSlice::from_matrix(self, [0, 0], mid, self.cols);
-                slice_2 = MatrixSlice::from_matrix(self, [mid, 0], self.rows - mid, self.cols);
-            }
-            Axes::Col => {
-                assert!(mid < self.cols);
-
-                slice_1 = MatrixSlice::from_matrix(self, [0, 0], self.rows, mid);
-                slice_2 = MatrixSlice::from_matrix(self, [0, mid], self.rows, self.cols - mid);
-            }
-        }
-
-        (slice_1, slice_2)
-    }
-
-    /// Split the matrix at the specified axis returning two `MatrixSlice`s.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::matrix::Axes;
-    ///
-    /// let mut a = Matrix::new(3,3, vec![2.0; 9]);
-    /// let (b,c) = a.split_at_mut(1, Axes::Col);
-    /// ```
-    pub fn split_at_mut(&mut self,
-                        mid: usize,
-                        axis: Axes)
-                        -> (MatrixSliceMut<T>, MatrixSliceMut<T>) {
-
-        let mat_cols = self.cols;
-        let mat_rows = self.rows;
-
-        let slice_1: MatrixSliceMut<T>;
-        let slice_2: MatrixSliceMut<T>;
-
-        match axis {
-            Axes::Row => {
-                assert!(mid < self.rows);
-
-                unsafe {
-                    slice_1 = MatrixSliceMut::from_raw_parts(self.data.as_mut_ptr(),
-                                                             mid,
-                                                             mat_cols,
-                                                             mat_cols);
-                    slice_2 =
-                        MatrixSliceMut::from_raw_parts(self.data
-                                                           .as_mut_ptr()
-                                                           .offset((mid * mat_cols) as isize),
-                                                       mat_rows - mid,
-                                                       mat_cols,
-                                                       mat_cols);
-                }
-            }
-            Axes::Col => {
-                assert!(mid < self.cols);
-                unsafe {
-                    slice_1 = MatrixSliceMut::from_raw_parts(self.data.as_mut_ptr(),
-                                                             mat_rows,
-                                                             mid,
-                                                             mat_cols);
-                    slice_2 = MatrixSliceMut::from_raw_parts(self.data
-                                                                 .as_mut_ptr()
-                                                                 .offset(mid as isize),
-                                                             mat_rows,
-                                                             mat_cols - mid,
-                                                             mat_cols);
-                }
-            }
-        }
-
-        (slice_1, slice_2)
-    }
-
-    /// Returns a `MatrixSlice` over the whole matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(3, 3, vec![2.0; 9]);
-    /// let b = a.as_slice();
-    /// ```
-    pub fn as_slice(&self) -> MatrixSlice<T> {
-        MatrixSlice::from_matrix(self, [0, 0], self.rows, self.cols)
-    }
-
-    /// Returns a mutable `MatrixSlice` over the whole matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let mut a = Matrix::new(3, 3, vec![2.0; 9]);
-    /// let b = a.as_mut_slice();
-    /// ```
-    pub fn as_mut_slice(&mut self) -> MatrixSliceMut<T> {
-        let rows = self.rows;
-        let cols = self.cols;
-        MatrixSliceMut::from_matrix(self, [0, 0], rows, cols)
-    }
-
-    /// Returns the row of a `Matrix` at the given index.
-    /// `None` if the index is out of bounds.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(3, 4, vec![2.0; 12]);
-    /// let row = a.get_row(1);
-    /// let expected = vec![2.0; 4];
-    /// assert_eq!(row, Some(&*expected));
-    /// assert!(a.get_row(5).is_none());
-    /// ```
-    pub fn get_row(&self, index: usize) -> Option<&[T]> {
-        if index < self.rows {
-            unsafe { Some(self.get_row_unchecked(index)) }
-        } else {
-            None
-        }
-    }
-
-    /// Returns the row of a `Matrix` at the given index without doing unbounds checking
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(3, 4, vec![2.0; 12]);
-    /// let row = unsafe { a.get_row_unchecked(1) };
-    /// let expected = vec![2.0; 4];
-    /// assert_eq!(row, &*expected);
-    /// ```
-    pub unsafe fn get_row_unchecked(&self, index: usize) -> &[T] {
-        let ptr = self.data.as_ptr().offset((self.cols * index) as isize);
-        ::std::slice::from_raw_parts(ptr, self.cols)
-    }
-
-    /// Returns a mutable reference to the row of a `Matrix` at the given index.
-    /// `None` if the index is out of bounds.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let mut a = Matrix::new(3, 4, vec![2.0; 12]);
-    /// {
-    ///     let row = a.get_row_mut(1);
-    ///     let mut expected = vec![2.0; 4];
-    ///     assert_eq!(row, Some(&mut *expected));
-    /// }
-    /// assert!(a.get_row_mut(5).is_none());
-    /// ```
-    pub fn get_row_mut(&mut self, index: usize) -> Option<&mut [T]> {
-        if index < self.rows {
-            unsafe { Some(self.get_row_unchecked_mut(index)) }
-        } else {
-            None
-        }
-    }
-
-    /// Returns a mutable reference to the row of a `Matrix` at the given index
-    /// without doing unbounds checking
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let mut a = Matrix::new(3, 4, vec![2.0; 12]);
-    /// let row = unsafe { a.get_row_unchecked_mut(1) };
-    /// let mut expected = vec![2.0; 4];
-    /// assert_eq!(row, &mut *expected);
-    /// ```
-    pub unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> &mut [T] {
-        let ptr = self.data.as_mut_ptr().offset((self.cols * index) as isize);
-        ::std::slice::from_raw_parts_mut(ptr, self.cols)
     }
 }
 
@@ -359,316 +149,6 @@ impl<T: Clone> Clone for Matrix<T> {
             rows: self.rows,
             cols: self.cols,
             data: self.data.clone(),
-        }
-    }
-}
-
-impl<T: Copy> Matrix<T> {
-    /// Select rows from matrix
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::<f64>::ones(3,3);
-    ///
-    /// let b = &a.select_rows(&[2]);
-    /// assert_eq!(b.rows(), 1);
-    /// assert_eq!(b.cols(), 3);
-    ///
-    /// let c = &a.select_rows(&[1,2]);
-    /// assert_eq!(c.rows(), 2);
-    /// assert_eq!(c.cols(), 3);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - Panics if row indices exceed the matrix dimensions.
-    pub fn select_rows(&self, rows: &[usize]) -> Matrix<T> {
-
-        let mut mat_vec = Vec::with_capacity(rows.len() * self.cols);
-
-        for row in rows {
-            assert!(*row < self.rows,
-                    "Row index is greater than number of rows.");
-        }
-
-        for row in rows {
-            mat_vec.extend_from_slice(&self.data[*row * self.cols..(*row + 1) * self.cols]);
-        }
-
-        Matrix {
-            cols: self.cols,
-            rows: rows.len(),
-            data: mat_vec,
-        }
-    }
-
-    /// Select columns from matrix
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::<f64>::ones(3,3);
-    /// let b = &a.select_cols(&[2]);
-    /// assert_eq!(b.rows(), 3);
-    /// assert_eq!(b.cols(), 1);
-    ///
-    /// let c = &a.select_cols(&[1,2]);
-    /// assert_eq!(c.rows(), 3);
-    /// assert_eq!(c.cols(), 2);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - Panics if column indices exceed the matrix dimensions.
-    pub fn select_cols(&self, cols: &[usize]) -> Matrix<T> {
-
-        let mut mat_vec = Vec::with_capacity(cols.len() * self.rows);
-
-        for col in cols {
-            assert!(*col < self.cols,
-                    "Column index is greater than number of columns.");
-        }
-
-        unsafe {
-            for i in 0..self.rows {
-                for col in cols.into_iter() {
-                    mat_vec.push(*self.data.get_unchecked(i * self.cols + col));
-                }
-            }
-        }
-
-        Matrix {
-            cols: cols.len(),
-            rows: self.rows,
-            data: mat_vec,
-        }
-    }
-
-    /// Select block matrix from matrix
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::<f64>::identity(3);
-    /// let b = &a.select(&[0,1], &[1,2]);
-    ///
-    /// // We get the 2x2 block matrix in the upper right corner.
-    /// assert_eq!(b.rows(), 2);
-    /// assert_eq!(b.cols(), 2);
-    ///
-    /// // Prints [0,0,1,0]
-    /// println!("{:?}", b.data());
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - Panics if row or column indices exceed the matrix dimensions.
-    pub fn select(&self, rows: &[usize], cols: &[usize]) -> Matrix<T> {
-
-        let mut mat_vec = Vec::with_capacity(cols.len() * rows.len());
-
-        for col in cols {
-            assert!(*col < self.cols,
-                    "Column index is greater than number of columns.");
-        }
-
-        for row in rows {
-            assert!(*row < self.rows,
-                    "Row index is greater than number of columns.");
-        }
-
-        unsafe {
-            for row in rows.into_iter() {
-                for col in cols.into_iter() {
-                    mat_vec.push(*self.data.get_unchecked(row * self.cols + col));
-                }
-            }
-        }
-
-        Matrix {
-            cols: cols.len(),
-            rows: rows.len(),
-            data: mat_vec,
-        }
-    }
-
-    /// Horizontally concatenates two matrices. With self on the left.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(3,2, vec![1.0,2.0,3.0,4.0,5.0,6.0]);
-    /// let b = Matrix::new(3,1, vec![4.0,5.0,6.0]);
-    ///
-    /// let c = &a.hcat(&b);
-    /// assert_eq!(c.cols(), a.cols() + b.cols());
-    /// assert_eq!(c[[1, 2]], 5.0);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - Self and m have different row counts.
-    pub fn hcat(&self, m: &Matrix<T>) -> Matrix<T> {
-        assert!(self.rows == m.rows, "Matrix row counts are not equal.");
-
-        let mut new_data = Vec::with_capacity((self.cols + m.cols) * self.rows);
-
-        unsafe {
-            for i in 0..self.rows {
-                for j in 0..self.cols {
-                    new_data.push(*self.data.get_unchecked(i * self.cols + j));
-                }
-
-                for j in 0..m.cols {
-                    new_data.push(*m.data.get_unchecked(i * m.cols + j));
-                }
-            }
-        }
-
-        Matrix {
-            cols: (self.cols + m.cols),
-            rows: self.rows,
-            data: new_data,
-        }
-    }
-
-    /// Vertically concatenates two matrices. With self on top.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,3, vec![1.0,2.0,3.0,4.0,5.0,6.0]);
-    /// let b = Matrix::new(1,3, vec![4.0,5.0,6.0]);
-    ///
-    /// let c = &a.vcat(&b);
-    /// assert_eq!(c.rows(), a.rows() + b.rows());
-    /// assert_eq!(c[[2, 2]], 6.0);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - Self and m have different column counts.
-    pub fn vcat(&self, m: &Matrix<T>) -> Matrix<T> {
-        assert!(self.cols == m.cols, "Matrix column counts are not equal.");
-
-        let mut new_data = Vec::with_capacity((self.rows + m.rows) * self.cols);
-
-        unsafe {
-            for i in 0..self.rows {
-                for j in 0..self.cols {
-                    new_data.push(*self.data.get_unchecked(i * self.cols + j));
-                }
-            }
-
-            for i in 0..m.rows {
-                for j in 0..m.cols {
-                    new_data.push(*m.data.get_unchecked(i * m.cols + j));
-                }
-            }
-        }
-
-        Matrix {
-            cols: self.cols,
-            rows: (self.rows + m.rows),
-            data: new_data,
-        }
-    }
-
-    /// Extract the diagonal of the matrix
-    ///
-    /// Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::vector::Vector;
-    ///
-    /// let a = Matrix::new(3,3,vec![1,2,3,4,5,6,7,8,9]);
-    /// let b = Matrix::new(3,2,vec![1,2,3,4,5,6]);
-    /// let c = Matrix::new(2,3,vec![1,2,3,4,5,6]);
-    ///
-    /// let d = &a.diag(); // 1,5,9
-    /// let e = &b.diag(); // 1,4
-    /// let f = &c.diag(); // 1,5
-    ///
-    /// assert_eq!(*d.data(), vec![1,5,9]);
-    /// assert_eq!(*e.data(), vec![1,4]);
-    /// assert_eq!(*f.data(), vec![1,5]);
-    /// ```
-    pub fn diag(&self) -> Vector<T> {
-        let mat_min = min(self.rows, self.cols);
-
-        let mut diagonal = Vec::with_capacity(mat_min);
-        unsafe {
-            for i in 0..mat_min {
-                diagonal.push(*self.data.get_unchecked(i * self.cols + i));
-            }
-        }
-        Vector::new(diagonal)
-    }
-
-    /// Applies a function to each element in the matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// fn add_two(a: f64) -> f64 {
-    ///     a + 2f64
-    /// }
-    ///
-    /// let a = Matrix::new(2, 2, vec![0.;4]);
-    ///
-    /// let b = a.apply(&add_two);
-    ///
-    /// assert_eq!(*b.data(), vec![2.0; 4]);
-    /// ```
-    pub fn apply(mut self, f: &Fn(T) -> T) -> Matrix<T> {
-        for val in &mut self.data {
-            *val = f(*val);
-        }
-
-        self
-    }
-
-    /// Tranposes the given matrix
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let mat = Matrix::new(2,3, vec![1.0,2.0,3.0,4.0,5.0,6.0]);
-    ///
-    /// let mt = mat.transpose();
-    /// ```
-    pub fn transpose(&self) -> Matrix<T> {
-        let mut new_data = Vec::with_capacity(self.rows * self.cols);
-
-        unsafe {
-            new_data.set_len(self.rows * self.cols);
-        }
-
-        for i in 0..self.cols {
-            for j in 0..self.rows {
-                new_data[i * self.rows + j] = self.data[j * self.cols + i];
-            }
-        }
-
-        Matrix {
-            cols: self.rows,
-            rows: self.cols,
-            data: new_data,
         }
     }
 }
@@ -765,161 +245,6 @@ impl<T: Clone + Zero + One> Matrix<T> {
             rows: size,
             data: data,
         }
-    }
-}
-
-impl<T: Copy + Zero + One + PartialEq> Matrix<T> {
-    /// Checks if matrix is diagonal.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,2, vec![1.0,0.0,0.0,1.0]);
-    /// let a_diag = a.is_diag();
-    ///
-    /// assert_eq!(a_diag, true);
-    ///
-    /// let b = Matrix::new(2,2, vec![1.0,0.0,1.0,0.0]);
-    /// let b_diag = b.is_diag();
-    ///
-    /// assert_eq!(b_diag, false);
-    /// ```
-    pub fn is_diag(&self) -> bool {
-
-        unsafe {
-            for i in 0..self.rows {
-                for j in 0..self.cols {
-                    if (i != j) && (*self.data.get_unchecked(i * self.cols + j) != T::zero()) {
-                        return false;
-                    }
-                }
-            }
-        }
-        true
-    }
-}
-
-impl<T: Copy + Zero + Add<T, Output = T>> Matrix<T> {
-    /// The sum of the rows of the matrix.
-    ///
-    /// Returns a Vector equal to the sum of the matrices rows.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = a.sum_rows();
-    /// assert_eq!(*c.data(), vec![4.0, 6.0]);
-    /// ```
-    pub fn sum_rows(&self) -> Vector<T> {
-        let mut row_sum = vec![T::zero(); self.cols];
-
-        unsafe {
-            for i in 0..self.rows {
-                for (j, item) in row_sum.iter_mut().enumerate().take(self.cols) {
-                    *item = *item + *self.data.get_unchecked(i * self.cols + j);
-                }
-            }
-        }
-        Vector::new(row_sum)
-    }
-
-    /// The sum of the columns of the matrix.
-    ///
-    /// Returns a Vector equal to the sum of the matrices columns.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = a.sum_cols();
-    /// assert_eq!(*c.data(), vec![3.0, 7.0]);
-    /// ```
-    pub fn sum_cols(&self) -> Vector<T> {
-        let mut col_sum = Vec::with_capacity(self.rows);
-
-        for row in self.iter_rows() {
-            col_sum.push(utils::unrolled_sum(row));
-        }
-        Vector::new(col_sum)
-    }
-
-    /// The sum of all elements in the matrix
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = a.sum();
-    /// assert_eq!(c, 10.0);
-    /// ```
-    pub fn sum(&self) -> T {
-        utils::unrolled_sum(&self.data[..])
-    }
-}
-
-impl<T: Copy + Mul<T, Output = T>> Matrix<T> {
-    /// The elementwise product of two matrices.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    /// let b = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = &a.elemul(&b);
-    /// assert_eq!(*c.data(), vec![1.0, 4.0, 9.0, 16.0]);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - The matrices have different row counts.
-    /// - The matrices have different column counts.
-    pub fn elemul(&self, m: &Matrix<T>) -> Matrix<T> {
-        assert!(self.rows == m.rows, "Matrix row counts not equal.");
-        assert!(self.cols == m.cols, "Matrix column counts not equal.");
-
-        Matrix::new(self.rows, self.cols, utils::ele_mul(&self.data, &m.data))
-    }
-}
-
-impl<T: Copy + Div<T, Output = T>> Matrix<T> {
-    /// The elementwise division of two matrices.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    /// let b = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = &a.elediv(&b);
-    /// assert_eq!(*c.data(), vec![1.0; 4]);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - The matrices have different row counts.
-    /// - The matrices have different column counts.
-    pub fn elediv(&self, m: &Matrix<T>) -> Matrix<T> {
-        assert!(self.rows == m.rows, "Matrix row counts not equal.");
-        assert!(self.cols == m.cols, "Matrix column counts not equal.");
-
-        Matrix::new(self.rows, self.cols, utils::ele_div(&self.data, &m.data))
     }
 }
 
@@ -1021,175 +346,6 @@ impl<T: Float + FromPrimitive> Matrix<T> {
 }
 
 impl<T: Any + Float> Matrix<T> {
-    /// Solves an upper triangular linear system.
-    ///
-    /// Given a matrix `U`, which is upper triangular, and a vector `y`, this function returns `x`
-    /// such that `Ux = y`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::vector::Vector;
-    /// use std::f32;
-    ///
-    /// let u = Matrix::new(2,2, vec![1.0, 2.0, 0.0, 1.0]);
-    /// let y = Vector::new(vec![3.0, 1.0]);
-    ///
-    /// let x = u.solve_u_triangular(y).expect("A solution should exist!");
-    /// assert!((x[0] - 1.0) < f32::EPSILON);
-    /// assert!((x[1] - 1.0) < f32::EPSILON);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - Vector size and matrix column count are not equal.
-    /// - Matrix is not upper triangular.
-    ///
-    /// # Failures
-    ///
-    /// Fails if there is no valid solution to the system (matrix is singular).
-    pub fn solve_u_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error> {
-        assert!(self.cols == y.size(),
-                format!("Vector size {0} != {1} Matrix column count.",
-                        y.size(),
-                        self.cols));
-
-        // Make sure we are upper triangular.
-        for (row_idx, row) in self.iter_rows().enumerate() {
-            for i in 0..row_idx {
-                unsafe {
-                    assert!(*row.get_unchecked(i) == T::zero(),
-                            "Matrix is not upper triangular.");
-                }
-
-            }
-        }
-
-        self.back_substitution(y)
-    }
-
-    fn back_substitution(&self, y: Vector<T>) -> Result<Vector<T>, Error> {
-        let mut x = vec![T::zero(); y.size()];
-
-        x[y.size() - 1] = y[y.size() - 1] / self[[y.size() - 1, y.size() - 1]];
-
-        unsafe {
-            for i in (0..y.size() - 1).rev() {
-                let mut holding_u_sum = T::zero();
-                for j in (i + 1..y.size()).rev() {
-                    holding_u_sum = holding_u_sum + *self.get_unchecked([i, j]) * x[j];
-                }
-
-                let diag = *self.get_unchecked([i, i]);
-                if diag.abs() < T::min_positive_value() + T::min_positive_value() {
-                    return Err(Error::new(ErrorKind::AlgebraFailure,
-                                          "Linear system cannot be solved (matrix is singular)."));
-                }
-                x[i] = (y[i] - holding_u_sum) / diag;
-            }
-        }
-
-        Ok(Vector::new(x))
-    }
-
-    /// Solves a lower triangular linear system.
-    ///
-    /// Given a matrix `L`, which is lower triangular, and a vector `y`, this function returns `x`
-    /// such that `Lx = y`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::vector::Vector;
-    /// use std::f32;
-    ///
-    /// let l = Matrix::new(2,2, vec![1.0, 0.0, 2.0, 1.0]);
-    /// let y = Vector::new(vec![1.0, 3.0]);
-    ///
-    /// let x = l.solve_l_triangular(y).expect("A solution should exist!");
-    /// println!("{:?}", x);
-    /// assert!((x[0] - 1.0) < f32::EPSILON);
-    /// assert!((x[1] - 1.0) < f32::EPSILON);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// - Vector size and matrix column count are not equal.
-    /// - Matrix is not lower triangular.
-    ///
-    /// # Failures
-    ///
-    /// Fails if there is no valid solution to the system (matrix is singular).
-    pub fn solve_l_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error> {
-        assert!(self.cols == y.size(),
-                format!("Vector size {0} != {1} Matrix column count.",
-                        y.size(),
-                        self.cols));
-
-        // Make sure we are lower triangular.
-        for (row_idx, row) in self.iter_rows().enumerate() {
-            for i in row_idx + 1..self.cols {
-                unsafe {
-                    assert!(*row.get_unchecked(i) == T::zero(),
-                            "Matrix is not lower triangular.");
-                }
-            }
-        }
-
-        self.forward_substitution(y)
-    }
-
-    fn forward_substitution(&self, y: Vector<T>) -> Result<Vector<T>, Error> {
-        let mut x = Vec::with_capacity(y.size());
-
-        x.push(y[0] / self[[0, 0]]);
-
-        unsafe {
-            for (i, y_item) in y.data().iter().enumerate().take(y.size()).skip(1) {
-                let mut holding_l_sum = T::zero();
-                for (j, x_item) in x.iter().enumerate().take(i) {
-                    holding_l_sum = holding_l_sum + *self.get_unchecked([i, j]) * *x_item;
-                }
-
-                let diag = *self.get_unchecked([i, i]);
-
-                if diag.abs() < T::min_positive_value() + T::min_positive_value() {
-                    return Err(Error::new(ErrorKind::AlgebraFailure,
-                                          "Linear system cannot be solved (matrix is singular)."));
-                }
-                x.push((*y_item - holding_l_sum) / diag);
-            }
-        }
-
-        Ok(Vector::new(x))
-    }
-
-    /// Computes the parity of a permutation matrix.
-    fn parity(&self) -> T {
-        let mut visited = vec![false; self.rows];
-        let mut sgn = T::one();
-
-        for k in 0..self.rows {
-            if !visited[k] {
-                let mut next = k;
-                let mut len = 0;
-
-                while !visited[next] {
-                    len += 1;
-                    visited[next] = true;
-                    next = utils::find(&self.data[next * self.cols..(next + 1) * self.cols],
-                                       T::one());
-                }
-
-                if len % 2 == 0 {
-                    sgn = -sgn;
-                }
-            }
-        }
-        sgn
-    }
 
     /// Solves the equation `Ax = y`.
     ///
@@ -1221,8 +377,8 @@ impl<T: Any + Float> Matrix<T> {
     pub fn solve(&self, y: Vector<T>) -> Result<Vector<T>, Error> {
         let (l, u, p) = try!(self.lup_decomp());
 
-        let b = try!(l.forward_substitution(p * y));
-        u.back_substitution(b)
+        let b = try!(forward_substitution(&l, p * y));
+        back_substitution(&u, b)
     }
 
     /// Computes the inverse of the matrix.
@@ -1275,9 +431,9 @@ impl<T: Any + Float> Matrix<T> {
             let mut id_col = vec![T::zero(); self.cols];
             id_col[i] = T::one();
 
-            let b = l.forward_substitution(&p * Vector::new(id_col))
+            let b = forward_substitution(&l, &p * Vector::new(id_col))
                 .expect("Matrix is singular AND has non-zero determinant!?");
-            inv_t_data.append(&mut u.back_substitution(b)
+            inv_t_data.append(&mut back_substitution(&u, b)
                 .expect("Matrix is singular AND has non-zero determinant!?")
                 .into_vec());
 
@@ -1342,7 +498,7 @@ impl<T: Any + Float> Matrix<T> {
                 }
             }
 
-            let sgn = p.parity();
+            let sgn = parity(&p);
 
             sgn * d
         }
@@ -1486,13 +642,97 @@ impl<T: fmt::Display> fmt::Display for Matrix<T> {
     }
 }
 
+/// Back substitution
+fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
+    where T: Any + Float,
+          M: BaseMatrix<T>,
+{
+    let mut x = vec![T::zero(); y.size()];
+
+    unsafe {
+        x[y.size() - 1] = y[y.size() - 1] / *m.get_unchecked([y.size() - 1, y.size() - 1]);
+
+        for i in (0..y.size() - 1).rev() {
+            let mut holding_u_sum = T::zero();
+            for j in (i + 1..y.size()).rev() {
+                holding_u_sum = holding_u_sum + *m.get_unchecked([i, j]) * x[j];
+            }
+
+            let diag = *m.get_unchecked([i, i]);
+            if diag.abs() < T::min_positive_value() + 
+                T::min_positive_value() 
+            {
+                return Err(Error::new(ErrorKind::AlgebraFailure,
+                                      "Linear system cannot be solved (matrix is singular)."));
+            }
+            x[i] = (y[i] - holding_u_sum) / diag;
+        }
+    }
+
+    Ok(Vector::new(x))
+}
+
+/// forward substitution
+fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
+    where T: Any + Float,
+          M: BaseMatrix<T>,
+{
+    let mut x = Vec::with_capacity(y.size());
+
+    unsafe {
+        x.push(y[0] / *m.get_unchecked([0, 0]));
+        for (i, y_item) in y.data().iter().enumerate().take(y.size()).skip(1) {
+            let mut holding_l_sum = T::zero();
+            for (j, x_item) in x.iter().enumerate().take(i) {
+                holding_l_sum = holding_l_sum + *m.get_unchecked([i, j]) * *x_item;
+            }
+
+            let diag = *m.get_unchecked([i, i]);
+
+            if diag.abs() < T::min_positive_value() + T::min_positive_value() {
+                return Err(Error::new(ErrorKind::AlgebraFailure,
+                                      "Linear system cannot be solved (matrix is singular)."));
+            }
+            x.push((*y_item - holding_l_sum) / diag);
+        }
+    }
+
+    Ok(Vector::new(x))
+}
+
+/// Computes the parity of a permutation matrix.
+fn parity<T, M>(m: &M) -> T
+    where T: Any + Float,
+          M: BaseMatrix<T>,
+{
+    let mut visited = vec![false; m.rows()];
+    let mut sgn = T::one();
+
+    for k in 0..m.rows() {
+        if !visited[k] {
+            let mut next = k;
+            let mut len = 0;
+
+            while !visited[next] {
+                len += 1;
+                visited[next] = true;
+                next = utils::find(&m.get_row(next).unwrap(), T::one());
+            }
+
+            if len % 2 == 0 {
+                sgn = -sgn;
+            }
+        }
+    }
+    sgn
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::super::vector::Vector;
     use super::Matrix;
-    use super::Axes;
-    use super::slice::BaseSlice;
+    use super::slice::BaseMatrix;
     use libnum::abs;
 
     #[test]
@@ -1564,66 +804,6 @@ mod tests {
         for (places, &expectation) in (1..5).zip(expectations.iter()) {
             assert_eq!(expectation, format!("{:.1$}", our_matrix, places));
         }
-    }
-
-    #[test]
-    fn test_split_matrix() {
-        let a = Matrix::new(3, 3, (0..9).collect::<Vec<_>>());
-
-        let (b, c) = a.split_at(1, Axes::Row);
-
-        assert_eq!(b.rows(), 1);
-        assert_eq!(b.cols(), 3);
-        assert_eq!(c.rows(), 2);
-        assert_eq!(c.cols(), 3);
-
-        assert_eq!(b[[0, 0]], 0);
-        assert_eq!(b[[0, 1]], 1);
-        assert_eq!(b[[0, 2]], 2);
-        assert_eq!(c[[0, 0]], 3);
-        assert_eq!(c[[0, 1]], 4);
-        assert_eq!(c[[0, 2]], 5);
-        assert_eq!(c[[1, 0]], 6);
-        assert_eq!(c[[1, 1]], 7);
-        assert_eq!(c[[1, 2]], 8);
-    }
-
-    #[test]
-    fn test_split_matrix_mut() {
-        let mut a = Matrix::new(3, 3, (0..9).collect::<Vec<_>>());
-
-        {
-            let (mut b, mut c) = a.split_at_mut(1, Axes::Row);
-
-            assert_eq!(b.rows(), 1);
-            assert_eq!(b.cols(), 3);
-            assert_eq!(c.rows(), 2);
-            assert_eq!(c.cols(), 3);
-
-            assert_eq!(b[[0, 0]], 0);
-            assert_eq!(b[[0, 1]], 1);
-            assert_eq!(b[[0, 2]], 2);
-            assert_eq!(c[[0, 0]], 3);
-            assert_eq!(c[[0, 1]], 4);
-            assert_eq!(c[[0, 2]], 5);
-            assert_eq!(c[[1, 0]], 6);
-            assert_eq!(c[[1, 1]], 7);
-            assert_eq!(c[[1, 2]], 8);
-
-            b[[0, 0]] = 4;
-            c[[0, 0]] = 5;
-        }
-
-        assert_eq!(a[[0, 0]], 4);
-        assert_eq!(a[[0, 1]], 1);
-        assert_eq!(a[[0, 2]], 2);
-        assert_eq!(a[[1, 0]], 5);
-        assert_eq!(a[[1, 1]], 4);
-        assert_eq!(a[[1, 2]], 5);
-        assert_eq!(a[[2, 0]], 6);
-        assert_eq!(a[[2, 1]], 7);
-        assert_eq!(a[[2, 2]], 8);
-
     }
 
     #[test]
@@ -1764,27 +944,5 @@ mod tests {
         assert_eq!(a[[0, 1]], 0.0);
         assert_eq!(a[[2, 1]], 0.0);
         assert_eq!(a[[3, 0]], 0.0);
-    }
-
-    #[test]
-    fn transpose_mat() {
-        let a = Matrix::new(5, 2, vec![1., 2., 3., 4., 5., 6., 7., 8., 9., 10.]);
-
-        let c = a.transpose();
-
-        assert_eq!(c.cols(), a.rows());
-        assert_eq!(c.rows(), a.cols());
-
-        assert_eq!(a[[0, 0]], c[[0, 0]]);
-        assert_eq!(a[[1, 0]], c[[0, 1]]);
-        assert_eq!(a[[2, 0]], c[[0, 2]]);
-        assert_eq!(a[[3, 0]], c[[0, 3]]);
-        assert_eq!(a[[4, 0]], c[[0, 4]]);
-        assert_eq!(a[[0, 1]], c[[1, 0]]);
-        assert_eq!(a[[1, 1]], c[[1, 1]]);
-        assert_eq!(a[[2, 1]], c[[1, 2]]);
-        assert_eq!(a[[3, 1]], c[[1, 3]]);
-        assert_eq!(a[[4, 1]], c[[1, 4]]);
-
     }
 }

@@ -5,7 +5,7 @@
 
 use std::convert::From;
 
-use super::matrix::{Matrix, MatrixSlice, MatrixSliceMut};
+use super::matrix::{Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix};
 use super::vector::Vector;
 
 
@@ -31,8 +31,8 @@ impl_matrix_from!(MatrixSliceMut);
 
 #[cfg(test)]
 mod tests {
-    use super::super::matrix::{Matrix, MatrixSlice, MatrixSliceMut};
-    use super::super::vector::Vector;
+    use matrix::{Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix};
+    use vector::Vector;
 
     #[test]
     fn inner_product_as_matrix_multiplication() {

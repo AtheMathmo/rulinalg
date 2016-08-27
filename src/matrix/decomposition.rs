@@ -15,7 +15,7 @@ use std::cmp;
 use std::ops::{Mul, Add, Div, Sub, Neg};
 use std::slice;
 
-use matrix::{Matrix, MatrixSlice, MatrixSliceMut};
+use matrix::{Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix, BaseMatrixMut};
 use vector::Vector;
 use Metric;
 use utils;
@@ -572,7 +572,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = Matrix::new(3,3,vec![1.,2.,3.,4.,5.,6.,7.,8.,9.]);
     ///
@@ -1061,7 +1061,7 @@ impl<T> Matrix<T> where T: Any + Copy + One + Zero + Neg<Output=T> +
 
 #[cfg(test)]
 mod tests {
-    use matrix::Matrix;
+    use matrix::{Matrix, BaseMatrix};
     use vector::Vector;
 
     fn validate_bidiag(mat: &Matrix<f64>,
