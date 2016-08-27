@@ -1,6 +1,6 @@
 //! Transposing
 
-use super::Matrix;
+use super::{Matrix, BaseMatrix, BaseMatrixMut};
 use std::cmp;
 use std::ptr;
 use utils;
@@ -243,7 +243,7 @@ impl<T: Copy> Matrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let mut a = Matrix::new(2, 3, vec![0,1,2,3,4,5]);
     /// a.inplace_transpose();
