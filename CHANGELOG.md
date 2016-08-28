@@ -2,6 +2,31 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
+## 0.3.0
+
+This is a large release which refactors most of the `matrix` module.
+We modify the `BaseSlice` trait to encompass `Matrix` functionality too - hence
+renaming it `BaseMatrix`. The motivation behind this is to allow us to be generic
+over `Matrix`/`MatrixSlice`/`MatrixSliceMut`.
+
+### Breaking Changes
+
+- Refactor `BaseSlice` trait as `BaseMatrix`. Implement this trait for `Matrix` too.
+- Much of the `Matrix` functionality is now implemented behind the `BaseMatrix` trait. 
+It will need to be `use`d to access this functionality.
+
+### Features
+
+- Add a new `BaseMatrixMut` trait for `Matrix` and `MatrixSliceMut`.
+- Many methods which were previously for `Matrix` only or for `MatrixSlice(Mut)` only now
+work with both!
+
+### Minor Changes
+
+- Fixing a bug in the `sub_slice` method.
+- Modifying some unsafe code to use equivalent iterators instead.
+- More benchmarks for wider performance regression coverage.
+
 ## 0.2.2
 
 ### Breaking Changes

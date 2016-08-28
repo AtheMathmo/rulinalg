@@ -56,6 +56,15 @@
 //!
 //! Of course the library can support more complex operations but you should check the individual
 //! modules for more information.
+//!
+//! # Matrix Slices
+//!
+//! Often times it is desirable to operate on only a sub-section of a `Matrix` without copying this block.
+//! Rulinalg allows this via the `MatrixSlice` and `MatrixSliceMut` structs. These structs can be created
+//! from `Matrix` structs and follow all of the borrowing rules of Rust.
+//!
+//! Note finally that much of the `Matrix`/`MatrixSlice`/`MatrixSliceMut` functionality is contained behind
+//! the `BaseMatrix`/`BaseMatrixMut` traits. This allows us to be generic over matrices or slices.
 
 #![deny(missing_docs)]
 #![warn(missing_debug_implementations)]
