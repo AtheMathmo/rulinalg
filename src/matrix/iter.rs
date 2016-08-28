@@ -1,31 +1,8 @@
 use std::iter::{ExactSizeIterator, FromIterator};
-use std::marker::PhantomData;
 use std::slice;
 
-use super::{Matrix, MatrixSlice, MatrixSliceMut};
-use super::slice::{SliceIter, SliceIterMut};
-
-/// Row iterator.
-#[derive(Debug)]
-pub struct Rows<'a, T: 'a> {
-    slice_start: *const T,
-    row_pos: usize,
-    slice_rows: usize,
-    slice_cols: usize,
-    row_stride: isize,
-    _marker: PhantomData<&'a T>,
-}
-
-/// Mutable row iterator.
-#[derive(Debug)]
-pub struct RowsMut<'a, T: 'a> {
-    slice_start: *mut T,
-    row_pos: usize,
-    slice_rows: usize,
-    slice_cols: usize,
-    row_stride: isize,
-    _marker: PhantomData<&'a mut T>,
-}
+use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut};
+use super::slice::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
 
 macro_rules! impl_iter_rows (
     ($rows:ident, $row_type:ty, $slice_from_parts:ident) => (
@@ -96,152 +73,6 @@ impl_iter_rows!(RowsMut, &'a mut [T], from_raw_parts_mut);
 impl<'a, T> ExactSizeIterator for Rows<'a, T> {}
 impl<'a, T> ExactSizeIterator for RowsMut<'a, T> {}
 
-impl<T> Matrix<T> {
-    /// Iterate over the rows of the matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
-    ///
-    /// // Prints "2" three times.
-    /// for row in a.iter_rows() {
-    ///     println!("{}", row.len());
-    /// }
-    /// ```
-    pub fn iter_rows(&self) -> Rows<T> {
-        Rows {
-            slice_start: self.data.as_ptr(),
-            row_pos: 0,
-            slice_rows: self.rows,
-            slice_cols: self.cols,
-            row_stride: self.cols as isize,
-            _marker: PhantomData::<&T>,
-        }
-    }
-
-    /// Iterate over the mutable rows of the matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
-    ///
-    /// for row in a.iter_rows_mut() {
-    ///     for r in row {
-    ///         *r = *r + 1;
-    ///     }
-    /// }
-    ///
-    /// // Now contains the range 1..7
-    /// println!("{}", a);
-    /// ```
-    pub fn iter_rows_mut(&mut self) -> RowsMut<T> {
-        RowsMut {
-            slice_start: self.data.as_mut_ptr(),
-            row_pos: 0,
-            slice_rows: self.rows,
-            slice_cols: self.cols,
-            row_stride: self.cols as isize,
-            _marker: PhantomData::<&mut T>,
-        }
-    }
-}
-
-impl<'a, T> MatrixSlice<'a, T> {
-    /// Iterate over the rows of the matrix slice.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSlice};
-    ///
-    /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
-    /// let b = MatrixSlice::from_matrix(&a, [0,0], 2, 2);
-    ///
-    /// // Prints "2" two times.
-    /// for row in b.iter_rows() {
-    ///     println!("{}", row.len());
-    /// }
-    /// ```
-    pub fn iter_rows(&self) -> Rows<T> {
-        Rows {
-            slice_start: self.ptr,
-            row_pos: 0,
-            slice_rows: self.rows,
-            slice_cols: self.cols,
-            row_stride: self.row_stride as isize,
-            _marker: PhantomData::<&'a T>,
-        }
-    }
-}
-
-impl<'a, T> MatrixSliceMut<'a, T> {
-    /// Iterate over the rows of the mutable matrix slice.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSliceMut};
-    ///
-    /// let mut a = Matrix::new(3 ,2, (0..6).collect::<Vec<usize>>());
-    /// let b = MatrixSliceMut::from_matrix(&mut a, [0,0], 2, 2);
-    ///
-    /// // Prints "2" two times.
-    /// for row in b.iter_rows() {
-    ///     println!("{}", row.len());
-    /// }
-    /// ```
-    pub fn iter_rows(&self) -> Rows<T> {
-        Rows {
-            slice_start: self.ptr,
-            row_pos: 0,
-            slice_rows: self.rows,
-            slice_cols: self.cols,
-            row_stride: self.row_stride as isize,
-            _marker: PhantomData::<&'a T>,
-        }
-    }
-
-    /// Iterate over the mutable rows of the matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSliceMut};
-    ///
-    /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
-    ///
-    /// // New scope (so we can consume `a` after)
-    /// {
-    ///    let b = MatrixSliceMut::from_matrix(&mut a, [0,0], 2, 2);
-    ///
-    ///     for row in b.iter_rows_mut() {
-    ///         for r in row {
-    ///             *r = *r + 1;
-    ///         }
-    ///     }
-    /// }
-    ///
-    /// // The first two rows have been incremented by 1
-    /// println!("{}", a);
-    /// ```
-    pub fn iter_rows_mut(&self) -> RowsMut<T> {
-        RowsMut {
-            slice_start: self.ptr,
-            row_pos: 0,
-            slice_rows: self.rows,
-            slice_cols: self.cols,
-            row_stride: self.row_stride as isize,
-            _marker: PhantomData::<&'a mut T>,
-        }
-    }
-}
-
 /// Creates a `Matrix` from an iterator over slices.
 ///
 /// Each of the slices produced by the iterator will become a row in the matrix.
@@ -255,7 +86,7 @@ impl<'a, T> MatrixSliceMut<'a, T> {
 /// We can create a new matrix from some data.
 ///
 /// ```
-/// use rulinalg::matrix::Matrix;
+/// use rulinalg::matrix::{Matrix, BaseMatrix};
 ///
 /// let a : Matrix<f64> = vec![4f64; 16].chunks(4).collect();
 ///
@@ -266,7 +97,7 @@ impl<'a, T> MatrixSliceMut<'a, T> {
 /// We can also do more interesting things.
 ///
 /// ```
-/// use rulinalg::matrix::Matrix;
+/// use rulinalg::matrix::{Matrix, BaseMatrix};
 ///
 /// let a = Matrix::new(4,2, (0..8).collect::<Vec<usize>>());
 ///
@@ -381,6 +212,7 @@ impl<'a, T> IntoIterator for &'a mut MatrixSliceMut<'a, T> {
 mod tests {
 
     use super::super::{Matrix, MatrixSlice, MatrixSliceMut};
+    use super::super::slice::{BaseMatrix, BaseMatrixMut};
 
     #[test]
     fn test_matrix_rows() {
@@ -423,7 +255,7 @@ mod tests {
         let mut a = Matrix::new(3, 3, (0..9).collect::<Vec<usize>>());
 
         {
-            let b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 2, 2);
+            let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 2, 2);
 
             let data = [[0, 1], [3, 4]];
 
