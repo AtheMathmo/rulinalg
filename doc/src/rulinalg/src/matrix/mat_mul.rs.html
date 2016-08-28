@@ -461,8 +461,7 @@
 <span id="417">417</span>
 <span id="418">418</span>
 </pre><pre class='rust '>
-<span class='kw'>use</span> <span class='kw'>super</span>::{<span class='ident'>Matrix</span>, <span class='ident'>MatrixSlice</span>, <span class='ident'>MatrixSliceMut</span>};
-<span class='kw'>use</span> <span class='kw'>super</span>::<span class='ident'>slice</span>::<span class='ident'>BaseSlice</span>;
+<span class='kw'>use</span> <span class='kw'>super</span>::{<span class='ident'>Matrix</span>, <span class='ident'>MatrixSlice</span>, <span class='ident'>MatrixSliceMut</span>, <span class='ident'>BaseMatrix</span>};
 
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>any</span>::{<span class='ident'>Any</span>, <span class='ident'>TypeId</span>};
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>ops</span>::{<span class='ident'>Add</span>, <span class='ident'>Mul</span>};
@@ -752,6 +751,7 @@
     <span class='kw'>use</span> <span class='kw'>super</span>::<span class='kw'>super</span>::<span class='ident'>Matrix</span>;
     <span class='kw'>use</span> <span class='kw'>super</span>::<span class='kw'>super</span>::<span class='ident'>MatrixSlice</span>;
     <span class='kw'>use</span> <span class='kw'>super</span>::<span class='kw'>super</span>::<span class='ident'>MatrixSliceMut</span>;
+    <span class='kw'>use</span> <span class='ident'>matrix</span>::<span class='ident'>slice</span>::<span class='ident'>BaseMatrix</span>;
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>matrix_mul_f32</span>() {

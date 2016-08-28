@@ -47,18 +47,22 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-6' class='srclink' href='../../src/rulinalg/src/matrix/mod.rs.html#1-1790' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-6' class='srclink' href='../../src/rulinalg/src/matrix/mod.rs.html#1-948' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>The matrix module.</p>
 
 <p>Currently contains all code
 relating to the matrix linear algebra struct.</p>
-</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+
+<p>Most of the logic for manipulating matrices is generically implemented
+via <code>BaseMatrix</code> and <code>BaseMatrixMut</code> trait.</p>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>pub use self::slice::{<a class='trait' href='../../rulinalg/matrix/slice/trait.BaseMatrix.html' title='rulinalg::matrix::slice::BaseMatrix'>BaseMatrix</a>, <a class='trait' href='../../rulinalg/matrix/slice/trait.BaseMatrixMut.html' title='rulinalg::matrix::slice::BaseMatrixMut'>BaseMatrixMut</a>};</code></td></tr></table><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
 <table>
                        <tr class=' module-item'>
                            <td><a class='mod' href='slice/index.html'
                                   title='rulinalg::matrix::slice'>slice</a></td>
                            <td class='docblock short'>
-                                <p>Slices for the <code>Matrix</code> struct.</p>
+                                <p>Traits for matrices operations.</p>
                            </td>
                        </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table>
@@ -81,6 +85,20 @@ relating to the matrix linear algebra struct.</p>
                                   title='rulinalg::matrix::MatrixSliceMut'>MatrixSliceMut</a></td>
                            <td class='docblock short'>
                                 <p>A mutable <code>MatrixSliceMut</code></p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Rows.html'
+                                  title='rulinalg::matrix::Rows'>Rows</a></td>
+                           <td class='docblock short'>
+                                <p>Row iterator.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.RowsMut.html'
+                                  title='rulinalg::matrix::RowsMut'>RowsMut</a></td>
+                           <td class='docblock short'>
+                                <p>Mutable row iterator.</p>
                            </td>
                        </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
 <table>

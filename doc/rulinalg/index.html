@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-0' class='srclink' href='../src/rulinalg/src/lib.rs.html#1-79' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-0' class='srclink' href='../src/rulinalg/src/lib.rs.html#1-88' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'>
 <h1 id='the-rulinalg-crate' class='section-header'><a href='#the-rulinalg-crate'>The rulinalg crate.</a></h1>
 <p>A crate that provides high-dimensional linear algebra
@@ -105,6 +105,14 @@ row will be [1,2,3].</p>
 
 <p>Of course the library can support more complex operations but you should check the individual
 modules for more information.</p>
+
+<h1 id='matrix-slices' class='section-header'><a href='#matrix-slices'>Matrix Slices</a></h1>
+<p>Often times it is desirable to operate on only a sub-section of a <code>Matrix</code> without copying this block.
+Rulinalg allows this via the <code>MatrixSlice</code> and <code>MatrixSliceMut</code> structs. These structs can be created
+from <code>Matrix</code> structs and follow all of the borrowing rules of Rust.</p>
+
+<p>Note finally that much of the <code>Matrix</code>/<code>MatrixSlice</code>/<code>MatrixSliceMut</code> functionality is contained behind
+the <code>BaseMatrix</code>/<code>BaseMatrixMut</code> traits. This allows us to be generic over matrices or slices.</p>
 </div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
 <table>
                        <tr class=' module-item'>

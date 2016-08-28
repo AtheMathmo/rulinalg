@@ -1360,7 +1360,7 @@
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>ops</span>::{<span class='ident'>Mul</span>, <span class='ident'>Add</span>, <span class='ident'>Div</span>, <span class='ident'>Sub</span>, <span class='ident'>Neg</span>};
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>slice</span>;
 
-<span class='kw'>use</span> <span class='ident'>matrix</span>::{<span class='ident'>Matrix</span>, <span class='ident'>MatrixSlice</span>, <span class='ident'>MatrixSliceMut</span>};
+<span class='kw'>use</span> <span class='ident'>matrix</span>::{<span class='ident'>Matrix</span>, <span class='ident'>MatrixSlice</span>, <span class='ident'>MatrixSliceMut</span>, <span class='ident'>BaseMatrix</span>, <span class='ident'>BaseMatrixMut</span>};
 <span class='kw'>use</span> <span class='ident'>vector</span>::<span class='ident'>Vector</span>;
 <span class='kw'>use</span> <span class='ident'>Metric</span>;
 <span class='kw'>use</span> <span class='ident'>utils</span>;
@@ -1571,10 +1571,10 @@
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// - The matrix cannot be reduced to bidiagonal form.</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>bidiagonal_decomp</span>(<span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(<span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>), <span class='ident'>Error</span><span class='op'>&gt;</span> {
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>flipped</span> <span class='op'>=</span> <span class='boolvalue'>false</span>;
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>flipped</span> <span class='op'>=</span> <span class='bool-val'>false</span>;
 
         <span class='kw'>if</span> <span class='self'>self</span>.<span class='ident'>rows</span> <span class='op'>&lt;</span> <span class='self'>self</span>.<span class='ident'>cols</span> {
-            <span class='ident'>flipped</span> <span class='op'>=</span> <span class='boolvalue'>true</span>;
+            <span class='ident'>flipped</span> <span class='op'>=</span> <span class='bool-val'>true</span>;
             <span class='self'>self</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>transpose</span>()
         }
 
@@ -1662,12 +1662,12 @@
     <span class='doccomment'>/// This function may fail in some cases. The current decomposition whilst being</span>
     <span class='doccomment'>/// efficient is fairly basic. Hopefully the algorithm can be made not to fail in the near future.</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>svd</span>(<span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(<span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>), <span class='ident'>Error</span><span class='op'>&gt;</span> {
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>flipped</span> <span class='op'>=</span> <span class='boolvalue'>false</span>;
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>flipped</span> <span class='op'>=</span> <span class='bool-val'>false</span>;
 
         <span class='comment'>// The algorithm assumes rows &gt; cols. If this is not the case we transpose and fix later.</span>
         <span class='kw'>if</span> <span class='self'>self</span>.<span class='ident'>cols</span> <span class='op'>&gt;</span> <span class='self'>self</span>.<span class='ident'>rows</span> {
             <span class='self'>self</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>transpose</span>();
-            <span class='ident'>flipped</span> <span class='op'>=</span> <span class='boolvalue'>true</span>;
+            <span class='ident'>flipped</span> <span class='op'>=</span> <span class='bool-val'>true</span>;
         }
 
         <span class='kw'>let</span> <span class='ident'>n</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>cols</span>;
@@ -1679,11 +1679,11 @@
         <span class='kw'>loop</span> {
             <span class='comment'>// Values to count the size of lower diagonal block</span>
             <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>q</span> <span class='op'>=</span> <span class='number'>0</span>;
-            <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>on_lower</span> <span class='op'>=</span> <span class='boolvalue'>true</span>;
+            <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>on_lower</span> <span class='op'>=</span> <span class='bool-val'>true</span>;
 
             <span class='comment'>// Values to count top block</span>
             <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>p</span> <span class='op'>=</span> <span class='number'>0</span>;
-            <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>on_middle</span> <span class='op'>=</span> <span class='boolvalue'>false</span>;
+            <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>on_middle</span> <span class='op'>=</span> <span class='bool-val'>false</span>;
 
             <span class='comment'>// Iterate through and hard set the super diag if converged</span>
             <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> (<span class='number'>0</span>..<span class='ident'>n</span> <span class='op'>-</span> <span class='number'>1</span>).<span class='ident'>rev</span>() {
@@ -1699,7 +1699,7 @@
                     <span class='kw'>if</span> <span class='ident'>on_lower</span> {
                         <span class='ident'>q</span> <span class='op'>+=</span> <span class='number'>1</span>;
                     } <span class='kw'>else</span> <span class='kw'>if</span> <span class='ident'>on_middle</span> {
-                        <span class='ident'>on_middle</span> <span class='op'>=</span> <span class='boolvalue'>false</span>;
+                        <span class='ident'>on_middle</span> <span class='op'>=</span> <span class='bool-val'>false</span>;
                         <span class='ident'>p</span> <span class='op'>=</span> <span class='ident'>i</span> <span class='op'>+</span> <span class='number'>1</span>;
                     }
                     <span class='kw'>unsafe</span> {
@@ -1708,8 +1708,8 @@
                 } <span class='kw'>else</span> {
                     <span class='kw'>if</span> <span class='ident'>on_lower</span> {
                         <span class='comment'>// No longer on the lower diagonal</span>
-                        <span class='ident'>on_middle</span> <span class='op'>=</span> <span class='boolvalue'>true</span>;
-                        <span class='ident'>on_lower</span> <span class='op'>=</span> <span class='boolvalue'>false</span>;
+                        <span class='ident'>on_middle</span> <span class='op'>=</span> <span class='bool-val'>true</span>;
+                        <span class='ident'>on_lower</span> <span class='op'>=</span> <span class='bool-val'>false</span>;
                     }
                 }
             }
@@ -1917,7 +1917,7 @@
     <span class='doccomment'>/// # Examples</span>
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// ```</span>
-    <span class='doccomment'>/// use rulinalg::matrix::Matrix;</span>
+    <span class='doccomment'>/// use rulinalg::matrix::{Matrix, BaseMatrix};</span>
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// let a = Matrix::new(3,3,vec![1.,2.,3.,4.,5.,6.,7.,8.,9.]);</span>
     <span class='doccomment'>///</span>
@@ -1973,10 +1973,10 @@
                       <span class='string'>&quot;Matrix must be square to produce balance matrix.&quot;</span>);
 
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>d</span> <span class='op'>=</span> <span class='ident'>Matrix</span>::<span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>::<span class='ident'>identity</span>(<span class='ident'>n</span>);
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>converged</span> <span class='op'>=</span> <span class='boolvalue'>false</span>;
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>converged</span> <span class='op'>=</span> <span class='bool-val'>false</span>;
 
         <span class='kw'>while</span> <span class='op'>!</span><span class='ident'>converged</span> {
-            <span class='ident'>converged</span> <span class='op'>=</span> <span class='boolvalue'>true</span>;
+            <span class='ident'>converged</span> <span class='op'>=</span> <span class='bool-val'>true</span>;
 
             <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> <span class='number'>0</span>..<span class='ident'>n</span> {
                 <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>select_cols</span>(<span class='kw-2'>&amp;</span>[<span class='ident'>i</span>]).<span class='ident'>norm</span>();
@@ -1998,7 +1998,7 @@
                 }
 
                 <span class='kw'>if</span> (<span class='ident'>c</span> <span class='op'>*</span> <span class='ident'>c</span> <span class='op'>+</span> <span class='ident'>r</span> <span class='op'>*</span> <span class='ident'>r</span>) <span class='op'>&lt;</span> <span class='ident'>cast</span>::<span class='op'>&lt;</span><span class='ident'>f64</span>, <span class='ident'>T</span><span class='op'>&gt;</span>(<span class='number'>0.95</span>).<span class='ident'>unwrap</span>() <span class='op'>*</span> <span class='ident'>s</span> {
-                    <span class='ident'>converged</span> <span class='op'>=</span> <span class='boolvalue'>false</span>;
+                    <span class='ident'>converged</span> <span class='op'>=</span> <span class='bool-val'>false</span>;
                     <span class='ident'>d</span>.<span class='ident'>data</span>[<span class='ident'>i</span> <span class='op'>*</span> (<span class='self'>self</span>.<span class='ident'>cols</span> <span class='op'>+</span> <span class='number'>1</span>)] <span class='op'>=</span> <span class='ident'>f</span> <span class='op'>*</span> <span class='ident'>d</span>.<span class='ident'>data</span>[<span class='ident'>i</span> <span class='op'>*</span> (<span class='self'>self</span>.<span class='ident'>cols</span> <span class='op'>+</span> <span class='number'>1</span>)];
 
                     <span class='kw'>for</span> <span class='ident'>j</span> <span class='kw'>in</span> <span class='number'>0</span>..<span class='ident'>n</span> {
@@ -2406,7 +2406,7 @@
 
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
 <span class='kw'>mod</span> <span class='ident'>tests</span> {
-    <span class='kw'>use</span> <span class='ident'>matrix</span>::<span class='ident'>Matrix</span>;
+    <span class='kw'>use</span> <span class='ident'>matrix</span>::{<span class='ident'>Matrix</span>, <span class='ident'>BaseMatrix</span>};
     <span class='kw'>use</span> <span class='ident'>vector</span>::<span class='ident'>Vector</span>;
 
     <span class='kw'>fn</span> <span class='ident'>validate_bidiag</span>(<span class='ident'>mat</span>: <span class='kw-2'>&amp;</span><span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>f64</span><span class='op'>&gt;</span>,
@@ -2443,7 +2443,7 @@
                                    <span class='number'>7.0</span>, <span class='number'>1.0</span>, <span class='number'>1.0</span>, <span class='number'>4.0</span>, <span class='number'>2.0</span>, <span class='number'>1.0</span>, <span class='op'>-</span><span class='number'>1.0</span>, <span class='number'>3.0</span>, <span class='number'>5.0</span>, <span class='number'>1.0</span>, <span class='number'>1.0</span>, <span class='number'>3.0</span>,
                                    <span class='number'>2.0</span>]);
         <span class='kw'>let</span> (<span class='ident'>b</span>, <span class='ident'>u</span>, <span class='ident'>v</span>) <span class='op'>=</span> <span class='ident'>mat</span>.<span class='ident'>clone</span>().<span class='ident'>bidiagonal_decomp</span>().<span class='ident'>unwrap</span>();
-        <span class='ident'>validate_bidiag</span>(<span class='kw-2'>&amp;</span><span class='ident'>mat</span>, <span class='kw-2'>&amp;</span><span class='ident'>b</span>, <span class='kw-2'>&amp;</span><span class='ident'>u</span>, <span class='kw-2'>&amp;</span><span class='ident'>v</span>, <span class='boolvalue'>true</span>);
+        <span class='ident'>validate_bidiag</span>(<span class='kw-2'>&amp;</span><span class='ident'>mat</span>, <span class='kw-2'>&amp;</span><span class='ident'>b</span>, <span class='kw-2'>&amp;</span><span class='ident'>u</span>, <span class='kw-2'>&amp;</span><span class='ident'>v</span>, <span class='bool-val'>true</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
@@ -2453,14 +2453,14 @@
                               <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1f64</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>, <span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>1.0</span>, <span class='number'>3.0</span>, <span class='number'>1.0</span>,
                                    <span class='number'>7.0</span>, <span class='number'>1.0</span>, <span class='number'>1.0</span>]);
         <span class='kw'>let</span> (<span class='ident'>b</span>, <span class='ident'>u</span>, <span class='ident'>v</span>) <span class='op'>=</span> <span class='ident'>mat</span>.<span class='ident'>clone</span>().<span class='ident'>bidiagonal_decomp</span>().<span class='ident'>unwrap</span>();
-        <span class='ident'>validate_bidiag</span>(<span class='kw-2'>&amp;</span><span class='ident'>mat</span>, <span class='kw-2'>&amp;</span><span class='ident'>b</span>, <span class='kw-2'>&amp;</span><span class='ident'>u</span>, <span class='kw-2'>&amp;</span><span class='ident'>v</span>, <span class='boolvalue'>true</span>);
+        <span class='ident'>validate_bidiag</span>(<span class='kw-2'>&amp;</span><span class='ident'>mat</span>, <span class='kw-2'>&amp;</span><span class='ident'>b</span>, <span class='kw-2'>&amp;</span><span class='ident'>u</span>, <span class='kw-2'>&amp;</span><span class='ident'>v</span>, <span class='bool-val'>true</span>);
 
         <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='ident'>Matrix</span>::<span class='ident'>new</span>(<span class='number'>3</span>,
                               <span class='number'>5</span>,
                               <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1f64</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>, <span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>1.0</span>, <span class='number'>3.0</span>, <span class='number'>1.0</span>,
                                    <span class='number'>7.0</span>, <span class='number'>1.0</span>, <span class='number'>1.0</span>]);
         <span class='kw'>let</span> (<span class='ident'>b</span>, <span class='ident'>u</span>, <span class='ident'>v</span>) <span class='op'>=</span> <span class='ident'>mat</span>.<span class='ident'>clone</span>().<span class='ident'>bidiagonal_decomp</span>().<span class='ident'>unwrap</span>();
-        <span class='ident'>validate_bidiag</span>(<span class='kw-2'>&amp;</span><span class='ident'>mat</span>, <span class='kw-2'>&amp;</span><span class='ident'>b</span>, <span class='kw-2'>&amp;</span><span class='ident'>u</span>, <span class='kw-2'>&amp;</span><span class='ident'>v</span>, <span class='boolvalue'>false</span>);
+        <span class='ident'>validate_bidiag</span>(<span class='kw-2'>&amp;</span><span class='ident'>mat</span>, <span class='kw-2'>&amp;</span><span class='ident'>b</span>, <span class='kw-2'>&amp;</span><span class='ident'>u</span>, <span class='kw-2'>&amp;</span><span class='ident'>v</span>, <span class='bool-val'>false</span>);
     }
 
     <span class='kw'>fn</span> <span class='ident'>validate_svd</span>(<span class='ident'>mat</span>: <span class='kw-2'>&amp;</span><span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>f64</span><span class='op'>&gt;</span>, <span class='ident'>b</span>: <span class='kw-2'>&amp;</span><span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>f64</span><span class='op'>&gt;</span>, <span class='ident'>u</span>: <span class='kw-2'>&amp;</span><span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>f64</span><span class='op'>&gt;</span>, <span class='ident'>v</span>: <span class='kw-2'>&amp;</span><span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>f64</span><span class='op'>&gt;</span>) {

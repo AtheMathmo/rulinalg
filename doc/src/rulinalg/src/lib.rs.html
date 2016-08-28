@@ -121,6 +121,15 @@
 <span id="77">77</span>
 <span id="78">78</span>
 <span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! # The rulinalg crate.</span>
 <span class='doccomment'>//! </span>
@@ -180,6 +189,15 @@
 <span class='doccomment'>//!</span>
 <span class='doccomment'>//! Of course the library can support more complex operations but you should check the individual</span>
 <span class='doccomment'>//! modules for more information.</span>
+<span class='doccomment'>//!</span>
+<span class='doccomment'>//! # Matrix Slices</span>
+<span class='doccomment'>//!</span>
+<span class='doccomment'>//! Often times it is desirable to operate on only a sub-section of a `Matrix` without copying this block.</span>
+<span class='doccomment'>//! Rulinalg allows this via the `MatrixSlice` and `MatrixSliceMut` structs. These structs can be created</span>
+<span class='doccomment'>//! from `Matrix` structs and follow all of the borrowing rules of Rust.</span>
+<span class='doccomment'>//!</span>
+<span class='doccomment'>//! Note finally that much of the `Matrix`/`MatrixSlice`/`MatrixSliceMut` functionality is contained behind</span>
+<span class='doccomment'>//! the `BaseMatrix`/`BaseMatrixMut` traits. This allows us to be generic over matrices or slices.</span>
 
 <span class='attribute'>#<span class='op'>!</span>[<span class='ident'>deny</span>(<span class='ident'>missing_docs</span>)]</span>
 <span class='attribute'>#<span class='op'>!</span>[<span class='ident'>warn</span>(<span class='ident'>missing_debug_implementations</span>)]</span>

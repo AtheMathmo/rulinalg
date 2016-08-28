@@ -125,6 +125,7 @@
             break;
 
         case "+":
+            ev.preventDefault();
             toggleAllDocs();
             break;
 
@@ -576,10 +577,6 @@
                         displayPath = item.path + '::';
                         href = rootPath + item.path.replace(/::/g, '/') + '/' +
                                name + '/index.html';
-                    } else if (type === 'static' || type === 'reexport') {
-                        displayPath = item.path + '::';
-                        href = rootPath + item.path.replace(/::/g, '/') +
-                               '/index.html';
                     } else if (type === "primitive") {
                         displayPath = "";
                         href = rootPath + item.path.replace(/::/g, '/') +
@@ -590,9 +587,14 @@
                     } else if (item.parent !== undefined) {
                         var myparent = item.parent;
                         var anchor = '#' + type + '.' + name;
-                        displayPath = item.path + '::' + myparent.name + '::';
+                        var parentType = itemTypes[myparent.ty];
+                        if (parentType === "primitive") {
+                            displayPath = myparent.name + '::';
+                        } else {
+                            displayPath = item.path + '::' + myparent.name + '::';
+                        }
                         href = rootPath + item.path.replace(/::/g, '/') +
-                               '/' + itemTypes[myparent.ty] +
+                               '/' + parentType +
                                '.' + myparent.name +
                                '.html' + anchor;
                     } else {
@@ -883,12 +885,16 @@
             sidebar.append(div);
         }
 
+        block("primitive", "Primitive Types");
         block("mod", "Modules");
+        block("macro", "Macros");
         block("struct", "Structs");
         block("enum", "Enums");
+        block("constant", "Constants");
+        block("static", "Statics");
         block("trait", "Traits");
         block("fn", "Functions");
-        block("macro", "Macros");
+        block("type", "Type Definitions");
     }
 
     window.initSidebarItems = initSidebarItems;

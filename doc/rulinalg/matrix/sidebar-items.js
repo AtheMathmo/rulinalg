@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Axes","Matrix dimensions"]],"mod":[["slice","Slices for the `Matrix` struct."]],"struct":[["Matrix","The `Matrix` struct."],["MatrixSlice","A `MatrixSlice`"],["MatrixSliceMut","A mutable `MatrixSliceMut`"]]});
+initSidebarItems({"enum":[["Axes","Matrix dimensions"]],"mod":[["slice","Traits for matrices operations."]],"struct":[["Matrix","The `Matrix` struct."],["MatrixSlice","A `MatrixSlice`"],["MatrixSliceMut","A mutable `MatrixSliceMut`"],["Rows","Row iterator."],["RowsMut","Mutable row iterator."]]});
