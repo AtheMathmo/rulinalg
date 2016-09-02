@@ -163,7 +163,10 @@ pub trait BaseMatrix<T>: Sized {
 
     /// The sum of the rows of the matrix.
     ///
-    /// Returns a Vector equal to the sum of the matrices rows.
+    /// Returns a Vector equal to the sums of elements over the matrices rows.
+    ///
+    /// Note that the resulting vector is identical to the sums of
+    /// elements along each column of the matrix.
     ///
     /// # Examples
     ///
@@ -185,7 +188,10 @@ pub trait BaseMatrix<T>: Sized {
 
     /// The sum of the columns of the matrix.
     ///
-    /// Returns a Vector equal to the sum of the matrices columns.
+    /// Returns a Vector equal to the sums of elements over the matrices columns.
+    ///
+    /// Note that the resulting vector is identical to the sums of
+    /// elements along each row of the matrix.
     ///
     /// # Examples
     ///
