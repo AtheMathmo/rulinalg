@@ -2,6 +2,27 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
+## 0.3.1
+
+### New Contributors
+
+- [scholtzan](https://github.com/scholtzan)
+- [theotherphil](https://github.com/theotherphil)
+
+### Breaking Changes
+
+- None
+
+### Features
+
+- None
+
+### Minor Changes
+
+- Improved documentation for `sum_rows` and `sum_cols` functions.
+- Generalized signature of `select_rows` and `select_cols`. These functions now
+take an `ExactSizeIterator` instead of a slice.
+
 ## 0.3.0
 
 This is a large release which refactors most of the `matrix` module.

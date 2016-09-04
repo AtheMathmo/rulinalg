@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/AtheMathmo/rulinalg.svg?branch=master)](https://travis-ci.org/AtheMathmo/rulinalg)
 
-The crate is currently on [version 0.3.0](https://crates.io/crates/rulinalg).
+The crate is currently on [version 0.3.1](https://crates.io/crates/rulinalg).
 
 Read the [API Documentation](https://athemathmo.github.io/rulinalg) to learn more. 
 
