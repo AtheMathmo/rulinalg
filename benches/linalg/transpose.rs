@@ -55,6 +55,42 @@ fn allocating_transpose_10000_100(b: &mut Bencher) {
     })
 }
 
+#[bench]
+fn allocating_transpose_30_10000(b: &mut Bencher) {
+    let a = Matrix::<f64>::zeros(30, 10000);
+
+    b.iter(|| {
+    	a.transpose()
+    })
+}
+
+#[bench]
+fn fast_allocating_transpose_10000_100(b: &mut Bencher) {
+    let a = Matrix::<f64>::zeros(10000, 100);
+
+    b.iter(|| {
+    	a.out_of_place_t()
+    })
+}
+
+#[bench]
+fn fast_allocating_transpose_1000_1000(b: &mut Bencher) {
+    let a = Matrix::<f64>::zeros(1000, 1000);
+
+    b.iter(|| {
+    	a.out_of_place_t()
+    })
+}
+
+#[bench]
+fn fast_allocating_transpose_30_10000(b: &mut Bencher) {
+    let a = Matrix::<f64>::zeros(30, 10000);
+
+    b.iter(|| {
+    	a.out_of_place_t()
+    })
+}
+
 // #[bench]
 // fn allocating_transpose_10000_10000(b: &mut Bencher) {
 //     let a = Matrix::<f64>::zeros(10000, 10000);

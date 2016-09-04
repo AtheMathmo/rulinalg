@@ -1,6 +1,6 @@
 //! Transposing
 
-use super::{Matrix, BaseMatrix, BaseMatrixMut};
+use super::{Matrix, MatrixSlice, MatrixSliceMut, Axes, BaseMatrix, BaseMatrixMut};
 use std::cmp;
 use std::ptr;
 use utils;
@@ -264,10 +264,10 @@ impl<T: Copy> Matrix<T> {
 
     fn inplace_square_transpose(&mut self) {
         unsafe {
-            for i in 0..self.rows-1 {
+            for i in 0..self.rows - 1 {
                 for j in i + 1..self.cols {
                     ptr::swap(self.get_unchecked_mut([i, j]) as *mut T,
-                            self.get_unchecked_mut([j, i]) as *mut T);
+                              self.get_unchecked_mut([j, i]) as *mut T);
                 }
             }
         }
@@ -333,12 +333,69 @@ impl<T: Copy> Matrix<T> {
         self.rows = n;
         self.cols = m;
     }
+
+    /// Transposing efficiently out of place
+    pub fn out_of_place_t(&self) -> Matrix<T> {
+        let mut new_data: Vec<T> = Vec::with_capacity(self.rows * self.cols);
+        unsafe {
+            new_data.set_len(self.rows * self.cols);
+        }
+
+        let mut b = Matrix::new(self.cols, self.rows, new_data);
+
+        Matrix::<T>::outer_t(self.as_slice(), b.as_mut_slice());
+
+        b
+
+    }
+
+    fn outer_t<'a, 'b>(a: MatrixSlice<'a, T>, mut b: MatrixSliceMut<'b, T>) {
+        let rows_larger: bool;
+        let larger_dim: usize;
+        if a.cols() >= b.rows() {
+            rows_larger = false;
+            larger_dim = a.cols();
+        } else {
+            rows_larger = true;
+            larger_dim = a.rows();
+        }
+
+        if larger_dim <= 8 {
+            Matrix::<T>::base_t(a, b);
+        } else {
+            if rows_larger {
+                let split_point = a.rows() / 2;
+                let (a_1, a_2) = a.split_at(split_point, Axes::Row);
+                let (b_1, b_2) = b.split_at_mut(split_point, Axes::Col);
+
+                Matrix::<T>::outer_t(a_1, b_1);
+                Matrix::<T>::outer_t(a_2, b_2);
+            } else {
+                let split_point = a.cols / 2;
+                let (a_1, a_2) = a.split_at(split_point, Axes::Col);
+                let (b_1, b_2) = b.split_at_mut(split_point, Axes::Row);
+
+                Matrix::<T>::outer_t(a_1, b_1);
+                Matrix::<T>::outer_t(a_2, b_2);
+            }
+        }
+    }
+
+    fn base_t<'a, 'b>(a: MatrixSlice<'a, T>, mut b: MatrixSliceMut<'b, T>) {
+        unsafe {
+            for i in 0..a.cols() {
+                for j in 0..a.rows() {
+                    *b.get_unchecked_mut([i, j]) = *a.get_unchecked([j, i]);
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{ReducedDivisor, gcd, mmi};
-    use matrix::Matrix;
+    use matrix::{Matrix, BaseMatrix};
 
     #[test]
     fn test_reduced_arith_div() {
@@ -371,10 +428,10 @@ mod tests {
     fn test_reduced_arith_2_pow() {
         let a = ReducedDivisor::new(4).unwrap();
 
-        assert_eq!(a.divmod(0), (0,0));
-        assert_eq!(a.divmod(1), (0,1));
-        assert_eq!(a.divmod(4), (1,0));
-        assert_eq!(a.divmod(9), (2,1));
+        assert_eq!(a.divmod(0), (0, 0));
+        assert_eq!(a.divmod(1), (0, 1));
+        assert_eq!(a.divmod(4), (1, 0));
+        assert_eq!(a.divmod(9), (2, 1));
     }
 
     #[test]
@@ -440,5 +497,28 @@ mod tests {
 
 
         assert_eq!(a.into_vec(), transposed);
+    }
+
+    #[test]
+    fn test_out_of_place_transpose_small() {
+        let a = Matrix::new(3, 6, (0..18).collect::<Vec<_>>());
+        let b = a.out_of_place_t();
+
+        assert_eq!(b.rows, 6);
+        assert_eq!(b.cols, 3);
+
+        let transposed = vec![0, 6, 12, 1, 7, 13, 2, 8, 14, 3, 9, 15, 4, 10, 16, 5, 11, 17];
+
+
+        assert_eq!(b.into_vec(), transposed);
+    }
+
+    #[test]
+    fn test_out_of_place_transpose_large() {
+        let a = Matrix::new(64, 64, (0..64 * 64).collect::<Vec<_>>());
+        let b = a.out_of_place_t();
+        let c = a.transpose();
+
+        assert_eq!(b.into_vec(), c.into_vec());
     }
 }
