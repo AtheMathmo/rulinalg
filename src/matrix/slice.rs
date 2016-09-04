@@ -280,7 +280,7 @@ pub trait BaseMatrix<T>: Sized {
 
         Matrix {
             cols: self.cols(),
-            rows: row_iter.clone().len(),
+            rows: row_iter.len(),
             data: mat_vec,
         }
     }
@@ -1534,7 +1534,7 @@ mod tests {
 
         assert_eq!(b.into_vec(), vec![1, 3, 5, 7]);
     }
-    
+
     #[test]
     fn test_matrix_select() {
         let a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
