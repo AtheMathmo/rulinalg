@@ -1599,6 +1599,24 @@ mod tests {
     }
 
     #[test]
+    fn test_matrixslice_swap_rows() {
+        let mut a = Matrix::new(4, 3, (0..12).collect::<Vec<usize>>());
+        {
+            let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 4, 2);
+            b.swap_rows(0, 1);
+        }
+        assert_eq!(a.into_vec(), vec![3,4,2,0,1,5,6,7,8,9,10,11]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_matrixslice_swap_rows_high() {
+        let mut a = Matrix::new(4, 3, (0..12).collect::<Vec<usize>>());
+        let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 3, 2);
+        b.swap_rows(3, 1);
+    }
+
+    #[test]
     fn test_matrix_swap_same_rows() {
         let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
         a.swap_rows(0, 0);
