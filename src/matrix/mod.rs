@@ -312,13 +312,29 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     ///
     /// let a = Matrix::<f32>::new(2,2,vec![1.0,2.0,3.0,4.0]);
     ///
-    /// let c = a.variance(Axes::Row);
+    /// let c = a.variance(Axes::Row).unwrap();
     /// assert_eq!(*c.data(), vec![2.0, 2.0]);
     ///
-    /// let d = a.variance(Axes::Col);
+    /// let d = a.variance(Axes::Col).unwrap();
     /// assert_eq!(*d.data(), vec![0.5, 0.5]);
     /// ```
-    pub fn variance(&self, axis: Axes) -> Vector<T> {
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, Axes};
+    ///
+    /// let a = Matrix::<f32>::new(1,2,vec![1.0,2.0]);
+    ///
+    /// let c = a.variance(Axes::Row);
+    /// assert!(c.is_err());
+    ///
+    /// let d = a.variance(Axes::Col).unwrap();
+    /// assert_eq!(*d.data(), vec![0.5]);
+    /// ```
+    ///
+    /// # Failures
+    ///
+    /// - There is only one row/column in the working axis.
+    pub fn variance(&self, axis: Axes) -> Result<Vector<T>, Error> {
         let mean = self.mean(axis);
 
         let n: usize;
@@ -333,6 +349,11 @@ impl<T: Float + FromPrimitive> Matrix<T> {
                 n = self.cols;
                 m = self.rows;
             }
+        }
+
+        if n == 1 {
+            return Err(Error::new(ErrorKind::InvalidArg,
+                                  "There is only one row or column in the working axis."));
         }
 
         let mut variance = Vector::zeros(m);
@@ -358,12 +379,11 @@ impl<T: Float + FromPrimitive> Matrix<T> {
         }
 
         let var_size: T = FromPrimitive::from_usize(n - 1).unwrap();
-        variance / var_size
+        Ok(variance / var_size)
     }
 }
 
 impl<T: Any + Float> Matrix<T> {
-
     /// Solves the equation `Ax = y`.
     ///
     /// Requires a Vector `y` as input.
