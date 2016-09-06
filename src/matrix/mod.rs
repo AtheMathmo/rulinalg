@@ -334,11 +334,11 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     /// // Only one column
     /// let b = Matrix::<f32>::new(2,1,vec![1.0,2.0]);
     ///
-    /// let e = b.variance(Axes::Row);
+    /// let e = b.variance(Axes::Row).unwrap();
     /// assert_eq!(*e.data(), vec![0.5]);
     ///
-    /// let f = b.variance(Axes::Col).unwrap();
-    /// assert!(*f.is_err());
+    /// let f = b.variance(Axes::Col);
+    /// assert!(f.is_err());
     ///
     /// ```
     /// // Empty matrix
@@ -347,7 +347,7 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     /// let b = a.variance(Axes::Row);
     /// assert!(b.is_err());
     ///
-    /// let c = b.variance(Axes::Col);
+    /// let c = a.variance(Axes::Col);
     /// assert!(c.is_err());
     /// ```
     ///
