@@ -371,14 +371,10 @@ impl<T: Float + FromPrimitive> Matrix<T> {
             }
         }
 
-        if n == 0 {
+        if n < 2 {
             return Err(Error::new(ErrorKind::InvalidArg,
-                                  "There is no data in the working axis."));
-        }
-
-        if n == 1 {
-            return Err(Error::new(ErrorKind::InvalidArg,
-                                  "There is only one row or column in the working axis."));
+                                  "There must be at least two rows or columns in the working \
+                                   axis."));
         }
 
         let mut variance = Vector::zeros(m);
