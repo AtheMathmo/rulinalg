@@ -322,6 +322,7 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     /// ```
     /// use rulinalg::matrix::{Matrix, Axes};
     ///
+    /// // Only one row
     /// let a = Matrix::<f32>::new(1,2,vec![1.0,2.0]);
     ///
     /// let c = a.variance(Axes::Row);
@@ -330,13 +331,24 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     /// let d = a.variance(Axes::Col).unwrap();
     /// assert_eq!(*d.data(), vec![0.5]);
     ///
-    /// let b = Matrix::<f32>::new(0,0,vec![]);
+    /// // Only one column
+    /// let b = Matrix::<f32>::new(2,1,vec![1.0,2.0]);
     ///
     /// let e = b.variance(Axes::Row);
-    /// assert!(e.is_err());
+    /// assert_eq!(*e.data(), vec![0.5]);
     ///
-    /// let f = b.variance(Axes::Col);
-    /// assert!(f.is_err());
+    /// let f = b.variance(Axes::Col).unwrap();
+    /// assert!(*f.is_err());
+    ///
+    /// ```
+    /// // Empty matrix
+    /// let a = Matrix::<f32>::new(0,0,vec![]);
+    ///
+    /// let b = a.variance(Axes::Row);
+    /// assert!(b.is_err());
+    ///
+    /// let c = b.variance(Axes::Col);
+    /// assert!(c.is_err());
     /// ```
     ///
     /// # Failures
