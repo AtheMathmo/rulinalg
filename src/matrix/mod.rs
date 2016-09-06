@@ -280,7 +280,7 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     /// assert_eq!(*d.data(), vec![]);
     /// ```
     pub fn mean(&self, axis: Axes) -> Vector<T> {
-        if self.rows == 0 {
+        if self.data.len() == 0 {
             // If the matrix is empty, there are no means to calculate.
             return Vector::new(vec![]);
         }
