@@ -329,11 +329,19 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     ///
     /// let d = a.variance(Axes::Col).unwrap();
     /// assert_eq!(*d.data(), vec![0.5]);
+    ///
+    /// let b = Matrix::<f32>::new(0,0,vec![]);
+    ///
+    /// let e = b.variance(Axes::Row);
+    /// assert!(e.is_err());
+    ///
+    /// let f = b.variance(Axes::Col);
+    /// assert!(f.is_err());
     /// ```
     ///
     /// # Failures
     ///
-    /// - There is only one row/column in the working axis.
+    /// - There are one or fewer row/columns in the working axis.
     pub fn variance(&self, axis: Axes) -> Result<Vector<T>, Error> {
         let mean = self.mean(axis);
 
@@ -349,6 +357,11 @@ impl<T: Float + FromPrimitive> Matrix<T> {
                 n = self.cols;
                 m = self.rows;
             }
+        }
+
+        if n == 0 {
+            return Err(Error::new(ErrorKind::InvalidArg,
+                                  "There is no data in the working axis."));
         }
 
         if n == 1 {
