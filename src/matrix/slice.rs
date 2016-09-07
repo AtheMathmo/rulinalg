@@ -31,6 +31,7 @@ use std::cmp::min;
 use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Add, Mul, Div};
+use std::ptr;
 use std::slice;
 
 /// Trait for immutable matrix structs.
@@ -899,7 +900,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<_>>());
     /// a.swap_rows(1, 3);
-    /// assert_eq!(a.into_vec(), vec![0,1,6,7,4,5,2,3])
+    /// assert_eq!(a.into_vec(), vec![0,1,6,7,4,5,2,3]);
     /// ```
     ///
     /// # Panics
@@ -921,6 +922,36 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
 
             for (x, y) in row_a.into_iter().zip(row_b.into_iter()) {
                 mem::swap(x, y);
+            }
+        }
+    }
+
+    /// Swaps two columns in a matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
+    ///
+    /// let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<_>>());
+    /// a.swap_cols(0, 1);
+    /// assert_eq!(a.into_vec(), vec![1,0,3,2,5,4,7,6]);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if `a` or `b` are out of bounds.
+    fn swap_cols(&mut self, a: usize, b: usize) {
+        assert!(a < self.cols(),
+                format!("Row index {0} larger than row count {1}", a, self.rows()));
+        assert!(b < self.cols(),
+                format!("Row index {0} larger than row count {1}", b, self.rows()));
+
+        unsafe {
+            for i in 0..self.rows() {
+                let a_ptr : *mut T = self.get_unchecked_mut([i, a]);
+                let b_ptr : *mut T = self.get_unchecked_mut([i, b]);
+                ptr::swap(a_ptr, b_ptr);
             }
         }
     }
@@ -1591,35 +1622,47 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_swap_rows() {
-        let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
+    fn test_swap_rows() {
+        let mut a = Matrix::new(4, 3, (0..12).collect::<Vec<usize>>());
         a.swap_rows(0, 1);
 
-        assert_eq!(a.into_vec(), vec![2, 3, 0, 1, 4, 5, 6, 7]);
-    }
+        assert_eq!(a.data(), &[3, 4, 5, 0, 1, 2, 6, 7, 8, 9, 10, 11]);
 
-    #[test]
-    fn test_matrixslice_swap_rows() {
-        let mut a = Matrix::new(4, 3, (0..12).collect::<Vec<usize>>());
         {
             let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 4, 2);
             b.swap_rows(0, 1);
         }
-        assert_eq!(a.into_vec(), vec![3,4,2,0,1,5,6,7,8,9,10,11]);
+
+        assert_eq!(a.into_vec(), vec![0, 1, 5, 3, 4, 2, 6, 7, 8, 9, 10, 11]);
     }
 
     #[test]
-    #[should_panic]
-    fn test_matrixslice_swap_rows_high() {
+    fn test_matrix_swap_cols() {
         let mut a = Matrix::new(4, 3, (0..12).collect::<Vec<usize>>());
-        let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 3, 2);
-        b.swap_rows(3, 1);
+        a.swap_cols(0, 1);
+
+        assert_eq!(a.data(), &[1, 0, 2, 4, 3, 5, 7, 6, 8, 10, 9, 11]);
+
+        {
+            let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 3, 3);
+            b.swap_cols(0, 2);
+        }
+
+        assert_eq!(a.into_vec(), vec![2, 0, 1, 5, 3, 4, 8, 6, 7, 10, 9, 11]);
     }
 
     #[test]
     fn test_matrix_swap_same_rows() {
         let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
         a.swap_rows(0, 0);
+
+        assert_eq!(a.into_vec(), (0..8).collect::<Vec<usize>>());
+    }
+
+    #[test]
+    fn test_matrix_swap_same_cols() {
+        let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
+        a.swap_cols(0, 0);
 
         assert_eq!(a.into_vec(), (0..8).collect::<Vec<usize>>());
     }
@@ -1640,9 +1683,16 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn test_matrix_swap_row_high_both() {
+    fn test_matrix_swap_col_high_first() {
         let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
-        a.swap_rows(5, 5);
+        a.swap_cols(2, 1);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_matrix_swap_col_high_second() {
+        let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
+        a.swap_cols(1, 2);
     }
 
     #[test]
