@@ -297,8 +297,8 @@ impl<T: Float + FromPrimitive> Matrix<T> {
 
     /// The variance of the matrix along the specified axis.
     ///
-    /// Axis Row - Sample variance of rows.
-    /// Axis Col - Sample variance of columns.
+    /// - Axis Row - Sample variance of rows.
+    /// - Axis Col - Sample variance of columns.
     ///
     /// # Examples
     ///
@@ -323,27 +323,11 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     /// let c = a.variance(Axes::Row);
     /// assert!(c.is_err());
     ///
-    /// let d = a.variance(Axes::Col).unwrap();
-    /// assert_eq!(*d.data(), vec![0.5]);
-    ///
-    /// // Only one column
-    /// let b = Matrix::<f32>::new(2,1,vec![1.0,2.0]);
-    ///
-    /// let e = b.variance(Axes::Row).unwrap();
-    /// assert_eq!(*e.data(), vec![0.5]);
-    ///
-    /// let f = b.variance(Axes::Col);
-    /// assert!(f.is_err());
-    ///
-    /// ```
     /// // Empty matrix
-    /// let a = Matrix::<f32>::new(0,0,vec![]);
+    /// let b = Matrix::<f32>::new(0,0,vec![]);
     ///
-    /// let b = a.variance(Axes::Row);
-    /// assert!(b.is_err());
-    ///
-    /// let c = a.variance(Axes::Col);
-    /// assert!(c.is_err());
+    /// let d = b.variance(Axes::Row);
+    /// assert!(d.is_err());
     /// ```
     ///
     /// # Failures
@@ -1010,5 +994,37 @@ mod tests {
 
         let d = a.mean(Axes::Col);
         assert_eq!(*d.data(), vec![]);
+    }
+
+    #[test]
+    fn test_invalid_variance() {
+        use super::Axes;
+
+        // Only one row
+        let a = Matrix::<f32>::new(1, 2, vec![1.0, 2.0]);
+
+        let a_row = a.variance(Axes::Row);
+        assert!(a_row.is_err());
+
+        let a_col = a.variance(Axes::Col).unwrap();
+        assert_eq!(*a_col.data(), vec![0.5]);
+
+        // Only one column
+        let b = Matrix::<f32>::new(2, 1, vec![1.0, 2.0]);
+
+        let b_row = b.variance(Axes::Row).unwrap();
+        assert_eq!(*b_row.data(), vec![0.5]);
+
+        let b_col = b.variance(Axes::Col);
+        assert!(b_col.is_err());
+
+        // Empty matrix
+        let d = Matrix::<f32>::new(0, 0, vec![]);
+
+        let d_row = d.variance(Axes::Row);
+        assert!(d_row.is_err());
+
+        let d_col = d.variance(Axes::Col);
+        assert!(d_col.is_err());
     }
 }
