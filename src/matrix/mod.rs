@@ -251,8 +251,10 @@ impl<T: Clone + Zero + One> Matrix<T> {
 impl<T: Float + FromPrimitive> Matrix<T> {
     /// The mean of the matrix along the specified axis.
     ///
-    /// Axis Row - Arithmetic mean of rows.
-    /// Axis Col - Arithmetic mean of columns.
+    /// - Axis Row - Arithmetic mean of rows.
+    /// - Axis Col - Arithmetic mean of columns.
+    ///
+    /// Calling `mean()` on an empty matrix will return an empty matrix.
     ///
     /// # Examples
     ///
@@ -266,18 +268,11 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     ///
     /// let d = a.mean(Axes::Col);
     /// assert_eq!(*d.data(), vec![1.5, 3.5]);
-    /// ```
     ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, Axes};
+    /// let b = Matrix::<f64>::new(0,0, vec![]);
     ///
-    /// let a = Matrix::<f64>::new(0,0, vec![]);
-    ///
-    /// let c = a.mean(Axes::Row);
-    /// assert_eq!(*c.data(), vec![]);
-    ///
-    /// let d = a.mean(Axes::Col);
-    /// assert_eq!(*d.data(), vec![]);
+    /// let e = b.mean(Axes::Row);
+    /// assert_eq!(*e.data(), vec![]);
     /// ```
     pub fn mean(&self, axis: Axes) -> Vector<T> {
         if self.data.len() == 0 {
@@ -1002,5 +997,18 @@ mod tests {
         assert_eq!(a[[0, 1]], 0.0);
         assert_eq!(a[[2, 1]], 0.0);
         assert_eq!(a[[3, 0]], 0.0);
+    }
+
+    #[test]
+    fn test_empty_mean() {
+        use super::Axes;
+
+        let a = Matrix::<f64>::new(0, 0, vec![]);
+
+        let c = a.mean(Axes::Row);
+        assert_eq!(*c.data(), vec![]);
+
+        let d = a.mean(Axes::Col);
+        assert_eq!(*d.data(), vec![]);
     }
 }
