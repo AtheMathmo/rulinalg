@@ -268,11 +268,6 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     ///
     /// let d = a.mean(Axes::Col);
     /// assert_eq!(*d.data(), vec![1.5, 3.5]);
-    ///
-    /// let b = Matrix::<f64>::new(0,0, vec![]);
-    ///
-    /// let e = b.mean(Axes::Row);
-    /// assert_eq!(*e.data(), vec![]);
     /// ```
     pub fn mean(&self, axis: Axes) -> Vector<T> {
         if self.data.len() == 0 {
@@ -312,22 +307,6 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     ///
     /// let d = a.variance(Axes::Col).unwrap();
     /// assert_eq!(*d.data(), vec![0.5, 0.5]);
-    /// ```
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, Axes};
-    ///
-    /// // Only one row
-    /// let a = Matrix::<f32>::new(1,2,vec![1.0,2.0]);
-    ///
-    /// let c = a.variance(Axes::Row);
-    /// assert!(c.is_err());
-    ///
-    /// // Empty matrix
-    /// let b = Matrix::<f32>::new(0,0,vec![]);
-    ///
-    /// let d = b.variance(Axes::Row);
-    /// assert!(d.is_err());
     /// ```
     ///
     /// # Failures
