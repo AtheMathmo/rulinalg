@@ -67,16 +67,16 @@ impl<T: fmt::Display> fmt::Display for Vector<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         try!(write!(f, "["));
         for (i, datum) in self.data.iter().enumerate() {
-            if i > 0 {
-                try!(write!(f, " "));
-            }
             match f.precision() {
                 Some(places) => {
-                    try!(write!(f, "{:.*}", places, datum));
+                    try!(write!(f, " {:.*}", places, datum));
                 }
                 None => {
-                    try!(write!(f, "{}", datum));
+                    try!(write!(f, " {}", datum));
                 }
+            }
+            if i < self.data.len() - 1 {
+                try!(write!(f, ","));
             }
         }
         write!(f, "]")
@@ -745,11 +745,11 @@ mod tests {
     #[test]
     fn test_display() {
         let v = Vector::new(vec![1, 2, 3, 4]);
-        assert_eq!(format!("{}", v), "[1 2 3 4]");
+        assert_eq!(format!("{}", v), "[ 1, 2, 3, 4]");
 
         let v2 = Vector::new(vec![3.3, 4.0, 5.0, 6.0]);
-        assert_eq!(format!("{}", v2), "[3.3 4 5 6]");
-        assert_eq!(format!("{:.1}", v2), "[3.3 4.0 5.0 6.0]");
+        assert_eq!(format!("{}", v2), "[ 3.3, 4, 5, 6]");
+        assert_eq!(format!("{:.1}", v2), "[ 3.3, 4.0, 5.0, 6.0]");
     }
 
     #[test]
