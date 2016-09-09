@@ -6,6 +6,7 @@
 use std::ops::{Mul, Add, Div, Sub, Index, Neg, MulAssign, DivAssign, SubAssign, AddAssign};
 use libnum::{One, Zero, Float, FromPrimitive};
 use std::cmp::PartialEq;
+use std::fmt;
 use Metric;
 use utils;
 
@@ -58,6 +59,27 @@ impl<T> Vector<T> {
     /// Consumes the Vector and returns the Vec of data.
     pub fn into_vec(self) -> Vec<T> {
         self.data
+    }
+}
+
+impl<T: fmt::Display> fmt::Display for Vector<T> {
+    /// Displays the Vector.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        try!(write!(f, "["));
+        for (i, datum) in self.data.iter().enumerate() {
+            if i > 0 {
+                try!(write!(f, " "));
+            }
+            match f.precision() {
+                Some(places) => {
+                    try!(write!(f, "{:.*}", places, datum));
+                }
+                None => {
+                    try!(write!(f, "{}", datum));
+                }
+            }
+        }
+        write!(f, "]")
     }
 }
 
@@ -719,6 +741,16 @@ impl_op_assign_vec!(SubAssign, Sub, sub, sub_assign, "subtraction");
 mod tests {
     use super::Vector;
     use super::super::Metric;
+
+    #[test]
+    fn test_display() {
+        let v = Vector::new(vec![1, 2, 3, 4]);
+        assert_eq!(format!("{}", v), "[1 2 3 4]");
+
+        let v2 = Vector::new(vec![3.3, 4.0, 5.0, 6.0]);
+        assert_eq!(format!("{}", v2), "[3.3 4 5 6]");
+        assert_eq!(format!("{:.1}", v2), "[3.3 4.0 5.0 6.0]");
+    }
 
     #[test]
     fn test_equality() {
