@@ -2,6 +2,24 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
+## 0.3.2
+
+### New Contributors
+
+- [eugene-bulkin](https://github.com/eugene-bulkin)
+
+### Breaking Changes
+
+- `Matrix::variance` now returns a `Result`.
+
+### Features
+
+- Added `swap_rows` and `swap_cols` function to `BaseMatrixMut`.
+
+### Minor Changes
+
+- Implemented `Display` for `Vector`.
+
 ## 0.3.1
 
 ### New Contributors

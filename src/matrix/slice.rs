@@ -31,10 +31,11 @@ use std::cmp::min;
 use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Add, Mul, Div};
+use std::ptr;
+use std::slice;
 
 /// Trait for immutable matrix structs.
 pub trait BaseMatrix<T>: Sized {
-
     /// Rows in the matrix.
     fn rows(&self) -> usize;
 
@@ -181,8 +182,9 @@ pub trait BaseMatrix<T>: Sized {
     fn sum_rows(&self) -> Vector<T>
         where T: Copy + Zero + Add<T, Output = T>
     {
-        let sum_rows = self.iter_rows().fold(vec![T::zero(); self.cols()], |row_sum, r|
-            utils::vec_bin_op(&row_sum, r, |sum, val| sum + val));
+        let sum_rows = self.iter_rows().fold(vec![T::zero(); self.cols()], |row_sum, r| {
+            utils::vec_bin_op(&row_sum, r, |sum, val| sum + val)
+        });
         Vector::new(sum_rows)
     }
 
@@ -260,7 +262,7 @@ pub trait BaseMatrix<T>: Sized {
     /// - Panics if row indices exceed the matrix dimensions.
     fn select_rows<'a, I>(&self, rows: I) -> Matrix<T>
         where T: Copy,
-              I: IntoIterator<Item=&'a usize>,
+              I: IntoIterator<Item = &'a usize>,
               I::IntoIter: ExactSizeIterator + Clone
     {
         let row_iter = rows.into_iter();
@@ -307,7 +309,7 @@ pub trait BaseMatrix<T>: Sized {
     /// - Panics if column indices exceed the matrix dimensions.
     fn select_cols<'a, I>(&self, cols: I) -> Matrix<T>
         where T: Copy,
-              I: IntoIterator<Item=&'a usize>,
+              I: IntoIterator<Item = &'a usize>,
               I::IntoIter: ExactSizeIterator + Clone
     {
         let col_iter = cols.into_iter();
@@ -352,7 +354,7 @@ pub trait BaseMatrix<T>: Sized {
     /// - The matrices have different row counts.
     /// - The matrices have different column counts.
     fn elemul(&self, m: &Self) -> Matrix<T>
-        where T: Copy + Mul<T, Output = T>,
+        where T: Copy + Mul<T, Output = T>
     {
         assert!(self.rows() == m.rows(), "Matrix row counts not equal.");
         assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
@@ -383,7 +385,7 @@ pub trait BaseMatrix<T>: Sized {
     /// - The matrices have different row counts.
     /// - The matrices have different column counts.
     fn elediv(&self, m: &Self) -> Matrix<T>
-        where T: Copy + Div<T, Output = T>,
+        where T: Copy + Div<T, Output = T>
     {
         assert!(self.rows() == m.rows(), "Matrix row counts not equal.");
         assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
@@ -467,7 +469,7 @@ pub trait BaseMatrix<T>: Sized {
     /// - Self and m have different row counts.
     fn hcat<S>(&self, m: &S) -> Matrix<T>
         where T: Copy,
-              S: BaseMatrix<T>,
+              S: BaseMatrix<T>
     {
         assert!(self.rows() == m.rows(), "Matrix row counts are not equal.");
 
@@ -505,9 +507,10 @@ pub trait BaseMatrix<T>: Sized {
     /// - Self and m have different column counts.
     fn vcat<S>(&self, m: &S) -> Matrix<T>
         where T: Copy,
-              S: BaseMatrix<T>,
+              S: BaseMatrix<T>
     {
-        assert!(self.cols() == m.cols(), "Matrix column counts are not equal.");
+        assert!(self.cols() == m.cols(),
+                "Matrix column counts are not equal.");
 
         let mut new_data = Vec::with_capacity((self.rows() + m.rows()) * self.cols());
 
@@ -543,7 +546,7 @@ pub trait BaseMatrix<T>: Sized {
     /// assert_eq!(*f.data(), vec![1,5]);
     /// ```
     fn diag(&self) -> Vector<T>
-        where T: Copy,
+        where T: Copy
     {
         let mat_min = min(self.rows(), self.cols());
 
@@ -568,7 +571,7 @@ pub trait BaseMatrix<T>: Sized {
     /// let mt = mat.transpose();
     /// ```
     fn transpose(&self) -> Matrix<T>
-        where T: Copy,
+        where T: Copy
     {
         let mut new_data = Vec::with_capacity(self.rows() * self.cols());
 
@@ -576,8 +579,7 @@ pub trait BaseMatrix<T>: Sized {
             new_data.set_len(self.rows() * self.cols());
             for i in 0..self.cols() {
                 for j in 0..self.rows() {
-                    *new_data.get_unchecked_mut(i * self.rows() + j) =
-                        *self.get_unchecked([j, i]);
+                    *new_data.get_unchecked_mut(i * self.rows() + j) = *self.get_unchecked([j, i]);
                 }
             }
         }
@@ -607,7 +609,7 @@ pub trait BaseMatrix<T>: Sized {
     /// assert_eq!(b_diag, false);
     /// ```
     fn is_diag(&self) -> bool
-        where T: Zero + PartialEq,
+        where T: Zero + PartialEq
     {
         let mut next_diag = 0usize;
         self.iter().enumerate().all(|(i, data)| if i == next_diag {
@@ -647,7 +649,7 @@ pub trait BaseMatrix<T>: Sized {
     ///
     /// Fails if there is no valid solution to the system (matrix is singular).
     fn solve_u_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
-        where T: Any + Float,
+        where T: Any + Float
     {
         assert!(self.cols() == y.size(),
                 format!("Vector size {0} != {1} Matrix column count.",
@@ -694,7 +696,7 @@ pub trait BaseMatrix<T>: Sized {
     ///
     /// Fails if there is no valid solution to the system (matrix is singular).
     fn solve_l_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
-        where T: Any + Float,
+        where T: Any + Float
     {
         assert!(self.cols() == y.size(),
                 format!("Vector size {0} != {1} Matrix column count.",
@@ -729,9 +731,10 @@ pub trait BaseMatrix<T>: Sized {
             Axes::Row => {
                 assert!(mid < self.rows());
                 unsafe {
-                    slice_1 = MatrixSlice::from_raw_parts(
-                        self.as_ptr(),
-                        mid, self.cols(), self.row_stride());
+                    slice_1 = MatrixSlice::from_raw_parts(self.as_ptr(),
+                                                          mid,
+                                                          self.cols(),
+                                                          self.row_stride());
                     slice_2 = MatrixSlice::from_raw_parts(
                         self.as_ptr().offset((mid * self.row_stride()) as isize),
                         self.rows() - mid, self.cols(), self.row_stride());
@@ -740,12 +743,14 @@ pub trait BaseMatrix<T>: Sized {
             Axes::Col => {
                 assert!(mid < self.cols());
                 unsafe {
-                    slice_1 = MatrixSlice::from_raw_parts(
-                        self.as_ptr(),
-                        self.rows(), mid, self.row_stride());
-                    slice_2 = MatrixSlice::from_raw_parts(
-                        self.as_ptr().offset(mid as isize),
-                        self.rows(), self.cols() - mid, self.row_stride());
+                    slice_1 = MatrixSlice::from_raw_parts(self.as_ptr(),
+                                                          self.rows(),
+                                                          mid,
+                                                          self.row_stride());
+                    slice_2 = MatrixSlice::from_raw_parts(self.as_ptr().offset(mid as isize),
+                                                          self.rows(),
+                                                          self.cols() - mid,
+                                                          self.row_stride());
                 }
             }
         }
@@ -781,7 +786,6 @@ pub trait BaseMatrix<T>: Sized {
 
 /// Trait for mutable matrices.
 pub trait BaseMatrixMut<T>: BaseMatrix<T> {
-
     /// Top left index of the slice.
     fn as_mut_ptr(&mut self) -> *mut T;
 
@@ -797,7 +801,10 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// ```
     fn as_mut_slice(&mut self) -> MatrixSliceMut<T> {
         unsafe {
-            MatrixSliceMut::from_raw_parts(self.as_mut_ptr(), self.rows(), self.cols(), self.row_stride())
+            MatrixSliceMut::from_raw_parts(self.as_mut_ptr(),
+                                           self.rows(),
+                                           self.cols(),
+                                           self.row_stride())
         }
     }
 
@@ -827,7 +834,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// assert_eq!(a.into_vec(), vec![0,1,2,3,6,7,6,9,10]);
     /// ```
     fn iter_mut<'a>(&mut self) -> SliceIterMut<'a, T>
-        where T: 'a,
+        where T: 'a
     {
         SliceIterMut {
             slice_start: self.as_mut_ptr(),
@@ -884,6 +891,71 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         ::std::slice::from_raw_parts_mut(ptr, self.cols())
     }
 
+    /// Swaps two rows in a matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
+    ///
+    /// let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<_>>());
+    /// a.swap_rows(1, 3);
+    /// assert_eq!(a.into_vec(), vec![0,1,6,7,4,5,2,3]);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if `a` or `b` are out of bounds.
+    fn swap_rows(&mut self, a: usize, b: usize) {
+        assert!(a < self.rows(),
+                format!("Row index {0} larger than row count {1}", a, self.rows()));
+        assert!(b < self.rows(),
+                format!("Row index {0} larger than row count {1}", b, self.rows()));
+
+        unsafe {
+            let row_a = slice::from_raw_parts_mut(self.as_mut_ptr()
+                                                      .offset((self.row_stride() * a) as isize),
+                                                  self.cols());
+            let row_b = slice::from_raw_parts_mut(self.as_mut_ptr()
+                                                      .offset((self.row_stride() * b) as isize),
+                                                  self.cols());
+
+            for (x, y) in row_a.into_iter().zip(row_b.into_iter()) {
+                mem::swap(x, y);
+            }
+        }
+    }
+
+    /// Swaps two columns in a matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
+    ///
+    /// let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<_>>());
+    /// a.swap_cols(0, 1);
+    /// assert_eq!(a.into_vec(), vec![1,0,3,2,5,4,7,6]);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if `a` or `b` are out of bounds.
+    fn swap_cols(&mut self, a: usize, b: usize) {
+        assert!(a < self.cols(),
+                format!("Row index {0} larger than row count {1}", a, self.rows()));
+        assert!(b < self.cols(),
+                format!("Row index {0} larger than row count {1}", b, self.rows()));
+
+        unsafe {
+            for i in 0..self.rows() {
+                let a_ptr : *mut T = self.get_unchecked_mut([i, a]);
+                let b_ptr : *mut T = self.get_unchecked_mut([i, b]);
+                ptr::swap(a_ptr, b_ptr);
+            }
+        }
+    }
+
     /// Iterate over the mutable rows of the matrix.
     ///
     /// # Examples
@@ -934,7 +1006,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// Panics if the dimensions of `self` and `target` are not the same.
     fn set_to<M: BaseMatrix<T>>(mut self, target: M)
-        where T: Copy,
+        where T: Copy
     {
         assert!(self.rows() == target.rows(),
                 "Target has different row count to self.");
@@ -964,7 +1036,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// assert_eq!(*b.data(), vec![2.0; 4]);
     /// ```
     fn apply(mut self, f: &Fn(T) -> T) -> Self
-        where T: Copy,
+        where T: Copy
     {
         for val in self.iter_mut() {
             *val = f(*val);
@@ -982,8 +1054,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// let mut a = Matrix::new(3,3, vec![2.0; 9]);
     /// let (b,c) = a.split_at_mut(1, Axes::Col);
     /// ```
-    fn split_at_mut(&mut self, mid: usize, axis: Axes) ->
-        (MatrixSliceMut<T>, MatrixSliceMut<T>) {
+    fn split_at_mut(&mut self, mid: usize, axis: Axes) -> (MatrixSliceMut<T>, MatrixSliceMut<T>) {
 
         let slice_1: MatrixSliceMut<T>;
         let slice_2: MatrixSliceMut<T>;
@@ -992,9 +1063,10 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
             Axes::Row => {
                 assert!(mid < self.rows());
                 unsafe {
-                    slice_1 = MatrixSliceMut::from_raw_parts(
-                        self.as_mut_ptr(),
-                        mid, self.cols(), self.row_stride());
+                    slice_1 = MatrixSliceMut::from_raw_parts(self.as_mut_ptr(),
+                                                             mid,
+                                                             self.cols(),
+                                                             self.row_stride());
                     slice_2 = MatrixSliceMut::from_raw_parts(
                         self.as_mut_ptr().offset((mid * self.row_stride()) as isize),
                         self.rows() - mid, self.cols(), self.row_stride());
@@ -1003,12 +1075,15 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
             Axes::Col => {
                 assert!(mid < self.cols());
                 unsafe {
-                    slice_1 = MatrixSliceMut::from_raw_parts(
-                        self.as_mut_ptr(),
-                        self.rows(), mid, self.row_stride());
-                    slice_2 = MatrixSliceMut::from_raw_parts(
-                        self.as_mut_ptr().offset(mid as isize),
-                        self.rows(), self.cols() - mid, self.row_stride());
+                    slice_1 = MatrixSliceMut::from_raw_parts(self.as_mut_ptr(),
+                                                             self.rows(),
+                                                             mid,
+                                                             self.row_stride());
+                    slice_2 = MatrixSliceMut::from_raw_parts(self.as_mut_ptr()
+                                                                 .offset(mid as isize),
+                                                             self.rows(),
+                                                             self.cols() - mid,
+                                                             self.row_stride());
                 }
             }
         }
@@ -1027,7 +1102,11 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// let mut slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
     /// let new_slice = slice.sub_slice_mut([0,0], 1, 1);
     /// ```
-    fn sub_slice_mut<'a>(&mut self, start: [usize; 2], rows: usize, cols: usize) -> MatrixSliceMut<'a, T>
+    fn sub_slice_mut<'a>(&mut self,
+                         start: [usize; 2],
+                         rows: usize,
+                         cols: usize)
+                         -> MatrixSliceMut<'a, T>
         where T: 'a
     {
         assert!(start[0] + rows <= self.rows(),
@@ -1043,10 +1122,18 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
 }
 
 impl<T> BaseMatrix<T> for Matrix<T> {
-    fn rows(&self) -> usize { self.rows }
-    fn cols(&self) -> usize { self.cols }
-    fn row_stride(&self) -> usize { self.cols }
-    fn as_ptr(&self) -> *const T { self.data.as_ptr() }
+    fn rows(&self) -> usize {
+        self.rows
+    }
+    fn cols(&self) -> usize {
+        self.cols
+    }
+    fn row_stride(&self) -> usize {
+        self.cols
+    }
+    fn as_ptr(&self) -> *const T {
+        self.data.as_ptr()
+    }
 
     fn into_matrix(self) -> Matrix<T>
         where T: Copy
@@ -1061,7 +1148,7 @@ impl<T> BaseMatrix<T> for Matrix<T> {
     }
 
     fn elemul(&self, m: &Self) -> Matrix<T>
-        where T: Copy + Mul<T, Output = T>,
+        where T: Copy + Mul<T, Output = T>
     {
         assert!(self.rows() == m.rows(), "Matrix row counts not equal.");
         assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
@@ -1071,7 +1158,7 @@ impl<T> BaseMatrix<T> for Matrix<T> {
     }
 
     fn elediv(&self, m: &Self) -> Matrix<T>
-        where T: Copy + Div<T, Output = T>,
+        where T: Copy + Div<T, Output = T>
     {
         assert!(self.rows() == m.rows(), "Matrix row counts not equal.");
         assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
@@ -1082,9 +1169,10 @@ impl<T> BaseMatrix<T> for Matrix<T> {
 
     fn vcat<S>(&self, m: &S) -> Matrix<T>
         where T: Copy,
-              S: BaseMatrix<T>,
+              S: BaseMatrix<T>
     {
-        assert!(self.cols() == m.cols(), "Matrix column counts are not equal.");
+        assert!(self.cols() == m.cols(),
+                "Matrix column counts are not equal.");
 
         let mut new_data = self.data.clone();
         new_data.reserve(m.rows() * m.cols());
@@ -1099,31 +1187,50 @@ impl<T> BaseMatrix<T> for Matrix<T> {
             data: new_data,
         }
     }
-
 }
 
 impl<'a, T> BaseMatrix<T> for MatrixSlice<'a, T> {
-    fn rows(&self) -> usize { self.rows }
-    fn cols(&self) -> usize { self.cols }
-    fn row_stride(&self) -> usize { self.row_stride }
-    fn as_ptr(&self) -> *const T { self.ptr }
+    fn rows(&self) -> usize {
+        self.rows
+    }
+    fn cols(&self) -> usize {
+        self.cols
+    }
+    fn row_stride(&self) -> usize {
+        self.row_stride
+    }
+    fn as_ptr(&self) -> *const T {
+        self.ptr
+    }
 }
 
 impl<'a, T> BaseMatrix<T> for MatrixSliceMut<'a, T> {
-    fn rows(&self) -> usize { self.rows }
-    fn cols(&self) -> usize { self.cols }
-    fn row_stride(&self) -> usize { self.row_stride }
-    fn as_ptr(&self) -> *const T { self.ptr as *const T }
+    fn rows(&self) -> usize {
+        self.rows
+    }
+    fn cols(&self) -> usize {
+        self.cols
+    }
+    fn row_stride(&self) -> usize {
+        self.row_stride
+    }
+    fn as_ptr(&self) -> *const T {
+        self.ptr as *const T
+    }
 }
 
 impl<T> BaseMatrixMut<T> for Matrix<T> {
     /// Top left index of the slice.
-    fn as_mut_ptr(&mut self) -> *mut T { self.data.as_mut_ptr() }
+    fn as_mut_ptr(&mut self) -> *mut T {
+        self.data.as_mut_ptr()
+    }
 }
 
 impl<'a, T> BaseMatrixMut<T> for MatrixSliceMut<'a, T> {
     /// Top left index of the slice.
-    fn as_mut_ptr(&mut self) -> *mut T { self.ptr }
+    fn as_mut_ptr(&mut self) -> *mut T {
+        self.ptr
+    }
 }
 
 impl<'a, T> MatrixSlice<'a, T> {
@@ -1340,14 +1447,14 @@ impl<'a, T> Iterator for $slice_iter<'a, T> {
     type Item = $data_type;
 
     fn next(&mut self) -> Option<$data_type> {
-        // Set the position of the next element
+// Set the position of the next element
         if self.row_pos < self.slice_rows {
             unsafe {
                 let iter_ptr = self.slice_start.offset((
                                 self.row_pos * self.row_stride + self.col_pos)
                                 as isize);
 
-                // If end of row, set to start of next row
+// If end of row, set to start of next row
                 if self.col_pos == self.slice_cols - 1 {
                     self.row_pos += 1usize;
                     self.col_pos = 0usize;
@@ -1421,7 +1528,6 @@ mod tests {
 
     #[test]
     fn test_sub_slice() {
-
         let mut a = Matrix::new(4, 4, (0..16).collect::<Vec<_>>());
         {
             let slice = a.sub_slice([1, 1], 3, 2);
@@ -1437,7 +1543,6 @@ mod tests {
                 assert_eq!(*a.get_unchecked([3, 1]), 25);
             }
         }
-
     }
 
     #[test]
@@ -1514,7 +1619,80 @@ mod tests {
         assert_eq!(a[[2, 0]], 6);
         assert_eq!(a[[2, 1]], 7);
         assert_eq!(a[[2, 2]], 8);
+    }
 
+    #[test]
+    fn test_swap_rows() {
+        let mut a = Matrix::new(4, 3, (0..12).collect::<Vec<usize>>());
+        a.swap_rows(0, 1);
+
+        assert_eq!(a.data(), &[3, 4, 5, 0, 1, 2, 6, 7, 8, 9, 10, 11]);
+
+        {
+            let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 4, 2);
+            b.swap_rows(0, 1);
+        }
+
+        assert_eq!(a.into_vec(), vec![0, 1, 5, 3, 4, 2, 6, 7, 8, 9, 10, 11]);
+    }
+
+    #[test]
+    fn test_matrix_swap_cols() {
+        let mut a = Matrix::new(4, 3, (0..12).collect::<Vec<usize>>());
+        a.swap_cols(0, 1);
+
+        assert_eq!(a.data(), &[1, 0, 2, 4, 3, 5, 7, 6, 8, 10, 9, 11]);
+
+        {
+            let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 3, 3);
+            b.swap_cols(0, 2);
+        }
+
+        assert_eq!(a.into_vec(), vec![2, 0, 1, 5, 3, 4, 8, 6, 7, 10, 9, 11]);
+    }
+
+    #[test]
+    fn test_matrix_swap_same_rows() {
+        let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
+        a.swap_rows(0, 0);
+
+        assert_eq!(a.into_vec(), (0..8).collect::<Vec<usize>>());
+    }
+
+    #[test]
+    fn test_matrix_swap_same_cols() {
+        let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
+        a.swap_cols(0, 0);
+
+        assert_eq!(a.into_vec(), (0..8).collect::<Vec<usize>>());
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_matrix_swap_row_high_first() {
+        let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
+        a.swap_rows(5, 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_matrix_swap_row_high_second() {
+        let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
+        a.swap_rows(0, 5);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_matrix_swap_col_high_first() {
+        let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
+        a.swap_cols(2, 1);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_matrix_swap_col_high_second() {
+        let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<usize>>());
+        a.swap_cols(1, 2);
     }
 
     #[test]
@@ -1577,6 +1755,5 @@ mod tests {
         assert_eq!(a[[2, 1]], c[[1, 2]]);
         assert_eq!(a[[3, 1]], c[[1, 3]]);
         assert_eq!(a[[4, 1]], c[[1, 4]]);
-
     }
 }

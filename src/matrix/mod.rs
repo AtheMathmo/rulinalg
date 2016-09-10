@@ -251,8 +251,10 @@ impl<T: Clone + Zero + One> Matrix<T> {
 impl<T: Float + FromPrimitive> Matrix<T> {
     /// The mean of the matrix along the specified axis.
     ///
-    /// Axis Row - Arithmetic mean of rows.
-    /// Axis Col - Arithmetic mean of columns.
+    /// - Axis Row - Arithmetic mean of rows.
+    /// - Axis Col - Arithmetic mean of columns.
+    ///
+    /// Calling `mean()` on an empty matrix will return an empty matrix.
     ///
     /// # Examples
     ///
@@ -268,6 +270,11 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     /// assert_eq!(*d.data(), vec![1.5, 3.5]);
     /// ```
     pub fn mean(&self, axis: Axes) -> Vector<T> {
+        if self.data.len() == 0 {
+            // If the matrix is empty, there are no means to calculate.
+            return Vector::new(vec![]);
+        }
+
         let m: Vector<T>;
         let n: T;
         match axis {
@@ -285,8 +292,8 @@ impl<T: Float + FromPrimitive> Matrix<T> {
 
     /// The variance of the matrix along the specified axis.
     ///
-    /// Axis Row - Sample variance of rows.
-    /// Axis Col - Sample variance of columns.
+    /// - Axis Row - Sample variance of rows.
+    /// - Axis Col - Sample variance of columns.
     ///
     /// # Examples
     ///
@@ -295,13 +302,17 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     ///
     /// let a = Matrix::<f32>::new(2,2,vec![1.0,2.0,3.0,4.0]);
     ///
-    /// let c = a.variance(Axes::Row);
+    /// let c = a.variance(Axes::Row).unwrap();
     /// assert_eq!(*c.data(), vec![2.0, 2.0]);
     ///
-    /// let d = a.variance(Axes::Col);
+    /// let d = a.variance(Axes::Col).unwrap();
     /// assert_eq!(*d.data(), vec![0.5, 0.5]);
     /// ```
-    pub fn variance(&self, axis: Axes) -> Vector<T> {
+    ///
+    /// # Failures
+    ///
+    /// - There are one or fewer row/columns in the working axis.
+    pub fn variance(&self, axis: Axes) -> Result<Vector<T>, Error> {
         let mean = self.mean(axis);
 
         let n: usize;
@@ -316,6 +327,12 @@ impl<T: Float + FromPrimitive> Matrix<T> {
                 n = self.cols;
                 m = self.rows;
             }
+        }
+
+        if n < 2 {
+            return Err(Error::new(ErrorKind::InvalidArg,
+                                  "There must be at least two rows or columns in the working \
+                                   axis."));
         }
 
         let mut variance = Vector::zeros(m);
@@ -341,12 +358,11 @@ impl<T: Float + FromPrimitive> Matrix<T> {
         }
 
         let var_size: T = FromPrimitive::from_usize(n - 1).unwrap();
-        variance / var_size
+        Ok(variance / var_size)
     }
 }
 
 impl<T: Any + Float> Matrix<T> {
-
     /// Solves the equation `Ax = y`.
     ///
     /// Requires a Vector `y` as input.
@@ -944,5 +960,50 @@ mod tests {
         assert_eq!(a[[0, 1]], 0.0);
         assert_eq!(a[[2, 1]], 0.0);
         assert_eq!(a[[3, 0]], 0.0);
+    }
+
+    #[test]
+    fn test_empty_mean() {
+        use super::Axes;
+
+        let a = Matrix::<f64>::new(0, 0, vec![]);
+
+        let c = a.mean(Axes::Row);
+        assert_eq!(*c.data(), vec![]);
+
+        let d = a.mean(Axes::Col);
+        assert_eq!(*d.data(), vec![]);
+    }
+
+    #[test]
+    fn test_invalid_variance() {
+        use super::Axes;
+
+        // Only one row
+        let a = Matrix::<f32>::new(1, 2, vec![1.0, 2.0]);
+
+        let a_row = a.variance(Axes::Row);
+        assert!(a_row.is_err());
+
+        let a_col = a.variance(Axes::Col).unwrap();
+        assert_eq!(*a_col.data(), vec![0.5]);
+
+        // Only one column
+        let b = Matrix::<f32>::new(2, 1, vec![1.0, 2.0]);
+
+        let b_row = b.variance(Axes::Row).unwrap();
+        assert_eq!(*b_row.data(), vec![0.5]);
+
+        let b_col = b.variance(Axes::Col);
+        assert!(b_col.is_err());
+
+        // Empty matrix
+        let d = Matrix::<f32>::new(0, 0, vec![]);
+
+        let d_row = d.variance(Axes::Row);
+        assert!(d_row.is_err());
+
+        let d_col = d.variance(Axes::Col);
+        assert!(d_col.is_err());
     }
 }

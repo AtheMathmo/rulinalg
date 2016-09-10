@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/AtheMathmo/rulinalg.svg?branch=master)](https://travis-ci.org/AtheMathmo/rulinalg)
 
-The crate is currently on [version 0.3.1](https://crates.io/crates/rulinalg).
+The crate is currently on [version 0.3.2](https://crates.io/crates/rulinalg).
 
 Read the [API Documentation](https://athemathmo.github.io/rulinalg) to learn more. 
 
@@ -43,7 +43,7 @@ The library is most easily used with [cargo](http://doc.crates.io/guide.html). S
 
 ```toml
 [dependencies]
-rulinalg="0.3.0"
+rulinalg="0.3.2"
 ```
 
 And then import the library using:

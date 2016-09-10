@@ -1,5 +1,5 @@
 use rulinalg::matrix::Matrix;
-use rulinalg::matrix::slice::BaseMatrix;
+use rulinalg::matrix::slice::{BaseMatrix, BaseMatrixMut};
 use test::Bencher;
 use test::black_box;
 
@@ -115,4 +115,36 @@ fn mat_sum_rows_and_cols_128_100(b: &mut Bencher) {
         assert_eq!(sum_rows.data(), &(0..100).map(|i| i * 128).collect::<Vec<_>>());
         assert_eq!(sum, 100 * 99 / 2 * 128);
     })
+}
+
+#[bench]
+fn mat_swap_rows_0_99(b: &mut Bencher) {
+    let v = (0..100).collect::<Vec<_>>();
+    let mut data = Vec::with_capacity(10000);
+
+    for _ in 0..100 {
+        data.extend_from_slice(&v);
+    }
+    let mut m = Matrix::new(100, 100, data);
+
+    b.iter(|| {
+        // This is super fast because we don't reset the cache
+        // We could try changing the indices
+        black_box(m.swap_rows(0, 99));
+    });
+}
+
+#[bench]
+fn mat_swap_cols_0_99(b: &mut Bencher) {
+    let v = (0..100).collect::<Vec<_>>();
+    let mut data = Vec::with_capacity(10000);
+
+    for _ in 0..100 {
+        data.extend_from_slice(&v);
+    }
+    let mut m = Matrix::new(100, 100, data);
+
+    b.iter(|| {
+        black_box(m.swap_cols(0, 99));
+    });
 }
