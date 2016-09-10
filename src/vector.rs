@@ -7,6 +7,8 @@ use std::ops::{Mul, Add, Div, Sub, Index, Neg, MulAssign, DivAssign, SubAssign, 
 use libnum::{One, Zero, Float, FromPrimitive};
 use std::cmp::PartialEq;
 use std::fmt;
+use std::slice::{Iter, IterMut};
+use std::vec::IntoIter;
 use Metric;
 use utils;
 
@@ -59,6 +61,36 @@ impl<T> Vector<T> {
     /// Consumes the Vector and returns the Vec of data.
     pub fn into_vec(self) -> Vec<T> {
         self.data
+    }
+
+    /// Returns an iterator over the Vector's data.
+    pub fn iter(&self) -> Iter<T> {
+        self.data.iter()
+    }
+
+    /// Returns an iterator over mutable references to the Vector's data.
+    pub fn iter_mut(&mut self) -> IterMut<T> {
+        self.mut_data().iter_mut()
+    }
+
+}
+
+impl<T> IntoIterator for Vector<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.data.into_iter()
+    }
+}
+
+
+impl<'a, T> IntoIterator for &'a Vector<T> {
+    type Item = &'a T;
+    type IntoIter = Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 
@@ -1086,6 +1118,27 @@ mod tests {
         let mut a = Vector::new(a_data.clone());
         a *= 2f32;
         assert_eq!(a.into_vec(), res_data.clone());
+    }
+
+    #[test]
+    fn vector_iteration() {
+        let our_vec = vec![2i32, 7, 1, 8, 2, 8];
+        let our_vector = Vector::new(our_vec.clone());
+        let our_vector_again = our_vector.clone();
+
+        // over Vector (consuming)
+        let mut our_recovered_vec = Vec::new();
+        for i in our_vector {
+            our_recovered_vec.push(i);
+        }
+        assert_eq!(our_recovered_vec, our_vec);
+
+        // over &Vector
+        let mut our_refcovered_vec = Vec::new();
+        for i in &our_vector_again {
+            our_refcovered_vec.push(*i);
+        }
+        assert_eq!(our_refcovered_vec, our_vec);
     }
 
 }
