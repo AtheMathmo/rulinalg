@@ -690,7 +690,7 @@ impl<T> Index<usize> for Vector<T> {
 impl<T> IndexMut<usize> for Vector<T> {
     fn index_mut(&mut self, idx: usize) -> &mut T {
         assert!(idx < self.size);
-        unsafe { self.data.get_unchecked_mut(idx) }
+        unsafe { self.data.get_unchecked_mut(idx) } 
     }
 }
 
