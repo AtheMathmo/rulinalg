@@ -3,7 +3,7 @@
 //! Currently contains all code
 //! relating to the vector linear algebra struct.
 
-use std::ops::{Mul, Add, Div, Sub, Index, Neg, MulAssign, DivAssign, SubAssign, AddAssign};
+use std::ops::{Mul, Add, Div, Sub, Index, IndexMut, Neg, MulAssign, DivAssign, SubAssign, AddAssign};
 use libnum::{One, Zero, Float, FromPrimitive};
 use std::cmp::PartialEq;
 use std::fmt;
@@ -686,6 +686,14 @@ impl<T> Index<usize> for Vector<T> {
     }
 }
 
+/// Indexes mutable vector.
+impl<T> IndexMut<usize> for Vector<T> {
+    fn index_mut(&mut self, idx: usize) -> &mut T {
+        assert!(idx < self.size);
+        unsafe { self.data.get_unchecked_mut(idx) } 
+    }
+}
+
 impl<T: Float> Metric<T> for Vector<T> {
     /// Compute euclidean norm for vector.
     ///
@@ -1141,4 +1149,15 @@ mod tests {
         assert_eq!(our_refcovered_vec, our_vec);
     }
 
+    #[test]
+    fn vector_index_mut() {
+        let our_vec = vec![1., 2., 3., 4.];
+        let mut our_vector = Vector::new(our_vec.clone());
+
+        for i in 0..4 {
+            our_vector[i] += 1.;
+        }
+
+        assert_eq!(our_vector.into_vec(), vec![2., 3., 4., 5.]);
+    }
 }
