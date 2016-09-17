@@ -45,6 +45,11 @@ pub trait BaseMatrix<T>: Sized {
     /// Row stride in the matrix.
     fn row_stride(&self) -> usize;
 
+    /// Returns true if the matrix contais no elements
+    fn is_empty(&self) -> bool {
+        self.rows() == 0 || self.cols() == 0
+    }
+
     /// Top left index of the matrix.
     fn as_ptr(&self) -> *const T;
 
@@ -625,6 +630,9 @@ pub trait BaseMatrix<T>: Sized {
     /// Given a matrix `U`, which is upper triangular, and a vector `y`, this function returns `x`
     /// such that `Ux = y`.
     ///
+    /// Note that this function will not check that `U` is upper triangular but will instead use only
+    /// the upper triangular portion of the matrix.
+    ///
     /// # Examples
     ///
     /// ```
@@ -643,11 +651,11 @@ pub trait BaseMatrix<T>: Sized {
     /// # Panics
     ///
     /// - Vector size and matrix column count are not equal.
-    /// - Matrix is not upper triangular.
     ///
     /// # Failures
     ///
-    /// Fails if there is no valid solution to the system (matrix is singular).
+    /// - There is no valid solution to the system (matrix is singular).
+    /// - The matrix is empty.
     fn solve_u_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
         where T: Any + Float
     {
@@ -656,13 +664,6 @@ pub trait BaseMatrix<T>: Sized {
                         y.size(),
                         self.cols()));
 
-        // Make sure we are upper triangular.
-        for (row_idx, row) in self.iter_rows().enumerate() {
-            if row.iter().take(row_idx).any(|data| data != &T::zero()) {
-                panic!("Matrix is not upper triangular");
-            }
-        }
-
         back_substitution(self, y)
     }
 
@@ -670,6 +671,9 @@ pub trait BaseMatrix<T>: Sized {
     ///
     /// Given a matrix `L`, which is lower triangular, and a vector `y`, this function returns `x`
     /// such that `Lx = y`.
+    ///
+    /// Note that this function will not check that `L` is lower triangular but will instead use only
+    /// the lower triangular portion of the matrix.
     ///
     /// # Examples
     ///
@@ -690,11 +694,11 @@ pub trait BaseMatrix<T>: Sized {
     /// # Panics
     ///
     /// - Vector size and matrix column count are not equal.
-    /// - Matrix is not lower triangular.
     ///
     /// # Failures
     ///
-    /// Fails if there is no valid solution to the system (matrix is singular).
+    /// - There is no valid solution to the system (matrix is singular).
+    /// - The matrix is empty.
     fn solve_l_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
         where T: Any + Float
     {
@@ -702,14 +706,7 @@ pub trait BaseMatrix<T>: Sized {
                 format!("Vector size {0} != {1} Matrix column count.",
                         y.size(),
                         self.cols()));
-
-        // Make sure we are lower triangular.
-        for (row_idx, row) in self.iter_rows().enumerate() {
-            if row.iter().skip(row_idx + 1).any(|data| data != &T::zero()) {
-                panic!("Matrix is not lower triangular.");
-            }
-        }
-
+        
         forward_substitution(self, y)
     }
 
@@ -1130,6 +1127,9 @@ impl<T> BaseMatrix<T> for Matrix<T> {
     }
     fn row_stride(&self) -> usize {
         self.cols
+    }
+    fn is_empty(&self) -> bool {
+        self.data.is_empty()
     }
     fn as_ptr(&self) -> *const T {
         self.data.as_ptr()

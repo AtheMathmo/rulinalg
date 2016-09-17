@@ -1,5 +1,24 @@
+use rulinalg::vector::Vector;
 use rulinalg::matrix::Matrix;
 use rulinalg::matrix::slice::BaseMatrix;
+
+#[test]
+fn test_l_triangular_solve_errs() {
+    let a = Matrix::<f64>::new(0, 0, vec![]);
+    assert!(a.solve_l_triangular(Vector::new(vec![])).is_err());
+
+    let a = Matrix::new(1, 1, vec![0.0]);
+    assert!(a.solve_l_triangular(Vector::new(vec![1.0])).is_err());
+}
+
+#[test]
+fn test_u_triangular_solve_errs() {
+    let a = Matrix::<f64>::new(0, 0, vec![]);
+    assert!(a.solve_u_triangular(Vector::new(vec![])).is_err());
+
+    let a = Matrix::new(1, 1, vec![0.0]);
+    assert!(a.solve_u_triangular(Vector::new(vec![1.0])).is_err());
+}
 
 #[test]
 fn matrix_lup_decomp() {
