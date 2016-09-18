@@ -743,6 +743,21 @@ fn parity<T, M>(m: &M) -> T
     sgn
 }
 
+macro_rules! matrix {
+    ($( $( $x: expr ),*);*) => {
+        {
+            let data_as_nested_array = [ $( [ $($x),* ] ),* ];
+            let rows = data_as_nested_array.len();
+            let cols = data_as_nested_array[0].len();
+            let data_as_flat_array: Vec<_> = data_as_nested_array.into_iter()
+                .flat_map(|row| row.into_iter())
+                .map(|x| x.to_owned())
+                .collect();
+            Matrix::new(rows, cols, data_as_flat_array)
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -961,6 +976,46 @@ mod tests {
         assert_eq!(a[[2, 1]], 0.0);
         assert_eq!(a[[3, 0]], 0.0);
     }
+
+    #[test]
+    fn create_mat_macro() {
+        {
+            // An arbitrary rectangular matrix
+            let mat = matrix!(1, 2, 3;
+                              4, 5, 6);
+            assert_eq!(2, mat.rows());
+            assert_eq!(3, mat.cols());
+            assert_eq!(&vec![1, 2, 3, 4, 5, 6], mat.data());
+        }
+
+        {
+            // A single row
+            let mat = matrix!(1, 2, 3);
+            assert_eq!(1, mat.rows());
+            assert_eq!(3, mat.cols());
+            assert_eq!(&vec![1, 2, 3], mat.data());
+        }
+
+        {
+            // A single element
+            let mat = matrix!(1);
+            assert_eq!(1, mat.rows());
+            assert_eq!(1, mat.cols());
+            assert_eq!(&vec![1], mat.data());
+        }
+
+        {
+            // A floating point matrix
+            let mat = matrix!(1.0, 2.0, 3.0;
+                              4.0, 5.0, 6.0;
+                              7.0, 8.0, 9.0);
+            let ref expected_data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+            assert_eq!(3, mat.rows());
+            assert_eq!(3, mat.cols());
+            assert_eq!(expected_data, mat.data());
+        }
+    }
+
 
     #[test]
     fn test_empty_mean() {
