@@ -1164,15 +1164,17 @@ mod tests {
 
     #[test]
     fn test_svd_tall_matrix() {
-        let mat = Matrix::new(5, 3,
-                              vec![1.0, 2.0, 3.0,
-                                   4.0, 5.0, 2.0,
-                                   4.0, 1.0, 2.0,
-                                   1.0, 3.0, 1.0,
-                                   7.0, 1.0, 1.0]);
+        // Note: This matrix is not arbitrary. It has been constructed specifically so that
+        // the "natural" order of the singular values it not sorted by default.
+        let mat = Matrix::new(5, 4,
+                              vec![ 3.61833700244349288, -3.28382346228211697,  1.97968027781346501, -0.41869628192662156,
+                                    3.96046289599926427,  0.70730060716580723, -2.80552479438772817, -1.45283286109873933,
+                                    1.44435028724617442,  1.27749196276785826, -1.09858397535426366, -0.03159619816434689,
+                                    1.13455445826500667,  0.81521390274755756,  3.99123446373437263, -2.83025703359666192,
+                                   -3.30895752093770579, -0.04979044289857298,  3.03248594516832792,  3.85962479743330977]);
         let (b, u, v) = mat.clone().svd().unwrap();
 
-        let expected_values = vec![10.75520534506231485, 4.64288772503583491, 2.18383872075175489f64];
+        let expected_values = vec![8.0, 6.0, 4.0, 2.0];
 
         validate_svd(&mat, &b, &u, &v);
         assert!(expected_values.iter()
@@ -1182,13 +1184,16 @@ mod tests {
 
     #[test]
     fn test_svd_short_matrix() {
-        let mat = Matrix::new(3, 5,
-                              vec![1.0,  2.0,  3.0,  4.0,  5.0,
-                                   2.0,  4.0,  1.0,  2.0,  1.0,
-                                   3.0,  1.0,  7.0,  1.0,  1.0]);
+        // Note: This matrix is not arbitrary. It has been constructed specifically so that
+        // the "natural" order of the singular values it not sorted by default.
+        let mat = Matrix::new(4, 5,
+                              vec![ 3.61833700244349288,  3.96046289599926427,  1.44435028724617442,  1.13455445826500645, -3.30895752093770579,
+                                   -3.28382346228211697,  0.70730060716580723,  1.27749196276785826,  0.81521390274755756, -0.04979044289857298,
+                                    1.97968027781346545, -2.80552479438772817, -1.09858397535426366,  3.99123446373437263,  3.03248594516832792,
+                                   -0.41869628192662156, -1.45283286109873933, -0.03159619816434689, -2.83025703359666192,  3.85962479743330977]);
         let (b, u, v) = mat.clone().svd().unwrap();
 
-        let expected_values = vec![ 10.30582791159127964, 5.00697984443758681, 3.27415086611198713];
+        let expected_values = vec![8.0, 6.0, 4.0, 2.0];
 
         validate_svd(&mat, &b, &u, &v);
         assert!(expected_values.iter()
