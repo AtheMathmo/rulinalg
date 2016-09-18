@@ -1134,6 +1134,32 @@ mod tests {
             .iter()
             .zip(recovered.data().iter())
             .any(|(&x, &y)| (x - y).abs() > 1e-10));
+
+        // The transposition is due to the fact that there does not exist
+        // any column iterators at the moment, and we need to simultaneously iterate
+        // over the columns. Once they do exist, we should rewrite
+        // the below iterators to use iter_cols() or whatever instead.
+        let ref u_transposed = u.transpose();
+        let ref v_transposed = v.transpose();
+        let ref mat_transposed = mat.transpose();
+
+        let mut singular_triplets = u_transposed.iter_rows().zip(b.diag().into_iter()).zip(v_transposed.iter_rows())
+            // chained zipping results in nested tuple. Flatten it.
+            .map(|((u_col, singular_value), v_col)| (Vector::new(u_col), singular_value, Vector::new(v_col)));
+
+        assert!(singular_triplets.by_ref()
+            // For a matrix M, each singular value σ and left and right singular vectors u and v respectively
+            // satisfy M v = σ u, so we take the difference
+            .map(|(ref u, sigma, ref v)| mat * v - u * sigma)
+            .flat_map(|v| v.into_vec().into_iter())
+            .all(|x| x.abs() < 1e-10));
+
+        assert!(singular_triplets.by_ref()
+            // For a matrix M, each singular value σ and left and right singular vectors u and v respectively
+            // satisfy M_transposed u = σ v, so we take the difference
+            .map(|(ref u, sigma, ref v)| mat_transposed * u - v * sigma)
+            .flat_map(|v| v.into_vec().into_iter())
+            .all(|x| x.abs() < 1e-10));
     }
 
     #[test]
