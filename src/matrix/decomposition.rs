@@ -1171,7 +1171,13 @@ mod tests {
                                    1.0, 3.0, 1.0,
                                    7.0, 1.0, 1.0]);
         let (b, u, v) = mat.clone().svd().unwrap();
+
+        let expected_values = vec![10.75520534506231485, 4.64288772503583491, 2.18383872075175489f64];
+
         validate_svd(&mat, &b, &u, &v);
+        assert!(expected_values.iter()
+            .zip(b.diag().data().iter())
+            .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
     }
 
     #[test]
@@ -1182,7 +1188,12 @@ mod tests {
                                    3.0,  1.0,  7.0,  1.0,  1.0]);
         let (b, u, v) = mat.clone().svd().unwrap();
 
+        let expected_values = vec![ 10.30582791159127964, 5.00697984443758681, 3.27415086611198713];
+
         validate_svd(&mat, &b, &u, &v);
+        assert!(expected_values.iter()
+            .zip(b.diag().data().iter())
+            .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
     }
 
     #[test]
@@ -1193,8 +1204,15 @@ mod tests {
                                    3.0,  1.0,  7.0,  1.0,  1.0,
                                    4.0,  2.0,  1.0, -1.0,  3.0,
                                    5.0,  1.0,  1.0,  3.0,  2.0]);
+
+        let expected_values = vec![12.17397474292711124, 5.26810473205258312, 4.49422697997698428,
+                                    2.92796758773851229, 2.87582008274122236];
+
         let (b, u, v) = mat.clone().svd().unwrap();
         validate_svd(&mat, &b, &u, &v);
+        assert!(expected_values.iter()
+            .zip(b.diag().data().iter())
+            .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
     }
 
     #[test]
