@@ -4,7 +4,7 @@
 
 The crate is currently on [version 0.3.2](https://crates.io/crates/rulinalg).
 
-Read the [API Documentation](https://athemathmo.github.io/rulinalg) to learn more. 
+Read the [API Documentation](https://athemathmo.github.io/rulinalg) to learn more.
 
 ---
 
@@ -57,11 +57,23 @@ Then import the modules and you're done!
 ```rust
 use rulinalg::matrix::Matrix;
 
-let a = Matrix::new(2,2, vec![1.0, 2.0, 3.0, 4.0]); // Create a 2x2 matrix [[1,2],[3,4]]
+// Create a 2x2 matrix:
+let a = Matrix::new(2, 2, vec![
+    1.0, 2.0,
+    3.0, 4.0,
+]);
 
-let b = Matrix::new(2,3, vec![1.0,2.0,3.0,4.0,5.0,6.0]); // Create a 2x3 matrix [[1.0,2.0,3.0],[4.0,5.0,6.0]]
+// Create a 2x3 matrix:
+let b = Matrix::new(2, 3, vec![
+    1.0, 2.0, 3.0,
+    4.0, 5.0, 6.0,
+]);
 
 let c = &a * &b; // Matrix product of a and b
+// [
+        9.0, 12.0, 15.0,
+       19.0, 26.0, 33.0,
+// ]
 ```
 
 More detailed coverage can be found in the [API documentation](https://AtheMathmo.github.io/rulinalg/).
