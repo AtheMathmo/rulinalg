@@ -1163,31 +1163,36 @@ mod tests {
     }
 
     #[test]
-    fn test_svd_non_square() {
-        let mat = Matrix::new(5,
-                              3,
-                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
+    fn test_svd_tall_matrix() {
+        let mat = Matrix::new(5, 3,
+                              vec![1.0, 2.0, 3.0,
+                                   4.0, 5.0, 2.0,
+                                   4.0, 1.0, 2.0,
+                                   1.0, 3.0, 1.0,
                                    7.0, 1.0, 1.0]);
         let (b, u, v) = mat.clone().svd().unwrap();
-
         validate_svd(&mat, &b, &u, &v);
+    }
 
-        let mat = Matrix::new(3,
-                              5,
-                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
-                                   7.0, 1.0, 1.0]);
+    #[test]
+    fn test_svd_short_matrix() {
+        let mat = Matrix::new(3, 5,
+                              vec![1.0,  2.0,  3.0,  4.0,  5.0,
+                                   2.0,  4.0,  1.0,  2.0,  1.0,
+                                   3.0,  1.0,  7.0,  1.0,  1.0]);
         let (b, u, v) = mat.clone().svd().unwrap();
 
         validate_svd(&mat, &b, &u, &v);
     }
 
     #[test]
-    fn test_svd_square() {
-        let mat = Matrix::new(5,
-                              5,
-                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
-                                   7.0, 1.0, 1.0, 4.0, 2.0, 1.0, -1.0, 3.0, 5.0, 1.0, 1.0, 3.0,
-                                   2.0]);
+    fn test_svd_square_matrix() {
+        let mat = Matrix::new(5, 5,
+                              vec![1.0,  2.0,  3.0,  4.0,  5.0,
+                                   2.0,  4.0,  1.0,  2.0,  1.0,
+                                   3.0,  1.0,  7.0,  1.0,  1.0,
+                                   4.0,  2.0,  1.0, -1.0,  3.0,
+                                   5.0,  1.0,  1.0,  3.0,  2.0]);
         let (b, u, v) = mat.clone().svd().unwrap();
         validate_svd(&mat, &b, &u, &v);
     }
