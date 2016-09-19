@@ -347,7 +347,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
                     b_ii = *b.get_unchecked([i, i]);
                     b_sup_diag = b.get_unchecked([i, i + 1]).abs();
                     diag_abs_sum = T::min_positive_value() *
-                                   (b_ii.abs() + *b.get_unchecked([i + 1, i + 1]));
+                                   (b_ii.abs() + b.get_unchecked([i + 1, i + 1]).abs());
                 }
                 if b_sup_diag <= diag_abs_sum {
                     // Adjust q or p to define boundaries of sup-diagonal box
