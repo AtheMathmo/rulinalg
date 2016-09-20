@@ -72,9 +72,11 @@
 extern crate num as libnum;
 extern crate matrixmultiply;
 
+// macros should be at the top in order for macros to be accessible in subsequent modules
+#[macro_use]
+pub mod macros;
 pub mod matrix;
 pub mod convert;
-pub mod macros;
 pub mod error;
 pub mod utils;
 pub mod vector;
