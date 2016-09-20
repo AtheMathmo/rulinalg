@@ -126,6 +126,44 @@ impl<T> Matrix<T> {
         }
     }
 
+    /// Constructor for Matrix struct that takes a function `f`
+    /// and constructs a new matrix such that `A_ij = f(i, j)`,
+    /// where `i` is the row index and `j` the column index.
+    ///
+    /// Requires both the row and column dimensions
+    /// as well as a generating function.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    ///
+    /// // Let's assume you have an array of "things" for
+    /// // which you want to generate a distance matrix:
+    /// let things: [i32; 3] = [1, 2, 3];
+    /// let distances: Matrix<f64> = Matrix::from_fn(things.len(), things.len(), |col, row| {
+    ///     (things[col] - things[row]).abs().into()
+    /// });
+    ///
+    /// assert_eq!(distances.rows(), 3);
+    /// assert_eq!(distances.cols(), 3);
+    /// assert_eq!(distances.data(), &vec![
+    ///     0.0, 1.0, 2.0,
+    ///     1.0, 0.0, 1.0,
+    ///     2.0, 1.0, 0.0,
+    /// ]);
+    /// ```
+    pub fn from_fn<F>(rows: usize, cols: usize, mut f: F) -> Matrix<T>
+        where F: FnMut(usize, usize) -> T {
+        let mut data = Vec::with_capacity(rows * cols);
+        for row in 0..rows {
+            for col in 0..cols {
+                data.push(f(col, row));
+            }
+        }
+        Matrix::new(rows, cols, data)
+    }
+
     /// Returns a non-mutable reference to the underlying data.
     pub fn data(&self) -> &Vec<T> {
         &self.data
@@ -675,8 +713,8 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
             }
 
             let diag = *m.get_unchecked([i, i]);
-            if diag.abs() < T::min_positive_value() + 
-                T::min_positive_value() 
+            if diag.abs() < T::min_positive_value() +
+                T::min_positive_value()
             {
                 return Err(Error::new(ErrorKind::AlgebraFailure,
                                       "Linear system cannot be solved (matrix is singular)."));
@@ -766,6 +804,19 @@ mod tests {
     fn test_new_mat_bad_data() {
         let a = vec![2.0; 7];
         let _ = Matrix::new(3, 3, a);
+    }
+
+    #[test]
+    fn test_new_mat_from_fn() {
+      let mut counter = 0;
+      let m : Matrix<usize> = Matrix::from_fn(3, 2, |_, _| {
+        let value = counter;
+        counter += 1;
+        value
+      });
+      assert!(m.rows() == 3);
+      assert!(m.cols() == 2);
+      assert!(m.data == vec![0, 1, 2, 3, 4, 5]);
     }
 
     #[test]
