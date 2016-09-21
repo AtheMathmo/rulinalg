@@ -339,6 +339,50 @@ fn correct_svd_signs<T>(mut b: Matrix<T>, mut u: Matrix<T>, mut v: Matrix<T>)
     (b, u, v)
 }
 
+fn sort_svd<T>(mut b: Matrix<T>, mut u: Matrix<T>, mut v: Matrix<T>)
+    -> (Matrix<T>, Matrix<T>, Matrix<T>) where T: Any + Float + Signed {
+
+    assert!(u.cols() == b.cols() && b.cols() == v.cols());
+
+    // This unfortunately incurs two allocations since we have no (simple)
+    // way to iterate over a matrix diagonal, only to copy it into a new Vector
+    let mut indexed_sorted_values: Vec<_> = b.diag().into_vec()
+        .into_iter()
+        .enumerate()
+        .collect();
+
+    // Sorting a vector of indices simultaneously with the singular values
+    // gives us a mapping between old and new (final) column indices.
+    indexed_sorted_values.sort_by(|&(_, ref x), &(_, ref y)|
+        x.partial_cmp(y).expect("All singular values should be finite, and thus sortable.")
+         .reverse()
+    );
+
+    // Set the diagonal elements of the singular value matrix
+    for (i, &(_, value)) in indexed_sorted_values.iter().enumerate() {
+        b[[i, i]] = value;
+    }
+
+    // Assuming N columns, the simultaneous sorting of indices and singular values yields
+    // a set of N (i, j) pairs which correspond to columns which must be swapped. However,
+    // for any (i, j) in this set, there is also (j, i). Keeping both of these would make us
+    // swap the columns back and forth, so we must remove the duplicates. We can avoid
+    // any further sorting or hashsets or similar by noting that we can simply
+    // remove any (i, j) for which j >= i. This also removes (i, i) pairs,
+    // i.e. columns that don't need to be swapped.
+    let swappable_pairs = indexed_sorted_values.into_iter()
+        .enumerate()
+        .map(|(new_index, (old_index, _))| (old_index, new_index))
+        .filter(|&(old_index, new_index)| old_index < new_index);
+
+    for (old_index, new_index) in swappable_pairs {
+        u.swap_cols(old_index, new_index);
+        v.swap_cols(old_index, new_index);
+    }
+
+    (b, u, v)
+}
+
 impl<T: Any + Float + Signed> Matrix<T> {
     /// Singular Value Decomposition
     ///
@@ -351,6 +395,11 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// This function may fail in some cases. The current decomposition whilst being
     /// efficient is fairly basic. Hopefully the algorithm can be made not to fail in the near future.
     pub fn svd(self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
+        let (b, u, v) = try!(self.svd_unordered());
+        Ok(sort_svd(b, u, v))
+    }
+
+    fn svd_unordered(self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
         let (b, u, v) = try!(self.svd_golub_reinsch());
 
         // The Golub-Reinsch implementation sometimes spits out negative singular values,
@@ -1105,6 +1154,7 @@ impl<T> Matrix<T> where T: Any + Copy + One + Zero + Neg<Output=T> +
 mod tests {
     use matrix::{Matrix, BaseMatrix};
     use vector::Vector;
+    use super::sort_svd;
 
     fn validate_bidiag(mat: &Matrix<f64>,
                        b: &Matrix<f64>,
@@ -1207,6 +1257,29 @@ mod tests {
     }
 
     #[test]
+    fn test_sort_svd() {
+        let u = Matrix::new(2, 3, vec![1.0, 2.0, 3.0,
+                                       4.0, 5.0, 6.0]);
+        let b = Matrix::new(3, 3, vec![4.0, 0.0, 0.0,
+                                       0.0, 8.0, 0.0,
+                                       0.0, 0.0, 2.0]);
+        let v = Matrix::new(3, 3, vec![21.0, 22.0, 23.0,
+                                       24.0, 25.0, 26.0,
+                                       27.0, 28.0, 29.0]);
+        let (b, u, v) = sort_svd(b, u, v);
+
+        assert_eq!(b.data(), &vec![8.0, 0.0, 0.0,
+                                  0.0, 4.0, 0.0,
+                                  0.0, 0.0, 2.0]);
+        assert_eq!(u.data(), &vec![2.0, 1.0, 3.0,
+                                  5.0, 4.0, 6.0]);
+        assert_eq!(v.data(), &vec![22.0, 21.0, 23.0,
+                                  25.0, 24.0, 26.0,
+                                  28.0, 27.0, 29.0]);
+
+    }
+
+    #[test]
     fn test_svd_tall_matrix() {
         // Note: This matrix is not arbitrary. It has been constructed specifically so that
         // the "natural" order of the singular values it not sorted by default.
@@ -1221,10 +1294,11 @@ mod tests {
         let expected_values = vec![8.0, 6.0, 4.0, 2.0];
 
         validate_svd(&mat, &b, &u, &v);
-        // Temporarily disable the check for ordering of singular values
-        // assert!(expected_values.iter()
-        //     .zip(b.diag().data().iter())
-        //     .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
+
+        // Assert the singular values are what we expect
+        assert!(expected_values.iter()
+            .zip(b.diag().data().iter())
+            .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
     }
 
     #[test]
@@ -1241,10 +1315,11 @@ mod tests {
         let expected_values = vec![8.0, 6.0, 4.0, 2.0];
 
         validate_svd(&mat, &b, &u, &v);
-        // Temporarily disable the check for ordering of singular values
-        // assert!(expected_values.iter()
-        //     .zip(b.diag().data().iter())
-        //     .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
+
+        // Assert the singular values are what we expect
+        assert!(expected_values.iter()
+            .zip(b.diag().data().iter())
+            .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
     }
 
     #[test]
@@ -1256,15 +1331,16 @@ mod tests {
                                    4.0,  2.0,  1.0, -1.0,  3.0,
                                    5.0,  1.0,  1.0,  3.0,  2.0]);
 
-        let expected_values = vec![12.17397474292711124, 5.26810473205258312, 4.49422697997698428,
-                                    2.92796758773851229, 2.87582008274122236];
+        let expected_values = vec![ 12.1739747429271112,   5.2681047320525831,   4.4942269799769843,
+                                     2.9279675877385123,   2.8758200827412224];
 
         let (b, u, v) = mat.clone().svd().unwrap();
         validate_svd(&mat, &b, &u, &v);
-        // Temporarily disable the check for ordering of singular values
-        // assert!(expected_values.iter()
-        //     .zip(b.diag().data().iter())
-        //     .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
+
+        // Assert the singular values are what we expect
+        assert!(expected_values.iter()
+            .zip(b.diag().data().iter())
+            .all(|(expected, actual)| (expected - actual).abs() < 1e-12));
     }
 
     #[test]
