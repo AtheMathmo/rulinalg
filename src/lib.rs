@@ -79,6 +79,10 @@ pub mod error;
 pub mod utils;
 pub mod vector;
 
+// Remove this module once epsilon() makes it into the num crate.
+mod epsilon;
+pub use epsilon::MachineEpsilon;
+
 /// Trait for linear algebra metrics.
 ///
 /// Currently only implements basic euclidean norm.

@@ -23,6 +23,7 @@ use error::{Error, ErrorKind};
 
 use libnum::{One, Zero, Float, Signed};
 use libnum::{cast, abs};
+use epsilon::MachineEpsilon;
 
 impl<T: Any + Float> Matrix<T> {
     /// Cholesky decomposition
@@ -383,7 +384,7 @@ fn sort_svd<T>(mut b: Matrix<T>, mut u: Matrix<T>, mut v: Matrix<T>)
     (b, u, v)
 }
 
-impl<T: Any + Float + Signed> Matrix<T> {
+impl<T: Any + Float + Signed + MachineEpsilon> Matrix<T> {
     /// Singular Value Decomposition
     ///
     /// Computes the SVD using the Golub-Reinsch algorithm.
@@ -426,6 +427,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
             flipped = true;
         }
 
+        let eps = T::from(3.0).unwrap() * T::epsilon();
         let n = self.cols;
 
         // Get the bidiagonal decomposition
@@ -447,8 +449,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
                 unsafe {
                     b_ii = *b.get_unchecked([i, i]);
                     b_sup_diag = b.get_unchecked([i, i + 1]).abs();
-                    diag_abs_sum = T::min_positive_value() *
-                                   (b_ii.abs() + b.get_unchecked([i + 1, i + 1]).abs());
+                    diag_abs_sum = eps * (b_ii.abs() + b.get_unchecked([i + 1, i + 1]).abs());
                 }
                 if b_sup_diag <= diag_abs_sum {
                     // Adjust q or p to define boundaries of sup-diagonal box
@@ -483,7 +484,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
                     b_sup_diag = *b.get_unchecked([i, i + 1]);
                 }
 
-                if b_ii.abs() < T::min_positive_value() {
+                if b_ii.abs() < eps {
                     let (c, s) = Matrix::<T>::givens_rot(b_ii, b_sup_diag);
                     let givens = Matrix::new(2, 2, vec![c, s, -s, c]);
                     let b_i = MatrixSliceMut::from_matrix(&mut b, [i, i], 1, 2);
