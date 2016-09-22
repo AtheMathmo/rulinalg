@@ -386,9 +386,19 @@ fn sort_svd<T>(mut b: Matrix<T>, mut u: Matrix<T>, mut v: Matrix<T>)
 impl<T: Any + Float + Signed> Matrix<T> {
     /// Singular Value Decomposition
     ///
-    /// Computes the SVD using Golub-Reinsch algorithm.
+    /// Computes the SVD using the Golub-Reinsch algorithm.
     ///
-    /// Returns Σ, U, V where self = U Σ V<sup>T</sup>.
+    /// Returns Σ, U, V, such that `self` = U Σ V<sup>T</sup>. Σ is a diagonal matrix whose elements
+    /// correspond to the non-negative singular values of the matrix. The singular values are ordered in
+    /// non-increasing order. U and V have orthonormal columns, and each column represents the
+    /// left and right singular vectors for the corresponding singular value in Σ, respectively.
+    ///
+    /// Denoting the dimensions of self as M x N (rows x cols), the dimensions of the returned matrices
+    /// are as follows:
+    ///
+    /// - `Σ`: N x N
+    /// - `U`: M x N
+    /// - `V`: N x N
     ///
     /// # Failures
     ///
