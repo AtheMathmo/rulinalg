@@ -66,7 +66,6 @@
 //! Note finally that much of the `Matrix`/`MatrixSlice`/`MatrixSliceMut` functionality is contained behind
 //! the `BaseMatrix`/`BaseMatrixMut` traits. This allows us to be generic over matrices or slices.
 
-#![cfg_attr(all(test, feature = "nightly"), feature(test))]
 #![deny(missing_docs)]
 #![warn(missing_debug_implementations)]
 
@@ -91,12 +90,3 @@ pub trait Metric<T> {
     /// Computes the euclidean norm.
     fn norm(&self) -> T;
 }
-
-/// The module-internal benchmarks must be run on nightly,
-/// so we hide the following under feature flags.
-/// Note that in order to run the module-internal benchmarks,
-/// you need to pass --features nightly to `cargo bench`.
-#[cfg(all(test, feature = "nightly"))]
-extern crate test;
-#[cfg(all(test, feature = "nightly"))]
-extern crate rand;
