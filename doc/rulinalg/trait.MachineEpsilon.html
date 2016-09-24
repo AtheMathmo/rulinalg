@@ -4,13 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="API documentation for the Rust `vector` mod in crate `rulinalg`.">
-    <meta name="keywords" content="rust, rustlang, rust-lang, vector">
+    <meta name="description" content="API documentation for the Rust `MachineEpsilon` trait in crate `rulinalg`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, MachineEpsilon">
 
-    <title>rulinalg::vector - Rust</title>
+    <title>rulinalg::MachineEpsilon - Rust</title>
 
-    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
-    <link rel="stylesheet" type="text/css" href="../../main.css">
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
     
 
     
@@ -28,7 +28,7 @@
 
     <nav class="sidebar">
         
-        <p class='location'><a href='../index.html'>rulinalg</a></p><script>window.sidebarCurrent = {name: 'vector', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+        <p class='location'><a href='index.html'>rulinalg</a></p><script>window.sidebarCurrent = {name: 'MachineEpsilon', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script>
     </nav>
 
     <nav class="sub">
@@ -42,25 +42,30 @@
         </form>
     </nav>
 
-    <section id='main' class="content mod">
-<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>rulinalg</a>::<wbr><a class='mod' href=''>vector</a></span><span class='out-of-band'><span id='render-detail'>
+    <section id='main' class="content trait">
+<h1 class='fqn'><span class='in-band'>Trait <a href='index.html'>rulinalg</a>::<wbr><a class='trait' href=''>MachineEpsilon</a></span><span class='out-of-band'><span id='render-detail'>
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-3548' class='srclink' href='../../src/rulinalg/src/vector.rs.html#1-1163' title='goto source code'>[src]</a></span></h1>
-<div class='docblock'><p>The vector module.</p>
-
-<p>Currently contains all code
-relating to the vector linear algebra struct.</p>
-</div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
-<table>
-                       <tr class=' module-item'>
-                           <td><a class='struct' href='struct.Vector.html'
-                                  title='rulinalg::vector::Vector'>Vector</a></td>
-                           <td class='docblock short'>
-                                <p>The Vector struct.</p>
-                           </td>
-                       </tr></table></section>
+               </span><a id='src-4050' class='srclink' href='../src/rulinalg/src/epsilon.rs.html#9-12' title='goto source code'>[src]</a></span></h1>
+<pre class='rust trait'>pub trait MachineEpsilon: Float {
+    fn <a href='#tymethod.epsilon' class='fnname'>epsilon</a>() -&gt; Self;
+}</pre><div class='docblock'><p>Expose the machine epsilon of floating point numbers.
+This trait should only need to exist for a short time,
+until the Float trait from the Num crate has the same
+capabilities.</p>
+</div>
+            <h2 id='required-methods'>Required Methods</h2>
+            <div class='methods'>
+        <h3 id='tymethod.epsilon' class='method stab '><span id='epsilon.v' class='invisible'><code>fn <a href='#tymethod.epsilon' class='fnname'>epsilon</a>() -&gt; Self</code></span></h3><div class='docblock'><p>Returns the machine epsilon for the given Float type.</p>
+</div></div>
+        <h2 id='implementors'>Implementors</h2>
+        <ul class='item-list' id='implementors-list'>
+    <li><code>impl MachineEpsilon for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f32.html'>f32</a></code></li>
+<li><code>impl MachineEpsilon for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a></code></li>
+</ul><script type="text/javascript" async
+                         src="../implementors/rulinalg/trait.MachineEpsilon.js">
+                 </script></section>
     <section id='search' class="content hidden"></section>
 
     <section class="footer"></section>
@@ -114,13 +119,13 @@ relating to the vector linear algebra struct.</p>
     
 
     <script>
-        window.rootPath = "../../";
+        window.rootPath = "../";
         window.currentCrate = "rulinalg";
         window.playgroundUrl = "";
     </script>
-    <script src="../../jquery.js"></script>
-    <script src="../../main.js"></script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
     
-    <script defer src="../../search-index.js"></script>
+    <script defer src="../search-index.js"></script>
 </body>
 </html>

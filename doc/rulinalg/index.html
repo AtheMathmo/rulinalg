@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-0' class='srclink' href='../src/rulinalg/src/lib.rs.html#1-88' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-0' class='srclink' href='../src/rulinalg/src/lib.rs.html#1-111' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'>
 <h1 id='the-rulinalg-crate' class='section-header'><a href='#the-rulinalg-crate'>The rulinalg crate.</a></h1>
 <p>A crate that provides high-dimensional linear algebra
@@ -103,6 +103,20 @@ row will be [1,2,3].</p>
 <span class='comment'>// Produces a 3x2 matrix filled with sevens.</span>
 <span class='kw'>let</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='ident'>a</span> <span class='op'>+</span> <span class='ident'>b</span>;</pre>
 
+<p>Sometimes we want to construct small matrices by hand, usually for writing unit tests
+or examples. For this purpose, <code>rulinalg</code> provides the <code>matrix!</code> macro:</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='comment'>// Remember to enable macro usage in rulinalg!</span>
+<span class='attribute'>#[<span class='ident'>macro_use</span>]</span>
+<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>rulinalg</span>;
+
+<span class='comment'>// Construct a 3x3 matrix of f64</span>
+<span class='comment'>// Commas separate columns and semi-colons separate rows</span>
+<span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
+                  <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>;
+                  <span class='number'>7.0</span>, <span class='number'>8.0</span>, <span class='number'>9.0</span>);</pre>
+
 <p>Of course the library can support more complex operations but you should check the individual
 modules for more information.</p>
 
@@ -156,8 +170,26 @@ the <code>BaseMatrix</code>/<code>BaseMatrixMut</code> traits. This allows us to
                            <td class='docblock short'>
                                 <p>The vector module.</p>
                            </td>
+                       </tr></table><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='macro' href='macro.matrix.html'
+                                  title='rulinalg::matrix'>matrix</a></td>
+                           <td class='docblock short'>
+                                <p>The <code>matrix!</code> macro enables easy construction of small matrices.</p>
+                           </td>
                        </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
 <table>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.MachineEpsilon.html'
+                                  title='rulinalg::MachineEpsilon'>MachineEpsilon</a></td>
+                           <td class='docblock short'>
+                                <p>Expose the machine epsilon of floating point numbers.
+This trait should only need to exist for a short time,
+until the Float trait from the Num crate has the same
+capabilities.</p>
+                           </td>
+                       </tr>
                        <tr class=' module-item'>
                            <td><a class='trait' href='trait.Metric.html'
                                   title='rulinalg::Metric'>Metric</a></td>
