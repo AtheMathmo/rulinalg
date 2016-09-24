@@ -13,3 +13,6 @@ license = "MIT"
 [dependencies]
 num = {version = "0.1.34", default-features = false }
 matrixmultiply = "0.1.8"
+
+[dev-dependencies]
+rand = "0.3"
