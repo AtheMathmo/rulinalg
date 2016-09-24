@@ -394,12 +394,22 @@ impl<T: Any + Float + Signed + MachineEpsilon> Matrix<T> {
     /// non-increasing order. U and V have orthonormal columns, and each column represents the
     /// left and right singular vectors for the corresponding singular value in Σ, respectively.
     ///
-    /// Denoting the dimensions of self as M x N (rows x cols), the dimensions of the returned matrices
-    /// are as follows:
+    /// If `self` has M rows and N columns, the dimensions of the returned matrices
+    /// are as follows.
+    ///
+    /// If M >= N:
     ///
     /// - `Σ`: N x N
     /// - `U`: M x N
     /// - `V`: N x N
+    ///
+    /// If M < N:
+    ///
+    /// - `Σ`: M x M
+    /// - `U`: M x M
+    /// - `V`: N x M
+    ///
+    /// Note: This version of the SVD is sometimes referred to as the 'economy SVD'.
     ///
     /// # Failures
     ///
