@@ -781,7 +781,6 @@ fn parity<T, M>(m: &M) -> T
     sgn
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::super::vector::Vector;

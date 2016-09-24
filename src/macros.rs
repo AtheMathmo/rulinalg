@@ -1,48 +1,106 @@
 //! Macros for the linear algebra modules.
 
-macro_rules! count {
-    () => (0usize);
-    ( $x:tt $($xs:tt)* ) => (1usize + count!($($xs)*));
+/// The `matrix!` macro enables easy construction of small matrices.
+///
+/// This is particularly useful when writing tests involving matrices.
+/// Note that the macro is just a convenient wrapper around the Matrix
+/// constructors, and as a result the matrix is still allocated on the
+/// heap.
+///
+/// Rows are separated by semi-colons, while commas separate the columns.
+/// Users of MATLAB will find this style familiar. If the dimensions
+/// don't match, the macro will fail to compile.
+///
+/// # Examples
+///
+/// ```
+/// #[macro_use]
+/// extern crate rulinalg;
+///
+/// # fn main() {
+/// // Construct a 3x3 matrix of f64
+/// let mat = matrix!(1.0, 2.0, 3.0;
+///                   4.0, 5.0, 6.0;
+///                   7.0, 8.0, 9.0);
+/// # }
+/// ```
+///
+/// To construct matrices of other types, specify the type by
+/// the usual Rust syntax:
+///
+/// ```
+/// # #[macro_use]
+/// # extern crate rulinalg;
+/// # fn main() {
+/// use rulinalg::matrix::Matrix;
+///
+/// // Construct a 2x3 matrix of f32
+/// let mat: Matrix<f32> = matrix!(1.0, 2.0, 3.0;
+///                                4.0, 5.0, 6.0);
+/// // Or
+/// let mat = matrix!(1.0, 2.0, 3.0;
+///                   4.0, 5.0, 6.0f32);
+/// # }
+/// ```
+///
+#[macro_export]
+macro_rules! matrix {
+    ($( $( $x: expr ),*);*) => {
+        {
+            use $crate::matrix::Matrix;
+            let data_as_nested_array = [ $( [ $($x),* ] ),* ];
+            let rows = data_as_nested_array.len();
+            let cols = data_as_nested_array[0].len();
+            let data_as_flat_array: Vec<_> = data_as_nested_array.into_iter()
+                .flat_map(|row| row.into_iter())
+                .cloned()
+                .collect();
+            Matrix::new(rows, cols, data_as_flat_array)
+        }
+    }
 }
 
-/// Should be able to do the following:
-///
-/// # Specification
-///
-/// ```
-/// let a = mat![1,2,3] // 1 row, 3 cols
-/// let b = mat![1;2;3] // 3 rows, 1 col
-/// let c = mat![1,2;3,4;5,6] // 3 rows, 2 cols
-/// let d = mat![Vector(5), Matrix(5 rows)] // +1 cols
-/// let e = mat![Vector(3); Matrix(3 cols)] // +1 rows
-/// let f = mat![Matrix(2,3); Matrix(10,3)] // 12 rows, 3 cols
-/// let g = mat![Matrix(5,2), Matrix(5,10)] // 5 rows, 12 cols
-/// ```
-///
-/// # Current Support
-///
-/// This macro currently supports the use cases described
-/// by a,b,c in the specification above.
-macro_rules! mat {
-    ( $( $x:expr ),* ) => { {
-        let vec = vec![$($x),*];
-        Matrix { cols : vec.len(), rows: 1, data: vec }
-    } };
-    ( $( $x0:expr ),* ; $($( $x:expr ),*);* ) => { {
-        let mut _assert_width0 = [(); count!($($x0)*)];
-        let mut vec = Vec::new();
-        let rows = 1usize;
-        let cols = count!($($x0)*);
+#[cfg(test)]
+mod tests {
+    use matrix::slice::BaseMatrix;
 
-        $( vec.push($x0); )*
+    #[test]
+    fn matrix_macro() {
+        {
+            // An arbitrary rectangular matrix
+            let mat = matrix!(1, 2, 3;
+                              4, 5, 6);
+            assert_eq!(2, mat.rows());
+            assert_eq!(3, mat.cols());
+            assert_eq!(&vec![1, 2, 3, 4, 5, 6], mat.data());
+        }
 
-        $(
-            let rows = rows + 1usize;
-            let _assert_width = [(); count!($($x)*)];
-            _assert_width0 = _assert_width;
-            $( vec.push($x); )*
-        )*
+        {
+            // A single row
+            let mat = matrix!(1, 2, 3);
+            assert_eq!(1, mat.rows());
+            assert_eq!(3, mat.cols());
+            assert_eq!(&vec![1, 2, 3], mat.data());
+        }
 
-        Matrix { cols : cols, rows: rows, data: vec }
-    } }
+        {
+            // A single element
+            let mat = matrix!(1);
+            assert_eq!(1, mat.rows());
+            assert_eq!(1, mat.cols());
+            assert_eq!(&vec![1], mat.data());
+        }
+
+        {
+            // A floating point matrix
+            let mat = matrix!(1.0, 2.0, 3.0;
+                              4.0, 5.0, 6.0;
+                              7.0, 8.0, 9.0);
+            let ref expected_data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+            assert_eq!(3, mat.rows());
+            assert_eq!(3, mat.cols());
+            assert_eq!(expected_data, mat.data());
+        }
+    }
+
 }
