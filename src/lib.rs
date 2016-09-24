@@ -54,6 +54,23 @@
 //! let c = a + b;
 //! ```
 //!
+//! Sometimes we want to construct small matrices by hand, usually for writing unit tests
+//! or examples. For this purpose, `rulinalg` provides the `matrix!` macro:
+//!
+//! ```
+//! // Remember to enable macro usage in rulinalg!
+//! #[macro_use]
+//! extern crate rulinalg;
+//!
+//! # fn main() {
+//! // Construct a 3x3 matrix of f64
+//! // Commas separate columns and semi-colons separate rows
+//! let mat = matrix!(1.0, 2.0, 3.0;
+//!                   4.0, 5.0, 6.0;
+//!                   7.0, 8.0, 9.0);
+//! # }
+//! ```
+//!
 //! Of course the library can support more complex operations but you should check the individual
 //! modules for more information.
 //!
@@ -72,12 +89,18 @@
 extern crate num as libnum;
 extern crate matrixmultiply;
 
+// macros should be at the top in order for macros to be accessible in subsequent modules
+#[macro_use]
+pub mod macros;
 pub mod matrix;
 pub mod convert;
-pub mod macros;
 pub mod error;
 pub mod utils;
 pub mod vector;
+
+// Remove this module once epsilon() makes it into the num crate.
+mod epsilon;
+pub use epsilon::MachineEpsilon;
 
 /// Trait for linear algebra metrics.
 ///
