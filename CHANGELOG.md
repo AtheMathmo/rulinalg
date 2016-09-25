@@ -2,6 +2,36 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
+## 0.3.3
+
+### New Contributors
+
+- [Andlon](https://github.com/Andlon)
+- [regexident](https://github.com/regexident)
+- [tokahuke](https://github.com/tokahuke)
+
+### Breaking Changes
+
+- None
+
+### Features
+
+- SVD now returns singular values in descending order.
+- Implemented a new `matrix!` macro for creating (small) matrices.
+- Added a `from_fn` constructor for `Matrix`.
+- Implementing `IndexMut` for `Vector`.
+- Added `iter` and `iter_mut` for `Vector`.
+- Implemented `IntoIter` for `Vector`.
+
+### Bug Fixes
+
+- Fixed bug with SVD convergence (would loop endlessly).
+- Singular values from SVD are now non-negative.
+
+### Minor Changes
+
+- None
+
 ## 0.3.2
 
 ### New Contributors

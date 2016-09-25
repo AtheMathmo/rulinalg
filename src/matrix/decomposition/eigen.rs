@@ -22,12 +22,13 @@
 use std::any::Any;
 use std::cmp;
 
+use epsilon::MachineEpsilon;
 use error::{Error, ErrorKind};
 use matrix::{Matrix, MatrixSliceMut};
 use matrix::slice::{BaseMatrix, BaseMatrixMut};
 
 use libnum::{Float, Signed};
-use libnum::{cast, abs};
+use libnum::abs;
 
 /// Eigen struct
 ///
@@ -40,7 +41,7 @@ pub struct Eigen<T> {
     mat: Matrix<T>,
 }
 
-impl<T: Any + Float + Signed> Eigen<T> {
+impl<T: Any + Float + Signed + MachineEpsilon> Eigen<T> {
     /// Create a new `Eigen` struct from a `Matrix`.
     ///
     /// # Examples
@@ -103,7 +104,7 @@ impl<T: Any + Float + Signed> Eigen<T> {
         // The final index of the active matrix
         let mut p = n - 1;
 
-        let eps = cast::<f64, T>(1e-20).expect("Failed to cast value for convergence check.");
+        let eps = T::from(3.0).unwrap() * T::epsilon();
 
         while p > 1 {
             let q = p - 1;
@@ -249,7 +250,7 @@ impl<T: Any + Float + Signed> Eigen<T> {
         // The final index of the active matrix
         let mut p = n - 1;
 
-        let eps = cast::<f64, T>(1e-20).expect("Failed to cast value for convergence check.");
+        let eps = T::from(3.0).unwrap() * T::epsilon();
 
         while p > 1 {
             let q = p - 1;
