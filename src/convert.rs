@@ -8,6 +8,17 @@ use std::convert::From;
 use super::matrix::{Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix};
 use super::vector::Vector;
 
+impl<T> From<Vec<T>> for Vector<T> {
+    fn from(vec: Vec<T>) -> Self {
+        Vector::new(vec)
+    }
+}
+
+impl<'a, T> From<&'a [T]> for Vector<T> where T: Clone {
+    fn from(slice: &'a [T]) -> Self {
+        Vector::new(slice.to_owned())
+    }
+}
 
 impl<T> From<Vector<T>> for Matrix<T> {
     fn from(vector: Vector<T>) -> Self {
