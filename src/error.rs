@@ -9,8 +9,10 @@ use std::marker::{Send, Sync};
 /// An error related to the linalg module.
 #[derive(Debug)]
 pub struct Error {
-    kind: ErrorKind,
-    error: Box<error::Error + Send + Sync>,
+    /// Type of error that led to this issue
+    pub kind: ErrorKind,
+    /// Boxed actual error for easy passing
+    pub error: Box<error::Error + Send + Sync>,
 }
 
 /// Types of errors produced in the linalg module.
@@ -25,6 +27,8 @@ pub enum ErrorKind {
     DecompFailure,
     /// A failure due to some algebraic constraints not being met.
     AlgebraFailure,
+    /// Tried to divide by zero
+    DivByZero
 }
 
 impl Error {

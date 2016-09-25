@@ -1157,8 +1157,8 @@ impl<T> Matrix<T> where T: Any + Copy + One + Zero + Neg<Output=T> +
                 let denom = u[[i,i]];
 
                 if denom == T::zero() {
-                    return Err(Error::new(ErrorKind::DecompFailure,
-                        "Matrix could not be LUP decomposed."));
+                    return Err(Error::new(ErrorKind::DivByZero,
+                        "A value in the diagonal of U == 0.0."));
                 }
                 l.data[j*n + i] = (a_2[[j,i]] - s2) / denom;
             }

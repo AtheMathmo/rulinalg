@@ -541,7 +541,11 @@ impl<T: Any + Float> Matrix<T> {
             (self[[0, 1]] * self[[1, 0]] * self[[2, 2]]) -
             (self[[0, 2]] * self[[1, 1]] * self[[2, 0]])
         } else {
-            let (l, u, p) = self.lup_decomp().expect("Could not compute LUP decomposition.");
+            let (l, u, p) = match self.lup_decomp() {
+                Ok(x) => x,
+                Err(Error { kind: ErrorKind::DivByZero, .. }) => return T::zero(),
+                _ => { panic!("Could not compute LUP decomposition."); }
+            };
 
             let mut d = T::one();
 
