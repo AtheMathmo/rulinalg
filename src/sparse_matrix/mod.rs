@@ -25,11 +25,11 @@ pub trait SparseMatrix<T> {
     fn identity(size: usize) -> Self;
 
     /// Returns number of rows
-    fn get_rows(&self) -> usize;
+    fn rows(&self) -> usize;
     /// Returns number of cols
-    fn get_cols(&self) -> usize;
+    fn cols(&self) -> usize;
     /// Returns number of non zero elements
-    fn get_nnz(&self) -> usize;
+    fn nnz(&self) -> usize;
 
     /// Tranposes the given matrix
     fn transpose(&self) -> Self;

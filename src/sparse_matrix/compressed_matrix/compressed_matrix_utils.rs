@@ -18,7 +18,7 @@ pub fn transpose<M, T>(compressed_matrix: &mut M, ptrs_size: usize)
     where M: CompressedMatrix<T>,
           T: Copy + One + Zero
 {
-    let nnz = compressed_matrix.get_nnz();
+    let nnz = compressed_matrix.nnz();
     let reduced_ptrs_size = ptrs_size - 1;
     let mut counter = vec![0; reduced_ptrs_size];
     let mut new_indices = vec![0; nnz];

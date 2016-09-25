@@ -132,13 +132,13 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CsrMatrix<T> {
         }
     }
 
-	fn get_rows(&self) -> usize {
+	fn rows(&self) -> usize {
 		self.rows
 	}
-	fn get_cols(&self) -> usize {
+	fn cols(&self) -> usize {
 		self.cols
 	}
-	fn get_nnz(&self) -> usize {
+	fn nnz(&self) -> usize {
 		self.nnz
 	}
 
