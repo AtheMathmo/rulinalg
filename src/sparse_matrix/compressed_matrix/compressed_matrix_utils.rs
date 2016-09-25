@@ -26,9 +26,9 @@ pub fn transpose<M, T>(compressed_matrix: &mut M, ptrs_size: usize)
     let mut new_values = vec![T::zero(); nnz];
 
     {
-        let indices = compressed_matrix.get_indices();
-        let ptrs = compressed_matrix.get_ptrs();
-        let values = compressed_matrix.get_values();
+        let indices = compressed_matrix.indices();
+        let ptrs = compressed_matrix.ptrs();
+        let values = compressed_matrix.values();
 
         for idx in indices {
             counter[*idx] += 1;

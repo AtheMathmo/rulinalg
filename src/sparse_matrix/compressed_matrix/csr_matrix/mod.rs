@@ -61,13 +61,13 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for CsrMatrix<T> {
         }
     }
 
-	fn get_indices(&self) -> &Vec<usize> {
+	fn indices(&self) -> &Vec<usize> {
 		&self.indices
 	}
-	fn get_ptrs(&self) -> &Vec<usize> {
+	fn ptrs(&self) -> &Vec<usize> {
 		&self.ptrs
 	}
-	fn get_values(&self) -> &Vec<T> {
+	fn values(&self) -> &Vec<T> {
 		&self.values
 	}
     fn set_indices(&mut self, indices: &Vec<usize>) {
