@@ -1,6 +1,7 @@
 //! Matrix Decompositions
 //!
 //! References:
+//!
 //! 1. [On Matrix Balancing and EigenVector computation]
 //! (http://arxiv.org/pdf/1401.5766v1.pdf), James, Langou and Lowery
 //!

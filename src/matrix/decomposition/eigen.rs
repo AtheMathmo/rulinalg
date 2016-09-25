@@ -60,7 +60,7 @@ impl<T: Any + Float + Signed + MachineEpsilon> Eigen<T> {
 
     /// Eigenvalues of a square matrix.
     ///
-    /// Returns a Vec of eigenvalues.
+    /// Returns a `Vec` of eigenvalues.
     ///
     /// # Examples
     ///
@@ -178,9 +178,9 @@ impl<T: Any + Float + Signed + MachineEpsilon> Eigen<T> {
 
     /// Eigendecomposition of a square matrix.
     ///
-    /// Returns a Vec of eigenvalues, and a matrix with eigenvectors as the columns.
+    /// Returns a `Vec` of eigenvalues, and a `Matrix` with eigenvectors as the columns.
     ///
-    /// The eigenvectors are only gauranteed to be correct if the matrix is real-symmetric.
+    /// The eigenvectors are only guaranteed to be correct if the `Matrix` is real-symmetric.
     ///
     /// # Examples
     ///
