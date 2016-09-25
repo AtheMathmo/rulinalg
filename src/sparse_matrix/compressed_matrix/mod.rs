@@ -8,7 +8,7 @@ pub mod csr_matrix;
 
 use sparse_matrix::SparseMatrix;
 
-/// Contract for sparse matrices implementation
+/// Contract for compressed matrices implementation
 pub trait CompressedMatrix<T>: SparseMatrix<T> {
     /// Construct a new matrix based only in rows and cols lengh
     fn new(rows: usize,
