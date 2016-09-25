@@ -7,7 +7,7 @@ use libnum::{One, Zero};
 use sparse_matrix::compressed_matrix::compressed_matrix_utils::*;
 use sparse_matrix::compressed_matrix::CompressedMatrix;
 use sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
-use sparse_matrix::coo_matrix::CooMatrix;
+use sparse_matrix::coordinate::Coordinate;
 use sparse_matrix::SparseMatrix;
 
 /// The `CscMatrix` struct.
@@ -88,6 +88,9 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for CscMatrix<T> {
 }
 
 impl<T: Copy + One + Zero> SparseMatrix<T> for CscMatrix<T> {
+	fn from_coordinates<C>(coords: &[C]) -> CscMatrix<T> where C: Coordinate<T> {
+    	unimplemented!();
+    }
     /// # Examples
     ///
     /// ```
@@ -165,24 +168,6 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CscMatrix<T> {
     /// use rulinalg::sparse_matrix::compressed_matrix::CompressedMatrix;
     /// use rulinalg::sparse_matrix::compressed_matrix::csc_matrix::CscMatrix;
     ///
-    /// let coo_mat = CscMatrix::new(4, 4, vec![0, 0, 0], vec![0, 1, 2, 3, 3], vec![1, 2, 3]).to_coo();
-    /// ```
-    fn to_coo(&self) -> CooMatrix<T> {
-        let cols_indices = get_expansed_ptrs_indices(&self.ptrs, self.nnz);
-
-        CooMatrix::new(self.rows,
-                       self.cols,
-                       self.indices.clone(),
-                       cols_indices,
-                       self.values.clone())
-    }
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::sparse_matrix::SparseMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::CompressedMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::csc_matrix::CscMatrix;
-    ///
     /// let csc_mat = CscMatrix::new(4, 4, vec![0, 0, 0], vec![0, 1, 2, 3, 3], vec![1, 2, 3]).to_csc();
     /// ```
     fn to_csc(&self) -> CscMatrix<T> {
@@ -224,7 +209,6 @@ mod tests {
     use sparse_matrix::compressed_matrix::CompressedMatrix;
     use sparse_matrix::compressed_matrix::csc_matrix::CscMatrix;
     use sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
-    use sparse_matrix::coo_matrix::CooMatrix;
     use sparse_matrix::SparseMatrix;
 
     #[test]
@@ -259,12 +243,6 @@ mod tests {
         assert_eq!(a, b);
     }
 
-    #[test]
-    fn test_to_coo() {
-        let a = CscMatrix::new(3, 3, vec![0, 1, 2], vec![0, 1, 3, 3], vec![1, 2, 3]).to_coo();
-        let b = CooMatrix::new(3, 3, vec![0, 1, 2], vec![0, 1, 1], vec![1, 2, 3]);
-        assert_eq!(a, b);
-    }
     #[test]
     fn test_to_csc() {
         let a = CscMatrix::new(3, 3, vec![0, 1, 2], vec![0, 1, 3, 3], vec![1, 2, 3]);

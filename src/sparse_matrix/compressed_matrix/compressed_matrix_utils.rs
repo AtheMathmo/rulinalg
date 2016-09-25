@@ -2,19 +2,6 @@ use libnum::{One, Zero};
 
 use sparse_matrix::compressed_matrix::CompressedMatrix;
 
-fn expand_ptrs_indices<C>(ptrs: &Vec<usize>, mut closure: C)
-    where C: FnMut(usize)
-{
-    for idx in 0..(ptrs.len() - 1) {
-        let greater_ptr = ptrs[idx + 1];
-        let lesser_ptr = ptrs[idx];
-
-        for _ in lesser_ptr..greater_ptr {
-            closure(idx)
-        }
-    }
-}
-
 fn expand_ptrs_indices_values<C>(ptrs: &Vec<usize>, mut closure: C)
     where C: FnMut(usize, usize)
 {
@@ -25,14 +12,6 @@ fn expand_ptrs_indices_values<C>(ptrs: &Vec<usize>, mut closure: C)
             closure(idx, value)
         }
     }
-}
-
-pub fn get_expansed_ptrs_indices(ptrs: &Vec<usize>, nnz: usize) -> Vec<usize> {
-    let mut indices = Vec::with_capacity(nnz);
-
-    expand_ptrs_indices(ptrs, |dest_idx| indices.push(dest_idx));
-
-    indices
 }
 
 pub fn transpose<M, T>(compressed_matrix: &mut M, ptrs_size: usize)
