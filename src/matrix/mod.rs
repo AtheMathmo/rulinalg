@@ -952,6 +952,14 @@ mod tests {
         println!("det is {0}", f);
         let error = abs(f - 99.);
         assert!(error < 1e-10);
+
+        let g = Matrix::<f64>::new(4, 4, vec![
+                                   1., 2., 3., 4., 
+                                   0., 0., 0., 0., 
+                                   0., 0., 0., 0., 
+                                   0., 0., 0., 0.]);
+        let h = g.det();
+        assert_eq!(h, 0.);
     }
 
     #[test]
