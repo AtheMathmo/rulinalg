@@ -2,7 +2,7 @@ use libnum::{One, Zero};
 
 use sparse_matrix::compressed_matrix::CompressedMatrix;
 
-fn expand_ptrs_indices_values<C>(ptrs: &Vec<usize>, mut closure: C)
+fn expand_ptrs_indices_values<C>(ptrs: &[usize], mut closure: C)
     where C: FnMut(usize, usize)
 {
     for idx in (0..(ptrs.len() - 1)).rev() {

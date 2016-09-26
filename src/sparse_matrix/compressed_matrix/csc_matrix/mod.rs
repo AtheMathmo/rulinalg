@@ -61,14 +61,14 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for CscMatrix<T> {
         }
     }
 
-    fn indices(&self) -> &Vec<usize> {
-        &self.indices
+    fn indices(&self) -> &[usize] {
+        &self.indices.as_slice()
     }
-    fn ptrs(&self) -> &Vec<usize> {
-        &self.ptrs
+    fn ptrs(&self) -> &[usize] {
+        &self.ptrs.as_slice()
     }
-    fn values(&self) -> &Vec<T> {
-        &self.values
+    fn values(&self) -> &[T] {
+        &self.values.as_slice()
     }
     fn set_indices(&mut self, indices: &Vec<usize>) {
         if indices.len() == self.nnz {
