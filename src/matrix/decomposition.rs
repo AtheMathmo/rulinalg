@@ -1500,11 +1500,13 @@ mod tests {
     #[test]
     fn test_lup_decomp() {
         use error::ErrorKind;
-        let a = Matrix::<f64>::new(4, 4, vec![
-                                   1., 2., 3., 4., 
-                                   0., 0., 0., 0., 
-                                   0., 0., 0., 0., 
-                                   0., 0., 0., 0.]);
+        let a: Matrix<f64> = matrix!(
+            1., 2., 3., 4.;
+            0., 0., 0., 0.;
+            0., 0., 0., 0.;
+            0., 0., 0., 0.
+        );
+
         match a.lup_decomp() {
             Err(e) => assert!(*e.kind() == ErrorKind::DivByZero),
             Ok(_) => panic!()
