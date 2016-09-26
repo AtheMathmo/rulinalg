@@ -1157,8 +1157,9 @@ impl<T> Matrix<T> where T: Any + Copy + One + Zero + Neg<Output=T> +
                 let denom = u[[i,i]];
 
                 if denom == T::zero() {
-                    return Err(Error::new(ErrorKind::DecompFailure,
-                        "Matrix could not be LUP decomposed."));
+                    return Err(Error::new(ErrorKind::DivByZero,
+                        "Singular matrix found in LUP decomposition. \
+                        A value in the diagonal of U == 0.0."));
                 }
                 l.data[j*n + i] = (a_2[[j,i]] - s2) / denom;
             }
@@ -1494,5 +1495,21 @@ mod tests {
         let a = Matrix::new(2, 3, vec![1.0; 6]);
 
         let _ = a.lup_decomp();
+    }
+
+    #[test]
+    fn test_lup_decomp() {
+        use error::ErrorKind;
+        let a: Matrix<f64> = matrix!(
+            1., 2., 3., 4.;
+            0., 0., 0., 0.;
+            0., 0., 0., 0.;
+            0., 0., 0., 0.
+        );
+
+        match a.lup_decomp() {
+            Err(e) => assert!(*e.kind() == ErrorKind::DivByZero),
+            Ok(_) => panic!()
+        }
     }
 }

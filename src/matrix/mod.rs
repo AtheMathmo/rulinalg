@@ -541,7 +541,11 @@ impl<T: Any + Float> Matrix<T> {
             (self[[0, 1]] * self[[1, 0]] * self[[2, 2]]) -
             (self[[0, 2]] * self[[1, 1]] * self[[2, 0]])
         } else {
-            let (l, u, p) = self.lup_decomp().expect("Could not compute LUP decomposition.");
+            let (l, u, p) = match self.lup_decomp() {
+                Ok(x) => x,
+                Err(ref e) if *e.kind() == ErrorKind::DivByZero => return T::zero(),
+                _ => { panic!("Could not compute LUP decomposition."); }
+            };
 
             let mut d = T::one();
 
@@ -948,6 +952,15 @@ mod tests {
         println!("det is {0}", f);
         let error = abs(f - 99.);
         assert!(error < 1e-10);
+
+        let g: Matrix<f64> = matrix!(
+            1., 2., 3., 4.;
+            0., 0., 0., 0.;
+            0., 0., 0., 0.;
+            0., 0., 0., 0.
+        );
+        let h = g.det();
+        assert_eq!(h, 0.);
     }
 
     #[test]
