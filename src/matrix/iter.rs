@@ -1,8 +1,96 @@
 use std::iter::{ExactSizeIterator, FromIterator};
 use std::slice;
+use std::marker::PhantomData;
 
 use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut};
 use super::slice::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
+
+/// An iterator over the diagonal elements of a matrix.
+pub struct Diagonal<'a, T: 'a> {
+    slice_start: *const T,
+    diag_pos: usize,
+    diag_len: usize,
+    row_stride: isize,
+    _marker: PhantomData<&'a T>,
+}
+
+
+/// An iterator over the mutable diagonal elements of a matrix.
+pub struct DiagonalMut<'a, T: 'a> {
+    slice_start: *mut T,
+    diag_pos: usize,
+    diag_len: usize,
+    row_stride: isize,
+    _marker: PhantomData<&'a mut T>,
+}
+
+macro_rules! impl_iter_diag (
+    ($diag:ident, $diag_type:ty, $to_item:ident) => (
+
+/// Iterates over the rows in the matrix.
+impl<'a, T> Iterator for $diag<'a, T> {
+    type Item = $diag_type;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.diag_pos < self.diag_len {
+            let diag: $diag_type;
+
+            unsafe {
+// Get pointer and shift to current diagonal
+                let ptr = self.slice_start.offset(self.diag_pos as isize * self.row_stride + self.diag_pos as isize);
+                diag = ptr.$to_item().unwrap();
+            }
+            self.diag_pos += 1;
+            Some(diag)
+
+        } else {
+            None
+        }
+    }
+
+    fn last(self) -> Option<Self::Item> {
+// Check if already at the end
+        if self.diag_pos < self.diag_len {
+            let diag: $diag_type;
+            unsafe {
+// Get pointer to last row and create a slice from raw parts
+                let ptr = self.slice_start.offset(self.diag_len as isize * self.row_stride - 1);
+                diag = ptr.$to_item().unwrap();
+            }
+            Some(diag)
+        } else {
+            None
+        }
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        if self.diag_pos + n < self.diag_len {
+            let diag: $diag_type;
+            unsafe {
+                let row = (self.diag_pos + n) as isize;
+                let ptr = self.slice_start.offset(row * self.row_stride + row);
+                diag = ptr.$to_item().unwrap();
+            }
+            self.diag_pos += n + 1;
+            Some(diag)
+        } else {
+            None
+        }
+    }
+
+    fn count(self) -> usize {
+        self.diag_len - self.diag_pos
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.diag_len - self.diag_pos, Some(self.diag_len - self.diag_pos))
+    }
+}
+    );
+);
+
+impl_iter_diag!(Diagonal, &'a T, as_ref);
+impl_iter_diag!(DiagonalMut, &'a mut T, as_mut);
 
 macro_rules! impl_iter_rows (
     ($rows:ident, $row_type:ty, $slice_from_parts:ident) => (
@@ -347,45 +435,45 @@ mod tests {
     }
 
     #[test]
-    fn into_iter_compile() { 
-        let a = Matrix::new(3, 3, vec![2.0; 9]); 
+    fn into_iter_compile() {
+        let a = Matrix::new(3, 3, vec![2.0; 9]);
         let mut b = MatrixSlice::from_matrix(&a, [1, 1], 2, 2);
-    
-        for _ in b { 
-        } 
-    
-        for _ in &b { 
-        } 
-    
-        for _ in &mut b { 
-        } 
-    } 
-    
+
+        for _ in b {
+        }
+
+        for _ in &b {
+        }
+
+        for _ in &mut b {
+        }
+    }
+
     #[test]
-    fn into_iter_mut_compile() { 
-        let mut a = Matrix::<f32>::new(3, 3, vec![2.0; 9]); 
-        
+    fn into_iter_mut_compile() {
+        let mut a = Matrix::<f32>::new(3, 3, vec![2.0; 9]);
+
         {
             let b = MatrixSliceMut::from_matrix(&mut a, [1, 1], 2, 2);
-                
-            for v in b { 
+
+            for v in b {
                 *v = 1.0;
-            } 
+            }
         }
-    
+
         {
             let b = MatrixSliceMut::from_matrix(&mut a, [1, 1], 2, 2);
-    
+
             for _ in &b {
-            } 
+            }
         }
-    
+
         {
             let mut b = MatrixSliceMut::from_matrix(&mut a, [1, 1], 2, 2);
-    
+
             for v in &mut b {
-                *v = 1.0; 
-            } 
+                *v = 1.0;
+            }
         }
-    } 
+    }
 }
