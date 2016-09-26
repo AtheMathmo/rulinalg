@@ -2,6 +2,10 @@
 //!
 //! Used as a common interface for all sparse matrices implementations
 
+//! References:
+//! 1. [Performance comparison of storage formats for sparse matrices]
+//! (http://facta.junis.ni.ac.rs/mai/mai24/fumi-24_39_51.pdf), Ivan P. Stanimirović and Milan B. Tasić
+
 pub mod compressed_matrix;
 pub mod coordinate;
 
