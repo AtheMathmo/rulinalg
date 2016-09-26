@@ -33,8 +33,8 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for CsrMatrix<T> {
     ///
     /// let csr_mat = CsrMatrix::new(4, 4, vec![0, 1, 2], vec![0, 1, 2, 3], vec![1, 2, 3]);
     ///
-    /// assert_eq!(csr_mat.get_rows(), 4);
-    /// assert_eq!(csr_mat.get_cols(), 4);
+    /// assert_eq!(csr_mat.rows(), 4);
+    /// assert_eq!(csr_mat.cols(), 4);
     /// ```
     ///
     /// # Panics
