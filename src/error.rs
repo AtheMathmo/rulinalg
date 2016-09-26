@@ -9,17 +9,15 @@ use std::marker::{Send, Sync};
 /// An error related to the linalg module.
 #[derive(Debug)]
 pub struct Error {
-    /// Type of error that led to this issue
-    pub kind: ErrorKind,
-    /// Boxed actual error for easy passing
-    pub error: Box<error::Error + Send + Sync>,
+    kind: ErrorKind,
+    error: Box<error::Error + Send + Sync>,
 }
 
 /// Types of errors produced in the linalg module.
 ///
 /// List intended to grow and so you should
 /// be wary of matching against explicitly.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ErrorKind {
     /// An argument did not uphold a necessary criteria for the function.
     InvalidArg,

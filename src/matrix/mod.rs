@@ -543,7 +543,7 @@ impl<T: Any + Float> Matrix<T> {
         } else {
             let (l, u, p) = match self.lup_decomp() {
                 Ok(x) => x,
-                Err(Error { kind: ErrorKind::DivByZero, .. }) => return T::zero(),
+                Err(ref e) if *e.kind() == ErrorKind::DivByZero => return T::zero(),
                 _ => { panic!("Could not compute LUP decomposition."); }
             };
 
