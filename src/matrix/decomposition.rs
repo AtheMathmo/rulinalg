@@ -1158,7 +1158,8 @@ impl<T> Matrix<T> where T: Any + Copy + One + Zero + Neg<Output=T> +
 
                 if denom == T::zero() {
                     return Err(Error::new(ErrorKind::DivByZero,
-                        "A value in the diagonal of U == 0.0."));
+                        "Singular matrix found in LUP decomposition. \
+                        A value in the diagonal of U == 0.0."));
                 }
                 l.data[j*n + i] = (a_2[[j,i]] - s2) / denom;
             }
