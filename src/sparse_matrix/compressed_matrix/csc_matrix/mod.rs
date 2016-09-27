@@ -23,6 +23,25 @@ pub struct CscMatrix<T> {
     values: Vec<T>,
 }
 
+impl<T: Copy + One + Zero> CscMatrix<T> {
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::sparse_matrix::SparseMatrix;
+    /// use rulinalg::sparse_matrix::compressed_matrix::CompressedMatrix;
+    /// use rulinalg::sparse_matrix::compressed_matrix::csc_matrix::CscMatrix;
+    ///
+    /// let csr_mat = CscMatrix::new(4, 4, vec![0, 0, 0], vec![0, 1, 2, 3, 3], vec![1, 2, 3]).to_csr();
+    /// ```
+    pub fn to_csr(&self) -> CsrMatrix<T> {
+        CsrMatrix::new(self.rows,
+                       self.cols,
+                       self.indices.clone(),
+                       self.ptrs.clone(),
+                       self.values.clone())
+    }
+}
+
 impl<T: Copy + One + Zero> CompressedMatrix<T> for CscMatrix<T> {
     fn from_triplets<R>(triples: &[R]) -> CscMatrix<T> where R: Triplet<T> {
     	unimplemented!();
@@ -152,35 +171,6 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CscMatrix<T> {
             values: values,
         }
     }
-
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::sparse_matrix::SparseMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::CompressedMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::csc_matrix::CscMatrix;
-    ///
-    /// let csc_mat = CscMatrix::new(4, 4, vec![0, 0, 0], vec![0, 1, 2, 3, 3], vec![1, 2, 3]).to_csc();
-    /// ```
-    fn to_csc(&self) -> CscMatrix<T> {
-        self.clone()
-    }
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::sparse_matrix::SparseMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::CompressedMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::csc_matrix::CscMatrix;
-    ///
-    /// let csr_mat = CscMatrix::new(4, 4, vec![0, 0, 0], vec![0, 1, 2, 3, 3], vec![1, 2, 3]).to_csr();
-    /// ```
-    fn to_csr(&self) -> CsrMatrix<T> {
-        CsrMatrix::new(self.rows,
-                       self.cols,
-                       self.indices.clone(),
-                       self.ptrs.clone(),
-                       self.values.clone())
-    }
 }
 
 impl<T: Clone> Clone for CscMatrix<T> {
@@ -242,12 +232,6 @@ mod tests {
         assert_eq!(a, b);
     }
 
-    #[test]
-    fn test_to_csc() {
-        let a = CscMatrix::new(3, 3, vec![0, 1, 2], vec![0, 1, 3, 3], vec![1, 2, 3]);
-        let b = a.to_csc();
-        assert_eq!(a, b);
-    }
     #[test]
     fn test_to_csr() {
         let a = CscMatrix::new(3, 3, vec![0, 1, 2], vec![0, 1, 3, 3], vec![1, 2, 3]).to_csr();

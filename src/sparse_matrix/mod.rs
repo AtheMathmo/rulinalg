@@ -9,9 +9,6 @@
 pub mod compressed_matrix;
 pub mod triplet;
 
-use sparse_matrix::compressed_matrix::csc_matrix::CscMatrix;
-use sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
-
 /// Contract for sparse matrices implementation
 pub trait SparseMatrix<T> {
     /// Constructs matrix with given diagonal.
@@ -32,9 +29,4 @@ pub trait SparseMatrix<T> {
 
     /// Tranposes the given matrix
     fn transpose(&self) -> Self;
-
-    /// Creates a new CscMatrix
-    fn to_csc(&self) -> CscMatrix<T>;
-    /// Creates a new CsrMatrix
-    fn to_csr(&self) -> CsrMatrix<T>;
 }
