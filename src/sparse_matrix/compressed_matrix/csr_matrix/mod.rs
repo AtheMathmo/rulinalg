@@ -70,21 +70,6 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for CsrMatrix<T> {
 	fn values(&self) -> &[T] {
 		&self.values.as_slice()
 	}
-    fn set_indices(&mut self, indices: &Vec<usize>) {
-    	if indices.len() == self.nnz {
-	    	self.indices = indices.clone();
-    	}
-    }
-    fn set_ptrs(&mut self, ptrs: &Vec<usize>) {
-    	if ptrs.len() == (self.rows + 1) {
-	    	self.ptrs = ptrs.clone();
-    	}
-    }
-    fn set_values(&mut self, values: &Vec<T>) {
-    	if values.len() == self.nnz {
-	    	self.values = values.clone();
-    	}
-    }
 }
 
 impl<T: Copy + One + Zero> SparseMatrix<T> for CsrMatrix<T> {
@@ -156,9 +141,16 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CsrMatrix<T> {
     fn transpose(&self) -> CsrMatrix<T>
         where T: Copy
     {
-	    let mut csr_matrix = self.clone();
-    	transpose(&mut csr_matrix, self.cols + 1);
-        csr_matrix
+    	let (indices, ptrs, values) = transpose(self, self.cols + 1);
+
+        CsrMatrix {
+            rows: self.rows,
+            cols: self.cols,
+            indices: indices,
+            nnz: self.nnz,
+            ptrs: ptrs,
+            values: values,
+        }
     }
 
     /// # Examples

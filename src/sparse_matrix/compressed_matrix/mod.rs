@@ -24,10 +24,4 @@ pub trait CompressedMatrix<T>: SparseMatrix<T> {
     fn ptrs(&self) -> &[usize];
     /// Returns values
     fn values(&self) -> &[T];
-    /// Sets indices
-    fn set_indices(&mut self, indices: &Vec<usize>);
-    /// Sets pointers (offsets)
-    fn set_ptrs(&mut self, ptrs: &Vec<usize>);
-    /// Sets values
-    fn set_values(&mut self, values: &Vec<T>);
 }
