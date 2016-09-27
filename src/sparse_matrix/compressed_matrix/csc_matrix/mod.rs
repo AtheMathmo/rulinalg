@@ -4,11 +4,11 @@ mod csc_matrix_arithm;
 
 use libnum::{One, Zero};
 
-use sparse_matrix::compressed_matrix::compressed_matrix_utils::*;
-use sparse_matrix::compressed_matrix::CompressedMatrix;
-use sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
-use sparse_matrix::coordinate::Coordinate;
 use sparse_matrix::SparseMatrix;
+use sparse_matrix::compressed_matrix::CompressedMatrix;
+use sparse_matrix::compressed_matrix::compressed_matrix_utils::*;
+use sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
+use sparse_matrix::triplet::Triplet;
 
 /// The `CscMatrix` struct.
 ///
@@ -73,9 +73,6 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for CscMatrix<T> {
 }
 
 impl<T: Copy + One + Zero> SparseMatrix<T> for CscMatrix<T> {
-	fn from_coordinates<C>(coords: &[C]) -> CscMatrix<T> where C: Coordinate<T> {
-    	unimplemented!();
-    }
     /// # Examples
     ///
     /// ```
@@ -96,6 +93,9 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CscMatrix<T> {
             ptrs: (0..(size + 1)).collect::<Vec<usize>>(),
             values: diag.to_vec(),
         }
+    }
+    fn from_triplets<R>(triples: &[R]) -> CscMatrix<T> where R: Triplet<T> {
+    	unimplemented!();
     }
     /// # Examples
     ///

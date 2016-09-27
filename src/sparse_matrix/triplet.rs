@@ -1,7 +1,7 @@
-//! Everything related to coordinate
+//! Everything related to triplet
 
-/// Represents a coordinate (row and column) with repective value
-pub trait Coordinate<T> {
+/// A triplet, i.e., a struct that represents a row, a column and a value
+pub trait Triplet<T> {
     /// Returns row
     fn row(&self) -> usize;
     /// Returns col
