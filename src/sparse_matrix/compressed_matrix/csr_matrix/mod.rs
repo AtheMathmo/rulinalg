@@ -24,7 +24,7 @@ pub struct CsrMatrix<T> {
 }
 
 impl<T: Copy + One + Zero> CompressedMatrix<T> for CsrMatrix<T> {
-    fn from_triplets<R>(coords: &[R]) -> CsrMatrix<T> where R: Triplet<T> {
+    fn from_triplets<R>(triples: &[R]) -> CsrMatrix<T> where R: Triplet<T> {
     	unimplemented!();
     }
     /// # Examples

@@ -5,10 +5,8 @@ use sparse_matrix::compressed_matrix::CompressedMatrix;
 fn expand_ptrs_indices_values<C>(ptrs: &[usize], mut closure: C)
     where C: FnMut(usize, usize)
 {
-    for idx in (0..(ptrs.len() - 1)).rev() {
-        let greater_ptr = ptrs[idx + 1];
-        let lesser_ptr = ptrs[idx];
-        for value in (lesser_ptr..greater_ptr).rev() {
+    for (idx, ptr) in ptrs.windows(2).enumerate().rev() {
+        for value in (ptr[0]..ptr[1]).rev() {
             closure(idx, value)
         }
     }
