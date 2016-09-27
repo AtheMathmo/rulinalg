@@ -14,7 +14,7 @@ pub trait CompressedMatrix<T>: SparseMatrix<T> {
     /// Constructs matrix with given coordinates (rows, cols and values).
     ///
     /// Requires slice of coordinates.
-    fn from_triplets<R>(triplets: &[R]) -> Self where R: Triplet<T>;
+    fn from_triplets<R>(rows: usize, cols: usize, triplets: &[R]) -> Self where R: Triplet<T>;
     /// Construct a new matrix based only in rows and cols lengh
     fn new(rows: usize,
            cols: usize,

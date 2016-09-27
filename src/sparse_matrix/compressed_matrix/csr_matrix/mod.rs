@@ -66,8 +66,51 @@ impl<T: Copy + One + Zero> CsrMatrix<T> {
 }
 
 impl<T: Copy + One + Zero> CompressedMatrix<T> for CsrMatrix<T> {
-    fn from_triplets<R>(triples: &[R]) -> CsrMatrix<T> where R: Triplet<T> {
-    	unimplemented!();
+    fn from_triplets<R>(rows: usize, cols: usize, triples: &[R]) -> CsrMatrix<T> where R: Triplet<T> {
+    	let nnz = triples.len();
+
+        let mut indices = vec![0; nnz];
+        let mut last_ptr = 0;
+        let mut ptrs = vec![0; rows + 1];
+        let mut sum_ptrs = 0;
+        let mut values = vec![T::zero(); nnz];
+
+        for row_idcs_idx in 0..nnz {
+            ptrs[triples[row_idcs_idx].row()] += 1;
+        }
+
+        for ptr_idx in 0..rows {
+            let tmp_ptr = ptrs[ptr_idx];
+            ptrs[ptr_idx] = sum_ptrs;
+            sum_ptrs += tmp_ptr;
+        }
+
+        ptrs[rows] = nnz;
+
+        for row_idcs_idx in 0..nnz {
+            let ptr_idx = triples[row_idcs_idx].row();
+            let dest_idx = ptrs[ptr_idx];
+
+            indices[dest_idx] = triples[row_idcs_idx].col();
+            values[dest_idx] = triples[row_idcs_idx].value();
+
+            ptrs[ptr_idx] += 1;
+        }
+
+        for ptr_idx in 0..nnz {
+            let tmp_ptr = ptrs[ptr_idx];
+            ptrs[ptr_idx] = last_ptr;
+            last_ptr = tmp_ptr;
+        }
+
+        CsrMatrix {
+            rows: rows,
+            cols: cols,
+            indices: indices,
+            nnz: nnz,
+            ptrs: ptrs,
+            values: values,
+        }
     }
     /// # Examples
     ///
@@ -239,6 +282,11 @@ mod tests {
     fn test_from_diag() {
         let a = CsrMatrix::new(3, 3, vec![0, 1, 2], vec![0, 1, 2, 3], vec![1, 2, 3]);
         let b = CsrMatrix::from_diag(&[1, 2, 3]);
+        assert_eq!(a, b);
+    }
+    fn test_from_triplets() {
+        let a = CsrMatrix::from_triplets(3, 3, &[(0, 0, 1), (1, 1, 2), (2, 2, 3)]);
+        let b = CsrMatrix::new(3, 3, vec![0, 1, 2], vec![0, 1, 2, 3], vec![1, 2, 3]);
         assert_eq!(a, b);
     }
     #[test]
