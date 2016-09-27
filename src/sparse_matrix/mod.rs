@@ -28,5 +28,5 @@ pub trait SparseMatrix<T> {
     fn nnz(&self) -> usize;
 
     /// Tranposes the given matrix
-    fn transpose(&self) -> Self;
+    fn transpose(&mut self);
 }

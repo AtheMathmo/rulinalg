@@ -2,6 +2,8 @@
 
 mod csc_matrix_arithm;
 
+use std::mem::swap;
+
 use libnum::{One, Zero};
 
 use sparse_matrix::SparseMatrix;
@@ -216,18 +218,15 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CscMatrix<T> {
     /// ```
     ///
     /// Complexity: O(rows + max(cols, nnz))
-    fn transpose(&self) -> CscMatrix<T>
-        where T: Copy
+    fn transpose(&mut self)
     {
+    	swap(&mut self.rows, &mut self.cols);
+
     	let (indices, ptrs, values) = transpose(self, self.rows + 1);
 
-        CscMatrix {
-            rows: self.rows,
-            cols: self.cols,
-            indices: indices,
-            ptrs: ptrs,
-            values: values,
-        }
+		self.indices = indices;
+		self.ptrs = ptrs;
+		self.values = values;
     }
 }
 
@@ -290,7 +289,8 @@ mod tests {
 
     #[test]
     fn test_transpose() {
-        let a = CscMatrix::new(3, 3, vec![0, 1, 2], vec![0, 1, 3, 3], vec![1, 2, 3]).transpose();
+        let mut a = CscMatrix::new(3, 3, vec![0, 1, 2], vec![0, 1, 3, 3], vec![1, 2, 3]);
+        a.transpose();
         let b = CscMatrix::new(3, 3, vec![0, 1, 1], vec![0, 1, 2, 3], vec![1, 2, 3]);
         assert_eq!(a, b);
     }
