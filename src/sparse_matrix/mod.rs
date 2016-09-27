@@ -9,7 +9,6 @@
 pub mod compressed_matrix;
 pub mod triplet;
 
-use sparse_matrix::triplet::Triplet;
 use sparse_matrix::compressed_matrix::csc_matrix::CscMatrix;
 use sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
 
@@ -19,10 +18,6 @@ pub trait SparseMatrix<T> {
     ///
     /// Requires slice of diagonal elements.
     fn from_diag(diag: &[T]) -> Self;
-    /// Constructs matrix with given coordinates (rows, cols and values).
-    ///
-    /// Requires slice of coordinates.
-    fn from_triplets<R>(triplets: &[R]) -> Self where R: Triplet<T>;
     /// Constructs the identity matrix.
     ///
     /// Requires the size of the matrix.

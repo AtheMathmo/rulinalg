@@ -24,6 +24,9 @@ pub struct CsrMatrix<T> {
 }
 
 impl<T: Copy + One + Zero> CompressedMatrix<T> for CsrMatrix<T> {
+    fn from_triplets<R>(coords: &[R]) -> CsrMatrix<T> where R: Triplet<T> {
+    	unimplemented!();
+    }
     /// # Examples
     ///
     /// ```
@@ -93,9 +96,6 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CsrMatrix<T> {
             ptrs: (0..(size + 1)).collect::<Vec<usize>>(),
             values: diag.to_vec(),
         }
-    }
-    fn from_triplets<R>(coords: &[R]) -> CsrMatrix<T> where R: Triplet<T> {
-    	unimplemented!();
     }
     /// # Examples
     ///

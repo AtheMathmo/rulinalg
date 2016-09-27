@@ -7,9 +7,14 @@ pub mod csc_matrix;
 pub mod csr_matrix;
 
 use sparse_matrix::SparseMatrix;
+use sparse_matrix::triplet::Triplet;
 
 /// Contract for compressed matrices implementation
 pub trait CompressedMatrix<T>: SparseMatrix<T> {
+    /// Constructs matrix with given coordinates (rows, cols and values).
+    ///
+    /// Requires slice of coordinates.
+    fn from_triplets<R>(triplets: &[R]) -> Self where R: Triplet<T>;
     /// Construct a new matrix based only in rows and cols lengh
     fn new(rows: usize,
            cols: usize,
