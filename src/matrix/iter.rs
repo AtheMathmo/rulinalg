@@ -39,9 +39,9 @@ impl<'a, T> Iterator for $diag<'a, T> {
         if self.diag_pos < self.diag_len {
 // Get pointer and shift to current diagonal
             let offset = match self.diag_offset {
-                DiagOffset::Main => self.diag_len as isize * self.row_stride - 1,
-                DiagOffset::Above(k) => (self.diag_len - 1) as isize * self.row_stride + (self.diag_len + k) as isize,
-                DiagOffset::Below(k) => (self.diag_len - 1) as isize * self.row_stride + (self.diag_len - k) as isize,
+                DiagOffset::Main => (self.diag_len - 1) as isize * (self.row_stride + 1),
+                DiagOffset::Above(k) => (self.diag_len - 1) as isize * self.row_stride + (self.diag_len + k - 1) as isize,
+                DiagOffset::Below(k) => (self.diag_len + k - 1) as isize * self.row_stride + (self.diag_len - 1) as isize,
             };
 
             unsafe {
@@ -58,7 +58,7 @@ impl<'a, T> Iterator for $diag<'a, T> {
             let offset = match self.diag_offset {
                 DiagOffset::Main => row * self.row_stride + row,
                 DiagOffset::Above(k) => row * self.row_stride + row + k as isize,
-                DiagOffset::Below(k) => row * self.row_stride + row - k as isize,
+                DiagOffset::Below(k) => (row + k as isize) * self.row_stride + row as isize,
             };
 
             let diag: $diag_type;
@@ -337,13 +337,30 @@ mod tests {
 
     #[test]
     fn test_matrix_slice_diag() {
-        let mut a = matrix![0.0, 1.0, 2.0, 4.0;
+        let mut a = matrix![0.0, 1.0, 2.0, 3.0;
                             4.0, 5.0, 6.0, 7.0;
                             8.0, 9.0, 10.0, 11.0];
-        let diags = [0.0, 5.0];
         {
             let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 4);
+
+            // Check equivalence
+            for ((d1, d2), d3) in b.iter_diag(DiagOffset::Main)
+                .zip(a.iter_diag(DiagOffset::Above(0)))
+                .zip(a.iter_diag(DiagOffset::Below(0))) {
+                assert_eq!(d1, d2);
+                assert_eq!(d1, d3);
+            }
+
+            let diags = [0.0, 5.0];
             assert!(b.iter_diag(DiagOffset::Main).enumerate().all(|(i, diag)| diags[i] == *diag));
+            let diags = [1.0, 6.0];
+            assert!(b.iter_diag(DiagOffset::Above(1)).enumerate().all(|(i, diag)| diags[i] == *diag));
+            let diags = [2.0, 7.0];
+            assert!(b.iter_diag(DiagOffset::Above(2)).enumerate().all(|(i, diag)| diags[i] == *diag));
+            let diags = [3.0];
+            assert!(b.iter_diag(DiagOffset::Above(3)).enumerate().all(|(i, diag)| diags[i] == *diag));
+            let diags = [4.0];
+            assert!(b.iter_diag(DiagOffset::Below(1)).enumerate().all(|(i, diag)| diags[i] == *diag));
         }
 
         {
@@ -364,12 +381,26 @@ mod tests {
                         3.0, 4.0, 5.0;
                         6.0, 7.0, 8.0];
 
-        let mut diags_iter = a.iter_diag(DiagOffset::Main);
+        {
+            let mut diags_iter = a.iter_diag(DiagOffset::Main);
 
-        assert_eq!(0.0, *diags_iter.nth(0).unwrap());
-        assert_eq!(8.0, *diags_iter.nth(1).unwrap());
+            assert_eq!(0.0, *diags_iter.nth(0).unwrap());
+            assert_eq!(8.0, *diags_iter.nth(1).unwrap());
+            assert_eq!(None, diags_iter.next());
+        }
 
-        assert_eq!(None, diags_iter.next());
+        {
+            let mut diags_iter = a.iter_diag(DiagOffset::Above(1));
+            assert_eq!(5.0, *diags_iter.nth(1).unwrap());
+            assert_eq!(None, diags_iter.next());
+        }
+
+        {
+            let mut diags_iter = a.iter_diag(DiagOffset::Below(1));
+            assert_eq!(7.0, *diags_iter.nth(1).unwrap());
+            assert_eq!(None, diags_iter.next());
+        }
+
     }
 
     #[test]
@@ -378,9 +409,20 @@ mod tests {
                         3.0, 4.0, 5.0;
                         6.0, 7.0, 8.0];
 
-        let diags_iter = a.iter_diag(DiagOffset::Main);
+        {
+            let diags_iter = a.iter_diag(DiagOffset::Main);
+            assert_eq!(8.0, *diags_iter.last().unwrap());
+        }
 
-        assert_eq!(8.0, *diags_iter.last().unwrap());
+        {
+            let diags_iter = a.iter_diag(DiagOffset::Above(2));
+            assert_eq!(2.0, *diags_iter.last().unwrap());
+        }
+
+        {
+            let diags_iter = a.iter_diag(DiagOffset::Below(2));
+            assert_eq!(6.0, *diags_iter.last().unwrap());
+        }
     }
 
     #[test]

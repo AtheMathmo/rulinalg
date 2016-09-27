@@ -167,8 +167,14 @@ pub trait BaseMatrix<T>: Sized {
     fn iter_diag(&self, k: DiagOffset) -> Diagonal<T> {
         let diag_len = match k {
             DiagOffset::Main => min(self.rows(), self.cols()),
-            DiagOffset::Above(m) => min(self.rows(), self.cols() - m),
-            DiagOffset::Below(m) => min(self.rows() - m, self.cols()),
+            DiagOffset::Above(m) => {
+                assert!(m < self.cols(), "Offset diagonal is not within matrix dimensions.");
+                min(self.rows(), self.cols() - m)
+            },
+            DiagOffset::Below(m) => {
+                assert!(m < self.rows(), "Offset diagonal is not within matrix dimensions.");
+                min(self.rows() - m, self.cols())
+            },
         };
 
         Diagonal {
@@ -1008,8 +1014,14 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T> {
         let diag_len = match k {
             DiagOffset::Main => min(self.rows(), self.cols()),
-            DiagOffset::Above(m) => min(self.rows(), self.cols() - m),
-            DiagOffset::Below(m) => min(self.rows() - m, self.cols()),
+            DiagOffset::Above(m) => {
+                assert!(m < self.cols(), "Offset diagonal is not within matrix dimensions.");
+                min(self.rows(), self.cols() - m)
+            },
+            DiagOffset::Below(m) => {
+                assert!(m < self.rows(), "Offset diagonal is not within matrix dimensions.");
+                min(self.rows() - m, self.cols())
+            },
         };
 
         DiagonalMut {
@@ -1515,7 +1527,7 @@ impl_slice_iter!(SliceIterMut, &'a mut T);
 #[cfg(test)]
 mod tests {
     use super::{BaseMatrix, BaseMatrixMut};
-    use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Axes};
+    use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Axes, DiagOffset};
 
     #[test]
     #[should_panic]
@@ -1656,6 +1668,30 @@ mod tests {
         assert_eq!(a[[2, 0]], 6);
         assert_eq!(a[[2, 1]], 7);
         assert_eq!(a[[2, 2]], 8);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_iter_diag_too_high() {
+        let a = matrix![0.0, 1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0, 7.0;
+                        8.0, 9.0, 10.0, 11.0];
+
+        for _ in a.iter_diag(DiagOffset::Above(4)) {
+
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_iter_diag_too_low() {
+        let a = matrix![0.0, 1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0, 7.0;
+                        8.0, 9.0, 10.0, 11.0];
+
+        for _ in a.iter_diag(DiagOffset::Below(3)) {
+
+        }
     }
 
     #[test]
