@@ -1,27 +1,10 @@
 use std::iter::{ExactSizeIterator, FromIterator};
 use std::slice;
-use std::marker::PhantomData;
 
-use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut};
+use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Diagonal, DiagonalMut, DiagOffset};
 use super::slice::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
 
-/// An iterator over the diagonal elements of a matrix.
-pub struct Diagonal<'a, T: 'a> {
-    slice_start: *const T,
-    diag_pos: usize,
-    diag_len: usize,
-    row_stride: isize,
-    _marker: PhantomData<&'a T>,
-}
 
-/// An iterator over the mutable diagonal elements of a matrix.
-pub struct DiagonalMut<'a, T: 'a> {
-    slice_start: *mut T,
-    diag_pos: usize,
-    diag_len: usize,
-    row_stride: isize,
-    _marker: PhantomData<&'a mut T>,
-}
 
 macro_rules! impl_iter_diag (
     ($diag:ident, $diag_type:ty, $to_item:ident) => (
@@ -36,8 +19,12 @@ impl<'a, T> Iterator for $diag<'a, T> {
 
             unsafe {
 // Get pointer and shift to current diagonal
-                let ptr = self.slice_start.offset(self.diag_pos as isize * self.row_stride + self.diag_pos as isize);
-                diag = ptr.$to_item().unwrap();
+                let offset = match self.diag_offset {
+                    DiagOffset::Main => self.diag_pos as isize * self.row_stride + self.diag_pos as isize,
+                    DiagOffset::Above(k) => self.diag_pos as isize * self.row_stride + (self.diag_pos + k) as isize,
+                    DiagOffset::Below(k) => (self.diag_pos + k) as isize * self.row_stride + self.diag_pos as isize,
+                };
+                diag = self.slice_start.offset(offset).$to_item().unwrap();
             }
             self.diag_pos += 1;
             Some(diag)
@@ -50,13 +37,16 @@ impl<'a, T> Iterator for $diag<'a, T> {
     fn last(self) -> Option<Self::Item> {
 // Check if already at the end
         if self.diag_pos < self.diag_len {
-            let diag: $diag_type;
+// Get pointer and shift to current diagonal
+            let offset = match self.diag_offset {
+                DiagOffset::Main => self.diag_len as isize * self.row_stride - 1,
+                DiagOffset::Above(k) => (self.diag_len - 1) as isize * self.row_stride + (self.diag_len + k) as isize,
+                DiagOffset::Below(k) => (self.diag_len - 1) as isize * self.row_stride + (self.diag_len - k) as isize,
+            };
+
             unsafe {
-// Get pointer to last row and create a slice from raw parts
-                let ptr = self.slice_start.offset(self.diag_len as isize * self.row_stride - 1);
-                diag = ptr.$to_item().unwrap();
+                Some(self.slice_start.offset(offset).$to_item().unwrap())
             }
-            Some(diag)
         } else {
             None
         }
@@ -64,11 +54,16 @@ impl<'a, T> Iterator for $diag<'a, T> {
 
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
         if self.diag_pos + n < self.diag_len {
+            let row = (self.diag_pos + n) as isize;
+            let offset = match self.diag_offset {
+                DiagOffset::Main => row * self.row_stride + row,
+                DiagOffset::Above(k) => row * self.row_stride + row + k as isize,
+                DiagOffset::Below(k) => row * self.row_stride + row - k as isize,
+            };
+
             let diag: $diag_type;
-            unsafe {
-                let row = (self.diag_pos + n) as isize;
-                let ptr = self.slice_start.offset(row * self.row_stride + row);
-                diag = ptr.$to_item().unwrap();
+            unsafe {(self.diag_pos + n) as isize;
+                diag = self.slice_start.offset(offset).$to_item().unwrap();
             }
             self.diag_pos += n + 1;
             Some(diag)
@@ -300,35 +295,8 @@ impl<'a, T> IntoIterator for &'a mut MatrixSliceMut<'a, T> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use super::super::{MatrixSlice, MatrixSliceMut};
+    use super::super::{DiagOffset, MatrixSlice, MatrixSliceMut};
     use super::super::slice::{BaseMatrix, BaseMatrixMut};
-
-    use std::cmp;
-    use std::marker::PhantomData;
-
-    impl<'a, T> Diagonal<'a, T> {
-        fn from_mat<M: BaseMatrix<T>>(mat: M) -> Diagonal<'a, T> {
-            Diagonal {
-                slice_start: mat.as_ptr(),
-                diag_pos: 0,
-                diag_len: cmp::min(mat.rows(), mat.cols()),
-                row_stride: mat.row_stride() as isize,
-                _marker: PhantomData::<&'a T>,
-            }
-        }
-    }
-    impl<'a, T> DiagonalMut<'a, T> {
-        fn from_mat<M: BaseMatrixMut<T>>(mat: &mut M) -> DiagonalMut<'a, T> {
-            DiagonalMut {
-                slice_start: mat.as_mut_ptr(),
-                diag_pos: 0,
-                diag_len: cmp::min(mat.rows(), mat.cols()),
-                row_stride: mat.row_stride() as isize,
-                _marker: PhantomData::<&'a mut T>,
-            }
-        }
-    }
 
     #[test]
     fn test_matrix_diag() {
@@ -336,14 +304,30 @@ mod tests {
                             3.0, 4.0, 5.0;
                             6.0, 7.0, 8.0];
 
+
+        // Check equivalence
+        for ((d1, d2), d3) in a.iter_diag(DiagOffset::Main)
+            .zip(a.iter_diag(DiagOffset::Above(0)))
+            .zip(a.iter_diag(DiagOffset::Below(0))) {
+            assert_eq!(d1, d2);
+            assert_eq!(d1, d3);
+        }
         let diags = [0.0, 4.0, 8.0];
-        let diags_iter = Diagonal::from_mat(a.clone());
+        assert!(a.iter_diag(DiagOffset::Main).enumerate().all(|(i, diag)| diags[i] == *diag));
+        let upper_diags = [1.0, 5.0];
+        assert!(a.iter_diag(DiagOffset::Above(1)).enumerate().all(|(i, diag)| upper_diags[i] == *diag));
+        let lower_diags = [3.0, 7.0];
+        assert!(a.iter_diag(DiagOffset::Below(1)).enumerate().all(|(i, diag)| lower_diags[i] == *diag));
+        let top_corner = [2.0];
+        assert!(a.iter_diag(DiagOffset::Above(2)).enumerate().all(|(i, diag)| top_corner[i] == *diag));
+        let bottom_corner = [6.0];
+        assert!(a.iter_diag(DiagOffset::Below(2)).enumerate().all(|(i, diag)| bottom_corner[i] == *diag));
 
-        assert!(diags_iter.enumerate().all(|(i, diag)| diags[i] == *diag));
-
-        let diags_iter_mut = DiagonalMut::from_mat(&mut a);
-        for d in diags_iter_mut {
-            *d = 1.0;
+        {
+            let diags_iter_mut = a.iter_diag_mut(DiagOffset::Main);
+            for d in diags_iter_mut {
+                *d = 1.0;
+            }
         }
 
         for i in 0..3 {
@@ -356,18 +340,17 @@ mod tests {
         let mut a = matrix![0.0, 1.0, 2.0, 4.0;
                             4.0, 5.0, 6.0, 7.0;
                             8.0, 9.0, 10.0, 11.0];
+        let diags = [0.0, 5.0];
         {
             let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 4);
-
-            let diags = [0.0, 5.0];
-            let diags_iter = Diagonal::from_mat(b);
-
-            assert!(diags_iter.enumerate().all(|(i, diag)| diags[i] == *diag));
+            assert!(b.iter_diag(DiagOffset::Main).enumerate().all(|(i, diag)| diags[i] == *diag));
         }
 
-        let diags_iter_mut = DiagonalMut::from_mat(&mut a);
-        for d in diags_iter_mut {
-            *d = 1.0;
+        {
+            let diags_iter_mut = a.iter_diag_mut(DiagOffset::Main);
+            for d in diags_iter_mut {
+                *d = 1.0;
+            }
         }
 
         for i in 0..3 {
@@ -381,7 +364,7 @@ mod tests {
                         3.0, 4.0, 5.0;
                         6.0, 7.0, 8.0];
 
-        let mut diags_iter = Diagonal::from_mat(a.clone());
+        let mut diags_iter = a.iter_diag(DiagOffset::Main);
 
         assert_eq!(0.0, *diags_iter.nth(0).unwrap());
         assert_eq!(8.0, *diags_iter.nth(1).unwrap());
@@ -395,7 +378,7 @@ mod tests {
                         3.0, 4.0, 5.0;
                         6.0, 7.0, 8.0];
 
-        let diags_iter = Diagonal::from_mat(a.clone());
+        let diags_iter = a.iter_diag(DiagOffset::Main);
 
         assert_eq!(8.0, *diags_iter.last().unwrap());
     }
@@ -406,11 +389,9 @@ mod tests {
                         3.0, 4.0, 5.0;
                         6.0, 7.0, 8.0];
 
-        let diags_iter = Diagonal::from_mat(a.clone());
+        assert_eq!(3, a.iter_diag(DiagOffset::Main).count());
 
-        assert_eq!(3, diags_iter.count());
-
-        let mut diags_iter = Diagonal::from_mat(a.clone());
+        let mut diags_iter = a.iter_diag(DiagOffset::Main);
         diags_iter.next();
         assert_eq!(2, diags_iter.count());
     }
@@ -421,7 +402,7 @@ mod tests {
                         3.0, 4.0, 5.0;
                         6.0, 7.0, 8.0];
 
-        let mut diags_iter = Diagonal::from_mat(a.clone());
+        let mut diags_iter = a.iter_diag(DiagOffset::Main);
 
         assert_eq!((3, Some(3)), diags_iter.size_hint());
 

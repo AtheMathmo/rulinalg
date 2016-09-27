@@ -20,6 +20,7 @@
 //! ```
 
 use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Axes};
+use matrix::{DiagOffset, Diagonal, DiagonalMut};
 use matrix::{back_substitution, forward_substitution};
 use vector::Vector;
 use utils;
@@ -158,6 +159,24 @@ pub trait BaseMatrix<T>: Sized {
             slice_rows: self.rows(),
             slice_cols: self.cols(),
             row_stride: self.row_stride() as isize,
+            _marker: PhantomData::<&T>,
+        }
+    }
+
+    /// Iterate over diagonal entries
+    fn iter_diag(&self, k: DiagOffset) -> Diagonal<T> {
+        let diag_len = match k {
+            DiagOffset::Main => min(self.rows(), self.cols()),
+            DiagOffset::Above(m) => min(self.rows(), self.cols() - m),
+            DiagOffset::Below(m) => min(self.rows() - m, self.cols()),
+        };
+
+        Diagonal {
+            slice_start: self.as_ptr(),
+            diag_pos: 0,
+            diag_len: diag_len,
+            row_stride: self.row_stride() as isize,
+            diag_offset: k,
             _marker: PhantomData::<&T>,
         }
     }
@@ -981,6 +1000,24 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
             slice_rows: self.rows(),
             slice_cols: self.cols(),
             row_stride: self.row_stride() as isize,
+            _marker: PhantomData::<&mut T>,
+        }
+    }
+
+    /// Iterate over diagonal entries mutably
+    fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T> {
+        let diag_len = match k {
+            DiagOffset::Main => min(self.rows(), self.cols()),
+            DiagOffset::Above(m) => min(self.rows(), self.cols() - m),
+            DiagOffset::Below(m) => min(self.rows() - m, self.cols()),
+        };
+
+        DiagonalMut {
+            slice_start: self.as_mut_ptr(),
+            diag_pos: 0,
+            diag_len: diag_len,
+            row_stride: self.row_stride() as isize,
+            diag_offset: k,
             _marker: PhantomData::<&mut T>,
         }
     }
