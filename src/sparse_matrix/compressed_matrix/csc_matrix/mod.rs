@@ -18,7 +18,6 @@ pub struct CscMatrix<T> {
     rows: usize,
     cols: usize,
     indices: Vec<usize>,
-    nnz: usize,
     ptrs: Vec<usize>,
     values: Vec<T>,
 }
@@ -107,7 +106,6 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for CscMatrix<T> {
             rows: rows,
             cols: cols,
             indices: indices,
-            nnz: nnz,
             ptrs: ptrs,
             values: values,
         }
@@ -137,13 +135,10 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for CscMatrix<T> {
         assert!(indices.len() == values.len(),
                 "Column indices must be equal row values");
 
-        let nnz = indices.len();
-
         CscMatrix {
             rows: rows,
             cols: cols,
             indices: indices,
-            nnz: nnz,
             ptrs: ptrs,
             values: values,
         }
@@ -177,7 +172,6 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CscMatrix<T> {
             rows: size,
             cols: size,
             indices: (0..size).collect::<Vec<usize>>(),
-            nnz: size,
             ptrs: (0..(size + 1)).collect::<Vec<usize>>(),
             values: diag.to_vec(),
         }
@@ -196,7 +190,6 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CscMatrix<T> {
             rows: size,
             cols: size,
             indices: (0..size).collect::<Vec<usize>>(),
-            nnz: size,
             ptrs: (0..(size + 1)).collect::<Vec<usize>>(),
             values: vec![T::one(); size],
         }
@@ -209,7 +202,7 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CscMatrix<T> {
         self.cols
     }
     fn nnz(&self) -> usize {
-        self.nnz
+        self.values.len()
     }
 
     /// # Examples
@@ -232,7 +225,6 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CscMatrix<T> {
             rows: self.rows,
             cols: self.cols,
             indices: indices,
-            nnz: self.nnz,
             ptrs: ptrs,
             values: values,
         }
@@ -245,7 +237,6 @@ impl<T: Clone> Clone for CscMatrix<T> {
             rows: self.rows,
             cols: self.cols,
             indices: self.indices.clone(),
-            nnz: self.nnz,
             ptrs: self.ptrs.clone(),
             values: self.values.clone(),
         }
@@ -284,6 +275,7 @@ mod tests {
         let b = CscMatrix::from_diag(&[1, 2, 3]);
         assert_eq!(a, b);
     }
+    #[test]
     fn test_from_triplets() {
         let a = CscMatrix::from_triplets(3, 3, &[(0, 0, 1), (1, 1, 2), (2, 2, 3)]);
         let b = CscMatrix::new(3, 3, vec![0, 1, 2], vec![0, 1, 2, 3], vec![1, 2, 3]);
