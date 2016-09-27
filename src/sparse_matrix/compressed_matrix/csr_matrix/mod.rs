@@ -207,6 +207,13 @@ mod tests {
     }
 
     #[test]
+    fn test_non_equality() {
+        let a = CsrMatrix::new(3, 3, vec![0, 1, 1, 2], vec![0, 1, 2, 2], vec![1, 2, 3, 4]);
+        let b = CsrMatrix::new(3, 3, vec![2, 2], vec![0, 1, 2, 2], vec![1, 2]);
+        assert_ne!(a, b);
+    }
+
+    #[test]
     #[should_panic]
     fn test_new_mat_bad_data() {
         let _ = CsrMatrix::new(3, 3, vec![0, 1, 2, 3], vec![0, 1, 2], vec![1, 2, 3]);
