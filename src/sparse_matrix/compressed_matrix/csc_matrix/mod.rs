@@ -40,6 +40,29 @@ impl<T: Copy + One + Zero> CscMatrix<T> {
                        self.ptrs.clone(),
                        self.values.clone())
     }
+
+	/// Transposes the given CSC matrix returning a new CSR matrix, which leads to a free transformation.
+	///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::sparse_matrix::SparseMatrix;
+    /// use rulinalg::sparse_matrix::compressed_matrix::CompressedMatrix;
+    /// use rulinalg::sparse_matrix::compressed_matrix::csc_matrix::CscMatrix;
+    ///
+    /// let _ = CscMatrix::new(4, 4, vec![0, 0, 0], vec![0, 1, 2, 3, 3], vec![1, 2, 3]).transpose();
+    /// ```
+    ///
+    /// Complexity: O(1)
+    pub fn transpose_csr(&self) -> CsrMatrix<T>
+        where T: Copy
+    {
+        CsrMatrix::new(self.rows,
+                       self.cols,
+                       self.indices.clone(),
+                       self.ptrs.clone(),
+                       self.values.clone())
+    }
 }
 
 impl<T: Copy + One + Zero> CompressedMatrix<T> for CscMatrix<T> {
