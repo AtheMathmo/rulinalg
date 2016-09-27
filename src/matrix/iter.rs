@@ -14,7 +14,6 @@ pub struct Diagonal<'a, T: 'a> {
     _marker: PhantomData<&'a T>,
 }
 
-
 /// An iterator over the mutable diagonal elements of a matrix.
 pub struct DiagonalMut<'a, T: 'a> {
     slice_start: *mut T,
@@ -91,6 +90,9 @@ impl<'a, T> Iterator for $diag<'a, T> {
 
 impl_iter_diag!(Diagonal, &'a T, as_ref);
 impl_iter_diag!(DiagonalMut, &'a mut T, as_mut);
+
+impl<'a, T> ExactSizeIterator for Diagonal<'a, T> {}
+impl<'a, T> ExactSizeIterator for DiagonalMut<'a, T> {}
 
 macro_rules! impl_iter_rows (
     ($rows:ident, $row_type:ty, $slice_from_parts:ident) => (
@@ -298,14 +300,149 @@ impl<'a, T> IntoIterator for &'a mut MatrixSliceMut<'a, T> {
 
 #[cfg(test)]
 mod tests {
-
-    use super::super::{Matrix, MatrixSlice, MatrixSliceMut};
+    use super::*;
+    use super::super::{MatrixSlice, MatrixSliceMut};
     use super::super::slice::{BaseMatrix, BaseMatrixMut};
+
+    use std::cmp;
+    use std::marker::PhantomData;
+
+    impl<'a, T> Diagonal<'a, T> {
+        fn from_mat<M: BaseMatrix<T>>(mat: M) -> Diagonal<'a, T> {
+            Diagonal {
+                slice_start: mat.as_ptr(),
+                diag_pos: 0,
+                diag_len: cmp::min(mat.rows(), mat.cols()),
+                row_stride: mat.row_stride() as isize,
+                _marker: PhantomData::<&'a T>,
+            }
+        }
+    }
+    impl<'a, T> DiagonalMut<'a, T> {
+        fn from_mat<M: BaseMatrixMut<T>>(mat: &mut M) -> DiagonalMut<'a, T> {
+            DiagonalMut {
+                slice_start: mat.as_mut_ptr(),
+                diag_pos: 0,
+                diag_len: cmp::min(mat.rows(), mat.cols()),
+                row_stride: mat.row_stride() as isize,
+                _marker: PhantomData::<&'a mut T>,
+            }
+        }
+    }
+
+    #[test]
+    fn test_matrix_diag() {
+        let mut a = matrix![0.0, 1.0, 2.0;
+                            3.0, 4.0, 5.0;
+                            6.0, 7.0, 8.0];
+
+        let diags = [0.0, 4.0, 8.0];
+        let diags_iter = Diagonal::from_mat(a.clone());
+
+        assert!(diags_iter.enumerate().all(|(i, diag)| diags[i] == *diag));
+
+        let diags_iter_mut = DiagonalMut::from_mat(&mut a);
+        for d in diags_iter_mut {
+            *d = 1.0;
+        }
+
+        for i in 0..3 {
+            assert_eq!(a[[i,i]], 1.0);
+        }
+    }
+
+    #[test]
+    fn test_matrix_slice_diag() {
+        let mut a = matrix![0.0, 1.0, 2.0, 4.0;
+                            4.0, 5.0, 6.0, 7.0;
+                            8.0, 9.0, 10.0, 11.0];
+        {
+            let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 4);
+
+            let diags = [0.0, 5.0];
+            let diags_iter = Diagonal::from_mat(b);
+
+            assert!(diags_iter.enumerate().all(|(i, diag)| diags[i] == *diag));
+        }
+
+        let diags_iter_mut = DiagonalMut::from_mat(&mut a);
+        for d in diags_iter_mut {
+            *d = 1.0;
+        }
+
+        for i in 0..3 {
+            assert_eq!(a[[i,i]], 1.0);
+        }
+    }
+
+    #[test]
+    fn test_matrix_diag_nth() {
+        let a = matrix![0.0, 1.0, 2.0;
+                        3.0, 4.0, 5.0;
+                        6.0, 7.0, 8.0];
+
+        let mut diags_iter = Diagonal::from_mat(a.clone());
+
+        assert_eq!(0.0, *diags_iter.nth(0).unwrap());
+        assert_eq!(8.0, *diags_iter.nth(1).unwrap());
+
+        assert_eq!(None, diags_iter.next());
+    }
+
+    #[test]
+    fn test_matrix_diag_last() {
+        let a = matrix![0.0, 1.0, 2.0;
+                        3.0, 4.0, 5.0;
+                        6.0, 7.0, 8.0];
+
+        let diags_iter = Diagonal::from_mat(a.clone());
+
+        assert_eq!(8.0, *diags_iter.last().unwrap());
+    }
+
+    #[test]
+    fn test_matrix_diag_count() {
+        let a = matrix![0.0, 1.0, 2.0;
+                        3.0, 4.0, 5.0;
+                        6.0, 7.0, 8.0];
+
+        let diags_iter = Diagonal::from_mat(a.clone());
+
+        assert_eq!(3, diags_iter.count());
+
+        let mut diags_iter = Diagonal::from_mat(a.clone());
+        diags_iter.next();
+        assert_eq!(2, diags_iter.count());
+    }
+
+    #[test]
+    fn test_matrix_diag_size_hint() {
+        let a = matrix![0.0, 1.0, 2.0;
+                        3.0, 4.0, 5.0;
+                        6.0, 7.0, 8.0];
+
+        let mut diags_iter = Diagonal::from_mat(a.clone());
+
+        assert_eq!((3, Some(3)), diags_iter.size_hint());
+
+        diags_iter.next();
+
+        assert_eq!((2, Some(2)), diags_iter.size_hint());
+        diags_iter.next();
+        diags_iter.next();
+
+        assert_eq!((0, Some(0)), diags_iter.size_hint());
+
+        assert_eq!(None, diags_iter.next());
+        assert_eq!((0, Some(0)), diags_iter.size_hint());
+    }
+
 
     #[test]
     fn test_matrix_rows() {
-        let mut a = Matrix::new(3, 3, (0..9).collect::<Vec<usize>>());
-
+        let mut a = matrix![0, 1, 2;
+                            3, 4, 5;
+                            6, 7, 8];
         let data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
 
         for (i, row) in a.iter_rows().enumerate() {
@@ -327,7 +464,9 @@ mod tests {
 
     #[test]
     fn test_matrix_slice_rows() {
-        let a = Matrix::new(3, 3, (0..9).collect::<Vec<usize>>());
+        let a = matrix![0, 1, 2;
+                        3, 4, 5;
+                        6, 7, 8];;
 
         let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 2);
 
@@ -340,7 +479,9 @@ mod tests {
 
     #[test]
     fn test_matrix_slice_mut_rows() {
-        let mut a = Matrix::new(3, 3, (0..9).collect::<Vec<usize>>());
+        let mut a = matrix![0, 1, 2;
+                            3, 4, 5;
+                            6, 7, 8];
 
         {
             let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 2, 2);
@@ -367,7 +508,9 @@ mod tests {
 
     #[test]
     fn test_matrix_rows_nth() {
-        let a = Matrix::new(3, 3, (0..9).collect::<Vec<usize>>());
+        let a = matrix![0, 1, 2;
+                        3, 4, 5;
+                        6, 7, 8];
 
         let mut row_iter = a.iter_rows();
 
@@ -379,7 +522,9 @@ mod tests {
 
     #[test]
     fn test_matrix_rows_last() {
-        let a = Matrix::new(3, 3, (0..9).collect::<Vec<usize>>());
+        let a = matrix![0, 1, 2;
+                        3, 4, 5;
+                        6, 7, 8];
 
         let row_iter = a.iter_rows();
 
@@ -402,7 +547,9 @@ mod tests {
 
     #[test]
     fn test_matrix_rows_count() {
-        let a = Matrix::new(3, 3, (0..9).collect::<Vec<usize>>());
+        let a = matrix![0, 1, 2;
+                        3, 4, 5;
+                        6, 7, 8];
 
         let row_iter = a.iter_rows();
 
@@ -415,7 +562,9 @@ mod tests {
 
     #[test]
     fn test_matrix_rows_size_hint() {
-        let a = Matrix::new(3, 3, (0..9).collect::<Vec<usize>>());
+        let a = matrix![0, 1, 2;
+                        3, 4, 5;
+                        6, 7, 8];
 
         let mut row_iter = a.iter_rows();
 
@@ -431,12 +580,13 @@ mod tests {
 
         assert_eq!(None, row_iter.next());
         assert_eq!((0, Some(0)), row_iter.size_hint());
-
     }
 
     #[test]
     fn into_iter_compile() {
-        let a = Matrix::new(3, 3, vec![2.0; 9]);
+        let a = matrix![2.0, 2.0, 2.0;
+                        2.0, 2.0, 2.0;
+                        2.0, 2.0, 2.0];
         let mut b = MatrixSlice::from_matrix(&a, [1, 1], 2, 2);
 
         for _ in b {
@@ -451,7 +601,9 @@ mod tests {
 
     #[test]
     fn into_iter_mut_compile() {
-        let mut a = Matrix::<f32>::new(3, 3, vec![2.0; 9]);
+        let mut a = matrix![2.0, 2.0, 2.0;
+                            2.0, 2.0, 2.0;
+                            2.0, 2.0, 2.0];
 
         {
             let b = MatrixSliceMut::from_matrix(&mut a, [1, 1], 2, 2);
