@@ -15,7 +15,7 @@ use sparse_matrix::triplet::Triplet;
 /// The `CsrMatrix` struct.
 ///
 /// Can be instantiated with any type.
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct CsrMatrix<T> {
     rows: usize,
     cols: usize,
@@ -227,18 +227,6 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CsrMatrix<T> {
 		self.indices = indices;
 		self.ptrs = ptrs;
 		self.values = values;
-    }
-}
-
-impl<T: Clone> Clone for CsrMatrix<T> {
-    fn clone(&self) -> CsrMatrix<T> {
-        CsrMatrix {
-            rows: self.rows,
-            cols: self.cols,
-            indices: self.indices.clone(),
-            ptrs: self.ptrs.clone(),
-            values: self.values.clone(),
-        }
     }
 }
 
