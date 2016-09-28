@@ -7,7 +7,10 @@ use libnum::Zero;
 use matrixmultiply;
 
 /// Return `true` if `A` and `B` are the same type
-fn same_type<A: Any, B: Any>() -> bool {
+fn same_type<A, B>() -> bool
+    where A: Any,
+          B: Any
+{
     TypeId::of::<A>() == TypeId::of::<B>()
 }
 
