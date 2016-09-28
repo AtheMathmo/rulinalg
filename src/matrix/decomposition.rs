@@ -25,7 +25,9 @@ use libnum::{One, Zero, Float, Signed};
 use libnum::{cast, abs};
 use epsilon::MachineEpsilon;
 
-impl<T: Any + Float> Matrix<T> {
+impl<T> Matrix<T>
+    where T: Any + Float
+{
     /// Cholesky decomposition
     ///
     /// Returns the cholesky decomposition of a positive definite matrix.
@@ -312,8 +314,12 @@ impl<T: Any + Float> Matrix<T> {
 /// The SVD is represented by matrices `(b, u, v)`, where `b` is the diagonal matrix
 /// containing the singular values, `u` is the matrix of left singular vectors
 /// and v is the matrix of right singular vectors.
-fn correct_svd_signs<T>(mut b: Matrix<T>, mut u: Matrix<T>, mut v: Matrix<T>)
-    -> (Matrix<T>, Matrix<T>, Matrix<T>) where T: Any + Float + Signed {
+fn correct_svd_signs<T>(mut b: Matrix<T>,
+                        mut u: Matrix<T>,
+                        mut v: Matrix<T>)
+                        -> (Matrix<T>, Matrix<T>, Matrix<T>)
+    where T: Any + Float + Signed
+{
 
     // When correcting the signs of the singular vectors, we can choose
     // to correct EITHER u or v. We make the choice depending on which matrix has the
@@ -340,8 +346,12 @@ fn correct_svd_signs<T>(mut b: Matrix<T>, mut u: Matrix<T>, mut v: Matrix<T>)
     (b, u, v)
 }
 
-fn sort_svd<T>(mut b: Matrix<T>, mut u: Matrix<T>, mut v: Matrix<T>)
-    -> (Matrix<T>, Matrix<T>, Matrix<T>) where T: Any + Float + Signed {
+fn sort_svd<T>(mut b: Matrix<T>,
+               mut u: Matrix<T>,
+               mut v: Matrix<T>)
+               -> (Matrix<T>, Matrix<T>, Matrix<T>)
+    where T: Any + Float + Signed
+{
 
     assert!(u.cols() == b.cols() && b.cols() == v.cols());
 

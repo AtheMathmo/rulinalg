@@ -154,7 +154,8 @@ impl<T> Matrix<T> {
     /// ]);
     /// ```
     pub fn from_fn<F>(rows: usize, cols: usize, mut f: F) -> Matrix<T>
-        where F: FnMut(usize, usize) -> T {
+        where F: FnMut(usize, usize) -> T
+    {
         let mut data = Vec::with_capacity(rows * cols);
         for row in 0..rows {
             for col in 0..cols {
@@ -649,12 +650,14 @@ impl<T: fmt::Display> fmt::Display for Matrix<T> {
         }
         let width = max_datum_width;
 
-        fn write_row<T: fmt::Display>(f: &mut fmt::Formatter,
-                                      row: &[T],
-                                      left_delimiter: &str,
-                                      right_delimiter: &str,
-                                      width: usize)
-                                      -> Result<(), fmt::Error> {
+        fn write_row<T>(f: &mut fmt::Formatter,
+                        row: &[T],
+                        left_delimiter: &str,
+                        right_delimiter: &str,
+                        width: usize)
+                        -> Result<(), fmt::Error>
+            where T: fmt::Display
+        {
             try!(write!(f, "{}", left_delimiter));
             for (index, datum) in row.iter().enumerate() {
                 match f.precision() {
@@ -703,7 +706,7 @@ impl<T: fmt::Display> fmt::Display for Matrix<T> {
 /// Back substitution
 fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     where T: Any + Float,
-          M: BaseMatrix<T>,
+          M: BaseMatrix<T>
 {
     let mut x = vec![T::zero(); y.size()];
 
@@ -733,7 +736,7 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
 /// forward substitution
 fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     where T: Any + Float,
-          M: BaseMatrix<T>,
+          M: BaseMatrix<T>
 {
     let mut x = Vec::with_capacity(y.size());
 
@@ -761,7 +764,7 @@ fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
 /// Computes the parity of a permutation matrix.
 fn parity<T, M>(m: &M) -> T
     where T: Any + Float,
-          M: BaseMatrix<T>,
+          M: BaseMatrix<T>
 {
     let mut visited = vec![false; m.rows()];
     let mut sgn = T::one();
