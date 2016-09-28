@@ -18,11 +18,14 @@ impl<'a, T> Iterator for $diag<'a, T> {
             let diag: $diag_type;
 
             unsafe {
-// Get pointer and shift to current diagonal
+                // Get pointer and shift to current diagonal
                 let offset = match self.diag_offset {
-                    DiagOffset::Main => self.diag_pos as isize * self.row_stride + self.diag_pos as isize,
-                    DiagOffset::Above(k) => self.diag_pos as isize * self.row_stride + (self.diag_pos + k) as isize,
-                    DiagOffset::Below(k) => (self.diag_pos + k) as isize * self.row_stride + self.diag_pos as isize,
+                    DiagOffset::Main => self.diag_pos as isize * self.row_stride
+                                        + self.diag_pos as isize,
+                    DiagOffset::Above(k) => self.diag_pos as isize * self.row_stride
+                                            + (self.diag_pos + k) as isize,
+                    DiagOffset::Below(k) => (self.diag_pos + k) as isize * self.row_stride
+                                            + self.diag_pos as isize,
                 };
                 diag = self.slice_start.offset(offset).$to_item().unwrap();
             }
@@ -35,13 +38,15 @@ impl<'a, T> Iterator for $diag<'a, T> {
     }
 
     fn last(self) -> Option<Self::Item> {
-// Check if already at the end
+        // Check if already at the end
         if self.diag_pos < self.diag_len {
-// Get pointer and shift to current diagonal
+            // Get pointer and shift to current diagonal
             let offset = match self.diag_offset {
                 DiagOffset::Main => (self.diag_len - 1) as isize * (self.row_stride + 1),
-                DiagOffset::Above(k) => (self.diag_len - 1) as isize * self.row_stride + (self.diag_len + k - 1) as isize,
-                DiagOffset::Below(k) => (self.diag_len + k - 1) as isize * self.row_stride + (self.diag_len - 1) as isize,
+                DiagOffset::Above(k) => (self.diag_len - 1) as isize * self.row_stride
+                                        + (self.diag_len + k - 1) as isize,
+                DiagOffset::Below(k) => (self.diag_len + k - 1) as isize * self.row_stride
+                                        + (self.diag_len - 1) as isize,
             };
 
             unsafe {
@@ -299,29 +304,44 @@ mod tests {
     use super::super::slice::{BaseMatrix, BaseMatrixMut};
 
     #[test]
+    fn test_diag_offset_equivalence() {
+        // This test will check that `Main`,
+        // `Below(0)`, and `Above(0)` are all equivalent.
+        let a = matrix![0.0, 1.0, 2.0;
+                        3.0, 4.0, 5.0;
+                        6.0, 7.0, 8.0];
+
+        // Collect each diagonal and compare them
+        let d1 = a.iter_diag(DiagOffset::Main).collect::<Vec<_>>();
+        let d2 = a.iter_diag(DiagOffset::Above(0)).collect::<Vec<_>>();
+        let d3 = a.iter_diag(DiagOffset::Below(0)).collect::<Vec<_>>();
+        assert_eq!(d1, d2);
+        assert_eq!(d2, d3);
+
+        let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 3);
+        let d1 = b.iter_diag(DiagOffset::Main).collect::<Vec<_>>();
+        let d2 = b.iter_diag(DiagOffset::Above(0)).collect::<Vec<_>>();
+        let d3 = b.iter_diag(DiagOffset::Below(0)).collect::<Vec<_>>();
+        assert_eq!(d1, d2);
+        assert_eq!(d2, d3);
+    }
+
+    #[test]
     fn test_matrix_diag() {
         let mut a = matrix![0.0, 1.0, 2.0;
                             3.0, 4.0, 5.0;
                             6.0, 7.0, 8.0];
 
-
-        // Check equivalence
-        for ((d1, d2), d3) in a.iter_diag(DiagOffset::Main)
-            .zip(a.iter_diag(DiagOffset::Above(0)))
-            .zip(a.iter_diag(DiagOffset::Below(0))) {
-            assert_eq!(d1, d2);
-            assert_eq!(d1, d3);
-        }
-        let diags = [0.0, 4.0, 8.0];
-        assert!(a.iter_diag(DiagOffset::Main).enumerate().all(|(i, diag)| diags[i] == *diag));
-        let upper_diags = [1.0, 5.0];
-        assert!(a.iter_diag(DiagOffset::Above(1)).enumerate().all(|(i, diag)| upper_diags[i] == *diag));
-        let lower_diags = [3.0, 7.0];
-        assert!(a.iter_diag(DiagOffset::Below(1)).enumerate().all(|(i, diag)| lower_diags[i] == *diag));
-        let top_corner = [2.0];
-        assert!(a.iter_diag(DiagOffset::Above(2)).enumerate().all(|(i, diag)| top_corner[i] == *diag));
-        let bottom_corner = [6.0];
-        assert!(a.iter_diag(DiagOffset::Below(2)).enumerate().all(|(i, diag)| bottom_corner[i] == *diag));
+        let diags = vec![0.0, 4.0, 8.0];
+        assert_eq!(a.iter_diag(DiagOffset::Main).cloned().collect::<Vec<_>>(), diags);
+        let diags = vec![1.0, 5.0];
+        assert_eq!(a.iter_diag(DiagOffset::Above(1)).cloned().collect::<Vec<_>>(), diags);
+        let diags = vec![3.0, 7.0];
+        assert_eq!(a.iter_diag(DiagOffset::Below(1)).cloned().collect::<Vec<_>>(), diags);
+        let diags = vec![2.0];
+        assert_eq!(a.iter_diag(DiagOffset::Above(2)).cloned().collect::<Vec<_>>(), diags);
+        let diags = vec![6.0];
+        assert_eq!(a.iter_diag(DiagOffset::Below(2)).cloned().collect::<Vec<_>>(), diags);
 
         {
             let diags_iter_mut = a.iter_diag_mut(DiagOffset::Main);
@@ -343,24 +363,16 @@ mod tests {
         {
             let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 4);
 
-            // Check equivalence
-            for ((d1, d2), d3) in b.iter_diag(DiagOffset::Main)
-                .zip(a.iter_diag(DiagOffset::Above(0)))
-                .zip(a.iter_diag(DiagOffset::Below(0))) {
-                assert_eq!(d1, d2);
-                assert_eq!(d1, d3);
-            }
-
-            let diags = [0.0, 5.0];
-            assert!(b.iter_diag(DiagOffset::Main).enumerate().all(|(i, diag)| diags[i] == *diag));
-            let diags = [1.0, 6.0];
-            assert!(b.iter_diag(DiagOffset::Above(1)).enumerate().all(|(i, diag)| diags[i] == *diag));
-            let diags = [2.0, 7.0];
-            assert!(b.iter_diag(DiagOffset::Above(2)).enumerate().all(|(i, diag)| diags[i] == *diag));
-            let diags = [3.0];
-            assert!(b.iter_diag(DiagOffset::Above(3)).enumerate().all(|(i, diag)| diags[i] == *diag));
-            let diags = [4.0];
-            assert!(b.iter_diag(DiagOffset::Below(1)).enumerate().all(|(i, diag)| diags[i] == *diag));
+            let diags = vec![0.0, 5.0];
+            assert_eq!(b.iter_diag(DiagOffset::Main).cloned().collect::<Vec<_>>(), diags);
+            let diags = vec![1.0, 6.0];
+            assert_eq!(b.iter_diag(DiagOffset::Above(1)).cloned().collect::<Vec<_>>(), diags);
+            let diags = vec![2.0, 7.0];
+            assert_eq!(b.iter_diag(DiagOffset::Above(2)).cloned().collect::<Vec<_>>(), diags);
+            let diags = vec![3.0];
+            assert_eq!(b.iter_diag(DiagOffset::Above(3)).cloned().collect::<Vec<_>>(), diags);
+            let diags = vec![4.0];
+            assert_eq!(b.iter_diag(DiagOffset::Below(1)).cloned().collect::<Vec<_>>(), diags);
         }
 
         {
@@ -377,30 +389,43 @@ mod tests {
 
     #[test]
     fn test_matrix_diag_nth() {
-        let a = matrix![0.0, 1.0, 2.0;
-                        3.0, 4.0, 5.0;
-                        6.0, 7.0, 8.0];
+        let a = matrix![0.0, 1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0, 7.0;
+                        8.0, 9.0, 10.0, 11.0];
 
-        {
-            let mut diags_iter = a.iter_diag(DiagOffset::Main);
+        let mut diags_iter = a.iter_diag(DiagOffset::Main);
+        assert_eq!(0.0, *diags_iter.nth(0).unwrap());
+        assert_eq!(10.0, *diags_iter.nth(1).unwrap());
+        assert_eq!(None, diags_iter.next());
 
-            assert_eq!(0.0, *diags_iter.nth(0).unwrap());
-            assert_eq!(8.0, *diags_iter.nth(1).unwrap());
-            assert_eq!(None, diags_iter.next());
-        }
+        let mut diags_iter = a.iter_diag(DiagOffset::Above(1));
+        assert_eq!(6.0, *diags_iter.nth(1).unwrap());
+        assert_eq!(11.0, *diags_iter.next().unwrap());
+        assert_eq!(None, diags_iter.next());
 
-        {
-            let mut diags_iter = a.iter_diag(DiagOffset::Above(1));
-            assert_eq!(5.0, *diags_iter.nth(1).unwrap());
-            assert_eq!(None, diags_iter.next());
-        }
+        let mut diags_iter = a.iter_diag(DiagOffset::Below(1));
+        assert_eq!(9.0, *diags_iter.nth(1).unwrap());
+        assert_eq!(None, diags_iter.next());
+    }
 
-        {
-            let mut diags_iter = a.iter_diag(DiagOffset::Below(1));
-            assert_eq!(7.0, *diags_iter.nth(1).unwrap());
-            assert_eq!(None, diags_iter.next());
-        }
+    #[test]
+    fn test_matrix_slice_diag_nth() {
+        let a = matrix![0.0, 1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0, 7.0;
+                        8.0, 9.0, 10.0, 11.0];
+        let b = MatrixSlice::from_matrix(&a, [0,0], 2, 4);
 
+        let mut diags_iter = b.iter_diag(DiagOffset::Main);
+        assert_eq!(5.0, *diags_iter.nth(1).unwrap());;
+        assert_eq!(None, diags_iter.next());
+
+        let mut diags_iter = b.iter_diag(DiagOffset::Above(1));
+        assert_eq!(6.0, *diags_iter.nth(1).unwrap());
+        assert_eq!(None, diags_iter.next());
+
+        let mut diags_iter = b.iter_diag(DiagOffset::Below(1));
+        assert_eq!(4.0, *diags_iter.nth(0).unwrap());
+        assert_eq!(None, diags_iter.next());        
     }
 
     #[test]
@@ -409,18 +434,35 @@ mod tests {
                         3.0, 4.0, 5.0;
                         6.0, 7.0, 8.0];
 
+        let diags_iter = a.iter_diag(DiagOffset::Main);
+        assert_eq!(8.0, *diags_iter.last().unwrap());
+
+        let diags_iter = a.iter_diag(DiagOffset::Above(2));
+        assert_eq!(2.0, *diags_iter.last().unwrap());
+
+        let diags_iter = a.iter_diag(DiagOffset::Below(2));
+        assert_eq!(6.0, *diags_iter.last().unwrap());    
+    }
+
+    #[test]
+    fn test_matrix_slice_diag_last() {
+        let a = matrix![0.0, 1.0, 2.0;
+                        3.0, 4.0, 5.0;
+                        6.0, 7.0, 8.0];
+        let b = MatrixSlice::from_matrix(&a, [0,0], 3, 2);
+
         {
-            let diags_iter = a.iter_diag(DiagOffset::Main);
-            assert_eq!(8.0, *diags_iter.last().unwrap());
+            let diags_iter = b.iter_diag(DiagOffset::Main);
+            assert_eq!(4.0, *diags_iter.last().unwrap());
         }
 
         {
-            let diags_iter = a.iter_diag(DiagOffset::Above(2));
-            assert_eq!(2.0, *diags_iter.last().unwrap());
+            let diags_iter = b.iter_diag(DiagOffset::Above(1));
+            assert_eq!(1.0, *diags_iter.last().unwrap());
         }
 
         {
-            let diags_iter = a.iter_diag(DiagOffset::Below(2));
+            let diags_iter = b.iter_diag(DiagOffset::Below(2));
             assert_eq!(6.0, *diags_iter.last().unwrap());
         }
     }
@@ -432,6 +474,10 @@ mod tests {
                         6.0, 7.0, 8.0];
 
         assert_eq!(3, a.iter_diag(DiagOffset::Main).count());
+        assert_eq!(2, a.iter_diag(DiagOffset::Above(1)).count());
+        assert_eq!(1, a.iter_diag(DiagOffset::Above(2)).count());
+        assert_eq!(2, a.iter_diag(DiagOffset::Below(1)).count());
+        assert_eq!(1, a.iter_diag(DiagOffset::Below(2)).count());
 
         let mut diags_iter = a.iter_diag(DiagOffset::Main);
         diags_iter.next();
@@ -445,9 +491,7 @@ mod tests {
                         6.0, 7.0, 8.0];
 
         let mut diags_iter = a.iter_diag(DiagOffset::Main);
-
         assert_eq!((3, Some(3)), diags_iter.size_hint());
-
         diags_iter.next();
 
         assert_eq!((2, Some(2)), diags_iter.size_hint());
@@ -455,7 +499,6 @@ mod tests {
         diags_iter.next();
 
         assert_eq!((0, Some(0)), diags_iter.size_hint());
-
         assert_eq!(None, diags_iter.next());
         assert_eq!((0, Some(0)), diags_iter.size_hint());
     }
