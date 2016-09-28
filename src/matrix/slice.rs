@@ -168,8 +168,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// #[macro_use]
-    /// # extern crate rulinalg;
+    /// # #[macro_use] extern crate rulinalg;
     ///
     /// # fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix, DiagOffset};
@@ -1034,8 +1033,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # Examples
     ///
     /// ```
-    /// #[macro_use]
-    /// # extern crate rulinalg;
+    /// # #[macro_use] extern crate rulinalg;
     ///
     /// # fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut, DiagOffset};
