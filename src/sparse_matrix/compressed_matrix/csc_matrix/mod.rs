@@ -6,7 +6,7 @@ use std::mem::swap;
 
 use libnum::{One, Zero};
 
-use sparse_matrix::{CompressedMatrix, CsrMatrix, SparseMatrix, Triplet};
+use sparse_matrix::{CompressedMatrix, CsrMatrix, MatrixCoordinate, SparseMatrix, Triplet};
 use sparse_matrix::compressed_matrix::compressed_matrix_utils::*;
 
 /// The `CscMatrix` struct.
@@ -60,42 +60,8 @@ impl<T: Copy + One + Zero> CscMatrix<T> {
 }
 
 impl<T: Copy + One + Zero> CompressedMatrix<T> for CscMatrix<T> {
-    fn from_triplets<R>(rows: usize, cols: usize, triples: &[R]) -> CscMatrix<T> where R: Triplet<T> {
-    	let nnz = triples.len();
-
-        let mut indices = vec![0; nnz];
-        let mut last_ptr = 0;
-        let mut ptrs = vec![0; cols + 1];
-        let mut sum_ptrs = 0;
-        let mut values = vec![T::zero(); nnz];
-
-        for row_idcs_idx in 0..nnz {
-            ptrs[triples[row_idcs_idx].col()] += 1;
-        }
-
-        for ptr_idx in 0..cols {
-            let tmp_ptr = ptrs[ptr_idx];
-            ptrs[ptr_idx] = sum_ptrs;
-            sum_ptrs += tmp_ptr;
-        }
-
-        ptrs[rows] = nnz;
-
-        for row_idcs_idx in 0..nnz {
-            let ptr_idx = triples[row_idcs_idx].col();
-            let dest_idx = ptrs[ptr_idx];
-
-            indices[dest_idx] = triples[row_idcs_idx].row();
-            values[dest_idx] = triples[row_idcs_idx].value();
-
-            ptrs[ptr_idx] += 1;
-        }
-
-        for ptr_idx in 0..nnz {
-            let tmp_ptr = ptrs[ptr_idx];
-            ptrs[ptr_idx] = last_ptr;
-            last_ptr = tmp_ptr;
-        }
+    fn from_triplets<R>(rows: usize, cols: usize, triplets: &[R]) -> CscMatrix<T> where R: Triplet<T> {
+    	let (indices, ptrs, values) = from_triplets(cols, MatrixCoordinate::COL, MatrixCoordinate::ROW, triplets);
 
         CscMatrix {
             rows: rows,

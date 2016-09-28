@@ -35,3 +35,13 @@ pub trait SparseMatrix<T> {
     /// Tranposes the given matrix
     fn transpose(&mut self);
 }
+
+/// Matix Coordinate (i, j)
+#[derive(Debug, Clone, Copy)]
+pub enum MatrixCoordinate {
+	/// Row type
+    ROW,
+    /// Column type
+    COL,
+}
+
