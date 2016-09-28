@@ -573,15 +573,7 @@ pub trait BaseMatrix<T>: Sized {
     fn diag(&self) -> Vector<T>
         where T: Copy
     {
-        let mat_min = min(self.rows(), self.cols());
-
-        let mut diagonal = Vec::with_capacity(mat_min);
-        unsafe {
-            for i in 0..mat_min {
-                diagonal.push(*self.get_unchecked([i, i]));
-            }
-        }
-        Vector::new(diagonal)
+        self.iter_diag(DiagOffset::Main).cloned().collect::<Vec<_>>().into()
     }
 
     /// Tranposes the given matrix
