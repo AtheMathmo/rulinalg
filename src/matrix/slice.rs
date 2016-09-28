@@ -164,6 +164,33 @@ pub trait BaseMatrix<T>: Sized {
     }
 
     /// Iterate over diagonal entries
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// #[macro_use]
+    /// # extern crate rulinalg;
+    ///
+    /// # fn main() {
+    /// use rulinalg::matrix::{Matrix, BaseMatrix, DiagOffset};
+    ///
+    /// let a = matrix![0, 1, 2;
+    ///                 3, 4, 5;
+    ///                 6, 7, 8];
+    /// let super_diag = a.iter_diag(DiagOffset::Above(1))
+    ///                     .cloned()
+    ///                     .collect::<Vec<_>>();
+    /// assert_eq!(vec![1, 5], super_diag);
+    /// # }
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// If using `Above` or `Below` with an
+    /// out-of-bounds offset this function will panic.
+    ///
+    /// This function will never panic if the `Main` diagonal
+    /// offset is used. 
     fn iter_diag(&self, k: DiagOffset) -> Diagonal<T> {
         let diag_len = match k {
             DiagOffset::Main => min(self.rows(), self.cols()),
@@ -1003,6 +1030,35 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     }
 
     /// Iterate over diagonal entries mutably
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// #[macro_use]
+    /// # extern crate rulinalg;
+    ///
+    /// # fn main() {
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut, DiagOffset};
+    ///
+    /// let mut a = matrix![0, 1, 2;
+    ///                 3, 4, 5;
+    ///                 6, 7, 8];
+    /// // Zero the sub-diagonal (sets 3 and 7 to 0)
+    /// for sub_d in a.iter_diag_mut(DiagOffset::Below(1)) {
+    ///     *sub_d = 0;   
+    /// }
+    ///
+    /// println!("{}", a);
+    /// # }
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// If using `Above` or `Below` with an
+    /// out-of-bounds offset this function will panic.
+    ///
+    /// This function will never panic if the `Main` diagonal
+    /// offset is used. 
     fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T> {
         let diag_len = match k {
             DiagOffset::Main => min(self.rows(), self.cols()),
