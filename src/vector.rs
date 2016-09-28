@@ -3,7 +3,8 @@
 //! Currently contains all code
 //! relating to the vector linear algebra struct.
 
-use std::ops::{Mul, Add, Div, Sub, Index, IndexMut, Neg, MulAssign, DivAssign, SubAssign, AddAssign};
+use std::ops::{Mul, Add, Div, Sub, MulAssign, DivAssign, SubAssign, AddAssign};
+use std::ops::{Index, IndexMut, Neg};
 use libnum::{One, Zero, Float, FromPrimitive};
 use std::cmp::PartialEq;
 use std::fmt;
@@ -72,7 +73,6 @@ impl<T> Vector<T> {
     pub fn iter_mut(&mut self) -> IterMut<T> {
         self.mut_data().iter_mut()
     }
-
 }
 
 impl<T> Into<Vec<T>> for Vector<T> {
