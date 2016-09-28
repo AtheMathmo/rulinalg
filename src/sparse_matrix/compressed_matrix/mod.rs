@@ -2,12 +2,11 @@
 //!
 //! Used as a common interface for Csc and Csr matrices implementations
 
-mod compressed_matrix_utils;
 pub mod csc_matrix;
 pub mod csr_matrix;
+mod compressed_matrix_utils;
 
-use sparse_matrix::SparseMatrix;
-use sparse_matrix::triplet::Triplet;
+use sparse_matrix::{Triplet, SparseMatrix};
 
 /// Contract for compressed matrices implementation
 pub trait CompressedMatrix<T>: SparseMatrix<T> {

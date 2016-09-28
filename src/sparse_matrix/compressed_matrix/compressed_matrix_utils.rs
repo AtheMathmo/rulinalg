@@ -1,6 +1,6 @@
 use libnum::{One, Zero};
 
-use sparse_matrix::compressed_matrix::CompressedMatrix;
+use sparse_matrix::CompressedMatrix;
 
 fn expand_ptrs_indices_values<C>(ptrs: &[usize], mut closure: C)
     where C: FnMut(usize, usize)

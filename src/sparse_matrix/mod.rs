@@ -9,6 +9,11 @@
 pub mod compressed_matrix;
 pub mod triplet;
 
+pub use self::compressed_matrix::CompressedMatrix;
+pub use self::compressed_matrix::csc_matrix::CscMatrix;
+pub use self::compressed_matrix::csr_matrix::CsrMatrix;
+pub use self::triplet::Triplet;
+
 /// Contract for sparse matrices implementation
 pub trait SparseMatrix<T> {
     /// Constructs matrix with given diagonal.

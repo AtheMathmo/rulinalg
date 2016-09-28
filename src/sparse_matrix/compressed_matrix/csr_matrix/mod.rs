@@ -6,11 +6,8 @@ use std::mem::swap;
 
 use libnum::{One, Zero};
 
-use sparse_matrix::SparseMatrix;
-use sparse_matrix::compressed_matrix::CompressedMatrix;
+use sparse_matrix::{CompressedMatrix, CscMatrix, SparseMatrix, Triplet};
 use sparse_matrix::compressed_matrix::compressed_matrix_utils::*;
-use sparse_matrix::compressed_matrix::csc_matrix::CscMatrix;
-use sparse_matrix::triplet::Triplet;
 
 /// The `CsrMatrix` struct.
 ///
@@ -28,9 +25,7 @@ impl<T: Copy + One + Zero> CsrMatrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::sparse_matrix::SparseMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::CompressedMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
+    /// use rulinalg::sparse_matrix::{CompressedMatrix, CsrMatrix};
     ///
     /// let csc_mat = CsrMatrix::new(4, 4, vec![0, 0, 0], vec![0, 1, 2, 3, 3], vec![1, 2, 3]).to_csc();
     /// ```
@@ -47,9 +42,7 @@ impl<T: Copy + One + Zero> CsrMatrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::sparse_matrix::SparseMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::CompressedMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
+    /// use rulinalg::sparse_matrix::{CompressedMatrix, CsrMatrix, SparseMatrix};
     ///
     /// let _ = CsrMatrix::new(4, 4, vec![0, 0, 0], vec![0, 1, 2, 3, 3], vec![1, 2, 3]).transpose();
     /// ```
@@ -115,9 +108,7 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for CsrMatrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::sparse_matrix::SparseMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::CompressedMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
+    /// use rulinalg::sparse_matrix::{CompressedMatrix, CsrMatrix, SparseMatrix};
     ///
     /// let csr_mat = CsrMatrix::new(4, 4, vec![0, 1, 2], vec![0, 1, 2, 3], vec![1, 2, 3]);
     ///
@@ -161,9 +152,7 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CsrMatrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::sparse_matrix::SparseMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::CompressedMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
+    /// use rulinalg::sparse_matrix::{CompressedMatrix, CsrMatrix, SparseMatrix};
     ///
     /// let csr_mat = CsrMatrix::from_diag(&[1.0,2.0,3.0,4.0]);
     /// ```
@@ -181,9 +170,7 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CsrMatrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::sparse_matrix::SparseMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::CompressedMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
+    /// use rulinalg::sparse_matrix::{CompressedMatrix, CsrMatrix, SparseMatrix};
     ///
     /// let I = CsrMatrix::<f64>::identity(4);
     /// ```
@@ -210,9 +197,7 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CsrMatrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::sparse_matrix::SparseMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::CompressedMatrix;
-    /// use rulinalg::sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
+    /// use rulinalg::sparse_matrix::{CompressedMatrix, CsrMatrix, SparseMatrix};
     ///
     /// let _ = CsrMatrix::new(4, 4, vec![0, 0, 0], vec![0, 1, 2, 3, 3], vec![1, 2, 3]).transpose();
     /// ```
@@ -232,10 +217,7 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CsrMatrix<T> {
 
 #[cfg(test)]
 mod tests {
-    use sparse_matrix::compressed_matrix::CompressedMatrix;
-    use sparse_matrix::compressed_matrix::csc_matrix::CscMatrix;
-    use sparse_matrix::compressed_matrix::csr_matrix::CsrMatrix;
-    use sparse_matrix::SparseMatrix;
+    use sparse_matrix::{CompressedMatrix, CscMatrix, CsrMatrix, SparseMatrix};
 
     #[test]
     fn test_equality() {
