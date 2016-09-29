@@ -18,7 +18,10 @@ impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
             let pos = self.diag_pos as isize;
             self.diag_pos += self.matrix.row_stride() + 1;
             unsafe {
-                Some(self.matrix.$as_ptr().offset(pos).$to_item().unwrap())
+                Some(self.matrix.$as_ptr()
+                                .offset(pos)
+                                .$to_item()
+                                .expect("Diag iterator found a null pointer, this is a bug."))
             }
         } else {
             None
@@ -28,7 +31,10 @@ impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
     fn last(self) -> Option<Self::Item> {
         if self.diag_pos < self.diag_end {
             unsafe {
-                Some(self.matrix.$as_ptr().offset(self.diag_end as isize - 1).$to_item().unwrap())
+                Some(self.matrix.$as_ptr()
+                                .offset(self.diag_end as isize - 1)
+                                .$to_item()
+                                .expect("Diag iterator found a null pointer, this is a bug."))
             }
         } else {
             None
@@ -41,7 +47,10 @@ impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
             let pos = self.diag_pos as isize;
             self.diag_pos += self.matrix.row_stride() + 1;
             unsafe {
-                Some(self.matrix.$as_ptr().offset(pos).$to_item().unwrap())
+                Some(self.matrix.$as_ptr()
+                                .offset(pos)
+                                .$to_item()
+                                .expect("Diag iterator found a null pointer, this is a bug."))
             }
         } else {
             None
