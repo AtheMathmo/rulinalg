@@ -16,7 +16,7 @@ use error::{Error, ErrorKind};
 use utils;
 use vector::Vector;
 
-pub mod decomposition;
+mod decomposition;
 mod impl_ops;
 mod mat_mul;
 mod iter;
@@ -708,14 +708,12 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     where T: Any + Float,
           M: BaseMatrix<T>
 {
-    if m.is_empty() {
-        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."))
-    }
-
     let mut x = vec![T::zero(); y.size()];
 
     unsafe {
-        for i in (0..y.size()).rev() {
+        x[y.size() - 1] = y[y.size() - 1] / *m.get_unchecked([y.size() - 1, y.size() - 1]);
+
+        for i in (0..y.size() - 1).rev() {
             let mut holding_u_sum = T::zero();
             for j in (i + 1..y.size()).rev() {
                 holding_u_sum = holding_u_sum + *m.get_unchecked([i, j]) * x[j];
@@ -740,14 +738,11 @@ fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     where T: Any + Float,
           M: BaseMatrix<T>
 {
-    if m.is_empty() {
-        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."))
-    }
-
     let mut x = Vec::with_capacity(y.size());
 
     unsafe {
-        for (i, y_item) in y.data().iter().enumerate().take(y.size()) {
+        x.push(y[0] / *m.get_unchecked([0, 0]));
+        for (i, y_item) in y.data().iter().enumerate().take(y.size()).skip(1) {
             let mut holding_l_sum = T::zero();
             for (j, x_item) in x.iter().enumerate().take(i) {
                 holding_l_sum = holding_l_sum + *m.get_unchecked([i, j]) * *x_item;
