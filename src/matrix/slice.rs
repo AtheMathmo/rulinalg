@@ -190,26 +190,24 @@ pub trait BaseMatrix<T>: Sized {
     ///
     /// This function will never panic if the `Main` diagonal
     /// offset is used. 
-    fn iter_diag(&self, k: DiagOffset) -> Diagonal<T> {
-        let diag_len = match k {
-            DiagOffset::Main => min(self.rows(), self.cols()),
+    fn iter_diag(&self, k: DiagOffset) -> Diagonal<T, Self> {
+        let (diag_len, diag_start) = match k {
+            DiagOffset::Main => (min(self.rows(), self.cols()), 0),
             DiagOffset::Above(m) => {
                 assert!(m < self.cols(), "Offset diagonal is not within matrix dimensions.");
-                min(self.rows(), self.cols() - m)
+                (min(self.rows(), self.cols() - m), m)
             },
             DiagOffset::Below(m) => {
                 assert!(m < self.rows(), "Offset diagonal is not within matrix dimensions.");
-                min(self.rows() - m, self.cols())
+                (min(self.rows() - m, self.cols()), m * self.row_stride())
             },
         };
 
         Diagonal {
-            slice_start: self.as_ptr(),
-            diag_pos: 0,
-            diag_len: diag_len,
-            row_stride: self.row_stride() as isize,
-            diag_offset: k,
-            _marker: PhantomData::<&T>,
+            matrix: self,
+            diag_pos: diag_start,
+            diag_end: diag_start + (diag_len - 1) * self.row_stride() + diag_len,
+            _marker: PhantomData::<T>,
         }
     }
 
@@ -1057,26 +1055,26 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// This function will never panic if the `Main` diagonal
     /// offset is used. 
-    fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T> {
-        let diag_len = match k {
-            DiagOffset::Main => min(self.rows(), self.cols()),
+    fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
+        let (diag_len, diag_start) = match k {
+            DiagOffset::Main => (min(self.rows(), self.cols()), 0),
             DiagOffset::Above(m) => {
                 assert!(m < self.cols(), "Offset diagonal is not within matrix dimensions.");
-                min(self.rows(), self.cols() - m)
+                (min(self.rows(), self.cols() - m), m)
             },
             DiagOffset::Below(m) => {
                 assert!(m < self.rows(), "Offset diagonal is not within matrix dimensions.");
-                min(self.rows() - m, self.cols())
+                (min(self.rows() - m, self.cols()), m * self.row_stride())
             },
         };
 
+
+        let diag_end = diag_start + (diag_len - 1) * self.row_stride() + diag_len;
         DiagonalMut {
-            slice_start: self.as_mut_ptr(),
-            diag_pos: 0,
-            diag_len: diag_len,
-            row_stride: self.row_stride() as isize,
-            diag_offset: k,
-            _marker: PhantomData::<&mut T>,
+            matrix: self,
+            diag_pos: diag_start,
+            diag_end: diag_end,
+            _marker: PhantomData::<T>,
         }
     }
 
