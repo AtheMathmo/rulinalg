@@ -20,8 +20,7 @@
 //! ```
 
 use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Axes};
-use matrix::{DiagOffset, Diagonal};
-// use matrix::{DiagOffset, Diagonal, DiagonalMut};
+use matrix::{DiagOffset, Diagonal, DiagonalMut};
 use matrix::{back_substitution, forward_substitution};
 use vector::Vector;
 use utils;
@@ -208,7 +207,7 @@ pub trait BaseMatrix<T>: Sized {
             matrix: self,
             diag_pos: diag_start,
             diag_end: diag_start + (diag_len - 1) * self.row_stride() + diag_len,
-            _marker: PhantomData::<&T>,
+            _marker: PhantomData::<T>,
         }
     }
 
@@ -1027,57 +1026,57 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         }
     }
 
-//     /// Iterate over diagonal entries mutably
-//     ///
-//     /// # Examples
-//     ///
-//     /// ```
-//     /// # #[macro_use] extern crate rulinalg;
-//     ///
-//     /// # fn main() {
-//     /// use rulinalg::matrix::{Matrix, BaseMatrixMut, DiagOffset};
-//     ///
-//     /// let mut a = matrix![0, 1, 2;
-//     ///                 3, 4, 5;
-//     ///                 6, 7, 8];
-//     /// // Zero the sub-diagonal (sets 3 and 7 to 0)
-//     /// for sub_d in a.iter_diag_mut(DiagOffset::Below(1)) {
-//     ///     *sub_d = 0;   
-//     /// }
-//     ///
-//     /// println!("{}", a);
-//     /// # }
-//     /// ```
-//     ///
-//     /// # Panics
-//     ///
-//     /// If using `Above` or `Below` with an
-//     /// out-of-bounds offset this function will panic.
-//     ///
-//     /// This function will never panic if the `Main` diagonal
-//     /// offset is used. 
-//     fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T> {
-//         let diag_len = match k {
-//             DiagOffset::Main => min(self.rows(), self.cols()),
-//             DiagOffset::Above(m) => {
-//                 assert!(m < self.cols(), "Offset diagonal is not within matrix dimensions.");
-//                 min(self.rows(), self.cols() - m)
-//             },
-//             DiagOffset::Below(m) => {
-//                 assert!(m < self.rows(), "Offset diagonal is not within matrix dimensions.");
-//                 min(self.rows() - m, self.cols())
-//             },
-//         };
-// 
-//         DiagonalMut {
-//             slice_start: self.as_mut_ptr(),
-//             diag_pos: 0,
-//             diag_len: diag_len,
-//             row_stride: self.row_stride() as isize,
-//             diag_offset: k,
-//             _marker: PhantomData::<&mut T>,
-//         }
-//     }
+    /// Iterate over diagonal entries mutably
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg;
+    ///
+    /// # fn main() {
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut, DiagOffset};
+    ///
+    /// let mut a = matrix![0, 1, 2;
+    ///                 3, 4, 5;
+    ///                 6, 7, 8];
+    /// // Zero the sub-diagonal (sets 3 and 7 to 0)
+    /// for sub_d in a.iter_diag_mut(DiagOffset::Below(1)) {
+    ///     *sub_d = 0;   
+    /// }
+    ///
+    /// println!("{}", a);
+    /// # }
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// If using `Above` or `Below` with an
+    /// out-of-bounds offset this function will panic.
+    ///
+    /// This function will never panic if the `Main` diagonal
+    /// offset is used. 
+    fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
+        let (diag_len, diag_start) = match k {
+            DiagOffset::Main => (min(self.rows(), self.cols()), 0),
+            DiagOffset::Above(m) => {
+                assert!(m < self.cols(), "Offset diagonal is not within matrix dimensions.");
+                (min(self.rows(), self.cols() - m), m)
+            },
+            DiagOffset::Below(m) => {
+                assert!(m < self.rows(), "Offset diagonal is not within matrix dimensions.");
+                (min(self.rows() - m, self.cols()), m * self.row_stride())
+            },
+        };
+
+
+        let diag_end = diag_start + (diag_len - 1) * self.row_stride() + diag_len;
+        DiagonalMut {
+            matrix: self,
+            diag_pos: diag_start,
+            diag_end: diag_end,
+            _marker: PhantomData::<T>,
+        }
+    }
 
     /// Sets the underlying matrix data to the target data.
     ///

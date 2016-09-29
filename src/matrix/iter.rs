@@ -1,17 +1,16 @@
 use std::iter::{ExactSizeIterator, FromIterator};
 use std::slice;
 
-use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Diagonal};
-// use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Diagonal, DiagonalMut, DiagOffset};
+use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Diagonal, DiagonalMut};
 use super::slice::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
 
 
 
 macro_rules! impl_iter_diag (
-    ($diag:ident, $diag_type:ty, $to_item:ident) => (
+    ($diag:ident, $diag_base:ident, $diag_type:ty, $to_item:ident, $as_ptr:ident) => (
 
 /// Iterates over the rows in the matrix.
-impl<'a, T, M: BaseMatrix<T>> Iterator for $diag<'a, T, M> {
+impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
     type Item = $diag_type;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -19,7 +18,7 @@ impl<'a, T, M: BaseMatrix<T>> Iterator for $diag<'a, T, M> {
             let pos = self.diag_pos as isize;
             self.diag_pos += self.matrix.row_stride() + 1;
             unsafe {
-                Some(self.matrix.as_ptr().offset(pos).$to_item().unwrap())
+                Some(self.matrix.$as_ptr().offset(pos).$to_item().unwrap())
             }
         } else {
             None
@@ -29,7 +28,7 @@ impl<'a, T, M: BaseMatrix<T>> Iterator for $diag<'a, T, M> {
     fn last(self) -> Option<Self::Item> {
         if self.diag_pos < self.diag_end {
             unsafe {
-                Some(self.matrix.as_ptr().offset(self.diag_end as isize - 1).$to_item().unwrap())
+                Some(self.matrix.$as_ptr().offset(self.diag_end as isize - 1).$to_item().unwrap())
             }
         } else {
             None
@@ -42,7 +41,7 @@ impl<'a, T, M: BaseMatrix<T>> Iterator for $diag<'a, T, M> {
             let pos = self.diag_pos as isize;
             self.diag_pos += self.matrix.row_stride() + 1;
             unsafe {
-                Some(self.matrix.as_ptr().offset(pos).$to_item().unwrap())
+                Some(self.matrix.$as_ptr().offset(pos).$to_item().unwrap())
             }
         } else {
             None
@@ -62,14 +61,15 @@ impl<'a, T, M: BaseMatrix<T>> Iterator for $diag<'a, T, M> {
         }
     }
 }
+
+impl<'a, T, M: $diag_base<T>> ExactSizeIterator for $diag<'a, T, M> {}
+
     );
+
 );
 
-impl_iter_diag!(Diagonal, &'a T, as_ref);
-// impl_iter_diag!(DiagonalMut, &'a mut T, as_mut);
-
-impl<'a, T, M: BaseMatrix<T>> ExactSizeIterator for Diagonal<'a, T, M> {}
-// impl<'a, T> ExactSizeIterator for DiagonalMut<'a, T> {}
+impl_iter_diag!(Diagonal, BaseMatrix, &'a T, as_ref, as_ptr);
+impl_iter_diag!(DiagonalMut, BaseMatrixMut, &'a mut T, as_mut, as_mut_ptr);
 
 macro_rules! impl_iter_rows (
     ($rows:ident, $row_type:ty, $slice_from_parts:ident) => (
@@ -320,16 +320,16 @@ mod tests {
         let diags = vec![6.0];
         assert_eq!(a.iter_diag(DiagOffset::Below(2)).cloned().collect::<Vec<_>>(), diags);
 
-//         {
-//             let diags_iter_mut = a.iter_diag_mut(DiagOffset::Main);
-//             for d in diags_iter_mut {
-//                 *d = 1.0;
-//             }
-//         }
-// 
-//         for i in 0..3 {
-//             assert_eq!(a[[i,i]], 1.0);
-//         }
+        {
+            let diags_iter_mut = a.iter_diag_mut(DiagOffset::Main);
+            for d in diags_iter_mut {
+                *d = 1.0;
+            }
+        }
+
+        for i in 0..3 {
+            assert_eq!(a[[i,i]], 1.0);
+        }
     }
 
     #[test]
@@ -352,16 +352,16 @@ mod tests {
             assert_eq!(b.iter_diag(DiagOffset::Below(1)).cloned().collect::<Vec<_>>(), diags);
         }
 
-//         {
-//             let diags_iter_mut = a.iter_diag_mut(DiagOffset::Main);
-//             for d in diags_iter_mut {
-//                 *d = 1.0;
-//             }
-//         }
-// 
-//         for i in 0..3 {
-//             assert_eq!(a[[i,i]], 1.0);
-//         }
+        {
+            let diags_iter_mut = a.iter_diag_mut(DiagOffset::Main);
+            for d in diags_iter_mut {
+                *d = 1.0;
+            }
+        }
+
+        for i in 0..3 {
+            assert_eq!(a[[i,i]], 1.0);
+        }
     }
 
     #[test]

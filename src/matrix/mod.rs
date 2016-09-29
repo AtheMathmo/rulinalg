@@ -112,19 +112,17 @@ pub struct Diagonal<'a, T: 'a, M: 'a + BaseMatrix<T>> {
     matrix: &'a M,
     diag_pos: usize,
     diag_end: usize,
-    _marker: PhantomData<&'a T>,
+    _marker: PhantomData<T>,
 }
 
-// /// An iterator over the mutable diagonal elements of a matrix.
-// #[derive(Debug)]
-// pub struct DiagonalMut<'a, T: 'a> {
-//     slice_start: *mut T,
-//     diag_pos: usize,
-//     diag_len: usize,
-//     row_stride: isize,
-//     diag_offset: DiagOffset,
-//     _marker: PhantomData<&'a mut T>,
-// }
+/// An iterator over the mutable diagonal elements of a matrix.
+#[derive(Debug)]
+pub struct DiagonalMut<'a, T: 'a, M: 'a + BaseMatrixMut<T>> {
+    matrix: &'a mut M,
+    diag_pos: usize,
+    diag_end: usize,
+    _marker: PhantomData<T>,
+}
 
 impl<T> Matrix<T> {
     /// Constructor for Matrix struct.
