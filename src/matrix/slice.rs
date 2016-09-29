@@ -207,7 +207,7 @@ pub trait BaseMatrix<T>: Sized {
             matrix: self,
             diag_pos: diag_start,
             diag_end: diag_start + (diag_len - 1) * self.row_stride() + diag_len,
-            _marker: PhantomData::<T>,
+            _marker: PhantomData::<&T>,
         }
     }
 
@@ -1074,7 +1074,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
             matrix: self,
             diag_pos: diag_start,
             diag_end: diag_end,
-            _marker: PhantomData::<T>,
+            _marker: PhantomData::<&mut T>,
         }
     }
 
