@@ -23,7 +23,6 @@ use error::{Error, ErrorKind};
 
 use libnum::{One, Zero, Float, Signed};
 use libnum::{cast, abs};
-use epsilon::MachineEpsilon;
 
 impl<T> Matrix<T>
     where T: Any + Float
@@ -394,7 +393,7 @@ fn sort_svd<T>(mut b: Matrix<T>,
     (b, u, v)
 }
 
-impl<T: Any + Float + Signed + MachineEpsilon> Matrix<T> {
+impl<T: Any + Float + Signed> Matrix<T> {
     /// Singular Value Decomposition
     ///
     /// Computes the SVD using the Golub-Reinsch algorithm.
