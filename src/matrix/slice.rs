@@ -206,9 +206,8 @@ pub trait BaseMatrix<T>: Sized {
         };
 
         Diagonal {
-            matrix: self.sub_slice(diag_start, diag_len, diag_len),
+            square_matrix: self.sub_slice(diag_start, diag_len, diag_len),
             inner: 0..diag_len,
-            _marker: PhantomData::<&T>,
         }
     }
 
@@ -1072,9 +1071,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         };
 
         DiagonalMut {
-            matrix: self.sub_slice_mut(diag_start, diag_len, diag_len),
+            square_matrix: self.sub_slice_mut(diag_start, diag_len, diag_len),
             inner: 0..diag_len,
-            _marker: PhantomData::<&mut T>,
         }
     }
 

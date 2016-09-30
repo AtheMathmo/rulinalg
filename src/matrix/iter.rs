@@ -13,7 +13,7 @@ impl<'a, T> Iterator for $diag<'a, T> {
     type Item = $diag_type;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next().map(|i| unsafe { self.matrix.$get_unchecked([i, i]) })
+        self.inner.next().map(|i| unsafe { self.square_matrix.$get_unchecked([i, i]) })
     }
 
     fn last(mut self) -> Option<Self::Item> {
@@ -22,7 +22,7 @@ impl<'a, T> Iterator for $diag<'a, T> {
     }
     
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        self.inner.nth(n).map(|i| unsafe { self.matrix.$get_unchecked([i, i])})
+        self.inner.nth(n).map(|i| unsafe { self.square_matrix.$get_unchecked([i, i])})
     }
 
     fn count(self) -> usize {
