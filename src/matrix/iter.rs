@@ -77,8 +77,51 @@ impl<'a, T, M: $diag_base<T>> ExactSizeIterator for $diag<'a, T, M> {}
 
 );
 
-impl_iter_diag!(Diagonal, BaseMatrix, &'a T, as_ref, as_ptr);
-impl_iter_diag!(DiagonalMut, BaseMatrixMut, &'a mut T, as_mut, as_mut_ptr);
+macro_rules! impl_iter_diag2 (
+    ($diag:ident, $diag_base:ident, $diag_type:ty, $to_item:ident, $as_ptr:ident) => (
+
+impl<'a, T: 'a, M: 'a + $diag_base<T>> $diag<'a, T, M> {
+    unsafe fn get_unchecked(&mut self, i: usize) -> $diag_type {
+        self.matrix.$as_ptr()
+                   .offset((self.start + i * (self.matrix.row_stride() + 1)) as isize)
+                   .$to_item()
+                   .expect("Diag iterator found a null pointer, this is a bug.") 
+    }
+}
+
+/// Iterates over the rows in the matrix.
+impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
+    type Item = $diag_type;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next().map(|i| unsafe { self.get_unchecked(i) })
+    }
+
+    fn last(mut self) -> Option<Self::Item> {
+        self.inner.clone().last().map(|i| unsafe { self.get_unchecked(i)})
+    }
+    
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.inner.nth(n).map(|i| unsafe { self.get_unchecked(i)})
+    }
+
+    fn count(self) -> usize {
+        self.inner.count()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
+}
+
+impl<'a, T, M: $diag_base<T>> ExactSizeIterator for $diag<'a, T, M> {}
+
+    );
+
+);
+
+impl_iter_diag2!(Diagonal, BaseMatrix, &'a T, as_ref, as_ptr);
+impl_iter_diag2!(DiagonalMut, BaseMatrixMut, &'a mut T, as_mut, as_mut_ptr);
 
 macro_rules! impl_iter_rows (
     ($rows:ident, $row_type:ty, $slice_from_parts:ident) => (
@@ -140,14 +183,13 @@ impl<'a, T> Iterator for $rows<'a, T> {
         (self.slice_rows - self.row_pos, Some(self.slice_rows - self.row_pos))
     }
 }
+
+impl<'a, T> ExactSizeIterator for $rows<'a, T> {}
     );
 );
 
 impl_iter_rows!(Rows, &'a [T], from_raw_parts);
 impl_iter_rows!(RowsMut, &'a mut [T], from_raw_parts_mut);
-
-impl<'a, T> ExactSizeIterator for Rows<'a, T> {}
-impl<'a, T> ExactSizeIterator for RowsMut<'a, T> {}
 
 /// Creates a `Matrix` from an iterator over slices.
 ///

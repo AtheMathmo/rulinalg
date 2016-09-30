@@ -110,8 +110,8 @@ pub enum DiagOffset {
 #[derive(Debug)]
 pub struct Diagonal<'a, T: 'a, M: 'a + BaseMatrix<T>> {
     matrix: &'a M,
-    diag_pos: usize,
-    diag_end: usize,
+    start: usize,
+    inner: ::std::ops::Range<usize>,
     _marker: PhantomData<&'a T>,
 }
 
@@ -119,8 +119,8 @@ pub struct Diagonal<'a, T: 'a, M: 'a + BaseMatrix<T>> {
 #[derive(Debug)]
 pub struct DiagonalMut<'a, T: 'a, M: 'a + BaseMatrixMut<T>> {
     matrix: &'a mut M,
-    diag_pos: usize,
-    diag_end: usize,
+    start: usize,
+    inner: ::std::ops::Range<usize>,
     _marker: PhantomData<&'a mut T>,
 }
 
