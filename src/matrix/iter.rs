@@ -6,14 +6,18 @@ use super::slice::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
 
 
 macro_rules! impl_iter_diag (
-    ($diag:ident, $diag_type:ty, $get_unchecked:ident) => (
+    ($diag:ident, $diag_type:ty, $to_item:ident, $as_ptr:ident) => (
 
 /// Iterates over the rows in the matrix.
 impl<'a, T> Iterator for $diag<'a, T> {
     type Item = $diag_type;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next().map(|i| unsafe { self.square_matrix.$get_unchecked([i, i]) })
+        self.inner.next().map(|i| unsafe {
+            self.square_matrix.$as_ptr()
+                .offset((i * (self.square_matrix.row_stride() + 1)) as isize)
+                .$to_item().expect("Diag iterator found a null pointer, this is a bug.")
+        })
     }
 
     fn last(mut self) -> Option<Self::Item> {
@@ -22,7 +26,11 @@ impl<'a, T> Iterator for $diag<'a, T> {
     }
     
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        self.inner.nth(n).map(|i| unsafe { self.square_matrix.$get_unchecked([i, i])})
+        self.inner.nth(n).map(|i| unsafe {
+            self.square_matrix.$as_ptr()
+                .offset((i * (self.square_matrix.row_stride() + 1)) as isize)
+                .$to_item().expect("Diag iterator found a null pointer, this is a bug.")
+        })
     }
 
     fn count(self) -> usize {
@@ -40,8 +48,9 @@ impl<'a, T> ExactSizeIterator for $diag<'a, T> {}
 
 );
 
-impl_iter_diag!(Diagonal, &'a T, get_unchecked);
-impl_iter_diag!(DiagonalMut, &'a mut T, get_unchecked_mut);
+impl_iter_diag!(Diagonal, &'a T, as_ref, as_ptr);
+impl_iter_diag!(DiagonalMut, &'a mut T, as_mut, as_mut_ptr);
+
 
 macro_rules! impl_iter_rows (
     ($rows:ident, $row_type:ty, $slice_from_parts:ident) => (

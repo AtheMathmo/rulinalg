@@ -66,9 +66,7 @@ pub trait BaseMatrix<T>: Sized {
     }
 
     /// Get a reference to a point in the matrix without bounds checking.
-    unsafe fn get_unchecked<'a>(&self, index: [usize; 2]) -> &'a T 
-        where T: 'a
-    {
+    unsafe fn get_unchecked(&self, index: [usize; 2]) -> &T {
         &*(self.as_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
     }
 
@@ -850,9 +848,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     }
 
     /// Get a mutable reference to a point in the matrix without bounds checks.
-    unsafe fn get_unchecked_mut<'a>(&mut self, index: [usize; 2]) -> &'a mut T
-        where T: 'a
-    {
+    unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut T {
         &mut *(self.as_mut_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
     }
 
