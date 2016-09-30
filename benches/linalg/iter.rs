@@ -24,12 +24,7 @@ fn mat_diag_manual_10_50(b: &mut Bencher) {
     let a = Matrix::new(10, 50, vec![2.0;500]);
 
     b.iter(|| {
-        let mut d = black_box( Vec::with_capacity(10));
-        for i in 0..10 {
-            unsafe {
-                black_box(d.push(*a.get_unchecked([i,i])));
-            }
-        }
+        unsafe { black_box((0..10).map(|i| *a.get_unchecked([i,i])).collect::<Vec<_>>()); }
     });
 }
 
@@ -49,11 +44,6 @@ fn mat_diag_manual_100_500(b: &mut Bencher) {
     let a = Matrix::new(100, 500, vec![2.0;50000]);
 
     b.iter(|| {
-        let mut d = black_box( Vec::with_capacity(100));
-        for i in 0..100 {
-            unsafe {
-                black_box(d.push(*a.get_unchecked([i,i])));
-            }
-        }
+        unsafe { black_box((0..100).map(|i| *a.get_unchecked([i,i])).collect::<Vec<_>>()); }
     });
 }

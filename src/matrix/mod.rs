@@ -108,20 +108,16 @@ pub enum DiagOffset {
 
 /// An iterator over the diagonal elements of a matrix.
 #[derive(Debug)]
-pub struct Diagonal<'a, T: 'a, M: 'a + BaseMatrix<T>> {
-    matrix: &'a M,
-    diag_pos: usize,
-    diag_end: usize,
-    _marker: PhantomData<&'a T>,
+pub struct Diagonal<'a, T: 'a> {
+    square_matrix: MatrixSlice<'a, T>,
+    inner: ::std::ops::Range<usize>,
 }
 
 /// An iterator over the mutable diagonal elements of a matrix.
 #[derive(Debug)]
-pub struct DiagonalMut<'a, T: 'a, M: 'a + BaseMatrixMut<T>> {
-    matrix: &'a mut M,
-    diag_pos: usize,
-    diag_end: usize,
-    _marker: PhantomData<&'a mut T>,
+pub struct DiagonalMut<'a, T: 'a> {
+    square_matrix: MatrixSliceMut<'a, T>,
+    inner: ::std::ops::Range<usize>,
 }
 
 impl<T> Matrix<T> {

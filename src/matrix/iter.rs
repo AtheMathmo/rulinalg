@@ -5,80 +5,52 @@ use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Diagonal, Diagon
 use super::slice::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
 
 
-
 macro_rules! impl_iter_diag (
-    ($diag:ident, $diag_base:ident, $diag_type:ty, $to_item:ident, $as_ptr:ident) => (
+    ($diag:ident, $diag_type:ty, $to_item:ident, $as_ptr:ident) => (
 
 /// Iterates over the rows in the matrix.
-impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
+impl<'a, T> Iterator for $diag<'a, T> {
     type Item = $diag_type;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.diag_pos < self.diag_end {
-            let pos = self.diag_pos as isize;
-            self.diag_pos += self.matrix.row_stride() + 1;
-            unsafe {
-                Some(self.matrix.$as_ptr()
-                                .offset(pos)
-                                .$to_item()
-                                .expect("Diag iterator found a null pointer, this is a bug."))
-            }
-        } else {
-            None
-        }
+        self.inner.next().map(|i| unsafe {
+            self.square_matrix.$as_ptr()
+                .offset((i * (self.square_matrix.row_stride() + 1)) as isize)
+                .$to_item().expect("Diag iterator found a null pointer, this is a bug.")
+        })
     }
 
-    fn last(self) -> Option<Self::Item> {
-        if self.diag_pos < self.diag_end {
-            unsafe {
-                Some(self.matrix.$as_ptr()
-                                .offset(self.diag_end as isize - 1)
-                                .$to_item()
-                                .expect("Diag iterator found a null pointer, this is a bug."))
-            }
-        } else {
-            None
-        }
+    fn last(mut self) -> Option<Self::Item> {
+        let n = self.inner.len() - 1;
+        self.nth(n)
     }
     
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        self.diag_pos += n * (self.matrix.row_stride() + 1);
-        if self.diag_pos < self.diag_end {
-            let pos = self.diag_pos as isize;
-            self.diag_pos += self.matrix.row_stride() + 1;
-            unsafe {
-                Some(self.matrix.$as_ptr()
-                                .offset(pos)
-                                .$to_item()
-                                .expect("Diag iterator found a null pointer, this is a bug."))
-            }
-        } else {
-            None
-        }
+        self.inner.nth(n).map(|i| unsafe {
+            self.square_matrix.$as_ptr()
+                .offset((i * (self.square_matrix.row_stride() + 1)) as isize)
+                .$to_item().expect("Diag iterator found a null pointer, this is a bug.")
+        })
     }
 
     fn count(self) -> usize {
-        self.size_hint().0
+        self.inner.count()
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        if self.diag_pos < self.diag_end {
-            let s = (self.diag_end - self.diag_pos) / (self.matrix.row_stride() + 1) + 1;
-            (s, Some(s))
-        } else {
-            (0, Some(0))
-        }
+        self.inner.size_hint()
     }
 }
 
-impl<'a, T, M: $diag_base<T>> ExactSizeIterator for $diag<'a, T, M> {}
+impl<'a, T> ExactSizeIterator for $diag<'a, T> {}
 
     );
 
 );
 
-impl_iter_diag!(Diagonal, BaseMatrix, &'a T, as_ref, as_ptr);
-impl_iter_diag!(DiagonalMut, BaseMatrixMut, &'a mut T, as_mut, as_mut_ptr);
+impl_iter_diag!(Diagonal, &'a T, as_ref, as_ptr);
+impl_iter_diag!(DiagonalMut, &'a mut T, as_mut, as_mut_ptr);
+
 
 macro_rules! impl_iter_rows (
     ($rows:ident, $row_type:ty, $slice_from_parts:ident) => (
@@ -140,14 +112,13 @@ impl<'a, T> Iterator for $rows<'a, T> {
         (self.slice_rows - self.row_pos, Some(self.slice_rows - self.row_pos))
     }
 }
+
+impl<'a, T> ExactSizeIterator for $rows<'a, T> {}
     );
 );
 
 impl_iter_rows!(Rows, &'a [T], from_raw_parts);
 impl_iter_rows!(RowsMut, &'a mut [T], from_raw_parts_mut);
-
-impl<'a, T> ExactSizeIterator for Rows<'a, T> {}
-impl<'a, T> ExactSizeIterator for RowsMut<'a, T> {}
 
 /// Creates a `Matrix` from an iterator over slices.
 ///
