@@ -1,6 +1,6 @@
 [package]
 name = "rulinalg"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["AtheMathmo"]
 
 description = "A linear algebra library."

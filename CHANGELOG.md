@@ -2,6 +2,30 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
+# 0.3.4
+
+### New Contributors
+
+- [andrewcsmith](https://github.com/andrewcsmith)
+- [nwtnian](https://github.com/nwtnian)
+
+### Breaking Changes
+
+- Removed the `MachineEpsilon` trait. The same functionality
+now exists in [num](https://github.com/rust-num/num).
+
+### Features
+
+- Implemented `From`/`Into` for traits for `Vec` and `Vector`.
+
+### Bug Fixes
+
+- `det()` now returns `0` instead of panicking if `Matrix` is singular.
+
+### Minor Changes
+
+- None
+
 ## 0.3.3
 
 ### New Contributors
