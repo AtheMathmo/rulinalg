@@ -1,5 +1,5 @@
 //! # The rulinalg crate.
-//! 
+//!
 //! A crate that provides high-dimensional linear algebra
 //! implemented entirely in Rust.
 //!
@@ -40,7 +40,7 @@
 //!
 //! The matrices are stored in row-major order. This means in the example above the top
 //! row will be [1,2,3].
-//! 
+//!
 //! We can perform operations on matrices.
 //!
 //! ```
@@ -97,10 +97,6 @@ pub mod convert;
 pub mod error;
 pub mod utils;
 pub mod vector;
-
-// Remove this module once epsilon() makes it into the num crate.
-mod epsilon;
-pub use epsilon::MachineEpsilon;
 
 /// Trait for linear algebra metrics.
 ///
