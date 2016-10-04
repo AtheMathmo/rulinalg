@@ -126,6 +126,45 @@ impl<T> Matrix<T> {
         }
     }
 
+    /// Constructor for Matrix struct that takes a function `f`
+    /// and constructs a new matrix such that `A_ij = f(i, j)`,
+    /// where `i` is the row index and `j` the column index.
+    ///
+    /// Requires both the row and column dimensions
+    /// as well as a generating function.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    ///
+    /// // Let's assume you have an array of "things" for
+    /// // which you want to generate a distance matrix:
+    /// let things: [i32; 3] = [1, 2, 3];
+    /// let distances: Matrix<f64> = Matrix::from_fn(things.len(), things.len(), |col, row| {
+    ///     (things[col] - things[row]).abs().into()
+    /// });
+    ///
+    /// assert_eq!(distances.rows(), 3);
+    /// assert_eq!(distances.cols(), 3);
+    /// assert_eq!(distances.data(), &vec![
+    ///     0.0, 1.0, 2.0,
+    ///     1.0, 0.0, 1.0,
+    ///     2.0, 1.0, 0.0,
+    /// ]);
+    /// ```
+    pub fn from_fn<F>(rows: usize, cols: usize, mut f: F) -> Matrix<T>
+        where F: FnMut(usize, usize) -> T
+    {
+        let mut data = Vec::with_capacity(rows * cols);
+        for row in 0..rows {
+            for col in 0..cols {
+                data.push(f(col, row));
+            }
+        }
+        Matrix::new(rows, cols, data)
+    }
+
     /// Returns a non-mutable reference to the underlying data.
     pub fn data(&self) -> &Vec<T> {
         &self.data
@@ -503,7 +542,11 @@ impl<T: Any + Float> Matrix<T> {
             (self[[0, 1]] * self[[1, 0]] * self[[2, 2]]) -
             (self[[0, 2]] * self[[1, 1]] * self[[2, 0]])
         } else {
-            let (l, u, p) = self.lup_decomp().expect("Could not compute LUP decomposition.");
+            let (l, u, p) = match self.lup_decomp() {
+                Ok(x) => x,
+                Err(ref e) if *e.kind() == ErrorKind::DivByZero => return T::zero(),
+                _ => { panic!("Could not compute LUP decomposition."); }
+            };
 
             let mut d = T::one();
 
@@ -607,12 +650,14 @@ impl<T: fmt::Display> fmt::Display for Matrix<T> {
         }
         let width = max_datum_width;
 
-        fn write_row<T: fmt::Display>(f: &mut fmt::Formatter,
-                                      row: &[T],
-                                      left_delimiter: &str,
-                                      right_delimiter: &str,
-                                      width: usize)
-                                      -> Result<(), fmt::Error> {
+        fn write_row<T>(f: &mut fmt::Formatter,
+                        row: &[T],
+                        left_delimiter: &str,
+                        right_delimiter: &str,
+                        width: usize)
+                        -> Result<(), fmt::Error>
+            where T: fmt::Display
+        {
             try!(write!(f, "{}", left_delimiter));
             for (index, datum) in row.iter().enumerate() {
                 match f.precision() {
@@ -661,7 +706,7 @@ impl<T: fmt::Display> fmt::Display for Matrix<T> {
 /// Back substitution
 fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     where T: Any + Float,
-          M: BaseMatrix<T>,
+          M: BaseMatrix<T>
 {
     if m.is_empty() {
         return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."))
@@ -677,8 +722,8 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
             }
 
             let diag = *m.get_unchecked([i, i]);
-            if diag.abs() < T::min_positive_value() + 
-                T::min_positive_value() 
+            if diag.abs() < T::min_positive_value() +
+                T::min_positive_value()
             {
                 return Err(Error::new(ErrorKind::AlgebraFailure,
                                       "Linear system cannot be solved (matrix is singular)."));
@@ -693,7 +738,7 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
 /// forward substitution
 fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     where T: Any + Float,
-          M: BaseMatrix<T>,
+          M: BaseMatrix<T>
 {
     if m.is_empty() {
         return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."))
@@ -724,7 +769,7 @@ fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
 /// Computes the parity of a permutation matrix.
 fn parity<T, M>(m: &M) -> T
     where T: Any + Float,
-          M: BaseMatrix<T>,
+          M: BaseMatrix<T>
 {
     let mut visited = vec![false; m.rows()];
     let mut sgn = T::one();
@@ -748,7 +793,6 @@ fn parity<T, M>(m: &M) -> T
     sgn
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::super::vector::Vector;
@@ -771,6 +815,19 @@ mod tests {
     fn test_new_mat_bad_data() {
         let a = vec![2.0; 7];
         let _ = Matrix::new(3, 3, a);
+    }
+
+    #[test]
+    fn test_new_mat_from_fn() {
+      let mut counter = 0;
+      let m : Matrix<usize> = Matrix::from_fn(3, 2, |_, _| {
+        let value = counter;
+        counter += 1;
+        value
+      });
+      assert!(m.rows() == 3);
+      assert!(m.cols() == 2);
+      assert!(m.data == vec![0, 1, 2, 3, 4, 5]);
     }
 
     #[test]
@@ -903,6 +960,15 @@ mod tests {
         println!("det is {0}", f);
         let error = abs(f - 99.);
         assert!(error < 1e-10);
+
+        let g: Matrix<f64> = matrix!(
+            1., 2., 3., 4.;
+            0., 0., 0., 0.;
+            0., 0., 0., 0.;
+            0., 0., 0., 0.
+        );
+        let h = g.det();
+        assert_eq!(h, 0.);
     }
 
     #[test]

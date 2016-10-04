@@ -75,6 +75,12 @@ impl<T> Vector<T> {
 
 }
 
+impl<T> Into<Vec<T>> for Vector<T> {
+    fn into(self) -> Vec<T> {
+        self.data
+    }
+}
+
 impl<T> IntoIterator for Vector<T> {
     type Item = T;
     type IntoIter = IntoIter<T>;
@@ -83,7 +89,6 @@ impl<T> IntoIterator for Vector<T> {
         self.data.into_iter()
     }
 }
-
 
 impl<'a, T> IntoIterator for &'a Vector<T> {
     type Item = &'a T;
@@ -690,7 +695,7 @@ impl<T> Index<usize> for Vector<T> {
 impl<T> IndexMut<usize> for Vector<T> {
     fn index_mut(&mut self, idx: usize) -> &mut T {
         assert!(idx < self.size);
-        unsafe { self.data.get_unchecked_mut(idx) } 
+        unsafe { self.data.get_unchecked_mut(idx) }
     }
 }
 

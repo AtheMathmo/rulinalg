@@ -102,8 +102,9 @@ pub fn unrolled_sum<T>(mut xs: &[T]) -> T
 /// // Will print a vector of `7`s.
 /// println!("{:?}", a);
 /// ```
-pub fn in_place_vec_bin_op<F, T: Copy>(mut u: &mut [T], v: &[T], mut f: F)
-    where F: FnMut(&mut T, &T)
+pub fn in_place_vec_bin_op<F, T>(mut u: &mut [T], v: &[T], mut f: F)
+    where F: FnMut(&mut T, &T),
+          T: Copy
 {
     debug_assert_eq!(u.len(), v.len());
     let len = cmp::min(u.len(), v.len());
@@ -131,8 +132,9 @@ pub fn in_place_vec_bin_op<F, T: Copy>(mut u: &mut [T], v: &[T], mut f: F)
 /// // Will print a vector of `7`s.
 /// println!("{:?}", a);
 /// ```
-pub fn vec_bin_op<F, T: Copy>(u: &[T], v: &[T], f: F) -> Vec<T>
-    where F: Fn(T, T) -> T
+pub fn vec_bin_op<F, T>(u: &[T], v: &[T], f: F) -> Vec<T>
+    where F: Fn(T, T) -> T,
+          T: Copy
 {
     debug_assert_eq!(u.len(), v.len());
     let len = cmp::min(u.len(), v.len());
@@ -240,7 +242,9 @@ pub fn ele_div<T: Copy + Div<T, Output = T>>(u: &[T], v: &[T]) -> Vec<T> {
 /// assert_eq!(c.0, 3);
 /// assert_eq!(c.1, 4.0);
 /// ```
-pub fn argmax<T: Copy + PartialOrd>(u: &[T]) -> (usize, T) {
+pub fn argmax<T>(u: &[T]) -> (usize, T)
+    where T: Copy + PartialOrd
+{
     assert!(u.len() != 0);
 
     let mut max_index = 0;
@@ -270,7 +274,9 @@ pub fn argmax<T: Copy + PartialOrd>(u: &[T]) -> (usize, T) {
 /// assert_eq!(c.0, 1);
 /// assert_eq!(c.1, 2.0);
 /// ```
-pub fn argmin<T: Copy + PartialOrd>(u: &[T]) -> (usize, T) {
+pub fn argmin<T>(u: &[T]) -> (usize, T)
+    where T: Copy + PartialOrd
+{
     assert!(u.len() != 0);
 
     let mut min_index = 0;
@@ -299,7 +305,9 @@ pub fn argmin<T: Copy + PartialOrd>(u: &[T]) -> (usize, T) {
 /// let c = utils::find(&a, 3.0);
 /// assert_eq!(c, 2);
 /// ```
-pub fn find<T: PartialEq>(p: &[T], u: T) -> usize {
+pub fn find<T>(p: &[T], u: T) -> usize
+    where T: PartialOrd
+{
     for (i, v) in p.iter().enumerate() {
         if *v == u {
             return i;
