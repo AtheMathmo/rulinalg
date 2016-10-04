@@ -206,7 +206,7 @@ pub trait BaseMatrix<T>: Sized {
         Diagonal {
             matrix: self,
             diag_pos: diag_start,
-            diag_end: diag_start + (diag_len - 1) * self.row_stride() + diag_len,
+            diag_end: diag_start + diag_len.saturating_sub(1) * self.row_stride() + diag_len,
             _marker: PhantomData::<&T>,
         }
     }

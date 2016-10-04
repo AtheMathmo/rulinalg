@@ -286,7 +286,7 @@ impl<'a, T> IntoIterator for &'a mut MatrixSliceMut<'a, T> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{DiagOffset, MatrixSlice, MatrixSliceMut};
+    use super::super::{DiagOffset, Matrix, MatrixSlice, MatrixSliceMut};
     use super::super::slice::{BaseMatrix, BaseMatrixMut};
 
     #[test]
@@ -339,6 +339,13 @@ mod tests {
         for i in 0..3 {
             assert_eq!(a[[i,i]], 1.0);
         }
+    }
+
+    #[test]
+    fn test_empty_matrix_diag() {
+        let a = Matrix::<f32>::new(0, 0, vec![]);
+
+        assert_eq!(None, a.iter_diag(DiagOffset::Main).next());
     }
 
     #[test]
