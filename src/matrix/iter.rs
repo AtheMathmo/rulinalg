@@ -343,7 +343,7 @@ mod tests {
 
     #[test]
     fn test_empty_matrix_diag() {
-        let a = Matrix::<f32>::new(0, 0, vec![]);
+        let a : Matrix<f32> = matrix![];
 
         assert_eq!(None, a.iter_diag(DiagOffset::Main).next());
     }
