@@ -949,8 +949,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
 
         unsafe {
             for i in 0..self.rows() {
-                let a_ptr : *mut T = self.get_unchecked_mut([i, a]);
-                let b_ptr : *mut T = self.get_unchecked_mut([i, b]);
+                let a_ptr: *mut T = self.get_unchecked_mut([i, a]);
+                let b_ptr: *mut T = self.get_unchecked_mut([i, b]);
                 ptr::swap(a_ptr, b_ptr);
             }
         }

@@ -720,9 +720,7 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
             }
 
             let diag = *m.get_unchecked([i, i]);
-            if diag.abs() < T::min_positive_value() +
-                T::min_positive_value()
-            {
+            if diag.abs() < T::min_positive_value() + T::min_positive_value() {
                 return Err(Error::new(ErrorKind::AlgebraFailure,
                                       "Linear system cannot be solved (matrix is singular)."));
             }
@@ -814,15 +812,15 @@ mod tests {
 
     #[test]
     fn test_new_mat_from_fn() {
-      let mut counter = 0;
-      let m : Matrix<usize> = Matrix::from_fn(3, 2, |_, _| {
-        let value = counter;
-        counter += 1;
-        value
-      });
-      assert!(m.rows() == 3);
-      assert!(m.cols() == 2);
-      assert!(m.data == vec![0, 1, 2, 3, 4, 5]);
+        let mut counter = 0;
+        let m: Matrix<usize> = Matrix::from_fn(3, 2, |_, _| {
+            let value = counter;
+            counter += 1;
+            value
+        });
+        assert!(m.rows() == 3);
+        assert!(m.cols() == 2);
+        assert!(m.data == vec![0, 1, 2, 3, 4, 5]);
     }
 
     #[test]
