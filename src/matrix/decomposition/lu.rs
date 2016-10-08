@@ -3,14 +3,10 @@ use error::{Error, ErrorKind};
 use utils;
 
 use std::any::Any;
-use std::ops::{Mul, Add, Div, Sub, Neg};
 
-use libnum::{One, Zero};
+use libnum::{Float};
 
-impl<T> Matrix<T> where T: Any + Copy + One + Zero + Neg<Output=T> +
-                           Add<T, Output=T> + Mul<T, Output=T> +
-                           Sub<T, Output=T> + Div<T, Output=T> +
-                           PartialOrd
+impl<T> Matrix<T> where T: Any + Float
 {
 
     /// Computes L, U, and P for LUP decomposition.
