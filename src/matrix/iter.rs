@@ -1,4 +1,5 @@
 use std::iter::{ExactSizeIterator, FromIterator};
+use std::mem;
 use std::slice;
 
 use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Diagonal, DiagonalMut};
@@ -7,9 +8,9 @@ use super::slice::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
 
 
 macro_rules! impl_iter_diag (
-    ($diag:ident, $diag_base:ident, $diag_type:ty, $to_item:ident, $as_ptr:ident) => (
+    ($diag:ident, $diag_base:ident, $diag_type:ty, $as_ptr:ident) => (
 
-/// Iterates over the rows in the matrix.
+/// Iterates over the diagonals in the matrix.
 impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
     type Item = $diag_type;
 
@@ -18,10 +19,8 @@ impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
             let pos = self.diag_pos as isize;
             self.diag_pos += self.matrix.row_stride() + 1;
             unsafe {
-                Some(self.matrix.$as_ptr()
-                                .offset(pos)
-                                .$to_item()
-                                .expect("Diag iterator found a null pointer, this is a bug."))
+                Some(mem::transmute(self.matrix.$as_ptr()
+                            .offset(pos)))
             }
         } else {
             None
@@ -31,10 +30,8 @@ impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
     fn last(self) -> Option<Self::Item> {
         if self.diag_pos < self.diag_end {
             unsafe {
-                Some(self.matrix.$as_ptr()
-                                .offset(self.diag_end as isize - 1)
-                                .$to_item()
-                                .expect("Diag iterator found a null pointer, this is a bug."))
+                Some(mem::transmute(self.matrix.$as_ptr()
+                            .offset(self.diag_end as isize - 1)))
             }
         } else {
             None
@@ -47,10 +44,8 @@ impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
             let pos = self.diag_pos as isize;
             self.diag_pos += self.matrix.row_stride() + 1;
             unsafe {
-                Some(self.matrix.$as_ptr()
-                                .offset(pos)
-                                .$to_item()
-                                .expect("Diag iterator found a null pointer, this is a bug."))
+                Some(mem::transmute(self.matrix.$as_ptr()
+                            .offset(pos)))
             }
         } else {
             None
@@ -77,8 +72,8 @@ impl<'a, T, M: $diag_base<T>> ExactSizeIterator for $diag<'a, T, M> {}
 
 );
 
-impl_iter_diag!(Diagonal, BaseMatrix, &'a T, as_ref, as_ptr);
-impl_iter_diag!(DiagonalMut, BaseMatrixMut, &'a mut T, as_mut, as_mut_ptr);
+impl_iter_diag!(Diagonal, BaseMatrix, &'a T, as_ptr);
+impl_iter_diag!(DiagonalMut, BaseMatrixMut, &'a mut T, as_mut_ptr);
 
 macro_rules! impl_iter_rows (
     ($rows:ident, $row_type:ty, $slice_from_parts:ident) => (
