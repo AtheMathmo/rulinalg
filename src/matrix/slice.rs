@@ -171,12 +171,12 @@ pub trait BaseMatrix<T>: Sized {
     /// # #[macro_use] extern crate rulinalg;
     ///
     /// # fn main() {
-    /// use rulinalg::matrix::{Matrix, BaseMatrix, DiagOffset};
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = matrix![0, 1, 2;
     ///                 3, 4, 5;
     ///                 6, 7, 8];
-    /// let super_diag = a.iter_diag(DiagOffset::Above(1))
+    /// let super_diag = a.iter_diag(1)
     ///                     .cloned()
     ///                     .collect::<Vec<_>>();
     /// assert_eq!(vec![1, 5], super_diag);
@@ -190,8 +190,9 @@ pub trait BaseMatrix<T>: Sized {
     ///
     /// This function will never panic if the `Main` diagonal
     /// offset is used. 
-    fn iter_diag(&self, k: DiagOffset) -> Diagonal<T, Self> {
-        let (diag_len, diag_start) = match k {
+    fn iter_diag<D>(&self, k: D) -> Diagonal<T, Self>
+        where D: Into<DiagOffset> {
+        let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
             DiagOffset::Above(m) => {
                 assert!(m < self.cols(), "Offset diagonal is not within matrix dimensions.");
@@ -1040,7 +1041,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///                 3, 4, 5;
     ///                 6, 7, 8];
     /// // Zero the sub-diagonal (sets 3 and 7 to 0)
-    /// for sub_d in a.iter_diag_mut(DiagOffset::Below(1)) {
+    /// for sub_d in a.iter_diag_mut(-1) {
     ///     *sub_d = 0;   
     /// }
     ///
@@ -1055,8 +1056,9 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// This function will never panic if the `Main` diagonal
     /// offset is used. 
-    fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
-        let (diag_len, diag_start) = match k {
+    fn iter_diag_mut<D>(&mut self, k: D) -> DiagonalMut<T, Self>
+        where D: Into<DiagOffset> {
+        let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
             DiagOffset::Above(m) => {
                 assert!(m < self.cols(), "Offset diagonal is not within matrix dimensions.");

@@ -96,7 +96,7 @@ pub struct RowsMut<'a, T: 'a> {
 }
 
 /// Diagonal offset (used by Diagonal iterator).
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum DiagOffset {
     /// The main diagonal of the matrix.
     Main,
