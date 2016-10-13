@@ -171,22 +171,28 @@ pub trait BaseMatrix<T>: Sized {
     /// # #[macro_use] extern crate rulinalg;
     ///
     /// # fn main() {
-    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    /// use rulinalg::matrix::{DiagOffset, Matrix, BaseMatrix};
     ///
     /// let a = matrix![0, 1, 2;
     ///                 3, 4, 5;
     ///                 6, 7, 8];
-    /// let super_diag = a.iter_diag(1)
-    ///                     .cloned()
-    ///                     .collect::<Vec<_>>();
-    /// assert_eq!(vec![1, 5], super_diag);
+    /// // Print super diag [1, 5]
+    /// for d in a.iter_diag(DiagOffset::Above(1)) {
+    ///     println!("{}", d);
+    /// }
+    ///
+    /// // Print sub diag [3, 7]
+    /// // Equivalent to `iter_diag(DiagOffset::Below(-1))`
+    /// for d in a.iter_diag(-1) {
+    ///     println!("{}", d);
+    /// }
     /// # }
     /// ```
     ///
     /// # Panics
     ///
-    /// If using `Above` or `Below` with an
-    /// out-of-bounds offset this function will panic.
+    /// If using an `Above` or `Below` offset which is
+    /// out-of-bounds this function will panic.
     ///
     /// This function will never panic if the `Main` diagonal
     /// offset is used. 
@@ -1038,9 +1044,16 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut, DiagOffset};
     ///
     /// let mut a = matrix![0, 1, 2;
-    ///                 3, 4, 5;
-    ///                 6, 7, 8];
+    ///                     3, 4, 5;
+    ///                     6, 7, 8];
+    ///
+    /// // Increment super diag
+    /// for d in a.iter_diag_mut(DiagOffset::Above(1)) {
+    ///     *d = *d + 1;
+    /// }
+    ///
     /// // Zero the sub-diagonal (sets 3 and 7 to 0)
+    /// // Equivalent to `iter_diag(DiagOffset::Below(-1))`
     /// for sub_d in a.iter_diag_mut(-1) {
     ///     *sub_d = 0;   
     /// }
@@ -1051,8 +1064,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// # Panics
     ///
-    /// If using `Above` or `Below` with an
-    /// out-of-bounds offset this function will panic.
+    /// If using an `Above` or `Below` offset which is
+    /// out-of-bounds this function will panic.
     ///
     /// This function will never panic if the `Main` diagonal
     /// offset is used. 
