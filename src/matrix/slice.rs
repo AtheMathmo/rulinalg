@@ -627,11 +627,9 @@ pub trait BaseMatrix<T>: Sized {
 
     /// Solves an upper triangular linear system.
     ///
-    /// Given a matrix `U`, which is upper triangular, and a vector `y`, this function returns `x`
-    /// such that `Ux = y`.
-    ///
-    /// Note that this function will not check that `U` is upper triangular but will instead use only
-    /// the upper triangular portion of the matrix.
+    /// Given a matrix `A` and a vector `b`, this function returns the
+    /// solution of the upper triangular system `Ux = b`, where `U` is
+    /// the upper triangular part of `A`.
     ///
     /// # Examples
     ///
@@ -669,11 +667,9 @@ pub trait BaseMatrix<T>: Sized {
 
     /// Solves a lower triangular linear system.
     ///
-    /// Given a matrix `L`, which is lower triangular, and a vector `y`, this function returns `x`
-    /// such that `Lx = y`.
-    ///
-    /// Note that this function will not check that `L` is lower triangular but will instead use only
-    /// the lower triangular portion of the matrix.
+    /// Given a matrix `A` and a vector `b`, this function returns the
+    /// solution of the lower triangular system `Lx = b`, where `L` is
+    /// the lower triangular part of `A`.
     ///
     /// # Examples
     ///
