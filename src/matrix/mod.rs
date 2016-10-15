@@ -5,6 +5,63 @@
 //!
 //! Most of the logic for manipulating matrices is generically implemented
 //! via `BaseMatrix` and `BaseMatrixMut` trait.
+//!
+//! # Tutorial: Authoring matrices with rulinalg
+//!
+//! As stated elsewhere, if you're only creating small matrices for tests, the
+//! `matrix!` macro is sufficient. On the other hand, if you are using rulinalg
+//! as part of a library, you probably have an idea of how your matrices need to
+//! be laid out. This tutorial covers basic idioms for authoring matrices.
+//!
+//! ## Constant matrix
+//!
+//! The two tersest methods for constructing a constant matrix are `zeros` and
+//! `ones`. Both have the signature `rows: usize, cols: usize`, and are
+//! implemented by type. So, for example, to create a mutable matrix of float
+//! zeros:
+//!
+//! ```
+//! let mut my__zero_mat = Matrix::<f64>::zeros(10, 20);
+//! ```
+//!
+//! A matrix of ones would simple replace `zeros` with `ones`.
+//!
+//! ## Square matrix from main diagonal
+//!
+//! If the main defining feature of the matrix is its diagonal, you can create a
+//! vector with the appropriate values and use the `from_diag` method. For
+//! example, here is a 5x5 matrix with -2 on its main diagonal and zeros
+//! elsewhere:
+//!
+//! ```
+//! let main_diag = Vector::<f64>::ones(5).apply(&|el| { el * -2 });
+//! let mut diag_mat = Matrix::from_diag(main_diag.data());
+//! ```
+//!
+//! Note that you can use either the standard Rust vector methods, or those
+//! included with rulinalg as in the example.
+//!
+//! ## Modifying off-diagonals
+//!
+//! The `DiagOffset` enumerated type is used to safely address super- and
+//! sub-diagonals. These can be used to access the diagonals of a matrix with
+//! `iter_diag` or `iter_diag_mut`. The below example creates a 5x5 matrix with
+//! -2 on the main diagonal, then changes the first superdiagonal values to all
+//! be 1:
+//!
+//! ```
+//! let main_diag = Vector::<f64>::ones(5).apply(&|el| { el * -2 });
+//! let mut diag_mat = Matrix::from_diag(main_diag.data());
+//! for el in diag_mat.iter_diag_mut(DiagOffset::Above(1)) { *el = 1.0; }
+//! ```
+//!
+//! ## Matrix by rows
+//!
+//! ## Modifying a single row
+//!
+//! ## Modifying a single column
+//!
+//! ## Modifying values addressed by a set of indices
 
 use std::any::Any;
 use std::fmt;
