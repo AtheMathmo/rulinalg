@@ -34,6 +34,19 @@ pub enum MatrixComparisonResult<T, C> where T: Copy, C: ElementwiseComparator<T>
     MismatchedElements { comparator: C, mismatches: Vec<ElementComparisonError<T>> }
 }
 
+#[doc(hidden)]
+pub trait ElementwiseComparator<T> where T: Copy {
+    fn compare(&self, x: T, y: T) -> Option<T>;
+    fn description(&self) -> String;
+    fn definition(&self) -> String;
+}
+
+#[doc(hidden)]
+#[derive(Copy, Clone, Debug)]
+pub struct AbsoluteElementwiseComparator<T> {
+    pub tol: T
+}
+
 impl<T, C> MatrixComparisonResult<T, C> where T: Copy + fmt::Display, C: ElementwiseComparator<T> {
     pub fn panic_message(&self) -> Option<String> {
         match self {
@@ -73,13 +86,6 @@ Dimensions of matrices X and Y do not match.
 }
 
 #[doc(hidden)]
-pub trait ElementwiseComparator<T> where T: Copy {
-    fn compare(&self, x: T, y: T) -> Option<T>;
-    fn description(&self) -> String;
-    fn definition(&self) -> String;
-}
-
-#[doc(hidden)]
 pub fn elementwise_matrix_comparison<T, M, C>(x: &M, y: &M, comparator: C) -> MatrixComparisonResult<T, C>
     where M: BaseMatrix<T>, T: Copy, C: ElementwiseComparator<T> {
     if x.rows() == y.rows() && x.cols() == y.cols() {
@@ -113,12 +119,6 @@ pub fn elementwise_matrix_comparison<T, M, C>(x: &M, y: &M, comparator: C) -> Ma
     } else {
         MatrixComparisonResult::MismatchedDimensions { dim_x: (x.rows(), x.cols()), dim_y: (y.rows(), y.cols()) }
     }
-}
-
-#[doc(hidden)]
-#[derive(Copy, Clone, Debug)]
-pub struct AbsoluteElementwiseComparator<T> {
-    pub tol: T
 }
 
 impl<T> ElementwiseComparator<T> for AbsoluteElementwiseComparator<T>
