@@ -39,7 +39,7 @@
 //! use rulinalg::matrix::Matrix;
 //! use rulinalg::vector::Vector;
 //!
-//! let main_diag = Vector::<f64>::ones(5).apply(&|el| { el * -2 });
+//! let main_diag = Vector::<f64>::ones(5).apply(&|el| { el * -2.0 });
 //! let mut diag_mat = Matrix::from_diag(main_diag.data());
 //! ```
 //!
@@ -58,7 +58,7 @@
 //! use rulinalg::matrix::{Matrix, DiagOffset};
 //! use rulinalg::vector::Vector;
 //!
-//! let main_diag = Vector::<f64>::ones(5).apply(&|el| { el * -2 });
+//! let main_diag = Vector::<f64>::ones(5).apply(&|el| { el * -2.0 });
 //! let mut diag_mat = Matrix::from_diag(main_diag.data());
 //! for el in diag_mat.iter_diag_mut(DiagOffset::Above(1)) { *el = 1.0; }
 //! ```
