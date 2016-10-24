@@ -167,7 +167,7 @@ impl<T> ElementwiseComparator<T> for AbsoluteElementwiseComparator<T>
 }
 
 impl<T> ElementwiseComparator<T> for ExactElementwiseComparator
-    where T: Copy + fmt::Display + Num + PartialOrd<T> {
+    where T: Copy + fmt::Display + PartialEq<T> {
 
     fn compare(&self, a: T, b: T) -> Option<ComparisonError<T>> {
         if a == b {
