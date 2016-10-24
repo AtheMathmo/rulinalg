@@ -6,23 +6,36 @@ use std::fmt;
 
 #[doc(hidden)]
 #[derive(Debug, Copy, Clone)]
+pub enum ComparisonError<T> {
+    ExactComparisonFailure,
+    ToleranceFailure(T)
+}
+
+#[doc(hidden)]
+#[derive(Debug, Copy, Clone)]
 pub struct ElementComparisonError<T> {
     pub x: T,
     pub y: T,
-    pub error: T,
+    pub error: ComparisonError<T>,
     pub row: usize,
     pub col: usize
 }
 
 impl<T> fmt::Display for ElementComparisonError<T> where T: fmt::Display {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
-            "({i}, {j}): x = {x}, y = {y}. Error: {error}",
+        let result = write!(f,
+            "({i}, {j}): x = {x}, y = {y}.",
             i = self.row,
             j = self.col,
             x = self.x,
-            y = self.y,
-            error = self.error)
+            y = self.y);
+
+        match &self.error {
+            &ComparisonError::ToleranceFailure(ref error) => {
+                result.and(write!(f, " Error: {error}.", error = error))
+            },
+            _ => result
+        }
     }
 }
 
@@ -36,7 +49,7 @@ pub enum MatrixComparisonResult<T, C> where T: Copy, C: ElementwiseComparator<T>
 
 #[doc(hidden)]
 pub trait ElementwiseComparator<T> where T: Copy {
-    fn compare(&self, x: T, y: T) -> Option<T>;
+    fn compare(&self, x: T, y: T) -> Option<ComparisonError<T>>;
     fn description(&self) -> String;
     fn definition(&self) -> String;
 }
@@ -46,6 +59,10 @@ pub trait ElementwiseComparator<T> where T: Copy {
 pub struct AbsoluteElementwiseComparator<T> {
     pub tol: T
 }
+
+#[doc(hidden)]
+#[derive(Copy, Clone, Debug)]
+pub struct ExactElementwiseComparator;
 
 impl<T, C> MatrixComparisonResult<T, C> where T: Copy + fmt::Display, C: ElementwiseComparator<T> {
     pub fn panic_message(&self) -> Option<String> {
@@ -124,7 +141,7 @@ pub fn elementwise_matrix_comparison<T, M, C>(x: &M, y: &M, comparator: C) -> Ma
 impl<T> ElementwiseComparator<T> for AbsoluteElementwiseComparator<T>
     where T: Copy + fmt::Display + Num + PartialOrd<T> {
 
-    fn compare(&self, a: T, b: T) -> Option<T> {
+    fn compare(&self, a: T, b: T) -> Option<ComparisonError<T>> {
         // Note: Cannot use num::abs because we do not want to restrict
         // ourselves to Signed types (i.e. we still want to be able to
         // handle unsigned types).
@@ -135,7 +152,7 @@ impl<T> ElementwiseComparator<T> for AbsoluteElementwiseComparator<T>
             if distance <= self.tol {
                 None
             } else {
-                Some(distance)
+                Some(ComparisonError::ToleranceFailure(distance))
             }
         }
     }
@@ -146,6 +163,26 @@ impl<T> ElementwiseComparator<T> for AbsoluteElementwiseComparator<T>
 
     fn definition(&self) -> String {
         format!("|x - y| <= {tol}", tol = self.tol)
+    }
+}
+
+impl<T> ElementwiseComparator<T> for ExactElementwiseComparator
+    where T: Copy + fmt::Display + Num + PartialOrd<T> {
+
+    fn compare(&self, a: T, b: T) -> Option<ComparisonError<T>> {
+        if a == b {
+            None
+        } else {
+            Some(ComparisonError::ExactComparisonFailure)
+        }
+    }
+
+    fn description(&self) -> String {
+        format!("exact equality")
+    }
+
+    fn definition(&self) -> String {
+        format!("x == y")
     }
 }
 
@@ -166,6 +203,18 @@ impl<T> ElementwiseComparator<T> for AbsoluteElementwiseComparator<T>
 /// ```
 #[macro_export]
 macro_rules! assert_matrix_eq {
+    ($x:expr, $y:expr, comp = exact) => {
+        {
+            use $crate::macros::{elementwise_matrix_comparison, ExactElementwiseComparator};
+            let msg = elementwise_matrix_comparison(&$x, &$y, ExactElementwiseComparator).panic_message();
+            if let Some(msg) = msg {
+                // Note: We need the panic to incur here inside of the macro in order
+                // for the line number to be correct when using it for tests,
+                // hence we build the panic message in code, but panic here.
+                panic!(msg);
+            }
+        }
+    };
     ($x:expr, $y:expr, comp = abs, tol = $tol:expr) => {
         {
             use $crate::macros::{elementwise_matrix_comparison, AbsoluteElementwiseComparator};
@@ -216,6 +265,17 @@ mod tests {
         assert_matrix_eq!(x, y, comp = abs, tol = 1e-10);
     }
 
+    #[test]
+    pub fn matrix_eq_exact_compare_self_for_integer() {
+        let x = matrix![1, 2, 3;
+                        4, 5, 6];
+        assert_matrix_eq!(x, x, comp = exact);
+    }
 
-    // TODO: test for differently sized matrices
+    #[test]
+    pub fn matrix_eq_exact_compare_self_for_floating_point() {
+        let x = matrix![1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0];
+        assert_matrix_eq!(x, x, comp = exact);
+    }
 }
