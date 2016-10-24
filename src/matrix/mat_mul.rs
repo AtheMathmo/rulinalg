@@ -295,8 +295,11 @@ mod tests {
 
     #[test]
     fn matrix_mul_f32() {
-        let a = Matrix::new(3, 2, vec![1f32, 2., 3., 4., 5., 6.]);
-        let b = Matrix::new(2, 3, vec![1f32, 2., 3., 4., 5., 6.]);
+        let a = matrix!(1f32, 2.;
+                        3., 4.;
+                        5., 6.);
+        let b = matrix!(1f32, 2., 3.;
+                        4., 5., 6.);
 
         // Allocating new memory
         let c = &a * &b;
@@ -317,8 +320,11 @@ mod tests {
 
     #[test]
     fn matrix_mul_f64() {
-        let a = Matrix::new(3, 2, vec![1f64, 2., 3., 4., 5., 6.]);
-        let b = Matrix::new(2, 3, vec![1f64, 2., 3., 4., 5., 6.]);
+        let a = matrix!(1f64, 2.;
+                        3., 4.;
+                        5., 6.);
+        let b = matrix!(1f64, 2., 3.;
+                        4., 5., 6.);
 
         // Allocating new memory
         let c = &a * &b;
@@ -339,8 +345,11 @@ mod tests {
 
     #[test]
     fn matrix_mul_usize() {
-        let a = Matrix::new(3, 2, vec![1usize, 2, 3, 4, 5, 6]);
-        let b = Matrix::new(2, 3, vec![1usize, 2, 3, 4, 5, 6]);
+        let a = matrix!(1usize, 2;
+                        3, 4;
+                        5, 6);
+        let b = matrix!(1usize, 2, 3;
+                        4, 5, 6);
 
         // Allocating new memory
         let c = &a * &b;
