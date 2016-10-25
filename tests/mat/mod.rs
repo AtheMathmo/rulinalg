@@ -4,7 +4,7 @@ use rulinalg::matrix::slice::BaseMatrix;
 
 #[test]
 fn test_l_triangular_solve_errs() {
-    let a = Matrix::<f64>::new(0, 0, vec![]);
+    let a: Matrix<f64> = matrix!();
     assert!(a.solve_l_triangular(Vector::new(vec![])).is_err());
 
     let a = matrix!(0.0);
@@ -13,7 +13,7 @@ fn test_l_triangular_solve_errs() {
 
 #[test]
 fn test_u_triangular_solve_errs() {
-    let a = Matrix::<f64>::new(0, 0, vec![]);
+    let a: Matrix<f64> = matrix!();
     assert!(a.solve_u_triangular(Vector::new(vec![])).is_err());
 
     let a = matrix!(0.0);

@@ -1169,8 +1169,8 @@ mod tests {
     #[test]
     fn add_slice() {
         let a = 3.0;
-        let mut b = Matrix::new(3, 3, vec![2.0; 9]);
-        let c = Matrix::new(2, 2, vec![1.0; 4]);
+        let mut b = Matrix::ones(3, 3) * 2.;
+        let c = Matrix::ones(2, 2);
 
         {
             let d = MatrixSlice::from_matrix(&b, [1, 1], 2, 2);
@@ -1206,8 +1206,8 @@ mod tests {
     #[test]
     fn sub_slice() {
         let a = 3.0;
-        let b = Matrix::new(2, 2, vec![1.0; 4]);
-        let mut c = Matrix::new(3, 3, vec![2.0; 9]);
+        let b = Matrix::ones(2, 2);
+        let mut c = Matrix::ones(3, 3) * 2.;
 
         {
             let d = MatrixSlice::from_matrix(&c, [1, 1], 2, 2);
@@ -1244,7 +1244,7 @@ mod tests {
     fn div_slice() {
         let a = 3.0;
 
-        let mut b = Matrix::new(3, 3, vec![2.0; 9]);
+        let mut b = Matrix::ones(3, 3) * 2.;
 
         {
             let c = MatrixSlice::from_matrix(&b, [1, 1], 2, 2);
@@ -1261,14 +1261,14 @@ mod tests {
 
     #[test]
     fn neg_slice() {
-        let b = Matrix::new(3, 3, vec![2.0; 9]);
+        let b = Matrix::ones(3, 3) * 2.;
 
         let c = MatrixSlice::from_matrix(&b, [1, 1], 2, 2);
 
         let m = -c;
         assert_eq!(m.into_vec(), vec![-2.0;4]);
 
-        let mut b = Matrix::new(3, 3, vec![2.0; 9]);
+        let mut b = Matrix::ones(3, 3) * 2.;
 
         let c = MatrixSliceMut::from_matrix(&mut b, [1, 1], 2, 2);
 

@@ -1479,13 +1479,13 @@ mod tests {
     #[test]
     #[should_panic]
     fn make_slice_bad_dim() {
-        let a = Matrix::new(3, 3, vec![2.0; 9]);
+        let a = Matrix::ones(3, 3) * 2.0;
         let _ = MatrixSlice::from_matrix(&a, [1, 1], 3, 2);
     }
 
     #[test]
     fn make_slice() {
-        let a = Matrix::new(3, 3, vec![2.0; 9]);
+        let a = Matrix::ones(3, 3) * 2.0;
         let b = MatrixSlice::from_matrix(&a, [1, 1], 2, 2);
 
         assert_eq!(b.rows(), 2);
@@ -1543,7 +1543,7 @@ mod tests {
 
     #[test]
     fn slice_into_matrix() {
-        let mut a = Matrix::new(3, 3, vec![2.0; 9]);
+        let mut a = Matrix::ones(3, 3) * 2.0;
 
         {
             let b = MatrixSlice::from_matrix(&a, [1, 1], 2, 2);

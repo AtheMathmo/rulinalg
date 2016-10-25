@@ -99,7 +99,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_non_square_lup_decomp() {
-        let a = Matrix::new(2, 3, vec![1.0; 6]);
+        let a: Matrix<f64> = Matrix::ones(2, 3);
 
         let _ = a.lup_decomp();
     }

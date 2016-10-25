@@ -371,8 +371,8 @@ mod tests {
     #[test]
     fn mul_slice_basic() {
         let a = 3.0;
-        let b = Matrix::new(2, 2, vec![1.0; 4]);
-        let mut c = Matrix::new(3, 3, vec![2.0; 9]);
+        let b = Matrix::ones(2, 2);
+        let mut c = Matrix::ones(3, 3) * 2.;
         {
             let d = MatrixSlice::from_matrix(&c, [1, 1], 2, 2);
 
@@ -400,9 +400,10 @@ mod tests {
 
     #[test]
     fn mul_slice_uneven_data() {
-        let a = Matrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        let a = matrix!(1.0, 2.0; 3.0, 4.0);
 
-        let c = Matrix::new(2, 3, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let c = matrix!(1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0);
         let d = MatrixSlice::from_matrix(&c, [0, 0], 2, 2);
 
         let e = d * a;
@@ -415,9 +416,9 @@ mod tests {
 
     #[test]
     fn mul_slice_uneven_data_usize() {
-        let a = Matrix::new(2, 2, vec![1usize, 2, 3, 4]);
+        let a = matrix!(1usize, 2; 3, 4);
 
-        let c = Matrix::new(2, 3, vec![1usize, 2, 3, 4, 5, 6]);
+        let c = matrix!(1usize, 2, 3; 4, 5, 6);
         let d = MatrixSlice::from_matrix(&c, [0, 0], 2, 2);
 
         let e = d * a;

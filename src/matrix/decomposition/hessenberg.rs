@@ -141,7 +141,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_non_square_upper_hessenberg() {
-        let a = Matrix::new(2, 3, vec![1.0; 6]);
+        let a: Matrix<f64> = Matrix::ones(2, 3);
 
         let _ = a.upper_hessenberg();
     }
@@ -149,7 +149,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_non_square_upper_hess_decomp() {
-        let a = Matrix::new(2, 3, vec![1.0; 6]);
+        let a: Matrix<f64> = Matrix::ones(2, 3);
 
         let _ = a.upper_hess_decomp();
     }
