@@ -285,8 +285,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
             }
 
             let (c, s) = Matrix::givens_rot(x, y);
-            let givens_mat = matrix!(c, -s;
-                                     s, c);
+            let givens_mat = Matrix::new(2, 2, vec![c, -s, s, c]);
 
             {
                 // Apply Givens rotation to the block (on the left)
