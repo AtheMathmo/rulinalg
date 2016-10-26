@@ -133,28 +133,28 @@ mod tests {
 
     #[test]
     fn test_bidiagonal_square() {
-        let mat = Matrix::new(5,
-                              5,
-                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
-                                   7.0, 1.0, 1.0, 4.0, 2.0, 1.0, -1.0, 3.0, 5.0, 1.0, 1.0, 3.0,
-                                   2.0]);
+        let mat = matrix!(1f64, 2.0, 3.0, 4.0, 5.0;
+                          2.0, 4.0, 1.0, 2.0, 1.0;
+                          3.0, 1.0, 7.0, 1.0, 1.0;
+                          4.0, 2.0, 1.0, -1.0, 3.0;
+                          5.0, 1.0, 1.0, 3.0, 2.0);
         let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
         validate_bidiag(&mat, &b, &u, &v, true);
     }
 
     #[test]
     fn test_bidiagonal_non_square() {
-        let mat = Matrix::new(5,
-                              3,
-                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
-                                   7.0, 1.0, 1.0]);
+        let mat = matrix!(1f64, 2.0, 3.0;
+                          4.0, 5.0, 2.0;
+                          4.0, 1.0, 2.0;
+                          1.0, 3.0, 1.0;
+                          7.0, 1.0, 1.0);
         let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
         validate_bidiag(&mat, &b, &u, &v, true);
 
-        let mat = Matrix::new(3,
-                              5,
-                              vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
-                                   7.0, 1.0, 1.0]);
+        let mat = matrix!(1f64, 2.0, 3.0, 4.0, 5.0;
+                          2.0, 4.0, 1.0, 2.0, 1.0;
+                          3.0, 1.0, 7.0, 1.0, 1.0);
         let (b, u, v) = mat.clone().bidiagonal_decomp().unwrap();
         validate_bidiag(&mat, &b, &u, &v, false);
     }

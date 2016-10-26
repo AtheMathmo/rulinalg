@@ -351,7 +351,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
         assert!(n == self.cols, "Matrix must be square for eigendecomp.");
 
         match n {
-            1 => Ok((vec![self.data[0]], Matrix::new(1, 1, vec![T::one()]))),
+            1 => Ok((vec![self.data[0]], Matrix::ones(1, 1))),
             2 => self.direct_2_by_2_eigendecomp(),
             _ => self.francis_shift_eigendecomp(),
         }
@@ -365,13 +365,13 @@ mod tests {
 
     #[test]
     fn test_1_by_1_matrix_eigenvalues() {
-        let a = Matrix::new(1, 1, vec![3.]);
+        let a = Matrix::ones(1, 1) * 3.;
         assert_eq!(vec![3.], a.eigenvalues().unwrap());
     }
 
     #[test]
     fn test_2_by_2_matrix_eigenvalues() {
-        let a = Matrix::new(2, 2, vec![1., 2., 3., 4.]);
+        let a = matrix!(1., 2.; 3., 4.);
         // characteristic polynomial is λ² − 5λ − 2 = 0
         assert_eq!(vec![(5. - (33.0f32).sqrt()) / 2., (5. + (33.0f32).sqrt()) / 2.],
                    a.eigenvalues().unwrap());
@@ -379,7 +379,7 @@ mod tests {
 
     #[test]
     fn test_2_by_2_matrix_zeros_eigenvalues() {
-        let a = Matrix::new(2, 2, vec![0.; 4]);
+        let a = Matrix::zeros(2, 2);
         // characteristic polynomial is λ² = 0
         assert_eq!(vec![0.0, 0.0], a.eigenvalues().unwrap());
     }
@@ -387,7 +387,7 @@ mod tests {
     #[test]
     fn test_2_by_2_matrix_complex_eigenvalues() {
         // This test currently fails - complex eigenvalues would be nice though!
-        let a = Matrix::new(2, 2, vec![1.0, -3.0, 1.0, 1.0]);
+        let a = matrix!(1., -3.; 1., 1.);
         // characteristic polynomial is λ² − λ + 4 = 0
 
         // Decomposition will fail
@@ -396,7 +396,7 @@ mod tests {
 
     #[test]
     fn test_2_by_2_matrix_eigendecomp() {
-        let a = Matrix::new(2, 2, vec![20., 4., 20., 16.]);
+        let a = matrix!(20., 4.; 20., 16.);
         let (eigenvals, eigenvecs) = a.eigendecomp().unwrap();
 
         let lambda_1 = eigenvals[0];
@@ -412,7 +412,9 @@ mod tests {
 
     #[test]
     fn test_3_by_3_eigenvals() {
-        let a = Matrix::new(3, 3, vec![17f64, 22., 27., 22., 29., 36., 27., 36., 45.]);
+        let a = matrix!(17f64, 22., 27.;
+                        22., 29., 36.;
+                        27., 36., 45.);
 
         let eigs = a.eigenvalues().unwrap();
 
@@ -427,10 +429,11 @@ mod tests {
 
     #[test]
     fn test_5_by_5_eigenvals() {
-        let a = Matrix::new(5,
-                            5,
-                            vec![1f64, 2.0, 3.0, 4.0, 5.0, 2.0, 4.0, 1.0, 2.0, 1.0, 3.0, 1.0,
-                                 7.0, 1.0, 1.0, 4.0, 2.0, 1.0, -1.0, 3.0, 5.0, 1.0, 1.0, 3.0, 2.0]);
+        let a = matrix!(1f64, 2.0, 3.0, 4.0, 5.0;
+                        2.0, 4.0, 1.0, 2.0, 1.0;
+                        3.0, 1.0, 7.0, 1.0, 1.0;
+                        4.0, 2.0, 1.0, -1.0, 3.0;
+                        5.0, 1.0, 1.0, 3.0, 2.0);
 
         let eigs = a.eigenvalues().unwrap();
 
@@ -450,7 +453,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_non_square_eigenvalues() {
-        let a = Matrix::new(2, 3, vec![1.0; 6]);
+        let a: Matrix<f64> = Matrix::ones(2, 3);
 
         let _ = a.eigenvalues();
     }
@@ -458,7 +461,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_non_square_eigendecomp() {
-        let a = Matrix::new(2, 3, vec![1.0; 6]);
+        let a: Matrix<f64> = Matrix::ones(2, 3);
 
         let _ = a.eigendecomp();
     }

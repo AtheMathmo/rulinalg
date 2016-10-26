@@ -348,7 +348,7 @@ mod tests {
 
     #[test]
     fn into_iter_compile() { 
-        let a = Matrix::new(3, 3, vec![2.0; 9]); 
+        let a = Matrix::ones(3, 3) * 2.;
         let mut b = MatrixSlice::from_matrix(&a, [1, 1], 2, 2);
     
         for _ in b { 
@@ -363,7 +363,7 @@ mod tests {
     
     #[test]
     fn into_iter_mut_compile() { 
-        let mut a = Matrix::<f32>::new(3, 3, vec![2.0; 9]); 
+        let mut a = Matrix::<f32>::ones(3, 3) * 2.;
         
         {
             let b = MatrixSliceMut::from_matrix(&mut a, [1, 1], 2, 2);

@@ -847,7 +847,9 @@ mod tests {
 
     #[test]
     fn indexing_mat() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
 
         assert_eq!(a[[0, 0]], 1.0);
         assert_eq!(a[[0, 1]], 2.0);
@@ -859,7 +861,9 @@ mod tests {
 
     #[test]
     fn matrix_vec_mul() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
         let b = Vector::new(vec![4., 7.]);
 
         let c = a * b;
@@ -873,7 +877,9 @@ mod tests {
 
     #[test]
     fn matrix_f32_mul() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
 
         // Allocating new memory
         let c = &a * &2.0;
@@ -918,8 +924,12 @@ mod tests {
 
     #[test]
     fn matrix_add() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
-        let b = Matrix::new(3, 2, vec![2., 3., 4., 5., 6., 7.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
+        let b = matrix!(2., 3.;
+                        4., 5.;
+                        6., 7.);
 
         // Allocating new memory
         let c = &a + &b;
@@ -964,7 +974,9 @@ mod tests {
 
     #[test]
     fn matrix_f32_add() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
         let b = 3.0;
 
         // Allocating new memory
@@ -1010,8 +1022,12 @@ mod tests {
 
     #[test]
     fn matrix_sub() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
-        let b = Matrix::new(3, 2, vec![2., 3., 4., 5., 6., 7.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
+        let b = matrix!(2., 3.;
+                        4., 5.;
+                        6., 7.);
 
         // Allocate new memory
         let c = &a - &b;
@@ -1056,7 +1072,9 @@ mod tests {
 
     #[test]
     fn matrix_f32_sub() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
         let b = 3.0;
 
         // Allocating new memory
@@ -1102,7 +1120,9 @@ mod tests {
 
     #[test]
     fn matrix_f32_div() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
         let b = 3.0;
 
         // Allocating new memory
@@ -1149,8 +1169,8 @@ mod tests {
     #[test]
     fn add_slice() {
         let a = 3.0;
-        let mut b = Matrix::new(3, 3, vec![2.0; 9]);
-        let c = Matrix::new(2, 2, vec![1.0; 4]);
+        let mut b = Matrix::ones(3, 3) * 2.;
+        let c = Matrix::ones(2, 2);
 
         {
             let d = MatrixSlice::from_matrix(&b, [1, 1], 2, 2);
@@ -1186,8 +1206,8 @@ mod tests {
     #[test]
     fn sub_slice() {
         let a = 3.0;
-        let b = Matrix::new(2, 2, vec![1.0; 4]);
-        let mut c = Matrix::new(3, 3, vec![2.0; 9]);
+        let b = Matrix::ones(2, 2);
+        let mut c = Matrix::ones(3, 3) * 2.;
 
         {
             let d = MatrixSlice::from_matrix(&c, [1, 1], 2, 2);
@@ -1224,7 +1244,7 @@ mod tests {
     fn div_slice() {
         let a = 3.0;
 
-        let mut b = Matrix::new(3, 3, vec![2.0; 9]);
+        let mut b = Matrix::ones(3, 3) * 2.;
 
         {
             let c = MatrixSlice::from_matrix(&b, [1, 1], 2, 2);
@@ -1241,14 +1261,14 @@ mod tests {
 
     #[test]
     fn neg_slice() {
-        let b = Matrix::new(3, 3, vec![2.0; 9]);
+        let b = Matrix::ones(3, 3) * 2.;
 
         let c = MatrixSlice::from_matrix(&b, [1, 1], 2, 2);
 
         let m = -c;
         assert_eq!(m.into_vec(), vec![-2.0;4]);
 
-        let mut b = Matrix::new(3, 3, vec![2.0; 9]);
+        let mut b = Matrix::ones(3, 3) * 2.;
 
         let c = MatrixSliceMut::from_matrix(&mut b, [1, 1], 2, 2);
 
