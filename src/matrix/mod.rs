@@ -95,6 +95,35 @@ pub struct RowsMut<'a, T: 'a> {
     _marker: PhantomData<&'a mut T>,
 }
 
+/// Diagonal offset (used by Diagonal iterator).
+#[derive(Debug, PartialEq)]
+pub enum DiagOffset {
+    /// The main diagonal of the matrix.
+    Main,
+    /// An offset above the main diagonal.
+    Above(usize),
+    /// An offset below the main diagonal.
+    Below(usize),
+}
+
+/// An iterator over the diagonal elements of a matrix.
+#[derive(Debug)]
+pub struct Diagonal<'a, T: 'a, M: 'a + BaseMatrix<T>> {
+    matrix: &'a M,
+    diag_pos: usize,
+    diag_end: usize,
+    _marker: PhantomData<&'a T>,
+}
+
+/// An iterator over the mutable diagonal elements of a matrix.
+#[derive(Debug)]
+pub struct DiagonalMut<'a, T: 'a, M: 'a + BaseMatrixMut<T>> {
+    matrix: &'a mut M,
+    diag_pos: usize,
+    diag_end: usize,
+    _marker: PhantomData<&'a mut T>,
+}
+
 impl<T> Matrix<T> {
     /// Constructor for Matrix struct.
     ///

@@ -5,7 +5,9 @@
 
 use std::convert::From;
 
-use super::matrix::{Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix};
+use libnum::Zero;
+
+use super::matrix::{DiagOffset, Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix};
 use super::vector::Vector;
 
 impl<T> From<Vec<T>> for Vector<T> {
@@ -40,9 +42,31 @@ impl_matrix_from!(MatrixSlice);
 impl_matrix_from!(MatrixSliceMut);
 
 
+macro_rules! impl_diag_offset_from {
+    ($signed_type:ty) => {
+impl From<$signed_type> for DiagOffset {
+    fn from(int: $signed_type) -> Self {
+        if int.is_zero() {
+            DiagOffset::Main
+        } else if int.is_positive() {
+            DiagOffset::Above(int as usize)
+        } else {
+            DiagOffset::Below((-int) as usize)
+        }
+    }
+}
+    }
+}
+
+impl_diag_offset_from!(i8);
+impl_diag_offset_from!(i16);
+impl_diag_offset_from!(i32);
+impl_diag_offset_from!(i64);
+impl_diag_offset_from!(isize);
+
 #[cfg(test)]
 mod tests {
-    use matrix::{Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix};
+    use matrix::{DiagOffset, Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix};
     use vector::Vector;
 
     #[test]
@@ -73,6 +97,16 @@ mod tests {
         let e = Matrix::from(d);
         assert_eq!(e.rows(), 2);
         assert_eq!(e.cols(), 2);
+    }
+
+    #[test]
+    fn diag_offset_from_int() {
+        let a: DiagOffset = 3.into();
+        assert_eq!(a, DiagOffset::Above(3));
+        let a: DiagOffset = (-3).into();
+        assert_eq!(a, DiagOffset::Below(3));
+        let a: DiagOffset = 0.into();
+        assert_eq!(a, DiagOffset::Main);
     }
 
 }
