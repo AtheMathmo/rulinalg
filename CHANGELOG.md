@@ -2,6 +2,33 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
+# 0.3.5
+
+### New Contributors
+
+- [gcollura](https://github.com/gcollura)
+
+### Breaking Changes
+
+- None
+
+### Features
+
+- Added new `iter_diag` and `iter_diag_mut` functions to `BaseMatrix`
+and `BaseMatrixMut` respectively.
+
+### Bug Fixes
+
+- The `matrix!` macro now works on empty matrices.
+
+### Minor Changes
+
+- Some refactoring of `decomposition` module.
+- More lenient error handling on triangular solvers.
+They no longer `assert!` that a matrix is triangular.
+- All tests are now using `matrix!` macro and other
+tidier constructors.
+
 # 0.3.4
 
 ### New Contributors
