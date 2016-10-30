@@ -85,7 +85,8 @@ macro_rules! impl_bin_op_scalar_slice (
 /// Scalar
 #[doc=$doc]
 /// with matrix slice.
-impl<'a, T: Copy + $trt<T, Output=T>> $trt<T> for $slice<'a, T> {
+impl<'a, T> $trt<T> for $slice<'a, T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, f: T) -> Matrix<T> {
@@ -96,7 +97,8 @@ impl<'a, T: Copy + $trt<T, Output=T>> $trt<T> for $slice<'a, T> {
 /// Scalar
 #[doc=$doc]
 /// with matrix slice.
-impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<&'b T> for $slice<'a, T> {
+impl<'a, 'b, T> $trt<&'b T> for $slice<'a, T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, f: &T) -> Matrix<T> {
@@ -107,7 +109,8 @@ impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<&'b T> for $slice<'a, T> {
 /// Scalar
 #[doc=$doc]
 /// with matrix slice.
-impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<T> for &'b $slice<'a, T> {
+impl<'a, 'b, T> $trt<T> for &'b $slice<'a, T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, f: T) -> Matrix<T> {
@@ -118,7 +121,8 @@ impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<T> for &'b $slice<'a, T> {
 /// Scalar
 #[doc=$doc]
 /// with matrix slice.
-impl<'a, 'b, 'c, T: Copy + $trt<T, Output=T>> $trt<&'c T> for &'b $slice<'a, T> {
+impl<'a, 'b, 'c, T> $trt<&'c T> for &'b $slice<'a, T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, f: &T) -> Matrix<T> {
@@ -151,7 +155,8 @@ macro_rules! impl_bin_op_scalar_matrix (
 /// with matrix.
 ///
 /// Will reuse the memory allocated for the existing matrix.
-impl<T: Copy + $trt<T, Output=T>> $trt<T> for Matrix<T> {
+impl<T> $trt<T> for Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, f: T) -> Matrix<T> {
@@ -165,7 +170,8 @@ impl<T: Copy + $trt<T, Output=T>> $trt<T> for Matrix<T> {
 /// with matrix.
 ///
 /// Will reuse the memory allocated for the existing matrix.
-impl<'a, T: Copy + $trt<T, Output=T>> $trt<&'a T> for Matrix<T> {
+impl<'a, T> $trt<&'a T> for Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(mut self, f: &T) -> Matrix<T> {
@@ -181,7 +187,8 @@ impl<'a, T: Copy + $trt<T, Output=T>> $trt<&'a T> for Matrix<T> {
 /// Scalar
 #[doc=$doc]
 /// with matrix.
-impl<'a, T: Copy + $trt<T, Output=T>> $trt<T> for &'a Matrix<T> {
+impl<'a, T> $trt<T> for &'a Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, f: T) -> Matrix<T> {
@@ -193,7 +200,8 @@ impl<'a, T: Copy + $trt<T, Output=T>> $trt<T> for &'a Matrix<T> {
 /// Scalar
 #[doc=$doc]
 /// with matrix.
-impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<&'b T> for &'a Matrix<T> {
+impl<'a, 'b, T> $trt<&'b T> for &'a Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, f: &T) -> Matrix<T> {
@@ -351,7 +359,8 @@ macro_rules! impl_bin_op_mat_slice (
 /// Performs elementwise
 #[doc=$doc]
 /// between `Matrix` and `MatrixSlice`.
-impl<'a, T: Copy + $trt<T, Output=T>> $trt<Matrix<T>> for $slice<'a, T> {
+impl<'a, T> $trt<Matrix<T>> for $slice<'a, T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, m: Matrix<T>) -> Matrix<T> {
@@ -362,7 +371,8 @@ impl<'a, T: Copy + $trt<T, Output=T>> $trt<Matrix<T>> for $slice<'a, T> {
 /// Performs elementwise
 #[doc=$doc]
 /// between `Matrix` and `MatrixSlice`.
-impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<Matrix<T>> for &'b $slice<'a, T> {
+impl<'a, 'b, T> $trt<Matrix<T>> for &'b $slice<'a, T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, m: Matrix<T>) -> Matrix<T> {
@@ -373,7 +383,8 @@ impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<Matrix<T>> for &'b $slice<'a, T> 
 /// Performs elementwise
 #[doc=$doc]
 /// between `Matrix` and `MatrixSlice`.
-impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<&'b Matrix<T>> for $slice<'a, T> {
+impl<'a, 'b, T> $trt<&'b Matrix<T>> for $slice<'a, T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, m: &Matrix<T>) -> Matrix<T> {
@@ -384,7 +395,8 @@ impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<&'b Matrix<T>> for $slice<'a, T> 
 /// Performs elementwise
 #[doc=$doc]
 /// between `Matrix` and `MatrixSlice`.
-impl<'a, 'b, 'c, T: Copy + $trt<T, Output=T>> $trt<&'c Matrix<T>> for &'b $slice<'a, T> {
+impl<'a, 'b, 'c, T> $trt<&'c Matrix<T>> for &'b $slice<'a, T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, m: &Matrix<T>) -> Matrix<T> {
@@ -405,7 +417,8 @@ impl<'a, 'b, 'c, T: Copy + $trt<T, Output=T>> $trt<&'c Matrix<T>> for &'b $slice
 /// Performs elementwise
 #[doc=$doc]
 /// between `Matrix` and `MatrixSlice`.
-impl<'a, T: Copy + $trt<T, Output=T>> $trt<$slice<'a, T>> for Matrix<T> {
+impl<'a, T> $trt<$slice<'a, T>> for Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, s: $slice<T>) -> Matrix<T> {
@@ -416,7 +429,8 @@ impl<'a, T: Copy + $trt<T, Output=T>> $trt<$slice<'a, T>> for Matrix<T> {
 /// Performs elementwise
 #[doc=$doc]
 /// between `Matrix` and `MatrixSlice`.
-impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<$slice<'a, T>> for &'b Matrix<T> {
+impl<'a, 'b, T> $trt<$slice<'a, T>> for &'b Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, s: $slice<T>) -> Matrix<T> {
@@ -427,7 +441,8 @@ impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<$slice<'a, T>> for &'b Matrix<T> 
 /// Performs elementwise
 #[doc=$doc]
 /// between `Matrix` and `MatrixSlice`.
-impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<&'b $slice<'a, T>> for Matrix<T> {
+impl<'a, 'b, T> $trt<&'b $slice<'a, T>> for Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, s: &$slice<T>) -> Matrix<T> {
@@ -438,7 +453,8 @@ impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<&'b $slice<'a, T>> for Matrix<T> 
 /// Performs elementwise
 #[doc=$doc]
 /// between `Matrix` and `MatrixSlice`.
-impl<'a, 'b, 'c, T: Copy + $trt<T, Output=T>> $trt<&'c $slice<'a, T>> for &'b Matrix<T> {
+impl<'a, 'b, 'c, T> $trt<&'c $slice<'a, T>> for &'b Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, s: &$slice<T>) -> Matrix<T> {
@@ -472,7 +488,8 @@ macro_rules! impl_bin_op_mat (
 /// between two matrices.
 ///
 /// This will reuse allocated memory from `self`.
-impl<T: Copy + $trt<T, Output=T>> $trt<Matrix<T>> for Matrix<T> {
+impl<T> $trt<Matrix<T>> for Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, m: Matrix<T>) -> Matrix<T> {
@@ -485,7 +502,8 @@ impl<T: Copy + $trt<T, Output=T>> $trt<Matrix<T>> for Matrix<T> {
 /// between two matrices.
 ///
 /// This will reuse allocated memory from `m`.
-impl<'a, T: Copy + $trt<T, Output=T>> $trt<Matrix<T>> for &'a Matrix<T> {
+impl<'a, T> $trt<Matrix<T>> for &'a Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, mut m: Matrix<T>) -> Matrix<T> {
@@ -502,7 +520,8 @@ impl<'a, T: Copy + $trt<T, Output=T>> $trt<Matrix<T>> for &'a Matrix<T> {
 /// between two matrices.
 ///
 /// This will reuse allocated memory from `self`.
-impl<'a, T: Copy + $trt<T, Output=T>> $trt<&'a Matrix<T>> for Matrix<T> {
+impl<'a, T> $trt<&'a Matrix<T>> for Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(mut self, m: &Matrix<T>) -> Matrix<T> {
@@ -517,7 +536,8 @@ impl<'a, T: Copy + $trt<T, Output=T>> $trt<&'a Matrix<T>> for Matrix<T> {
 /// Performs elementwise
 #[doc=$doc]
 /// between two matrices.
-impl<'a, 'b, T: Copy + $trt<T, Output=T>> $trt<&'b Matrix<T>> for &'a Matrix<T> {
+impl<'a, 'b, T> $trt<&'b Matrix<T>> for &'a Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     type Output = Matrix<T>;
 
     fn $op(self, m: &Matrix<T>) -> Matrix<T> {
@@ -545,7 +565,8 @@ macro_rules! impl_op_assign_mat_scalar (
 /// Performs
 #[doc=$doc]
 /// assignment between a matrix and a scalar.
-impl<T : Copy + $trt<T, Output=T>> $assign_trt<T> for Matrix<T> {
+impl<T> $assign_trt<T> for Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     fn $op_assign(&mut self, _rhs: T) {
         for x in &mut self.data {
             *x = (*x).$op(_rhs)
@@ -556,7 +577,8 @@ impl<T : Copy + $trt<T, Output=T>> $assign_trt<T> for Matrix<T> {
 /// Performs
 #[doc=$doc]
 /// assignment between a matrix and a scalar.
-impl<'a, T : Copy + $trt<T, Output=T>> $assign_trt<&'a T> for Matrix<T> {
+impl<'a, T> $assign_trt<&'a T> for Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     fn $op_assign(&mut self, _rhs: &T) {
         for x in &mut self.data {
             *x = (*x).$op(*_rhs)
@@ -577,7 +599,8 @@ macro_rules! impl_op_assign_slice_scalar (
 /// Performs
 #[doc=$doc]
 /// assignment between a mutable matrix slice and a scalar.
-impl<'a, T : Copy + $trt<T, Output=T>> $assign_trt<T> for MatrixSliceMut<'a, T> {
+impl<'a, T> $assign_trt<T> for MatrixSliceMut<'a, T>
+    where T: Copy + $trt<T, Output=T> {
     fn $op_assign(&mut self, _rhs: T) {
         for x in self.iter_mut() {
             *x = (*x).$op(_rhs)
@@ -588,7 +611,8 @@ impl<'a, T : Copy + $trt<T, Output=T>> $assign_trt<T> for MatrixSliceMut<'a, T> 
 /// Performs
 #[doc=$doc]
 /// assignment between a mutable matrix slice and a scalar.
-impl<'a, 'b, T : Copy + $trt<T, Output=T>> $assign_trt<&'b T> for MatrixSliceMut<'a, T> {
+impl<'a, 'b, T> $assign_trt<&'b T> for MatrixSliceMut<'a, T>
+    where T: Copy + $trt<T, Output=T> {
     fn $op_assign(&mut self, _rhs: &T) {
         for x in self.iter_mut() {
             *x = (*x).$op(*_rhs)
@@ -609,7 +633,8 @@ macro_rules! impl_op_assign_mat (
 /// Performs elementwise
 #[doc=$doc]
 /// assignment between two matrices.
-impl<T : Copy + $trt<T, Output=T>> $assign_trt<Matrix<T>> for Matrix<T> {
+impl<T> $assign_trt<Matrix<T>> for Matrix<T>
+    where T: Copy + $trt<T, Output=T>  {
     fn $op_assign(&mut self, _rhs: Matrix<T>) {
         utils::in_place_vec_bin_op(&mut self.data, &_rhs.data, |x, &y| {*x = (*x).$op(y) });
     }
@@ -618,7 +643,8 @@ impl<T : Copy + $trt<T, Output=T>> $assign_trt<Matrix<T>> for Matrix<T> {
 /// Performs elementwise
 #[doc=$doc]
 /// assignment between two matrices.
-impl<'a, T : Copy + $trt<T, Output=T>> $assign_trt<&'a Matrix<T>> for Matrix<T> {
+impl<'a, T> $assign_trt<&'a Matrix<T>> for Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     fn $op_assign(&mut self, _rhs: &Matrix<T>) {
         utils::in_place_vec_bin_op(&mut self.data, &_rhs.data, |x, &y| {*x = (*x).$op(y) });
     }
@@ -636,7 +662,7 @@ macro_rules! impl_op_assign_slice_mat (
 #[doc=$doc]
 /// assignment between two matrices.
 impl<'a, T> $assign_trt<Matrix<T>> for MatrixSliceMut<'a, T>
-    where T : Copy + $trt<T, Output=T>
+    where T: Copy + $trt<T, Output=T>
 {
     fn $op_assign(&mut self, _rhs: Matrix<T>) {
         for (slice_row, target_row) in self.iter_rows_mut().zip(_rhs.iter_rows()) {
@@ -649,7 +675,7 @@ impl<'a, T> $assign_trt<Matrix<T>> for MatrixSliceMut<'a, T>
 #[doc=$doc]
 /// assignment between two matrices.
 impl<'a, 'b, T> $assign_trt<&'b Matrix<T>> for MatrixSliceMut<'a, T>
-    where T : Copy + $trt<T, Output=T>
+    where T: Copy + $trt<T, Output=T>
 {
     fn $op_assign(&mut self, _rhs: &Matrix<T>) {
         for (slice_row, target_row) in self.iter_rows_mut()
@@ -675,7 +701,7 @@ macro_rules! impl_op_assign_slice (
 #[doc=$doc]
 /// assignment between two matrices.
 impl<'a, 'b, T> $assign_trt<$target_slice<'b, T>> for MatrixSliceMut<'a, T>
-    where T : Copy + $trt<T, Output=T>
+    where T: Copy + $trt<T, Output=T>
 {
     fn $op_assign(&mut self, _rhs: $target_slice<T>) {
         for (slice_row, target_row) in self.iter_rows_mut()
@@ -691,7 +717,7 @@ impl<'a, 'b, T> $assign_trt<$target_slice<'b, T>> for MatrixSliceMut<'a, T>
 #[doc=$doc]
 /// assignment between two matrices.
 impl<'a, 'b, 'c, T> $assign_trt<&'c $target_slice<'b, T>> for MatrixSliceMut<'a, T>
-    where T : Copy + $trt<T, Output=T>
+    where T: Copy + $trt<T, Output=T>
 {
     fn $op_assign(&mut self, _rhs: &$target_slice<T>) {
         for (slice_row, target_row) in self.iter_rows_mut()
@@ -716,7 +742,8 @@ macro_rules! impl_op_assign_mat_slice (
 /// Performs elementwise
 #[doc=$doc]
 /// assignment between two matrices.
-impl<'a, T : Copy + $trt<T, Output=T>> $assign_trt<$target_mat<'a, T>> for Matrix<T> {
+impl<'a, T> $assign_trt<$target_mat<'a, T>> for Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     fn $op_assign(&mut self, _rhs: $target_mat<T>) {
         for (slice_row, target_row) in self.iter_rows_mut().zip(_rhs.iter_rows()) {
             utils::in_place_vec_bin_op(slice_row, target_row, |x, &y| {*x = (*x).$op(y) });
@@ -727,7 +754,8 @@ impl<'a, T : Copy + $trt<T, Output=T>> $assign_trt<$target_mat<'a, T>> for Matri
 /// Performs elementwise
 #[doc=$doc]
 /// assignment between two matrices.
-impl<'a, 'b, T : Copy + $trt<T, Output=T>> $assign_trt<&'b $target_mat<'a, T>> for Matrix<T> {
+impl<'a, 'b, T> $assign_trt<&'b $target_mat<'a, T>> for Matrix<T>
+    where T: Copy + $trt<T, Output=T> {
     fn $op_assign(&mut self, _rhs: &$target_mat<T>) {
         for (slice_row, target_row) in self.iter_rows_mut().zip(_rhs.iter_rows()) {
             utils::in_place_vec_bin_op(slice_row, target_row, |x, &y| {*x = (*x).$op(y) });
@@ -746,7 +774,8 @@ macro_rules! impl_neg_slice (
     ($slice:ident) => (
 
 /// Gets negative of matrix slice.
-impl<'a, T: Neg<Output = T> + Copy> Neg for $slice<'a, T> {
+impl<'a, T> Neg for $slice<'a, T>
+    where T: Neg<Output = T> + Copy {
     type Output = Matrix<T>;
 
     fn neg(self) -> Matrix<T> {
@@ -755,7 +784,8 @@ impl<'a, T: Neg<Output = T> + Copy> Neg for $slice<'a, T> {
 }
 
 /// Gets negative of matrix slice.
-impl<'a, 'b, T: Neg<Output = T> + Copy> Neg for &'b $slice<'a, T> {
+impl<'a, 'b, T> Neg for &'b $slice<'a, T>
+    where T: Neg<Output = T> + Copy {
     type Output = Matrix<T>;
 
     fn neg(self) -> Matrix<T> {
@@ -776,7 +806,9 @@ impl_neg_slice!(MatrixSlice);
 impl_neg_slice!(MatrixSliceMut);
 
 /// Gets negative of matrix.
-impl<T: Neg<Output = T> + Copy> Neg for Matrix<T> {
+impl<T> Neg for Matrix<T>
+    where T: Neg<Output = T> + Copy
+{
     type Output = Matrix<T>;
 
     fn neg(mut self) -> Matrix<T> {
@@ -789,7 +821,9 @@ impl<T: Neg<Output = T> + Copy> Neg for Matrix<T> {
 }
 
 /// Gets negative of matrix.
-impl<'a, T: Neg<Output = T> + Copy> Neg for &'a Matrix<T> {
+impl<'a, T> Neg for &'a Matrix<T>
+    where T: Neg<Output = T> + Copy
+{
     type Output = Matrix<T>;
 
     fn neg(self) -> Matrix<T> {
@@ -813,7 +847,9 @@ mod tests {
 
     #[test]
     fn indexing_mat() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
 
         assert_eq!(a[[0, 0]], 1.0);
         assert_eq!(a[[0, 1]], 2.0);
@@ -825,7 +861,9 @@ mod tests {
 
     #[test]
     fn matrix_vec_mul() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
         let b = Vector::new(vec![4., 7.]);
 
         let c = a * b;
@@ -839,7 +877,9 @@ mod tests {
 
     #[test]
     fn matrix_f32_mul() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
 
         // Allocating new memory
         let c = &a * &2.0;
@@ -884,8 +924,12 @@ mod tests {
 
     #[test]
     fn matrix_add() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
-        let b = Matrix::new(3, 2, vec![2., 3., 4., 5., 6., 7.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
+        let b = matrix!(2., 3.;
+                        4., 5.;
+                        6., 7.);
 
         // Allocating new memory
         let c = &a + &b;
@@ -930,7 +974,9 @@ mod tests {
 
     #[test]
     fn matrix_f32_add() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
         let b = 3.0;
 
         // Allocating new memory
@@ -976,8 +1022,12 @@ mod tests {
 
     #[test]
     fn matrix_sub() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
-        let b = Matrix::new(3, 2, vec![2., 3., 4., 5., 6., 7.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
+        let b = matrix!(2., 3.;
+                        4., 5.;
+                        6., 7.);
 
         // Allocate new memory
         let c = &a - &b;
@@ -1022,7 +1072,9 @@ mod tests {
 
     #[test]
     fn matrix_f32_sub() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
         let b = 3.0;
 
         // Allocating new memory
@@ -1068,7 +1120,9 @@ mod tests {
 
     #[test]
     fn matrix_f32_div() {
-        let a = Matrix::new(3, 2, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.);
         let b = 3.0;
 
         // Allocating new memory
@@ -1115,8 +1169,8 @@ mod tests {
     #[test]
     fn add_slice() {
         let a = 3.0;
-        let mut b = Matrix::new(3, 3, vec![2.0; 9]);
-        let c = Matrix::new(2, 2, vec![1.0; 4]);
+        let mut b = Matrix::ones(3, 3) * 2.;
+        let c = Matrix::ones(2, 2);
 
         {
             let d = MatrixSlice::from_matrix(&b, [1, 1], 2, 2);
@@ -1152,8 +1206,8 @@ mod tests {
     #[test]
     fn sub_slice() {
         let a = 3.0;
-        let b = Matrix::new(2, 2, vec![1.0; 4]);
-        let mut c = Matrix::new(3, 3, vec![2.0; 9]);
+        let b = Matrix::ones(2, 2);
+        let mut c = Matrix::ones(3, 3) * 2.;
 
         {
             let d = MatrixSlice::from_matrix(&c, [1, 1], 2, 2);
@@ -1190,7 +1244,7 @@ mod tests {
     fn div_slice() {
         let a = 3.0;
 
-        let mut b = Matrix::new(3, 3, vec![2.0; 9]);
+        let mut b = Matrix::ones(3, 3) * 2.;
 
         {
             let c = MatrixSlice::from_matrix(&b, [1, 1], 2, 2);
@@ -1207,14 +1261,14 @@ mod tests {
 
     #[test]
     fn neg_slice() {
-        let b = Matrix::new(3, 3, vec![2.0; 9]);
+        let b = Matrix::ones(3, 3) * 2.;
 
         let c = MatrixSlice::from_matrix(&b, [1, 1], 2, 2);
 
         let m = -c;
         assert_eq!(m.into_vec(), vec![-2.0;4]);
 
-        let mut b = Matrix::new(3, 3, vec![2.0; 9]);
+        let mut b = Matrix::ones(3, 3) * 2.;
 
         let c = MatrixSliceMut::from_matrix(&mut b, [1, 1], 2, 2);
 

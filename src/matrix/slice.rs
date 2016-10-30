@@ -20,6 +20,7 @@
 //! ```
 
 use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Axes};
+use matrix::{DiagOffset, Diagonal, DiagonalMut};
 use matrix::{back_substitution, forward_substitution};
 use vector::Vector;
 use utils;
@@ -44,6 +45,11 @@ pub trait BaseMatrix<T>: Sized {
 
     /// Row stride in the matrix.
     fn row_stride(&self) -> usize;
+
+    /// Returns true if the matrix contais no elements
+    fn is_empty(&self) -> bool {
+        self.rows() == 0 || self.cols() == 0
+    }
 
     /// Top left index of the matrix.
     fn as_ptr(&self) -> *const T;
@@ -158,6 +164,60 @@ pub trait BaseMatrix<T>: Sized {
             slice_rows: self.rows(),
             slice_cols: self.cols(),
             row_stride: self.row_stride() as isize,
+            _marker: PhantomData::<&T>,
+        }
+    }
+
+    /// Iterate over diagonal entries
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg;
+    ///
+    /// # fn main() {
+    /// use rulinalg::matrix::{DiagOffset, Matrix, BaseMatrix};
+    ///
+    /// let a = matrix![0, 1, 2;
+    ///                 3, 4, 5;
+    ///                 6, 7, 8];
+    /// // Print super diag [1, 5]
+    /// for d in a.iter_diag(DiagOffset::Above(1)) {
+    ///     println!("{}", d);
+    /// }
+    ///
+    /// // Print sub diag [3, 7]
+    /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
+    /// for d in a.iter_diag(DiagOffset::from(-1)) {
+    ///     println!("{}", d);
+    /// }
+    /// # }
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// If using an `Above` or `Below` offset which is
+    /// out-of-bounds this function will panic.
+    ///
+    /// This function will never panic if the `Main` diagonal
+    /// offset is used. 
+    fn iter_diag(&self, k: DiagOffset) -> Diagonal<T, Self> {
+        let (diag_len, diag_start) = match k.into() {
+            DiagOffset::Main => (min(self.rows(), self.cols()), 0),
+            DiagOffset::Above(m) => {
+                assert!(m < self.cols(), "Offset diagonal is not within matrix dimensions.");
+                (min(self.rows(), self.cols() - m), m)
+            },
+            DiagOffset::Below(m) => {
+                assert!(m < self.rows(), "Offset diagonal is not within matrix dimensions.");
+                (min(self.rows() - m, self.cols()), m * self.row_stride())
+            },
+        };
+
+        Diagonal {
+            matrix: self,
+            diag_pos: diag_start,
+            diag_end: diag_start + diag_len.saturating_sub(1) * self.row_stride() + diag_len,
             _marker: PhantomData::<&T>,
         }
     }
@@ -548,15 +608,7 @@ pub trait BaseMatrix<T>: Sized {
     fn diag(&self) -> Vector<T>
         where T: Copy
     {
-        let mat_min = min(self.rows(), self.cols());
-
-        let mut diagonal = Vec::with_capacity(mat_min);
-        unsafe {
-            for i in 0..mat_min {
-                diagonal.push(*self.get_unchecked([i, i]));
-            }
-        }
-        Vector::new(diagonal)
+        self.iter_diag(DiagOffset::Main).cloned().collect::<Vec<_>>().into()
     }
 
     /// Tranposes the given matrix
@@ -622,8 +674,9 @@ pub trait BaseMatrix<T>: Sized {
 
     /// Solves an upper triangular linear system.
     ///
-    /// Given a matrix `U`, which is upper triangular, and a vector `y`, this function returns `x`
-    /// such that `Ux = y`.
+    /// Given a matrix `A` and a vector `b`, this function returns the
+    /// solution of the upper triangular system `Ux = b`, where `U` is
+    /// the upper triangular part of `A`.
     ///
     /// # Examples
     ///
@@ -643,11 +696,11 @@ pub trait BaseMatrix<T>: Sized {
     /// # Panics
     ///
     /// - Vector size and matrix column count are not equal.
-    /// - Matrix is not upper triangular.
     ///
     /// # Failures
     ///
-    /// Fails if there is no valid solution to the system (matrix is singular).
+    /// - There is no valid solution to the system (matrix is singular).
+    /// - The matrix is empty.
     fn solve_u_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
         where T: Any + Float
     {
@@ -656,20 +709,14 @@ pub trait BaseMatrix<T>: Sized {
                         y.size(),
                         self.cols()));
 
-        // Make sure we are upper triangular.
-        for (row_idx, row) in self.iter_rows().enumerate() {
-            if row.iter().take(row_idx).any(|data| data != &T::zero()) {
-                panic!("Matrix is not upper triangular");
-            }
-        }
-
         back_substitution(self, y)
     }
 
     /// Solves a lower triangular linear system.
     ///
-    /// Given a matrix `L`, which is lower triangular, and a vector `y`, this function returns `x`
-    /// such that `Lx = y`.
+    /// Given a matrix `A` and a vector `b`, this function returns the
+    /// solution of the lower triangular system `Lx = b`, where `L` is
+    /// the lower triangular part of `A`.
     ///
     /// # Examples
     ///
@@ -690,11 +737,11 @@ pub trait BaseMatrix<T>: Sized {
     /// # Panics
     ///
     /// - Vector size and matrix column count are not equal.
-    /// - Matrix is not lower triangular.
     ///
     /// # Failures
     ///
-    /// Fails if there is no valid solution to the system (matrix is singular).
+    /// - There is no valid solution to the system (matrix is singular).
+    /// - The matrix is empty.
     fn solve_l_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
         where T: Any + Float
     {
@@ -702,14 +749,7 @@ pub trait BaseMatrix<T>: Sized {
                 format!("Vector size {0} != {1} Matrix column count.",
                         y.size(),
                         self.cols()));
-
-        // Make sure we are lower triangular.
-        for (row_idx, row) in self.iter_rows().enumerate() {
-            if row.iter().skip(row_idx + 1).any(|data| data != &T::zero()) {
-                panic!("Matrix is not lower triangular.");
-            }
-        }
-
+        
         forward_substitution(self, y)
     }
 
@@ -985,6 +1025,65 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         }
     }
 
+    /// Iterate over diagonal entries mutably
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg;
+    ///
+    /// # fn main() {
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut, DiagOffset};
+    ///
+    /// let mut a = matrix![0, 1, 2;
+    ///                     3, 4, 5;
+    ///                     6, 7, 8];
+    ///
+    /// // Increment super diag
+    /// for d in a.iter_diag_mut(DiagOffset::Above(1)) {
+    ///     *d = *d + 1;
+    /// }
+    ///
+    /// // Zero the sub-diagonal (sets 3 and 7 to 0)
+    /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
+    /// for sub_d in a.iter_diag_mut(DiagOffset::from(-1)) {
+    ///     *sub_d = 0;   
+    /// }
+    ///
+    /// println!("{}", a);
+    /// # }
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// If using an `Above` or `Below` offset which is
+    /// out-of-bounds this function will panic.
+    ///
+    /// This function will never panic if the `Main` diagonal
+    /// offset is used. 
+    fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
+        let (diag_len, diag_start) = match k.into() {
+            DiagOffset::Main => (min(self.rows(), self.cols()), 0),
+            DiagOffset::Above(m) => {
+                assert!(m < self.cols(), "Offset diagonal is not within matrix dimensions.");
+                (min(self.rows(), self.cols() - m), m)
+            },
+            DiagOffset::Below(m) => {
+                assert!(m < self.rows(), "Offset diagonal is not within matrix dimensions.");
+                (min(self.rows() - m, self.cols()), m * self.row_stride())
+            },
+        };
+
+
+        let diag_end = diag_start + (diag_len - 1) * self.row_stride() + diag_len;
+        DiagonalMut {
+            matrix: self,
+            diag_pos: diag_start,
+            diag_end: diag_end,
+            _marker: PhantomData::<&mut T>,
+        }
+    }
+
     /// Sets the underlying matrix data to the target data.
     ///
     /// # Examples
@@ -1130,6 +1229,9 @@ impl<T> BaseMatrix<T> for Matrix<T> {
     }
     fn row_stride(&self) -> usize {
         self.cols
+    }
+    fn is_empty(&self) -> bool {
+        self.data.is_empty()
     }
     fn as_ptr(&self) -> *const T {
         self.data.as_ptr()
@@ -1478,18 +1580,18 @@ impl_slice_iter!(SliceIterMut, &'a mut T);
 #[cfg(test)]
 mod tests {
     use super::{BaseMatrix, BaseMatrixMut};
-    use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Axes};
+    use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Axes, DiagOffset};
 
     #[test]
     #[should_panic]
     fn make_slice_bad_dim() {
-        let a = Matrix::new(3, 3, vec![2.0; 9]);
+        let a = Matrix::ones(3, 3) * 2.0;
         let _ = MatrixSlice::from_matrix(&a, [1, 1], 3, 2);
     }
 
     #[test]
     fn make_slice() {
-        let a = Matrix::new(3, 3, vec![2.0; 9]);
+        let a = Matrix::ones(3, 3) * 2.0;
         let b = MatrixSlice::from_matrix(&a, [1, 1], 2, 2);
 
         assert_eq!(b.rows(), 2);
@@ -1547,7 +1649,7 @@ mod tests {
 
     #[test]
     fn slice_into_matrix() {
-        let mut a = Matrix::new(3, 3, vec![2.0; 9]);
+        let mut a = Matrix::ones(3, 3) * 2.0;
 
         {
             let b = MatrixSlice::from_matrix(&a, [1, 1], 2, 2);
@@ -1619,6 +1721,30 @@ mod tests {
         assert_eq!(a[[2, 0]], 6);
         assert_eq!(a[[2, 1]], 7);
         assert_eq!(a[[2, 2]], 8);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_iter_diag_too_high() {
+        let a = matrix![0.0, 1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0, 7.0;
+                        8.0, 9.0, 10.0, 11.0];
+
+        for _ in a.iter_diag(DiagOffset::Above(4)) {
+
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_iter_diag_too_low() {
+        let a = matrix![0.0, 1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0, 7.0;
+                        8.0, 9.0, 10.0, 11.0];
+
+        for _ in a.iter_diag(DiagOffset::Below(3)) {
+
+        }
     }
 
     #[test]
@@ -1724,13 +1850,17 @@ mod tests {
 
     #[test]
     fn matrix_diag() {
-        let a = Matrix::new(3, 3, vec![1., 3., 5., 2., 4., 7., 1., 1., 0.]);
+        let a = matrix!(1., 3., 5.;
+                        2., 4., 7.;
+                        1., 1., 0.);
 
         let b = a.is_diag();
 
         assert!(!b);
 
-        let c = Matrix::new(3, 3, vec![1., 0., 0., 0., 2., 0., 0., 0., 3.]);
+        let c = matrix!(1., 0., 0.;
+                        0., 2., 0.;
+                        0., 0., 3.);
         let d = c.is_diag();
 
         assert!(d);
@@ -1738,7 +1868,11 @@ mod tests {
 
     #[test]
     fn transpose_mat() {
-        let a = Matrix::new(5, 2, vec![1., 2., 3., 4., 5., 6., 7., 8., 9., 10.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.;
+                        7., 8.;
+                        9., 10.);
 
         let c = a.transpose();
 

@@ -2,6 +2,57 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
+# 0.3.5
+
+### New Contributors
+
+- [gcollura](https://github.com/gcollura)
+
+### Breaking Changes
+
+- None
+
+### Features
+
+- Added new `iter_diag` and `iter_diag_mut` functions to `BaseMatrix`
+and `BaseMatrixMut` respectively.
+
+### Bug Fixes
+
+- The `matrix!` macro now works on empty matrices.
+
+### Minor Changes
+
+- Some refactoring of `decomposition` module.
+- More lenient error handling on triangular solvers.
+They no longer `assert!` that a matrix is triangular.
+- All tests are now using `matrix!` macro and other
+tidier constructors.
+
+# 0.3.4
+
+### New Contributors
+
+- [andrewcsmith](https://github.com/andrewcsmith)
+- [nwtnian](https://github.com/nwtnian)
+
+### Breaking Changes
+
+- Removed the `MachineEpsilon` trait. The same functionality
+now exists in [num](https://github.com/rust-num/num).
+
+### Features
+
+- Implemented `From`/`Into` for traits for `Vec` and `Vector`.
+
+### Bug Fixes
+
+- `det()` now returns `0` instead of panicking if `Matrix` is singular.
+
+### Minor Changes
+
+- None
+
 ## 0.3.3
 
 ### New Contributors

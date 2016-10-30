@@ -17,7 +17,7 @@ pub struct Error {
 ///
 /// List intended to grow and so you should
 /// be wary of matching against explicitly.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ErrorKind {
     /// An argument did not uphold a necessary criteria for the function.
     InvalidArg,
@@ -25,6 +25,8 @@ pub enum ErrorKind {
     DecompFailure,
     /// A failure due to some algebraic constraints not being met.
     AlgebraFailure,
+    /// Tried to divide by zero
+    DivByZero
 }
 
 impl Error {

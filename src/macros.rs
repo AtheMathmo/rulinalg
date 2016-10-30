@@ -45,6 +45,13 @@
 ///
 #[macro_export]
 macro_rules! matrix {
+    () => {
+        {
+            // Handle the case when called with no arguments, i.e. matrix![]
+            use $crate::matrix::Matrix;
+            Matrix::new(0, 0, vec![])
+        }
+    };
     ($( $( $x: expr ),*);*) => {
         {
             use $crate::matrix::Matrix;
@@ -63,6 +70,7 @@ macro_rules! matrix {
 #[cfg(test)]
 mod tests {
     use matrix::slice::BaseMatrix;
+    use matrix::Matrix;
 
     #[test]
     fn matrix_macro() {
@@ -101,6 +109,14 @@ mod tests {
             assert_eq!(3, mat.cols());
             assert_eq!(expected_data, mat.data());
         }
+    }
+
+    #[test]
+    fn matrix_macro_empty_mat() {
+        let mat: Matrix<f64> = matrix![];
+
+        assert_eq!(0, mat.rows());
+        assert_eq!(0, mat.cols());
     }
 
 }
