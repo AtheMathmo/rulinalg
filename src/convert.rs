@@ -43,17 +43,7 @@ impl_matrix_from!(MatrixSliceMut);
 
 
 macro_rules! impl_diag_offset_from {
-    ($unsigned_type:ty, $signed_type:ty) => {
-impl From<$unsigned_type> for DiagOffset {
-    fn from(int: $unsigned_type) -> Self {
-        if int.is_zero() {
-            DiagOffset::Main
-        } else {
-            DiagOffset::Above(int as usize)
-        }
-    }
-}
-
+    ($signed_type:ty) => {
 impl From<$signed_type> for DiagOffset {
     fn from(int: $signed_type) -> Self {
         if int.is_zero() {
@@ -68,11 +58,11 @@ impl From<$signed_type> for DiagOffset {
     }
 }
 
-impl_diag_offset_from!(u8, i8);
-impl_diag_offset_from!(u16, i16);
-impl_diag_offset_from!(u32, i32);
-impl_diag_offset_from!(u64, i64);
-impl_diag_offset_from!(usize, isize);
+impl_diag_offset_from!(i8);
+impl_diag_offset_from!(i16);
+impl_diag_offset_from!(i32);
+impl_diag_offset_from!(i64);
+impl_diag_offset_from!(isize);
 
 #[cfg(test)]
 mod tests {

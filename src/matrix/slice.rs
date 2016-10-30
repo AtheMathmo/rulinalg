@@ -187,8 +187,8 @@ pub trait BaseMatrix<T>: Sized {
     /// }
     ///
     /// // Print sub diag [3, 7]
-    /// // Equivalent to `iter_diag(DiagOffset::Below(-1))`
-    /// for d in a.iter_diag(-1) {
+    /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
+    /// for d in a.iter_diag(DiagOffset::from(-1)) {
     ///     println!("{}", d);
     /// }
     /// # }
@@ -201,8 +201,7 @@ pub trait BaseMatrix<T>: Sized {
     ///
     /// This function will never panic if the `Main` diagonal
     /// offset is used. 
-    fn iter_diag<D>(&self, k: D) -> Diagonal<T, Self>
-        where D: Into<DiagOffset> {
+    fn iter_diag(&self, k: DiagOffset) -> Diagonal<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
             DiagOffset::Above(m) => {
@@ -1046,8 +1045,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// }
     ///
     /// // Zero the sub-diagonal (sets 3 and 7 to 0)
-    /// // Equivalent to `iter_diag(DiagOffset::Below(-1))`
-    /// for sub_d in a.iter_diag_mut(-1) {
+    /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
+    /// for sub_d in a.iter_diag_mut(DiagOffset::from(-1)) {
     ///     *sub_d = 0;   
     /// }
     ///
@@ -1062,8 +1061,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// This function will never panic if the `Main` diagonal
     /// offset is used. 
-    fn iter_diag_mut<D>(&mut self, k: D) -> DiagonalMut<T, Self>
-        where D: Into<DiagOffset> {
+    fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
             DiagOffset::Above(m) => {
