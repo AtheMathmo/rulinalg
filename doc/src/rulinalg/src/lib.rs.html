@@ -149,13 +149,9 @@
 <span id="105">105</span>
 <span id="106">106</span>
 <span id="107">107</span>
-<span id="108">108</span>
-<span id="109">109</span>
-<span id="110">110</span>
-<span id="111">111</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! # The rulinalg crate.</span>
-<span class='doccomment'>//! </span>
+<span class='doccomment'>//!</span>
 <span class='doccomment'>//! A crate that provides high-dimensional linear algebra</span>
 <span class='doccomment'>//! implemented entirely in Rust.</span>
 <span class='doccomment'>//!</span>
@@ -196,7 +192,7 @@
 <span class='doccomment'>//!</span>
 <span class='doccomment'>//! The matrices are stored in row-major order. This means in the example above the top</span>
 <span class='doccomment'>//! row will be [1,2,3].</span>
-<span class='doccomment'>//! </span>
+<span class='doccomment'>//!</span>
 <span class='doccomment'>//! We can perform operations on matrices.</span>
 <span class='doccomment'>//!</span>
 <span class='doccomment'>//! ```</span>
@@ -253,10 +249,6 @@
 <span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>error</span>;
 <span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>utils</span>;
 <span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>vector</span>;
-
-<span class='comment'>// Remove this module once epsilon() makes it into the num crate.</span>
-<span class='kw'>mod</span> <span class='ident'>epsilon</span>;
-<span class='kw'>pub</span> <span class='kw'>use</span> <span class='ident'>epsilon</span>::<span class='ident'>MachineEpsilon</span>;
 
 <span class='doccomment'>/// Trait for linear algebra metrics.</span>
 <span class='doccomment'>///</span>

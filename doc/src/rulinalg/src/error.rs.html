@@ -99,6 +99,8 @@
 <span id="55">55</span>
 <span id="56">56</span>
 <span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! Error handling for the linalg module.</span>
 
@@ -119,7 +121,7 @@
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// List intended to grow and so you should</span>
 <span class='doccomment'>/// be wary of matching against explicitly.</span>
-<span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Debug</span>)]</span>
+<span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Debug</span>, <span class='ident'>PartialEq</span>)]</span>
 <span class='kw'>pub</span> <span class='kw'>enum</span> <span class='ident'>ErrorKind</span> {
     <span class='doccomment'>/// An argument did not uphold a necessary criteria for the function.</span>
     <span class='ident'>InvalidArg</span>,
@@ -127,6 +129,8 @@
     <span class='ident'>DecompFailure</span>,
     <span class='doccomment'>/// A failure due to some algebraic constraints not being met.</span>
     <span class='ident'>AlgebraFailure</span>,
+    <span class='doccomment'>/// Tried to divide by zero</span>
+    <span class='ident'>DivByZero</span>
 }
 
 <span class='kw'>impl</span> <span class='ident'>Error</span> {

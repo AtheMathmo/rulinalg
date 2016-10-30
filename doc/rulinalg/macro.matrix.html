@@ -47,9 +47,10 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-4061' class='srclink' href='../src/rulinalg/src/macros.rs.html#47-61' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-4263' class='srclink' href='../src/rulinalg/src/macros.rs.html#47-68' title='goto source code'>[src]</a></span></h1>
 <pre class='rust macro'>
 <span class='macro'>macro_rules</span><span class='macro'>!</span> <span class='ident'>matrix</span> {
+    () <span class='op'>=&gt;</span> { ... };
     ($( $( <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>x</span>: <span class='ident'>expr</span> ),<span class='op'>*</span>);<span class='op'>*</span>) <span class='op'>=&gt;</span> { ... };
 }</pre>
 <div class='docblock'><p>The <code>matrix!</code> macro enables easy construction of small matrices.</p>
@@ -71,7 +72,7 @@ don&#39;t match, the macro will fail to compile.</p>
 <span class='comment'>// Construct a 3x3 matrix of f64</span>
 <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
                   <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>;
-                  <span class='number'>7.0</span>, <span class='number'>8.0</span>, <span class='number'>9.0</span>);</pre>
+                  <span class='number'>7.0</span>, <span class='number'>8.0</span>, <span class='number'>9.0</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
 
 <p>To construct matrices of other types, specify the type by
 the usual Rust syntax:</p>
@@ -84,7 +85,7 @@ the usual Rust syntax:</p>
                                <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>);
 <span class='comment'>// Or</span>
 <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
-                  <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0f32</span>);</pre>
+                  <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0f32</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
 </div></section>
     <section id='search' class="content hidden"></section>
 

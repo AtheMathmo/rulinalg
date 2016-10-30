@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-2552' class='srclink' href='../../../src/rulinalg/src/matrix/slice.rs.html#1-1759' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-552' class='srclink' href='../../../src/rulinalg/src/matrix/slice.rs.html#1-1893' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>Traits for matrices operations.</p>
 
 <p>These traits defines operations for structs representing matrices arranged in row-major order.</p>
@@ -66,20 +66,20 @@
 <span class='kw'>let</span> <span class='ident'>mat_slice</span> <span class='op'>=</span> <span class='ident'>a</span>.<span class='ident'>sub_slice</span>([<span class='number'>0</span>,<span class='number'>1</span>], <span class='number'>3</span>, <span class='number'>2</span>);
 
 <span class='comment'>// We can perform arithmetic with mixing owned and borrowed versions</span>
-<span class='kw'>let</span> <span class='ident'>_new_mat</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='ident'>mat_slice</span>.<span class='ident'>transpose</span>() <span class='op'>*</span> <span class='kw-2'>&amp;</span><span class='ident'>a</span>;</pre>
+<span class='kw'>let</span> <span class='ident'>_new_mat</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='ident'>mat_slice</span>.<span class='ident'>transpose</span>() <span class='op'>*</span> <span class='kw-2'>&amp;</span><span class='ident'>a</span>;<a class='test-arrow' target='_blank' href=''>Run</a></pre>
 </div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table>
                        <tr class=' module-item'>
                            <td><a class='struct' href='struct.SliceIter.html'
                                   title='rulinalg::matrix::slice::SliceIter'>SliceIter</a></td>
-                           <td class='docblock short'>
+                           <td class='docblock-short'>
                                 <p>Iterator for matrix.</p>
                            </td>
                        </tr>
                        <tr class=' module-item'>
                            <td><a class='struct' href='struct.SliceIterMut.html'
                                   title='rulinalg::matrix::slice::SliceIterMut'>SliceIterMut</a></td>
-                           <td class='docblock short'>
+                           <td class='docblock-short'>
                                 <p>Iterator for mutable matrix.</p>
                            </td>
                        </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
@@ -87,14 +87,14 @@
                        <tr class=' module-item'>
                            <td><a class='trait' href='trait.BaseMatrix.html'
                                   title='rulinalg::matrix::slice::BaseMatrix'>BaseMatrix</a></td>
-                           <td class='docblock short'>
+                           <td class='docblock-short'>
                                 <p>Trait for immutable matrix structs.</p>
                            </td>
                        </tr>
                        <tr class=' module-item'>
                            <td><a class='trait' href='trait.BaseMatrixMut.html'
                                   title='rulinalg::matrix::slice::BaseMatrixMut'>BaseMatrixMut</a></td>
-                           <td class='docblock short'>
+                           <td class='docblock-short'>
                                 <p>Trait for mutable matrices.</p>
                            </td>
                        </tr></table></section>

@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-7' class='srclink' href='../../src/rulinalg/src/matrix/mod.rs.html#1-1059' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-7' class='srclink' href='../../src/rulinalg/src/matrix/mod.rs.html#1-1119' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>The matrix module.</p>
 
 <p>Currently contains all code
@@ -61,43 +61,57 @@ via <code>BaseMatrix</code> and <code>BaseMatrixMut</code> trait.</p>
                        <tr class=' module-item'>
                            <td><a class='mod' href='slice/index.html'
                                   title='rulinalg::matrix::slice'>slice</a></td>
-                           <td class='docblock short'>
+                           <td class='docblock-short'>
                                 <p>Traits for matrices operations.</p>
                            </td>
                        </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table>
                        <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Diagonal.html'
+                                  title='rulinalg::matrix::Diagonal'>Diagonal</a></td>
+                           <td class='docblock-short'>
+                                <p>An iterator over the diagonal elements of a matrix.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.DiagonalMut.html'
+                                  title='rulinalg::matrix::DiagonalMut'>DiagonalMut</a></td>
+                           <td class='docblock-short'>
+                                <p>An iterator over the mutable diagonal elements of a matrix.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
                            <td><a class='struct' href='struct.Matrix.html'
                                   title='rulinalg::matrix::Matrix'>Matrix</a></td>
-                           <td class='docblock short'>
+                           <td class='docblock-short'>
                                 <p>The <code>Matrix</code> struct.</p>
                            </td>
                        </tr>
                        <tr class=' module-item'>
                            <td><a class='struct' href='struct.MatrixSlice.html'
                                   title='rulinalg::matrix::MatrixSlice'>MatrixSlice</a></td>
-                           <td class='docblock short'>
+                           <td class='docblock-short'>
                                 <p>A <code>MatrixSlice</code></p>
                            </td>
                        </tr>
                        <tr class=' module-item'>
                            <td><a class='struct' href='struct.MatrixSliceMut.html'
                                   title='rulinalg::matrix::MatrixSliceMut'>MatrixSliceMut</a></td>
-                           <td class='docblock short'>
+                           <td class='docblock-short'>
                                 <p>A mutable <code>MatrixSliceMut</code></p>
                            </td>
                        </tr>
                        <tr class=' module-item'>
                            <td><a class='struct' href='struct.Rows.html'
                                   title='rulinalg::matrix::Rows'>Rows</a></td>
-                           <td class='docblock short'>
+                           <td class='docblock-short'>
                                 <p>Row iterator.</p>
                            </td>
                        </tr>
                        <tr class=' module-item'>
                            <td><a class='struct' href='struct.RowsMut.html'
                                   title='rulinalg::matrix::RowsMut'>RowsMut</a></td>
-                           <td class='docblock short'>
+                           <td class='docblock-short'>
                                 <p>Mutable row iterator.</p>
                            </td>
                        </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
@@ -105,8 +119,15 @@ via <code>BaseMatrix</code> and <code>BaseMatrixMut</code> trait.</p>
                        <tr class=' module-item'>
                            <td><a class='enum' href='enum.Axes.html'
                                   title='rulinalg::matrix::Axes'>Axes</a></td>
-                           <td class='docblock short'>
+                           <td class='docblock-short'>
                                 <p>Matrix dimensions</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.DiagOffset.html'
+                                  title='rulinalg::matrix::DiagOffset'>DiagOffset</a></td>
+                           <td class='docblock-short'>
+                                <p>Diagonal offset (used by Diagonal iterator).</p>
                            </td>
                        </tr></table></section>
     <section id='search' class="content hidden"></section>
