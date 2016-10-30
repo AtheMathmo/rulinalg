@@ -637,10 +637,8 @@ mod tests {
     }
 
     #[test]
-    fn into_iter_compile() {
-        let a = matrix![2.0, 2.0, 2.0;
-                        2.0, 2.0, 2.0;
-                        2.0, 2.0, 2.0];
+    fn into_iter_compile() { 
+        let a = Matrix::ones(3, 3) * 2.;
         let mut b = MatrixSlice::from_matrix(&a, [1, 1], 2, 2);
 
         for _ in b {
@@ -654,11 +652,9 @@ mod tests {
     }
 
     #[test]
-    fn into_iter_mut_compile() {
-        let mut a = matrix![2.0, 2.0, 2.0;
-                            2.0, 2.0, 2.0;
-                            2.0, 2.0, 2.0];
-
+    fn into_iter_mut_compile() { 
+        let mut a = Matrix::<f32>::ones(3, 3) * 2.;
+        
         {
             let b = MatrixSliceMut::from_matrix(&mut a, [1, 1], 2, 2);
 

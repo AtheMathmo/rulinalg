@@ -737,12 +737,14 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     where T: Any + Float,
           M: BaseMatrix<T>
 {
+    if m.is_empty() {
+        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."))
+    }
+
     let mut x = vec![T::zero(); y.size()];
 
     unsafe {
-        x[y.size() - 1] = y[y.size() - 1] / *m.get_unchecked([y.size() - 1, y.size() - 1]);
-
-        for i in (0..y.size() - 1).rev() {
+        for i in (0..y.size()).rev() {
             let mut holding_u_sum = T::zero();
             for j in (i + 1..y.size()).rev() {
                 holding_u_sum = holding_u_sum + *m.get_unchecked([i, j]) * x[j];
@@ -767,11 +769,14 @@ fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     where T: Any + Float,
           M: BaseMatrix<T>
 {
+    if m.is_empty() {
+        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."))
+    }
+
     let mut x = Vec::with_capacity(y.size());
 
     unsafe {
-        x.push(y[0] / *m.get_unchecked([0, 0]));
-        for (i, y_item) in y.data().iter().enumerate().take(y.size()).skip(1) {
+        for (i, y_item) in y.data().iter().enumerate().take(y.size()) {
             let mut holding_l_sum = T::zero();
             for (j, x_item) in x.iter().enumerate().take(i) {
                 holding_l_sum = holding_l_sum + *m.get_unchecked([i, j]) * *x_item;
@@ -857,7 +862,8 @@ mod tests {
     #[test]
     fn test_equality() {
         // well, "PartialEq", at least
-        let a = Matrix::new(2, 3, vec![1., 2., 3., 4., 5., 6.]);
+        let a = matrix!(1., 2., 3.;
+                        4., 5., 6.);
         let a_redux = a.clone();
         assert_eq!(a, a_redux);
     }
@@ -873,14 +879,15 @@ mod tests {
 
     #[test]
     fn test_display_formatting() {
-        let first_matrix = Matrix::new(2, 3, vec![1, 2, 3, 4, 5, 6]);
+        let first_matrix = matrix!(1, 2, 3;
+                                   4, 5, 6);
         let first_expectation = "⎡1 2 3⎤\n⎣4 5 6⎦";
         assert_eq!(first_expectation, format!("{}", first_matrix));
 
-        let second_matrix = Matrix::new(4,
-                                        3,
-                                        vec![3.14, 2.718, 1.414, 2.503, 4.669, 1.202, 1.618,
-                                             0.5772, 1.3, 2.68545, 1.282, 10000.]);
+        let second_matrix = matrix!(3.14, 2.718, 1.414;
+                                    2.503, 4.669, 1.202;
+                                    1.618, 0.5772, 1.3;
+                                    2.68545, 1.282, 10000.);
         let second_exp = "⎡   3.14   2.718   1.414⎤\n⎢  2.503   4.669   1.202⎥\n⎢  \
                         1.618  0.5772     1.3⎥\n⎣2.68545   1.282   10000⎦";
         assert_eq!(second_exp, format!("{}", second_matrix));
@@ -888,13 +895,14 @@ mod tests {
 
     #[test]
     fn test_single_row_display_formatting() {
-        let one_row_matrix = Matrix::new(1, 4, vec![1, 2, 3, 4]);
+        let one_row_matrix = matrix!(1, 2, 3, 4);
         assert_eq!("[1 2 3 4]", format!("{}", one_row_matrix));
     }
 
     #[test]
     fn test_display_formatting_precision() {
-        let our_matrix = Matrix::new(2, 3, vec![1.2, 1.23, 1.234, 1.2345, 1.23456, 1.234567]);
+        let our_matrix = matrix!(1.2, 1.23, 1.234;
+                                 1.2345, 1.23456, 1.234567);
         let expectations = vec!["⎡1.2 1.2 1.2⎤\n⎣1.2 1.2 1.2⎦",
 
                                 "⎡1.20 1.23 1.23⎤\n⎣1.23 1.23 1.23⎦",
@@ -910,7 +918,7 @@ mod tests {
 
     #[test]
     fn test_matrix_index_mut() {
-        let mut a = Matrix::new(3, 3, vec![2.0; 9]);
+        let mut a = Matrix::ones(3, 3) * 2.0;
 
         a[[0, 0]] = 13.0;
 
@@ -950,13 +958,17 @@ mod tests {
 
     #[test]
     fn matrix_diag() {
-        let a = Matrix::new(3, 3, vec![1., 3., 5., 2., 4., 7., 1., 1., 0.]);
+        let a = matrix!(1., 3., 5.;
+                        2., 4., 7.;
+                        1., 1., 0.);
 
         let b = a.is_diag();
 
         assert!(!b);
 
-        let c = Matrix::new(3, 3, vec![1., 0., 0., 0., 2., 0., 0., 0., 3.]);
+        let c = matrix!(1., 0., 0.;
+                        0., 2., 0.;
+                        0., 0., 3.);
         let d = c.is_diag();
 
         assert!(d);
@@ -964,20 +976,24 @@ mod tests {
 
     #[test]
     fn matrix_det() {
-        let a = Matrix::new(2, 2, vec![2., 3., 1., 2.]);
+        let a = matrix!(2., 3.;
+                        1., 2.);
         let b = a.det();
 
         assert_eq!(b, 1.);
 
-        let c = Matrix::new(3, 3, vec![1., 2., 3., 4., 5., 6., 7., 8., 9.]);
+        let c = matrix!(1., 2., 3.;
+                        4., 5., 6.;
+                        7., 8., 9.);
         let d = c.det();
 
         assert_eq!(d, 0.);
 
-        let e = Matrix::<f64>::new(5,
-                                   5,
-                                   vec![1., 2., 3., 4., 5., 3., 0., 4., 5., 6., 2., 1., 2., 3.,
-                                        4., 0., 0., 0., 6., 5., 0., 0., 0., 5., 6.]);
+        let e: Matrix<f64> = matrix!(1., 2., 3., 4., 5.;
+                                     3., 0., 4., 5., 6.;
+                                     2., 1., 2., 3., 4.;
+                                     0., 0., 0., 6., 5.;
+                                     0., 0., 0., 5., 6.);
 
         let f = e.det();
 
@@ -985,19 +1001,18 @@ mod tests {
         let error = abs(f - 99.);
         assert!(error < 1e-10);
 
-        let g: Matrix<f64> = matrix!(
-            1., 2., 3., 4.;
-            0., 0., 0., 0.;
-            0., 0., 0., 0.;
-            0., 0., 0., 0.
-        );
+        let g: Matrix<f64> = matrix!(1., 2., 3., 4.;
+                                     0., 0., 0., 0.;
+                                     0., 0., 0., 0.;
+                                     0., 0., 0., 0.);
         let h = g.det();
         assert_eq!(h, 0.);
     }
 
     #[test]
     fn matrix_solve() {
-        let a = Matrix::new(2, 2, vec![2., 3., 1., 2.]);
+        let a = matrix!(2., 3.;
+                        1., 2.);
 
         let y = Vector::new(vec![8., 5.]);
 
@@ -1061,7 +1076,7 @@ mod tests {
     fn test_empty_mean() {
         use super::Axes;
 
-        let a = Matrix::<f64>::new(0, 0, vec![]);
+        let a: Matrix<f64> = matrix!();
 
         let c = a.mean(Axes::Row);
         assert_eq!(*c.data(), vec![]);
@@ -1075,7 +1090,7 @@ mod tests {
         use super::Axes;
 
         // Only one row
-        let a = Matrix::<f32>::new(1, 2, vec![1.0, 2.0]);
+        let a: Matrix<f32> = matrix!(1.0, 2.0);
 
         let a_row = a.variance(Axes::Row);
         assert!(a_row.is_err());
@@ -1084,7 +1099,7 @@ mod tests {
         assert_eq!(*a_col.data(), vec![0.5]);
 
         // Only one column
-        let b = Matrix::<f32>::new(2, 1, vec![1.0, 2.0]);
+        let b: Matrix<f32> = matrix!(1.0; 2.0);
 
         let b_row = b.variance(Axes::Row).unwrap();
         assert_eq!(*b_row.data(), vec![0.5]);
@@ -1093,7 +1108,7 @@ mod tests {
         assert!(b_col.is_err());
 
         // Empty matrix
-        let d = Matrix::<f32>::new(0, 0, vec![]);
+        let d: Matrix<f32> = matrix!();
 
         let d_row = d.variance(Axes::Row);
         assert!(d_row.is_err());

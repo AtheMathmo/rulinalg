@@ -46,6 +46,11 @@ pub trait BaseMatrix<T>: Sized {
     /// Row stride in the matrix.
     fn row_stride(&self) -> usize;
 
+    /// Returns true if the matrix contais no elements
+    fn is_empty(&self) -> bool {
+        self.rows() == 0 || self.cols() == 0
+    }
+
     /// Top left index of the matrix.
     fn as_ptr(&self) -> *const T;
 
@@ -670,8 +675,9 @@ pub trait BaseMatrix<T>: Sized {
 
     /// Solves an upper triangular linear system.
     ///
-    /// Given a matrix `U`, which is upper triangular, and a vector `y`, this function returns `x`
-    /// such that `Ux = y`.
+    /// Given a matrix `A` and a vector `b`, this function returns the
+    /// solution of the upper triangular system `Ux = b`, where `U` is
+    /// the upper triangular part of `A`.
     ///
     /// # Examples
     ///
@@ -691,11 +697,11 @@ pub trait BaseMatrix<T>: Sized {
     /// # Panics
     ///
     /// - Vector size and matrix column count are not equal.
-    /// - Matrix is not upper triangular.
     ///
     /// # Failures
     ///
-    /// Fails if there is no valid solution to the system (matrix is singular).
+    /// - There is no valid solution to the system (matrix is singular).
+    /// - The matrix is empty.
     fn solve_u_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
         where T: Any + Float
     {
@@ -704,20 +710,14 @@ pub trait BaseMatrix<T>: Sized {
                         y.size(),
                         self.cols()));
 
-        // Make sure we are upper triangular.
-        for (row_idx, row) in self.iter_rows().enumerate() {
-            if row.iter().take(row_idx).any(|data| data != &T::zero()) {
-                panic!("Matrix is not upper triangular");
-            }
-        }
-
         back_substitution(self, y)
     }
 
     /// Solves a lower triangular linear system.
     ///
-    /// Given a matrix `L`, which is lower triangular, and a vector `y`, this function returns `x`
-    /// such that `Lx = y`.
+    /// Given a matrix `A` and a vector `b`, this function returns the
+    /// solution of the lower triangular system `Lx = b`, where `L` is
+    /// the lower triangular part of `A`.
     ///
     /// # Examples
     ///
@@ -738,11 +738,11 @@ pub trait BaseMatrix<T>: Sized {
     /// # Panics
     ///
     /// - Vector size and matrix column count are not equal.
-    /// - Matrix is not lower triangular.
     ///
     /// # Failures
     ///
-    /// Fails if there is no valid solution to the system (matrix is singular).
+    /// - There is no valid solution to the system (matrix is singular).
+    /// - The matrix is empty.
     fn solve_l_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
         where T: Any + Float
     {
@@ -750,14 +750,7 @@ pub trait BaseMatrix<T>: Sized {
                 format!("Vector size {0} != {1} Matrix column count.",
                         y.size(),
                         self.cols()));
-
-        // Make sure we are lower triangular.
-        for (row_idx, row) in self.iter_rows().enumerate() {
-            if row.iter().skip(row_idx + 1).any(|data| data != &T::zero()) {
-                panic!("Matrix is not lower triangular.");
-            }
-        }
-
+        
         forward_substitution(self, y)
     }
 
@@ -1239,6 +1232,9 @@ impl<T> BaseMatrix<T> for Matrix<T> {
     fn row_stride(&self) -> usize {
         self.cols
     }
+    fn is_empty(&self) -> bool {
+        self.data.is_empty()
+    }
     fn as_ptr(&self) -> *const T {
         self.data.as_ptr()
     }
@@ -1591,13 +1587,13 @@ mod tests {
     #[test]
     #[should_panic]
     fn make_slice_bad_dim() {
-        let a = Matrix::new(3, 3, vec![2.0; 9]);
+        let a = Matrix::ones(3, 3) * 2.0;
         let _ = MatrixSlice::from_matrix(&a, [1, 1], 3, 2);
     }
 
     #[test]
     fn make_slice() {
-        let a = Matrix::new(3, 3, vec![2.0; 9]);
+        let a = Matrix::ones(3, 3) * 2.0;
         let b = MatrixSlice::from_matrix(&a, [1, 1], 2, 2);
 
         assert_eq!(b.rows(), 2);
@@ -1655,7 +1651,7 @@ mod tests {
 
     #[test]
     fn slice_into_matrix() {
-        let mut a = Matrix::new(3, 3, vec![2.0; 9]);
+        let mut a = Matrix::ones(3, 3) * 2.0;
 
         {
             let b = MatrixSlice::from_matrix(&a, [1, 1], 2, 2);
@@ -1856,13 +1852,17 @@ mod tests {
 
     #[test]
     fn matrix_diag() {
-        let a = Matrix::new(3, 3, vec![1., 3., 5., 2., 4., 7., 1., 1., 0.]);
+        let a = matrix!(1., 3., 5.;
+                        2., 4., 7.;
+                        1., 1., 0.);
 
         let b = a.is_diag();
 
         assert!(!b);
 
-        let c = Matrix::new(3, 3, vec![1., 0., 0., 0., 2., 0., 0., 0., 3.]);
+        let c = matrix!(1., 0., 0.;
+                        0., 2., 0.;
+                        0., 0., 3.);
         let d = c.is_diag();
 
         assert!(d);
@@ -1870,7 +1870,11 @@ mod tests {
 
     #[test]
     fn transpose_mat() {
-        let a = Matrix::new(5, 2, vec![1., 2., 3., 4., 5., 6., 7., 8., 9., 10.]);
+        let a = matrix!(1., 2.;
+                        3., 4.;
+                        5., 6.;
+                        7., 8.;
+                        9., 10.);
 
         let c = a.transpose();
 
