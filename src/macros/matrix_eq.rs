@@ -63,7 +63,7 @@ impl<T, C, E> MatrixComparisonResult<T, C, E> where T: Copy + fmt::Display, C: E
                 }
                 Some(format!("\n
 Matrices X and Y have {num} mismatched element pairs. The mismatched elements are listed below, in the format
-(row, col): x = x[[row, col]], y = y[[row, col]].
+(row, col): x = X[[row, col]], y = Y[[row, col]].
 
 {mismatches}
 Comparison criterion: {description}
