@@ -48,7 +48,6 @@ pub enum MatrixComparisonResult<T, C, E> where T: Copy, C: ElementwiseComparator
 pub trait ElementwiseComparator<T, E> where T: Copy, E: ComparisonFailure {
     fn compare(&self, x: T, y: T) -> Option<E>;
     fn description(&self) -> String;
-    fn definition(&self) -> String;
 }
 
 impl<T, C, E> MatrixComparisonResult<T, C, E> where T: Copy + fmt::Display, C: ElementwiseComparator<T, E>, E: ComparisonFailure {
@@ -67,12 +66,10 @@ Matrices X and Y have {num} mismatched element pairs. The mismatched elements ar
 (row, col): x = x[[row, col]], y = y[[row, col]].
 
 {mismatches}
-Comparison criterion: {description}, defined by
-    {definition}.
+Comparison criterion: {description}
 \n",
                     num = mismatches.len(),
                     description = comparator.description(),
-                    definition = comparator.definition(),
                     mismatches = formatted_mismatches))
             },
             &MatrixComparisonResult::MismatchedDimensions { dim_x, dim_y } => {
@@ -138,7 +135,7 @@ pub struct AbsoluteElementwiseComparator<T> {
 impl<T> ComparisonFailure for AbsoluteError<T> where T: fmt::Display {
     fn failure_reason(&self) -> Option<String> {
         Some(
-            format!("Absolute error: {error}", error = self.0)
+            format!("Absolute error: {error}.", error = self.0)
         )
     }
 }
@@ -163,11 +160,7 @@ impl<T> ElementwiseComparator<T, AbsoluteError<T>> for AbsoluteElementwiseCompar
     }
 
     fn description(&self) -> String {
-        format!("absolute difference")
-    }
-
-    fn definition(&self) -> String {
-        format!("|x - y| <= {tol}", tol = self.tol)
+        format!("absolute difference, |x - y| <= {tol}.", tol = self.tol)
     }
 }
 
@@ -195,11 +188,7 @@ impl<T> ElementwiseComparator<T, ExactError> for ExactElementwiseComparator
     }
 
     fn description(&self) -> String {
-        format!("exact equality")
-    }
-
-    fn definition(&self) -> String {
-        format!("x == y")
+        format!("exact equality x == y.")
     }
 }
 
@@ -236,12 +225,7 @@ impl<T> ElementwiseComparator<T, UlpError> for UlpElementwiseComparator
     }
 
     fn description(&self) -> String {
-        format!("ULP difference less than {tol}. See documentation for details.", tol = self.tol)
-    }
-
-    fn definition(&self) -> String {
-        // TODO: Make definition optional.
-        format!("ULP")
+        format!("ULP difference less than or equal to {tol}. See documentation for details.", tol = self.tol)
     }
 }
 
