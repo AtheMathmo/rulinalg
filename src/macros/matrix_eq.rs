@@ -1,9 +1,10 @@
 use matrix::BaseMatrix;
+use ulp;
+use ulp::Ulp;
 
 use libnum::{Num};
 
 use std::fmt;
-
 
 #[doc(hidden)]
 pub trait ComparisonFailure {
@@ -173,6 +174,7 @@ impl<T> ElementwiseComparator<T, AbsoluteError<T>> for AbsoluteElementwiseCompar
 #[doc(hidden)]
 #[derive(Copy, Clone, Debug)]
 pub struct ExactElementwiseComparator;
+
 #[doc(hidden)]
 #[derive(Copy, Clone, Debug)]
 pub struct ExactError;
@@ -198,6 +200,48 @@ impl<T> ElementwiseComparator<T, ExactError> for ExactElementwiseComparator
 
     fn definition(&self) -> String {
         format!("x == y")
+    }
+}
+
+#[doc(hidden)]
+#[derive(Copy, Clone, Debug)]
+pub struct UlpElementwiseComparator {
+    pub tol: u64
+}
+
+#[doc(hidden)]
+#[derive(Copy, Clone, Debug)]
+pub struct UlpError(pub ulp::UlpComparisonResult);
+
+impl ComparisonFailure for UlpError {
+    fn failure_reason(&self) -> Option<String> {
+        use ulp::UlpComparisonResult;
+        match self.0 {
+            UlpComparisonResult::Difference(diff) => Some(format!("Difference: {diff} ULP.", diff=diff)),
+            UlpComparisonResult::IncompatibleSigns => Some(format!("Numbers have incompatible signs.")),
+            _ => None
+        }
+    }
+}
+
+impl<T> ElementwiseComparator<T, UlpError> for UlpElementwiseComparator
+    where T: Copy + Ulp {
+
+    fn compare(&self, a: T, b: T) -> Option<UlpError> {
+        let diff = Ulp::ulp_diff(&a, &b);
+        match diff {
+            ulp::UlpComparisonResult::ExactMatch => None,
+            _ => Some(UlpError(diff))
+        }
+    }
+
+    fn description(&self) -> String {
+        format!("ULP difference less than {tol}. See documentation for details.", tol = self.tol)
+    }
+
+    fn definition(&self) -> String {
+        // TODO: Make definition optional.
+        format!("ULP")
     }
 }
 
@@ -234,6 +278,18 @@ macro_rules! assert_matrix_eq {
         {
             use $crate::macros::{elementwise_matrix_comparison, AbsoluteElementwiseComparator};
             let msg = elementwise_matrix_comparison(&$x, &$y, AbsoluteElementwiseComparator { tol: $tol }).panic_message();
+            if let Some(msg) = msg {
+                // Note: We need the panic to incur here inside of the macro in order
+                // for the line number to be correct when using it for tests,
+                // hence we build the panic message in code, but panic here.
+                panic!(msg);
+            }
+        }
+    };
+    ($x:expr, $y:expr, comp = ulp, tol = $tol:expr) => {
+        {
+            use $crate::macros::{elementwise_matrix_comparison, UlpElementwiseComparator};
+            let msg = elementwise_matrix_comparison(&$x, &$y, UlpElementwiseComparator { tol: $tol }).panic_message();
             if let Some(msg) = msg {
                 // Note: We need the panic to incur here inside of the macro in order
                 // for the line number to be correct when using it for tests,
@@ -292,5 +348,33 @@ mod tests {
         let x = matrix![1.0, 2.0, 3.0;
                         4.0, 5.0, 6.0];
         assert_matrix_eq!(x, x, comp = exact);
+    }
+
+    #[test]
+    pub fn matrix_eq_ulp_compare_self() {
+        let x = matrix![1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0];
+        assert_matrix_eq!(x, x, comp = ulp, tol = 0);
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn matrix_eq_ulp_different_signs() {
+        let x = matrix![1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0];
+        let y = matrix![1.0, 2.0, -3.0;
+                        4.0, 5.0, 6.0];
+        assert_matrix_eq!(x, y, comp = ulp, tol = 0);
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn matrix_eq_ulp_nan() {
+        use std::f64;
+        let x = matrix![1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0];
+        let y = matrix![1.0, 2.0, f64::NAN;
+                        4.0, 5.0, 6.0];
+        assert_matrix_eq!(x, y, comp = ulp, tol = 0);
     }
 }
