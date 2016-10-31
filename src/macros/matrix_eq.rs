@@ -4,67 +4,53 @@ use libnum::{Num};
 
 use std::fmt;
 
+
 #[doc(hidden)]
-#[derive(Debug, Copy, Clone)]
-pub enum ComparisonError<T> {
-    ExactComparisonFailure,
-    ToleranceFailure(T)
+pub trait ComparisonFailure {
+    fn failure_reason(&self) -> Option<String>;
 }
 
 #[doc(hidden)]
 #[derive(Debug, Copy, Clone)]
-pub struct ElementComparisonError<T> {
+pub struct ElementComparisonFailure<T, E> where E: ComparisonFailure {
     pub x: T,
     pub y: T,
-    pub error: ComparisonError<T>,
+    pub error: E,
     pub row: usize,
     pub col: usize
 }
 
-impl<T> fmt::Display for ElementComparisonError<T> where T: fmt::Display {
+impl<T, E> fmt::Display for ElementComparisonFailure<T, E> where T: fmt::Display, E: ComparisonFailure {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let result = write!(f,
-            "({i}, {j}): x = {x}, y = {y}.",
-            i = self.row,
-            j = self.col,
-            x = self.x,
-            y = self.y);
-
-        match &self.error {
-            &ComparisonError::ToleranceFailure(ref error) => {
-                result.and(write!(f, " Error: {error}.", error = error))
-            },
-            _ => result
-        }
+        write!(f,
+               "({i}, {j}): x = {x}, y = {y}.{reason}",
+               i = self.row,
+               j = self.col,
+               x = self.x,
+               y = self.y,
+               reason = self.error.failure_reason()
+                                  // Add a space before the reason
+                                  .map(|s| format!(" {}", s))
+                                  .unwrap_or(String::new()))
     }
 }
 
 #[doc(hidden)]
 #[derive(Debug)]
-pub enum MatrixComparisonResult<T, C> where T: Copy, C: ElementwiseComparator<T> {
+pub enum MatrixComparisonResult<T, C, E> where T: Copy, C: ElementwiseComparator<T, E>, E: ComparisonFailure {
     Match,
     MismatchedDimensions { dim_x: (usize, usize), dim_y: (usize, usize) },
-    MismatchedElements { comparator: C, mismatches: Vec<ElementComparisonError<T>> }
+    MismatchedElements { comparator: C, mismatches: Vec<ElementComparisonFailure<T, E>> }
 }
 
 #[doc(hidden)]
-pub trait ElementwiseComparator<T> where T: Copy {
-    fn compare(&self, x: T, y: T) -> Option<ComparisonError<T>>;
+pub trait ElementwiseComparator<T, E> where T: Copy, E: ComparisonFailure {
+    fn compare(&self, x: T, y: T) -> Option<E>;
     fn description(&self) -> String;
     fn definition(&self) -> String;
 }
 
-#[doc(hidden)]
-#[derive(Copy, Clone, Debug)]
-pub struct AbsoluteElementwiseComparator<T> {
-    pub tol: T
-}
-
-#[doc(hidden)]
-#[derive(Copy, Clone, Debug)]
-pub struct ExactElementwiseComparator;
-
-impl<T, C> MatrixComparisonResult<T, C> where T: Copy + fmt::Display, C: ElementwiseComparator<T> {
+impl<T, C, E> MatrixComparisonResult<T, C, E> where T: Copy + fmt::Display, C: ElementwiseComparator<T, E>, E: ComparisonFailure {
     pub fn panic_message(&self) -> Option<String> {
         match self {
             &MatrixComparisonResult::MismatchedElements { ref comparator, ref mismatches } => {
@@ -103,8 +89,8 @@ Dimensions of matrices X and Y do not match.
 }
 
 #[doc(hidden)]
-pub fn elementwise_matrix_comparison<T, M, C>(x: &M, y: &M, comparator: C) -> MatrixComparisonResult<T, C>
-    where M: BaseMatrix<T>, T: Copy, C: ElementwiseComparator<T> {
+pub fn elementwise_matrix_comparison<T, M, C, E>(x: &M, y: &M, comparator: C) -> MatrixComparisonResult<T, C, E>
+    where M: BaseMatrix<T>, T: Copy, C: ElementwiseComparator<T, E>, E: ComparisonFailure {
     if x.rows() == y.rows() && x.cols() == y.cols() {
         let mismatches = {
             let mut mismatches = Vec::new();
@@ -115,7 +101,7 @@ pub fn elementwise_matrix_comparison<T, M, C>(x: &M, y: &M, comparator: C) -> Ma
                     let a = x[[i, j]].to_owned();
                     let b = y[[i, j]].to_owned();
                     if let Some(error) = comparator.compare(a, b) {
-                        mismatches.push(ElementComparisonError {
+                        mismatches.push(ElementComparisonFailure {
                             x: a,
                             y: b,
                             error: error,
@@ -138,10 +124,28 @@ pub fn elementwise_matrix_comparison<T, M, C>(x: &M, y: &M, comparator: C) -> Ma
     }
 }
 
-impl<T> ElementwiseComparator<T> for AbsoluteElementwiseComparator<T>
+#[doc(hidden)]
+#[derive(Copy, Clone, Debug)]
+struct AbsoluteError<T>(pub T);
+
+#[doc(hidden)]
+#[derive(Copy, Clone, Debug)]
+pub struct AbsoluteElementwiseComparator<T> {
+    pub tol: T
+}
+
+impl<T> ComparisonFailure for AbsoluteError<T> where T: fmt::Display {
+    fn failure_reason(&self) -> Option<String> {
+        Some(
+            format!("Absolute error: {error}", error = self.0)
+        )
+    }
+}
+
+impl<T> ElementwiseComparator<T, AbsoluteError<T>> for AbsoluteElementwiseComparator<T>
     where T: Copy + fmt::Display + Num + PartialOrd<T> {
 
-    fn compare(&self, a: T, b: T) -> Option<ComparisonError<T>> {
+    fn compare(&self, a: T, b: T) -> Option<AbsoluteError<T>> {
         // Note: Cannot use num::abs because we do not want to restrict
         // ourselves to Signed types (i.e. we still want to be able to
         // handle unsigned types).
@@ -152,7 +156,7 @@ impl<T> ElementwiseComparator<T> for AbsoluteElementwiseComparator<T>
             if distance <= self.tol {
                 None
             } else {
-                Some(ComparisonError::ToleranceFailure(distance))
+                Some(AbsoluteError(distance))
             }
         }
     }
@@ -166,14 +170,25 @@ impl<T> ElementwiseComparator<T> for AbsoluteElementwiseComparator<T>
     }
 }
 
-impl<T> ElementwiseComparator<T> for ExactElementwiseComparator
+#[doc(hidden)]
+#[derive(Copy, Clone, Debug)]
+pub struct ExactElementwiseComparator;
+#[doc(hidden)]
+#[derive(Copy, Clone, Debug)]
+pub struct ExactError;
+
+impl ComparisonFailure for ExactError {
+    fn failure_reason(&self) -> Option<String> { None }
+}
+
+impl<T> ElementwiseComparator<T, ExactError> for ExactElementwiseComparator
     where T: Copy + fmt::Display + PartialEq<T> {
 
-    fn compare(&self, a: T, b: T) -> Option<ComparisonError<T>> {
+    fn compare(&self, a: T, b: T) -> Option<ExactError> {
         if a == b {
             None
         } else {
-            Some(ComparisonError::ExactComparisonFailure)
+            Some(ExactError)
         }
     }
 
