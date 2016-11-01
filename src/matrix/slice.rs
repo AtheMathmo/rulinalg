@@ -200,7 +200,7 @@ pub trait BaseMatrix<T>: Sized {
     /// out-of-bounds this function will panic.
     ///
     /// This function will never panic if the `Main` diagonal
-    /// offset is used. 
+    /// offset is used.
     fn iter_diag(&self, k: DiagOffset) -> Diagonal<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
@@ -597,18 +597,17 @@ pub trait BaseMatrix<T>: Sized {
     /// let b = Matrix::new(3,2,vec![1,2,3,4,5,6]);
     /// let c = Matrix::new(2,3,vec![1,2,3,4,5,6]);
     ///
-    /// let d = &a.diag(); // 1,5,9
-    /// let e = &b.diag(); // 1,4
-    /// let f = &c.diag(); // 1,5
+    /// let d = a.diag().collect::<Vec<_>>(); // 1,5,9
+    /// let e = b.diag().collect::<Vec<_>>(); // 1,4
+    /// let f = c.diag().collect::<Vec<_>>(); // 1,5
     ///
-    /// assert_eq!(*d.data(), vec![1,5,9]);
-    /// assert_eq!(*e.data(), vec![1,4]);
-    /// assert_eq!(*f.data(), vec![1,5]);
+    /// assert_eq!(d, vec![&1,&5,&9]);
+    /// assert_eq!(e, vec![&1,&4]);
+    /// assert_eq!(f, vec![&1,&5]);
     /// ```
-    fn diag(&self) -> Vector<T>
-        where T: Copy
+    fn diag(&self) -> Diagonal<T, Self>
     {
-        self.iter_diag(DiagOffset::Main).cloned().collect::<Vec<_>>().into()
+        self.iter_diag(DiagOffset::Main)
     }
 
     /// Tranposes the given matrix
@@ -749,7 +748,7 @@ pub trait BaseMatrix<T>: Sized {
                 format!("Vector size {0} != {1} Matrix column count.",
                         y.size(),
                         self.cols()));
-        
+
         forward_substitution(self, y)
     }
 
@@ -1047,7 +1046,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// // Zero the sub-diagonal (sets 3 and 7 to 0)
     /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
     /// for sub_d in a.iter_diag_mut(DiagOffset::from(-1)) {
-    ///     *sub_d = 0;   
+    ///     *sub_d = 0;
     /// }
     ///
     /// println!("{}", a);
@@ -1060,7 +1059,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// out-of-bounds this function will panic.
     ///
     /// This function will never panic if the `Main` diagonal
-    /// offset is used. 
+    /// offset is used.
     fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),

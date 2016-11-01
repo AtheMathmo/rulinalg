@@ -55,10 +55,7 @@ fn sort_svd<T>(mut b: Matrix<T>,
 
     // This unfortunately incurs two allocations since we have no (simple)
     // way to iterate over a matrix diagonal, only to copy it into a new Vector
-    let mut indexed_sorted_values: Vec<_> = b.diag().into_vec()
-        .into_iter()
-        .enumerate()
-        .collect();
+    let mut indexed_sorted_values: Vec<_> = b.diag().cloned().enumerate().collect();
 
     // Sorting a vector of indices simultaneously with the singular values
     // gives us a mapping between old and new (final) column indices.
@@ -347,7 +344,7 @@ mod tests {
         let ref v_transposed = v.transpose();
         let ref mat_transposed = mat.transpose();
 
-        let mut singular_triplets = u_transposed.iter_rows().zip(b.diag().into_iter()).zip(v_transposed.iter_rows())
+        let mut singular_triplets = u_transposed.iter_rows().zip(b.diag()).zip(v_transposed.iter_rows())
             // chained zipping results in nested tuple. Flatten it.
             .map(|((u_col, singular_value), v_col)| (Vector::new(u_col), singular_value, Vector::new(v_col)));
 
@@ -407,7 +404,7 @@ mod tests {
 
         // Assert the singular values are what we expect
         assert!(expected_values.iter()
-            .zip(b.diag().data().iter())
+            .zip(b.diag())
             .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
     }
 
@@ -427,7 +424,7 @@ mod tests {
 
         // Assert the singular values are what we expect
         assert!(expected_values.iter()
-            .zip(b.diag().data().iter())
+            .zip(b.diag())
             .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
     }
 
@@ -447,7 +444,7 @@ mod tests {
 
         // Assert the singular values are what we expect
         assert!(expected_values.iter()
-            .zip(b.diag().data().iter())
+            .zip(b.diag())
             .all(|(expected, actual)| (expected - actual).abs() < 1e-12));
     }
 }
