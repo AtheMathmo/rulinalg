@@ -322,7 +322,7 @@ mod tests {
 
     fn validate_svd(mat: &Matrix<f64>, b: &Matrix<f64>, u: &Matrix<f64>, v: &Matrix<f64>) {
         // b is diagonal (the singular values)
-        for (idx, row) in b.iter_rows().enumerate() {
+        for (idx, row) in b.row_iter().enumerate() {
             assert!(!row.iter().take(idx).any(|&x| x > 1e-10));
             assert!(!row.iter().skip(idx + 1).any(|&x| x > 1e-10));
             // Assert non-negativity of diagonal elements
@@ -347,7 +347,7 @@ mod tests {
         let ref v_transposed = v.transpose();
         let ref mat_transposed = mat.transpose();
 
-        let mut singular_triplets = u_transposed.iter_rows().zip(b.diag().into_iter()).zip(v_transposed.iter_rows())
+        let mut singular_triplets = u_transposed.row_iter().zip(b.diag().into_iter()).zip(v_transposed.row_iter())
             // chained zipping results in nested tuple. Flatten it.
             .map(|((u_col, singular_value), v_col)| (Vector::new(u_col), singular_value, Vector::new(v_col)));
 
