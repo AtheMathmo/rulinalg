@@ -16,7 +16,9 @@ impl<T> From<Vec<T>> for Vector<T> {
     }
 }
 
-impl<'a, T> From<&'a [T]> for Vector<T> where T: Clone {
+impl<'a, T> From<&'a [T]> for Vector<T>
+    where T: Clone
+{
     fn from(slice: &'a [T]) -> Self {
         Vector::new(slice.to_owned())
     }
@@ -32,7 +34,7 @@ macro_rules! impl_matrix_from {
     ($slice_type:ident) => {
         impl<'a, T: Copy> From<$slice_type<'a, T>> for Matrix<T> {
             fn from(slice: $slice_type<'a, T>) -> Self {
-                slice.iter_rows().collect::<Matrix<T>>()
+                slice.row_iter().collect::<Matrix<T>>()
             }
         }
     }

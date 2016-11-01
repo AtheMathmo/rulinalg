@@ -574,7 +574,9 @@ impl<T: Any + Float> Matrix<T> {
             let (l, u, p) = match self.lup_decomp() {
                 Ok(x) => x,
                 Err(ref e) if *e.kind() == ErrorKind::DivByZero => return T::zero(),
-                _ => { panic!("Could not compute LUP decomposition."); }
+                _ => {
+                    panic!("Could not compute LUP decomposition.");
+                }
             };
 
             let mut d = T::one();
@@ -632,7 +634,7 @@ impl<'a, T: Float> Metric<T> for MatrixSlice<'a, T> {
     fn norm(&self) -> T {
         let mut s = T::zero();
 
-        for row in self.iter_rows() {
+        for row in self.row_iter() {
             s = s + utils::dot(row, row);
         }
         s.sqrt()
@@ -657,7 +659,7 @@ impl<'a, T: Float> Metric<T> for MatrixSliceMut<'a, T> {
     fn norm(&self) -> T {
         let mut s = T::zero();
 
-        for row in self.iter_rows() {
+        for row in self.row_iter() {
             s = s + utils::dot(row, row);
         }
         s.sqrt()
@@ -738,7 +740,7 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
           M: BaseMatrix<T>
 {
     if m.is_empty() {
-        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."))
+        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."));
     }
 
     let mut x = vec![T::zero(); y.size()];
@@ -751,9 +753,7 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
             }
 
             let diag = *m.get_unchecked([i, i]);
-            if diag.abs() < T::min_positive_value() +
-                T::min_positive_value()
-            {
+            if diag.abs() < T::min_positive_value() + T::min_positive_value() {
                 return Err(Error::new(ErrorKind::AlgebraFailure,
                                       "Linear system cannot be solved (matrix is singular)."));
             }
@@ -770,7 +770,7 @@ fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
           M: BaseMatrix<T>
 {
     if m.is_empty() {
-        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."))
+        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."));
     }
 
     let mut x = Vec::with_capacity(y.size());
@@ -848,15 +848,15 @@ mod tests {
 
     #[test]
     fn test_new_mat_from_fn() {
-      let mut counter = 0;
-      let m : Matrix<usize> = Matrix::from_fn(3, 2, |_, _| {
-        let value = counter;
-        counter += 1;
-        value
-      });
-      assert!(m.rows() == 3);
-      assert!(m.cols() == 2);
-      assert!(m.data == vec![0, 1, 2, 3, 4, 5]);
+        let mut counter = 0;
+        let m: Matrix<usize> = Matrix::from_fn(3, 2, |_, _| {
+            let value = counter;
+            counter += 1;
+            value
+        });
+        assert!(m.rows() == 3);
+        assert!(m.cols() == 2);
+        assert!(m.data == vec![0, 1, 2, 3, 4, 5]);
     }
 
     #[test]
