@@ -97,6 +97,7 @@ pub mod convert;
 pub mod error;
 pub mod utils;
 pub mod vector;
+pub mod sparse_matrix;
 
 /// Trait for linear algebra metrics.
 ///
