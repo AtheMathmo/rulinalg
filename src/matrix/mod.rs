@@ -84,7 +84,7 @@ pub struct Rows<'a, T: 'a> {
     _marker: PhantomData<&'a T>,
 }
 
-/// Mutable column iterator.
+/// Mutable row iterator.
 #[derive(Debug)]
 pub struct RowsMut<'a, T: 'a> {
     slice_start: *mut T,
@@ -105,7 +105,7 @@ pub struct Cols<'a, T: 'a> {
     slice_start: *const T,
 }
 
-/// Mutable row iterator.
+/// Mutable column iterator.
 #[derive(Debug)]
 pub struct ColsMut<'a, T: 'a> {
     _marker: PhantomData<&'a mut T>,
