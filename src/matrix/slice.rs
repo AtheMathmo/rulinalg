@@ -621,18 +621,19 @@ pub trait BaseMatrix<T>: Sized {
     /// let b = Matrix::new(3,2,vec![1,2,3,4,5,6]);
     /// let c = Matrix::new(2,3,vec![1,2,3,4,5,6]);
     ///
-    /// let d = a.diag().cloned().collect::<Vec<_>>(); // 1,5,9
-    /// let e = b.diag().cloned().collect::<Vec<_>>(); // 1,4
-    /// let f = c.diag().cloned().collect::<Vec<_>>(); // 1,5
+    /// let d = &a.diag(); // 1,5,9
+    /// let e = &b.diag(); // 1,4
+    /// let f = &c.diag(); // 1,5
     ///
-    /// assert_eq!(d, vec![1,5,9]);
-    /// assert_eq!(e, vec![1,4]);
-    /// assert_eq!(f, vec![1,5]);
+    /// assert_eq!(*d.data(), vec![1,5,9]);
+    /// assert_eq!(*e.data(), vec![1,4]);
+    /// assert_eq!(*f.data(), vec![1,5]);
     /// ```
-    fn diag(&self) -> Diagonal<T, Self>
+    fn diag(&self) -> Vector<T>
+        where T: Copy
     {
-        self.iter_diag(DiagOffset::Main)
-    }
+        self.iter_diag(DiagOffset::Main).cloned().collect::<Vec<_>>().into()
+	}
 
     /// Tranposes the given matrix
     ///
