@@ -19,7 +19,7 @@
 //! let _new_mat = &mat_slice.transpose() * &a;
 //! ```
 
-use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Axes};
+use matrix::{Axes, Cols, ColsMut, Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut};
 use matrix::{DiagOffset, Diagonal, DiagonalMut};
 use matrix::{back_substitution, forward_substitution};
 use vector::Vector;
@@ -168,6 +168,30 @@ pub trait BaseMatrix<T>: Sized {
         }
     }
 
+    /// Iterate over the columns of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    ///
+    /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
+    ///
+    /// // Prints "3" two times.
+    /// for row in a.cols_iter() {
+    ///     println!("{}", row.len());
+    /// }
+    /// ```
+    fn cols_iter(&self) -> Cols<T> {
+        Cols {
+            _marker: PhantomData::<&T>,
+            col_pos: 0,
+            slice_cols: self.cols(),
+            slice_rows: self.rows(),
+            slice_start: self.as_ptr(),
+        }
+    }
+
     /// Iterate over diagonal entries
     ///
     /// # Examples
@@ -200,7 +224,7 @@ pub trait BaseMatrix<T>: Sized {
     /// out-of-bounds this function will panic.
     ///
     /// This function will never panic if the `Main` diagonal
-    /// offset is used. 
+    /// offset is used.
     fn iter_diag(&self, k: DiagOffset) -> Diagonal<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
@@ -372,24 +396,24 @@ pub trait BaseMatrix<T>: Sized {
               I: IntoIterator<Item = &'a usize>,
               I::IntoIter: ExactSizeIterator + Clone
     {
-        let col_iter = cols.into_iter();
-        let mut mat_vec = Vec::with_capacity(col_iter.len() * self.rows());
+        let cols_iter = cols.into_iter();
+        let mut mat_vec = Vec::with_capacity(cols_iter.len() * self.rows());
 
-        for col in col_iter.clone() {
+        for col in cols_iter.clone() {
             assert!(*col < self.cols(),
                     "Column index is greater than number of columns.");
         }
 
         unsafe {
             for i in 0..self.rows() {
-                for col in col_iter.clone() {
+                for col in cols_iter.clone() {
                     mat_vec.push(*self.get_unchecked([i, *col]));
                 }
             }
         }
 
         Matrix {
-            cols: col_iter.len(),
+            cols: cols_iter.len(),
             rows: self.rows(),
             data: mat_vec,
         }
@@ -597,18 +621,17 @@ pub trait BaseMatrix<T>: Sized {
     /// let b = Matrix::new(3,2,vec![1,2,3,4,5,6]);
     /// let c = Matrix::new(2,3,vec![1,2,3,4,5,6]);
     ///
-    /// let d = &a.diag(); // 1,5,9
-    /// let e = &b.diag(); // 1,4
-    /// let f = &c.diag(); // 1,5
+    /// let d = a.diag().cloned().collect::<Vec<_>>(); // 1,5,9
+    /// let e = b.diag().cloned().collect::<Vec<_>>(); // 1,4
+    /// let f = c.diag().cloned().collect::<Vec<_>>(); // 1,5
     ///
-    /// assert_eq!(*d.data(), vec![1,5,9]);
-    /// assert_eq!(*e.data(), vec![1,4]);
-    /// assert_eq!(*f.data(), vec![1,5]);
+    /// assert_eq!(d, vec![1,5,9]);
+    /// assert_eq!(e, vec![1,4]);
+    /// assert_eq!(f, vec![1,5]);
     /// ```
-    fn diag(&self) -> Vector<T>
-        where T: Copy
+    fn diag(&self) -> Diagonal<T, Self>
     {
-        self.iter_diag(DiagOffset::Main).cloned().collect::<Vec<_>>().into()
+        self.iter_diag(DiagOffset::Main)
     }
 
     /// Tranposes the given matrix
@@ -749,7 +772,7 @@ pub trait BaseMatrix<T>: Sized {
                 format!("Vector size {0} != {1} Matrix column count.",
                         y.size(),
                         self.cols()));
-        
+
         forward_substitution(self, y)
     }
 
@@ -1025,6 +1048,34 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         }
     }
 
+    /// Iterate over the mutable columns of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
+    ///
+    /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
+    ///
+    /// for row in a.cols_iter_mut() {
+    ///     for r in row {
+    ///         *r = *r + 1;
+    ///     }
+    /// }
+    ///
+    /// // Now contains the range 1..7
+    /// println!("{}", a);
+    /// ```
+    fn cols_iter_mut(&mut self) -> ColsMut<T> {
+        ColsMut {
+            _marker: PhantomData::<&mut T>,
+            col_pos: 0,
+            slice_cols: self.cols(),
+            slice_rows: self.rows(),
+            slice_start: self.as_mut_ptr(),
+        }
+    }
+
     /// Iterate over diagonal entries mutably
     ///
     /// # Examples
@@ -1047,7 +1098,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// // Zero the sub-diagonal (sets 3 and 7 to 0)
     /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
     /// for sub_d in a.iter_diag_mut(DiagOffset::from(-1)) {
-    ///     *sub_d = 0;   
+    ///     *sub_d = 0;
     /// }
     ///
     /// println!("{}", a);
@@ -1060,7 +1111,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// out-of-bounds this function will panic.
     ///
     /// This function will never panic if the `Main` diagonal
-    /// offset is used. 
+    /// offset is used.
     fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
