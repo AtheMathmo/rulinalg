@@ -246,7 +246,7 @@ impl<T> ElementwiseComparator<T, UlpError> for UlpElementwiseComparator
 /// ```
 #[macro_export]
 macro_rules! assert_matrix_eq {
-    ($x:expr, $y:expr, comp = exact) => {
+    ($x:expr, $y:expr) => {
         {
             use $crate::macros::{elementwise_matrix_comparison, ExactElementwiseComparator};
             let msg = elementwise_matrix_comparison(&$x, &$y, ExactElementwiseComparator).panic_message();
@@ -254,6 +254,17 @@ macro_rules! assert_matrix_eq {
                 // Note: We need the panic to incur here inside of the macro in order
                 // for the line number to be correct when using it for tests,
                 // hence we build the panic message in code, but panic here.
+                panic!("{msg}
+Please see the documentation for ways to compare matrices approximately.\n\n",
+                    msg = msg.trim_right());
+            }
+        }
+    };
+    ($x:expr, $y:expr, comp = exact) => {
+        {
+            use $crate::macros::{elementwise_matrix_comparison, ExactElementwiseComparator};
+            let msg = elementwise_matrix_comparison(&$x, &$y, ExactElementwiseComparator).panic_message();
+            if let Some(msg) = msg {
                 panic!(msg);
             }
         }
@@ -263,9 +274,6 @@ macro_rules! assert_matrix_eq {
             use $crate::macros::{elementwise_matrix_comparison, AbsoluteElementwiseComparator};
             let msg = elementwise_matrix_comparison(&$x, &$y, AbsoluteElementwiseComparator { tol: $tol }).panic_message();
             if let Some(msg) = msg {
-                // Note: We need the panic to incur here inside of the macro in order
-                // for the line number to be correct when using it for tests,
-                // hence we build the panic message in code, but panic here.
                 panic!(msg);
             }
         }
@@ -275,9 +283,6 @@ macro_rules! assert_matrix_eq {
             use $crate::macros::{elementwise_matrix_comparison, UlpElementwiseComparator};
             let msg = elementwise_matrix_comparison(&$x, &$y, UlpElementwiseComparator { tol: $tol }).panic_message();
             if let Some(msg) = msg {
-                // Note: We need the panic to incur here inside of the macro in order
-                // for the line number to be correct when using it for tests,
-                // hence we build the panic message in code, but panic here.
                 panic!(msg);
             }
         }
