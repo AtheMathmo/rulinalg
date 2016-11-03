@@ -2,7 +2,7 @@ use matrix::BaseMatrix;
 use ulp;
 use ulp::Ulp;
 
-use libnum::{Num};
+use libnum::{Num, Float};
 
 use std::fmt;
 
@@ -229,6 +229,63 @@ impl<T> ElementwiseComparator<T, UlpError> for UlpElementwiseComparator
     }
 }
 
+#[doc(hidden)]
+#[derive(Copy, Clone, Debug)]
+pub struct FloatElementwiseComparator<T> {
+    abs: AbsoluteElementwiseComparator<T>,
+    ulp: UlpElementwiseComparator
+}
+
+#[doc(hidden)]
+#[allow(dead_code)]
+impl<T> FloatElementwiseComparator<T> where T: Float + Ulp {
+    pub fn default() -> Self {
+        FloatElementwiseComparator {
+            abs: AbsoluteElementwiseComparator { tol: T::epsilon() },
+            ulp: UlpElementwiseComparator { tol: 4 }
+        }
+    }
+
+    pub fn eps(self, eps: T) -> Self {
+        FloatElementwiseComparator {
+            abs: AbsoluteElementwiseComparator { tol: eps },
+            ulp: self.ulp
+        }
+    }
+
+    pub fn ulp(self, max_ulp: u64) -> Self {
+        FloatElementwiseComparator {
+            abs: self.abs,
+            ulp: UlpElementwiseComparator { tol: max_ulp }
+        }
+    }
+}
+
+impl<T> ElementwiseComparator<T, UlpError> for FloatElementwiseComparator<T>
+    where T: Copy + Ulp + Float + fmt::Display {
+    fn compare(&self, a: T, b: T) -> Option<UlpError> {
+        // First perform an absolute comparison with a presumably very small epsilon tolerance
+        if let Some(_) = self.abs.compare(a, b) {
+            // Then fall back to an ULP-based comparison
+            self.ulp.compare(a, b)
+        } else {
+            // If the epsilon comparison succeeds, we have a match
+            None
+        }
+    }
+
+    fn description(&self) -> String {
+        format!("
+Epsilon-sized absolute comparison, followed by an ULP-based comparison.
+Please see the documentation for details.
+Epsilon:       {eps}
+ULP tolerance: {ulp}",
+            eps = self.abs.tol,
+            ulp = self.ulp.tol)
+    }
+}
+
+
 /// Compare matrices for approximate equality.
 /// # Examples
 ///
@@ -282,6 +339,28 @@ Please see the documentation for ways to compare matrices approximately.\n\n",
         {
             use $crate::macros::{elementwise_matrix_comparison, UlpElementwiseComparator};
             let msg = elementwise_matrix_comparison(&$x, &$y, UlpElementwiseComparator { tol: $tol }).panic_message();
+            if let Some(msg) = msg {
+                panic!(msg);
+            }
+        }
+    };
+    ($x:expr, $y:expr, comp = float) => {
+        {
+            use $crate::macros::{elementwise_matrix_comparison, FloatElementwiseComparator};
+            let comp = FloatElementwiseComparator::default();
+            let msg = elementwise_matrix_comparison(&$x, &$y, comp).panic_message();
+            if let Some(msg) = msg {
+                panic!(msg);
+            }
+        }
+    };
+    // This following allows us to optionally tweak the epsilon and ulp tolerances
+    // used in the default float comparator.
+    ($x:expr, $y:expr, comp = float, $($key:ident = $val:expr),+) => {
+        {
+            use $crate::macros::{elementwise_matrix_comparison, FloatElementwiseComparator};
+            let comp = FloatElementwiseComparator::default()$(.$key($val))+;
+            let msg = elementwise_matrix_comparison(&$x, &$y, comp).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
@@ -347,6 +426,20 @@ mod tests {
     }
 
     #[test]
+    pub fn matrix_eq_default_compare_self_for_floating_point() {
+        let x = matrix![1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0];
+        assert_matrix_eq!(x, x);
+    }
+
+    #[test]
+    pub fn matrix_eq_default_compare_self_for_integer() {
+        let x = matrix![1, 2, 3;
+                        4, 5, 6];
+        assert_matrix_eq!(x, x);
+    }
+
+    #[test]
     #[should_panic]
     pub fn matrix_eq_ulp_different_signs() {
         let x = matrix![1.0, 2.0, 3.0;
@@ -365,5 +458,34 @@ mod tests {
         let y = matrix![1.0, 2.0, f64::NAN;
                         4.0, 5.0, 6.0];
         assert_matrix_eq!(x, y, comp = ulp, tol = 0);
+    }
+
+    #[test]
+    pub fn matrix_eq_float_compare_self() {
+        let x = matrix![1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0];
+        assert_matrix_eq!(x, x, comp = float);
+    }
+
+    #[test]
+    pub fn matrix_eq_float_compare_self_with_eps() {
+        let x = matrix![1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0];
+        assert_matrix_eq!(x, x, comp = float, eps = 1e-6);
+    }
+
+    #[test]
+    pub fn matrix_eq_float_compare_self_with_ulp() {
+        let x = matrix![1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0];
+        assert_matrix_eq!(x, x, comp = float, ulp = 12);
+    }
+
+    #[test]
+    pub fn matrix_eq_float_compare_self_with_eps_and_ulp() {
+        let x = matrix![1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0];
+        assert_matrix_eq!(x, x, comp = float, eps = 1e-6, ulp = 12);
+        assert_matrix_eq!(x, x, comp = float, ulp = 12, eps = 1e-6);
     }
 }

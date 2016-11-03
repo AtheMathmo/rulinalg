@@ -10,5 +10,6 @@ pub use self::matrix_eq::{
     elementwise_matrix_comparison,
     AbsoluteElementwiseComparator,
     ExactElementwiseComparator,
-    UlpElementwiseComparator
+    UlpElementwiseComparator,
+    FloatElementwiseComparator
 };
