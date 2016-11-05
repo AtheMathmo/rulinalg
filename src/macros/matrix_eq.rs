@@ -305,8 +305,12 @@ ULP tolerance: {ulp}",
 macro_rules! assert_matrix_eq {
     ($x:expr, $y:expr) => {
         {
+            // Note: The reason we take slices of both x and y is that if x or y are passed as references,
+            // we don't attempt to call elementwise_matrix_comparison with a &&BaseMatrix type (double reference),
+            // which does not work due to generics.
             use $crate::macros::{elementwise_matrix_comparison, ExactElementwiseComparator};
-            let msg = elementwise_matrix_comparison(&$x, &$y, ExactElementwiseComparator).panic_message();
+            use $crate::matrix::BaseMatrix;
+            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), ExactElementwiseComparator).panic_message();
             if let Some(msg) = msg {
                 // Note: We need the panic to incur here inside of the macro in order
                 // for the line number to be correct when using it for tests,
@@ -320,7 +324,8 @@ Please see the documentation for ways to compare matrices approximately.\n\n",
     ($x:expr, $y:expr, comp = exact) => {
         {
             use $crate::macros::{elementwise_matrix_comparison, ExactElementwiseComparator};
-            let msg = elementwise_matrix_comparison(&$x, &$y, ExactElementwiseComparator).panic_message();
+            use $crate::matrix::BaseMatrix;
+            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), ExactElementwiseComparator).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
@@ -329,7 +334,8 @@ Please see the documentation for ways to compare matrices approximately.\n\n",
     ($x:expr, $y:expr, comp = abs, tol = $tol:expr) => {
         {
             use $crate::macros::{elementwise_matrix_comparison, AbsoluteElementwiseComparator};
-            let msg = elementwise_matrix_comparison(&$x, &$y, AbsoluteElementwiseComparator { tol: $tol }).panic_message();
+            use $crate::matrix::BaseMatrix;
+            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), AbsoluteElementwiseComparator { tol: $tol }).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
@@ -338,7 +344,8 @@ Please see the documentation for ways to compare matrices approximately.\n\n",
     ($x:expr, $y:expr, comp = ulp, tol = $tol:expr) => {
         {
             use $crate::macros::{elementwise_matrix_comparison, UlpElementwiseComparator};
-            let msg = elementwise_matrix_comparison(&$x, &$y, UlpElementwiseComparator { tol: $tol }).panic_message();
+            use $crate::matrix::BaseMatrix;
+            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), UlpElementwiseComparator { tol: $tol }).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
@@ -347,8 +354,9 @@ Please see the documentation for ways to compare matrices approximately.\n\n",
     ($x:expr, $y:expr, comp = float) => {
         {
             use $crate::macros::{elementwise_matrix_comparison, FloatElementwiseComparator};
+            use $crate::matrix::BaseMatrix;
             let comp = FloatElementwiseComparator::default();
-            let msg = elementwise_matrix_comparison(&$x, &$y, comp).panic_message();
+            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), comp).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
@@ -359,8 +367,9 @@ Please see the documentation for ways to compare matrices approximately.\n\n",
     ($x:expr, $y:expr, comp = float, $($key:ident = $val:expr),+) => {
         {
             use $crate::macros::{elementwise_matrix_comparison, FloatElementwiseComparator};
+            use $crate::matrix::BaseMatrix;
             let comp = FloatElementwiseComparator::default()$(.$key($val))+;
-            let msg = elementwise_matrix_comparison(&$x, &$y, comp).panic_message();
+            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), comp).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
@@ -487,5 +496,20 @@ mod tests {
                         4.0, 5.0, 6.0];
         assert_matrix_eq!(x, x, comp = float, eps = 1e-6, ulp = 12);
         assert_matrix_eq!(x, x, comp = float, ulp = 12, eps = 1e-6);
+    }
+
+    #[test]
+    pub fn matrix_eq_pass_by_ref()
+    {
+        let x = matrix![0.0f64];
+
+        // Exercise all the macro definitions and make sure that we are able to call it
+        // when the arguments are references.
+        assert_matrix_eq!(&x, &x);
+        assert_matrix_eq!(&x, &x, comp = exact);
+        assert_matrix_eq!(&x, &x, comp = abs, tol = 0.0);
+        assert_matrix_eq!(&x, &x, comp = ulp, tol = 0);
+        assert_matrix_eq!(&x, &x, comp = float);
+        assert_matrix_eq!(&x, &x, comp = float, eps = 0.0, ulp = 0);
     }
 }
