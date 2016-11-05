@@ -1,7 +1,7 @@
-//! The ULP module.
+//! Tools for ULP-based comparison of floating point numbers.
 use std::mem;
 
-/// TODO: Docs
+/// Represents the result of an ULP-based comparison between two floating point numbers.
 #[derive(Debug, Copy, Clone)]
 pub enum UlpComparisonResult
 {
@@ -18,7 +18,9 @@ pub enum UlpComparisonResult
 }
 
 /// Floating point types for which two instances can be compared for Unit in the Last Place (ULP) difference.
-/// Implementing this trait enables the usage of the `ulp` comparator in `assert_matrix_eq!` for the given type.
+///
+/// Implementing this trait enables the usage of the `ulp` comparator in
+/// [assert_matrix_eq!](macro.assert_matrix_eq!.html) for the given type.
 ///
 /// The definition here leverages the fact that for two adjacent floating point numbers,
 /// their integer representations are also adjacent.
@@ -26,6 +28,12 @@ pub enum UlpComparisonResult
 /// A somewhat accessible (but not exhaustive) guide on the topic is available in the popular article
 /// [Comparing Floating Point Numbers, 2012 Edition]
 /// (https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/).
+///
+/// Implementations for `f32` and `f64` are already available, and so users should not normally
+/// need to implement this. In the case when a custom implementation is necessary,
+/// please see the possible return values for [UlpComparisonResult](ulp/enum.UlpComparisonResult.html).
+/// Otherwise, we can recommend to read the source code of the included `f32` and `f64` implementations.
+
 pub trait Ulp {
     /// Returns the difference between two floating point numbers, measured in ULP.
     fn ulp_diff(a: &Self, b: &Self) -> UlpComparisonResult;
@@ -38,6 +46,7 @@ macro_rules! impl_float_ulp {
                 if a == b {
                     UlpComparisonResult::ExactMatch
                 } else if a.is_sign_positive() != b.is_sign_positive() {
+                    // ULP is not meaningful when the signs of the two numbers differ
                     UlpComparisonResult::IncompatibleSigns
                 } else if a.is_nan() || b.is_nan() {
                     // Nor does it make much sense for NAN
