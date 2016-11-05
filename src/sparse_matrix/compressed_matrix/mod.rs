@@ -23,7 +23,7 @@ pub trait CompressedMatrix<T>: SparseMatrix<T> {
     /// Returns pointers (offsets)
     fn ptrs(&self) -> &[usize];
 
-    /// Iterates linearly over the the matrix returning its data and respective indices.
+    /// Iterates linearly over the matrix returning its data and respective indices.
     ///
     /// # Examples
     ///
@@ -44,7 +44,7 @@ pub trait CompressedMatrix<T>: SparseMatrix<T> {
     /// let a = CsrMatrix::new(3,3, vec![1, 2, 3], vec![0, 0, 1], vec![0, 2, 3, 3]);
     ///
     /// // Iterates linearly over CSR matrix, i.e, over rows
-    /// // Prints [0,0], [1,2] - [1], [3], [], []
+    /// // Prints [0, 0], [1, 2] - [1], [3] - [], []
     /// for (row_cols_indices, row_data) in a.iter_linear() {
     ///     println!("{:?}, {:?}", row_cols_indices, row_data);
     /// }
@@ -60,7 +60,7 @@ pub trait CompressedMatrix<T>: SparseMatrix<T> {
     /// let mut a = CscMatrix::new(3,3, vec![1, 2, 3], vec![0, 0, 1], vec![0, 2, 3, 3]);
     ///
     /// // Iterates linearly over CSC matrix, i.e, over columns.
-    /// // Prints [0,0], [1,2] - [1], [3] - [], []
+    /// // Prints [0, 0], [1, 2] - [1], [3] - [], []
     /// for (_, col_data) in a.iter_linear_mut() {
 	///		for data in col_data {
     ///     	*data = *data * 2;
