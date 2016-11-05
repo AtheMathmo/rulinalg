@@ -199,7 +199,8 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for Compressed<T> {
         for idx in 0..self.rows {
             ptrs[idx + 1] = ptrs[idx] + counter[idx];
         }
-        expand_ptrs(&self.ptrs, |ptr_idx, dest_idx| {
+
+        expand_ptrs_rev(&self.ptrs, |ptr_idx, dest_idx| {
             let old_col_idx = self.indices[dest_idx];
 
             counter[old_col_idx] -= 1;
