@@ -1,6 +1,5 @@
 use matrix::{Matrix, BaseMatrix, BaseMatrixMut};
 use error::{Error, ErrorKind};
-use utils;
 
 use std::any::Any;
 
