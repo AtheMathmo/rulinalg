@@ -37,7 +37,7 @@ pub trait CompressedMatrix<T>: SparseMatrix<T> {
     ///
     /// // Iterates linearly over CSC matrix, i.e, over columns.
     /// // Prints [0,0], [1,2] - [1], [3], [], []
-    /// for (col_rows_indices, col_data) in a.iter_linear() {
+    /// for (col_rows_indices, col_data) in a.iter() {
     ///     println!("{:?}, {:?}", col_rows_indices, col_data);
     /// }
     ///
@@ -46,15 +46,15 @@ pub trait CompressedMatrix<T>: SparseMatrix<T> {
     ///
     /// let a = CsrMatrix::new(3,3, vec![1, 2, 3], vec![0, 0, 1], vec![0, 2, 3, 3]);
     ///
-    /// // Iterates linearly over CSR matrix, i.e, over rows
+    /// // Iterates over CSR matrix, i.e, over rows
     /// // Prints [0, 0], [1, 2] - [1], [3] - [], []
-    /// for (row_cols_indices, row_data) in a.iter_linear() {
+    /// for (row_cols_indices, row_data) in a.iter() {
     ///     println!("{:?}, {:?}", row_cols_indices, row_data);
     /// }
     /// ```
-    fn iter_linear(&self) -> CompressedLinear<T>;
+    fn iter(&self) -> CompressedIter<T>;
 
-    /// Iterates linearly over of the matrix returning its mutable data and respective column indices.
+    /// Iterates over of the matrix returning its mutable data and respective column indices.
     ///
     /// # Examples
     ///
@@ -63,12 +63,12 @@ pub trait CompressedMatrix<T>: SparseMatrix<T> {
     ///
     /// let mut a = CscMatrix::new(3,3, vec![1, 2, 3], vec![0, 0, 1], vec![0, 2, 3, 3]);
     ///
-    /// // Iterates linearly over CSC matrix, i.e, over columns.
+    /// // Iterates over CSC matrix, i.e, over columns.
     /// // Prints [0, 0], [1, 2] - [1], [3] - [], []
-    /// for (_, col_data) in a.iter_linear_mut() {
-	///		for data in col_data {
+    /// for (_, col_data) in a.iter_mut() {
+    /// 		for data in col_data {
     ///     	*data = *data * 2;
-    ///		}
+    /// 		}
     /// }
     ///
     /// ```
@@ -78,13 +78,13 @@ pub trait CompressedMatrix<T>: SparseMatrix<T> {
     ///
     /// // Iterates linearly over CSR matrix, i.e, over rows
     /// // Prints [0,0], [1,2] - [1], [3] - [], []
-    /// for (_, row_data) in a.iter_linear_mut() {
-	///		for data in row_data {
+    /// for (_, row_data) in a.iter_mut() {
+    /// 		for data in row_data {
     ///     	*data = *data * 2;
-    ///		}
+    /// 		}
     /// }
     /// ```
-    fn iter_linear_mut(&mut self) -> CompressedLinearMut<T>;
+    fn iter_mut(&mut self) -> CompressedIterMut<T>;
 
     /// Returns a mutable slice of the underlying data.
     fn mut_data(&mut self) -> &mut [T];
@@ -110,7 +110,7 @@ struct Compressed<T> {
 
 /// Compressed matrix linear iterator
 #[derive(Debug)]
-pub struct CompressedLinear<'a, T: 'a> {
+pub struct CompressedIter<'a, T: 'a> {
     _marker: PhantomData<&'a T>,
     current_pos: usize,
     data: *const T,
@@ -121,7 +121,7 @@ pub struct CompressedLinear<'a, T: 'a> {
 
 /// Compressed matrix mutable linear iterator
 #[derive(Debug)]
-pub struct CompressedLinearMut<'a, T: 'a> {
+pub struct CompressedIterMut<'a, T: 'a> {
     _marker: PhantomData<&'a mut T>,
     current_pos: usize,
     data: *mut T,

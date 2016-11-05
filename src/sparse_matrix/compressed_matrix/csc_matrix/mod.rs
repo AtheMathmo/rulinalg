@@ -16,7 +16,7 @@
 
 use libnum::{One, Zero};
 
-use sparse_matrix::{CsrMatrix, CompressedLinear, CompressedLinearMut, CompressedMatrix, Triplet,
+use sparse_matrix::{CsrMatrix, CompressedIter, CompressedIterMut, CompressedMatrix, Triplet,
                     SparseMatrix};
 use sparse_matrix::compressed_matrix::Compressed;
 
@@ -66,12 +66,12 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for CscMatrix<T> {
         self.compressed.into_vec()
     }
 
-    fn iter_linear(&self) -> CompressedLinear<T> {
-        self.compressed.iter_linear()
+    fn iter(&self) -> CompressedIter<T> {
+        self.compressed.iter()
     }
 
-    fn iter_linear_mut(&mut self) -> CompressedLinearMut<T> {
-        self.compressed.iter_linear_mut()
+    fn iter_mut(&mut self) -> CompressedIterMut<T> {
+        self.compressed.iter_mut()
     }
 
     fn mut_data(&mut self) -> &mut [T] {

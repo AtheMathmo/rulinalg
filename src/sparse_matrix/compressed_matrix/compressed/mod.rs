@@ -7,8 +7,8 @@
 //! CSR matrix: Delegates all methods with no modifications.
 //! CSC matrix: Delegates all methods swaping rows for columns.
 
+mod compressed_iter;
 mod compressed_utils;
-mod compressed_iter_linear;
 
 use std::marker::PhantomData;
 use std::mem;
@@ -16,7 +16,7 @@ use std::mem;
 use libnum::{One, Zero};
 
 use self::compressed_utils::*;
-use sparse_matrix::{CompressedLinear, CompressedLinearMut, CompressedMatrix, Triplet, SparseMatrix};
+use sparse_matrix::{CompressedIter, CompressedIterMut, CompressedMatrix, Triplet, SparseMatrix};
 use sparse_matrix::compressed_matrix::Compressed;
 
 impl<T: Copy + One + Zero> CompressedMatrix<T> for Compressed<T> {
@@ -81,8 +81,8 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for Compressed<T> {
         self.data
     }
 
-    fn iter_linear(&self) -> CompressedLinear<T> {
-        CompressedLinear {
+    fn iter(&self) -> CompressedIter<T> {
+        CompressedIter {
             _marker: PhantomData::<&T>,
             current_pos: 0,
             data: self.data.as_ptr(),
@@ -92,8 +92,8 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for Compressed<T> {
         }
     }
 
-    fn iter_linear_mut(&mut self) -> CompressedLinearMut<T> {
-        CompressedLinearMut {
+    fn iter_mut(&mut self) -> CompressedIterMut<T> {
+        CompressedIterMut {
             _marker: PhantomData::<&mut T>,
             current_pos: 0,
             data: self.data.as_mut_ptr(),

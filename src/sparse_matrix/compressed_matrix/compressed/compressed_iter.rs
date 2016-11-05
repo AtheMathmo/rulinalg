@@ -1,8 +1,8 @@
 use std::slice;
 
-use sparse_matrix::{CompressedLinear, CompressedLinearMut};
+use sparse_matrix::{CompressedIter, CompressedIterMut};
 
-macro_rules! impl_iter_linear (
+macro_rules! impl_iter (
     ($iter_struct:ident, $data_type:ty, $slice_from_parts:ident) => (
 impl<'a, T> Iterator for $iter_struct<'a, T> {
     type Item = (&'a [usize], $data_type);
@@ -62,11 +62,11 @@ impl<'a, T> Iterator for $iter_struct<'a, T> {
     );
 );
 
-impl_iter_linear!(CompressedLinear, &'a [T], from_raw_parts);
-impl_iter_linear!(CompressedLinearMut, &'a mut [T], from_raw_parts_mut);
+impl_iter!(CompressedIter, &'a [T], from_raw_parts);
+impl_iter!(CompressedIterMut, &'a mut [T], from_raw_parts_mut);
 
-impl<'a, T> ExactSizeIterator for CompressedLinear<'a, T> {}
-impl<'a, T> ExactSizeIterator for CompressedLinearMut<'a, T> {}
+impl<'a, T> ExactSizeIterator for CompressedIter<'a, T> {}
+impl<'a, T> ExactSizeIterator for CompressedIterMut<'a, T> {}
 
 
 #[cfg(test)]
@@ -82,11 +82,11 @@ mod tests {
                                 vec![1, 2, 0, 3, 0, 2],
                                 vec![0, 0, 2, 2, 4, 4, 6, 6]);
 
-        let row_iter = a.iter_linear();
+        let row_iter = a.iter();
 
         assert_eq!(7, row_iter.count());
 
-        let mut row_iter_6 = a.iter_linear();
+        let mut row_iter_6 = a.iter();
         row_iter_6.next();
         assert_eq!(6, row_iter_6.count());
     }
@@ -99,13 +99,13 @@ mod tests {
                                 vec![1, 2, 0, 3, 0, 2],
                                 vec![0, 0, 2, 2, 4, 4, 6]);
 
-        let row_iter = a.iter_linear();
+        let row_iter = a.iter();
 
         let last0 = row_iter.last().unwrap();
         assert_eq!([0, 2], last0.0);
         assert_eq!([1, 6], last0.1);
 
-        let mut row_iter = a.iter_linear();
+        let mut row_iter = a.iter();
 
         row_iter.next();
 
@@ -113,7 +113,7 @@ mod tests {
         assert_eq!([0, 2], last1.0);
         assert_eq!([1, 6], last1.1);
 
-        let mut row_iter = a.iter_linear();
+        let mut row_iter = a.iter();
 
         row_iter.next();
         row_iter.next();
@@ -144,7 +144,7 @@ mod tests {
         let mut counter = 0;
         let indices = [[1, 2], [0, 3], [0, 2]];
 
-        for (cols, row) in a.iter_linear() {
+        for (cols, row) in a.iter() {
             if row.len() != 0 {
                 assert_eq!(data[counter], *row);
                 assert_eq!(indices[counter], *cols);
@@ -154,7 +154,7 @@ mod tests {
 
         counter = 0;
 
-        for (cols, row) in a.iter_linear_mut() {
+        for (cols, row) in a.iter_mut() {
             if row.len() != 0 {
                 assert_eq!(data[counter], *row);
                 assert_eq!(indices[counter], *cols);
@@ -162,7 +162,7 @@ mod tests {
             }
         }
 
-        for (_, row) in a.iter_linear_mut() {
+        for (_, row) in a.iter_mut() {
             for value in row {
                 *value = 0;
             }
@@ -179,7 +179,7 @@ mod tests {
                                 vec![1, 2, 0, 3, 0, 2],
                                 vec![0, 0, 2, 2, 4, 4, 6, 6]);
 
-        let mut row_iter = a.iter_linear();
+        let mut row_iter = a.iter();
 
         let nth0 = row_iter.nth(1).unwrap();
         assert_eq!([1usize, 2], nth0.0);
@@ -205,7 +205,7 @@ mod tests {
                                 vec![1, 2, 0, 3, 0, 2],
                                 vec![0, 0, 2, 2, 4, 4, 6, 6]);
 
-        let mut row_iter = a.iter_linear();
+        let mut row_iter = a.iter();
 
         assert_eq!((7, Some(7)), row_iter.size_hint());
         row_iter.next();
