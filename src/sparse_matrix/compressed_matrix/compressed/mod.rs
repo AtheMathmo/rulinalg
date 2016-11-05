@@ -35,10 +35,12 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for Compressed<T> {
         let mut ptrs = vec![0; rows + 1];
         let mut sum_ptrs = 0;
 
+        // Fill ptrs with each row nnz
         for idcs_idx in 0..nnz {
             ptrs[triplets[idcs_idx].row()] += 1;
         }
 
+        // Incremental addition of rows nnz
         for ptr_idx in 0..rows {
             let tmp_ptr = ptrs[ptr_idx];
             ptrs[ptr_idx] = sum_ptrs;
@@ -47,6 +49,7 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for Compressed<T> {
 
         ptrs[rows] = nnz;
 
+        // Fill indices, data and adjust ptrs
         for idcs_idx in 0..nnz {
             let ptr_idx = triplets[idcs_idx].row();
             let dest_idx = ptrs[ptr_idx];
@@ -57,6 +60,7 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for Compressed<T> {
             ptrs[ptr_idx] += 1;
         }
 
+        // Correct ptrs order
         for ptr_idx in 0..nnz {
             let tmp_ptr = ptrs[ptr_idx];
             ptrs[ptr_idx] = last_ptr;
