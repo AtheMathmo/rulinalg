@@ -1,6 +1,6 @@
 use std::slice;
 
-use super::{CompressedLinear, CompressedLinearMut};
+use sparse_matrix::{CompressedLinear, CompressedLinearMut};
 
 macro_rules! impl_iter_linear (
     ($iter_struct:ident, $data_type:ty, $slice_from_parts:ident) => (
@@ -71,7 +71,7 @@ impl<'a, T> ExactSizeIterator for CompressedLinearMut<'a, T> {}
 
 #[cfg(test)]
 mod tests {
-    use sparse_matrix::{CompressedMatrix, SparseMatrix};
+    use sparse_matrix::CompressedMatrix;
     use sparse_matrix::compressed_matrix::Compressed;
 
     #[test]

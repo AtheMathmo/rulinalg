@@ -16,41 +16,8 @@ use std::mem;
 use libnum::{One, Zero};
 
 use self::compressed_utils::*;
-use sparse_matrix::{Triplet, CompressedMatrix, SparseMatrix};
-
-/// The `Compressed` struct.
-///
-/// Can be instantiated with any type.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Compressed<T> {
-    cols: usize,
-    data: Vec<T>,
-    indices: Vec<usize>,
-    ptrs: Vec<usize>,
-    rows: usize,
-}
-
-/// Compressed matrix linear iterator
-#[derive(Debug)]
-pub struct CompressedLinear<'a, T: 'a> {
-    _marker: PhantomData<&'a T>,
-    current_pos: usize,
-    data: *const T,
-    indices: &'a [usize],
-    positions: usize,
-    ptrs: &'a [usize],
-}
-
-/// Compressed matrix mutable linear iterator
-#[derive(Debug)]
-pub struct CompressedLinearMut<'a, T: 'a> {
-    _marker: PhantomData<&'a mut T>,
-    current_pos: usize,
-    data: *mut T,
-    indices: &'a [usize],
-    positions: usize,
-    ptrs: &'a [usize],
-}
+use sparse_matrix::{CompressedLinear, CompressedLinearMut, CompressedMatrix, Triplet, SparseMatrix};
+use sparse_matrix::compressed_matrix::Compressed;
 
 impl<T: Copy + One + Zero> CompressedMatrix<T> for Compressed<T> {
     fn data(&self) -> &[T] {

@@ -2,11 +2,12 @@
 //!
 //! Used as a common interface for Csc and Csr matrices implementations.
 
-pub mod compressed;
+mod compressed;
 pub mod csc_matrix;
 pub mod csr_matrix;
 
-pub use self::compressed::{Compressed, CompressedLinear, CompressedLinearMut};
+use std::marker::PhantomData;
+
 use sparse_matrix::{Triplet, SparseMatrix};
 
 /// Contract for compressed matrices implementation
@@ -93,4 +94,38 @@ pub trait CompressedMatrix<T>: SparseMatrix<T> {
 
     /// Returns pointers (offsets)
     fn ptrs(&self) -> &[usize];
+}
+
+/// The `Compressed` struct.
+///
+/// Can be instantiated with any type.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+struct Compressed<T> {
+    cols: usize,
+    data: Vec<T>,
+    indices: Vec<usize>,
+    ptrs: Vec<usize>,
+    rows: usize,
+}
+
+/// Compressed matrix linear iterator
+#[derive(Debug)]
+pub struct CompressedLinear<'a, T: 'a> {
+    _marker: PhantomData<&'a T>,
+    current_pos: usize,
+    data: *const T,
+    indices: &'a [usize],
+    positions: usize,
+    ptrs: &'a [usize],
+}
+
+/// Compressed matrix mutable linear iterator
+#[derive(Debug)]
+pub struct CompressedLinearMut<'a, T: 'a> {
+    _marker: PhantomData<&'a mut T>,
+    current_pos: usize,
+    data: *mut T,
+    indices: &'a [usize],
+    positions: usize,
+    ptrs: &'a [usize],
 }

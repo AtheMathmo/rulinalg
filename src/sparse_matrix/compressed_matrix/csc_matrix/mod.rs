@@ -16,8 +16,9 @@
 
 use libnum::{One, Zero};
 
-use sparse_matrix::compressed_matrix::{Compressed, CompressedLinear, CompressedLinearMut};
-use sparse_matrix::{CompressedMatrix, CsrMatrix, SparseMatrix, Triplet};
+use sparse_matrix::{CsrMatrix, CompressedLinear, CompressedLinearMut, CompressedMatrix, Triplet,
+                    SparseMatrix};
+use sparse_matrix::compressed_matrix::Compressed;
 
 /// The `CscMatrix` struct.
 ///
@@ -123,7 +124,8 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for CscMatrix<T> {
 
 #[cfg(test)]
 mod tests {
-    use sparse_matrix::{CompressedMatrix, CscMatrix, CsrMatrix, SparseMatrix};
+    use sparse_matrix::{CscMatrix, CsrMatrix, SparseMatrix};
+    use sparse_matrix::compressed_matrix::CompressedMatrix;
 
     #[test]
     fn test_equality() {
