@@ -17,31 +17,28 @@ pub use self::triplet::Triplet;
 
 /// Contract for sparse matrices implementation
 pub trait SparseMatrix<T> {
+    /// Returns number of cols
+    fn cols(&self) -> usize;
+
+    /// Returns the specified data
+    fn get(&self, row: usize, col: usize) -> T;
+
     /// Constructs matrix with given diagonal.
     ///
     /// Requires slice of diagonal elements.
     fn from_diag(diag: &[T]) -> Self;
+
     /// Constructs the identity matrix.
     ///
     /// Requires the size of the matrix.
     fn identity(size: usize) -> Self;
 
-    /// Returns number of cols
-    fn cols(&self) -> usize;
     /// Returns number of non zero elements
     fn nnz(&self) -> usize;
+
     /// Returns number of rows
     fn rows(&self) -> usize;
 
-    /// Returns the specified data
-    fn get(&self, row: usize, col: usize) -> T;
     /// Tranposes the given matrix
     fn transpose(&mut self);
-
-    /// Returns a non-mutable reference to the underlying data.
-    fn data(&self) -> &[T];
-    /// Returns a mutable slice of the underlying data.
-    fn mut_data(&mut self) -> &mut [T];
-    /// Consumes the Matrix and returns the Vec of data.
-    fn into_vec(self) -> Vec<T>;
 }

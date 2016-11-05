@@ -53,6 +53,10 @@ pub struct CompressedLinearMut<'a, T: 'a> {
 }
 
 impl<T: Copy + One + Zero> CompressedMatrix<T> for Compressed<T> {
+    fn data(&self) -> &[T] {
+        &self.data
+    }
+
     fn from_triplets<R>(rows: usize, cols: usize, triplets: &[R]) -> Compressed<T>
         where R: Triplet<T>
     {
@@ -100,6 +104,42 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for Compressed<T> {
             rows: rows,
         }
     }
+
+
+    fn indices(&self) -> &[usize] {
+        &self.indices
+    }
+
+    fn into_vec(self) -> Vec<T> {
+        self.data
+    }
+
+    fn iter_linear(&self) -> CompressedLinear<T> {
+        CompressedLinear {
+            _marker: PhantomData::<&T>,
+            current_pos: 0,
+            data: self.data.as_ptr(),
+            indices: &self.indices,
+            positions: self.rows,
+            ptrs: &self.ptrs,
+        }
+    }
+
+    fn iter_linear_mut(&mut self) -> CompressedLinearMut<T> {
+        CompressedLinearMut {
+            _marker: PhantomData::<&mut T>,
+            current_pos: 0,
+            data: self.data.as_mut_ptr(),
+            indices: &self.indices,
+            positions: self.rows,
+            ptrs: &self.ptrs,
+        }
+    }
+
+    fn mut_data(&mut self) -> &mut [T] {
+        &mut self.data
+    }
+
     fn new(rows: usize,
            cols: usize,
            data: Vec<T>,
@@ -119,47 +159,16 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for Compressed<T> {
         }
     }
 
-    fn indices(&self) -> &[usize] {
-        &self.indices
-    }
     fn ptrs(&self) -> &[usize] {
         &self.ptrs
-    }
-
-    fn iter_linear(&self) -> CompressedLinear<T> {
-        CompressedLinear {
-            _marker: PhantomData::<&T>,
-            current_pos: 0,
-            data: self.data.as_ptr(),
-            indices: &self.indices,
-            positions: self.rows,
-            ptrs: &self.ptrs,
-        }
-    }
-    fn iter_linear_mut(&mut self) -> CompressedLinearMut<T> {
-        CompressedLinearMut {
-            _marker: PhantomData::<&mut T>,
-            current_pos: 0,
-            data: self.data.as_mut_ptr(),
-            indices: &self.indices,
-            positions: self.rows,
-            ptrs: &self.ptrs,
-        }
     }
 }
 
 impl<T: Copy + One + Zero> SparseMatrix<T> for Compressed<T> {
-    fn from_diag(diag: &[T]) -> Compressed<T> {
-        let size = diag.len();
-
-        Compressed {
-            cols: size,
-            data: diag.to_vec(),
-            indices: (0..size).collect::<Vec<usize>>(),
-            ptrs: (0..(size + 1)).collect::<Vec<usize>>(),
-            rows: size,
-        }
+    fn cols(&self) -> usize {
+        self.cols
     }
+
     fn identity(size: usize) -> Compressed<T> {
         Compressed {
             cols: size,
@@ -170,14 +179,16 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for Compressed<T> {
         }
     }
 
-    fn cols(&self) -> usize {
-        self.cols
-    }
-    fn nnz(&self) -> usize {
-        self.data.len()
-    }
-    fn rows(&self) -> usize {
-        self.rows
+    fn from_diag(diag: &[T]) -> Compressed<T> {
+        let size = diag.len();
+
+        Compressed {
+            cols: size,
+            data: diag.to_vec(),
+            indices: (0..size).collect::<Vec<usize>>(),
+            ptrs: (0..(size + 1)).collect::<Vec<usize>>(),
+            rows: size,
+        }
     }
 
     fn get(&self, row: usize, col: usize) -> T {
@@ -194,6 +205,15 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for Compressed<T> {
 
         return result_data;
     }
+
+    fn nnz(&self) -> usize {
+        self.data.len()
+    }
+
+    fn rows(&self) -> usize {
+        self.rows
+    }
+
     fn transpose(&mut self) {
         mem::swap(&mut self.rows, &mut self.cols);
 
@@ -226,15 +246,5 @@ impl<T: Copy + One + Zero> SparseMatrix<T> for Compressed<T> {
         self.data = data;
         self.indices = indices;
         self.ptrs = ptrs;
-    }
-
-    fn data(&self) -> &[T] {
-        &self.data
-    }
-    fn mut_data(&mut self) -> &mut [T] {
-        &mut self.data
-    }
-    fn into_vec(self) -> Vec<T> {
-        self.data
     }
 }

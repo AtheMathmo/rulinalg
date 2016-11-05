@@ -11,17 +11,19 @@ use sparse_matrix::{Triplet, SparseMatrix};
 
 /// Contract for compressed matrices implementation
 pub trait CompressedMatrix<T>: SparseMatrix<T> {
+    /// Returns a non-mutable reference to the underlying data.
+    fn data(&self) -> &[T];
+
     /// Constructs matrix with given coordinates (rows, cols and values).
     ///
     /// Requires slice of coordinates.
     fn from_triplets<R>(rows: usize, cols: usize, triplets: &[R]) -> Self where R: Triplet<T>;
-    /// Construct a new matrix based only in rows and cols lengh
-    fn new(rows: usize, cols: usize, data: Vec<T>, indices: Vec<usize>, ptrs: Vec<usize>) -> Self;
 
     /// Returns indices
     fn indices(&self) -> &[usize];
-    /// Returns pointers (offsets)
-    fn ptrs(&self) -> &[usize];
+
+    /// Consumes the Matrix and returns the Vec of data.
+    fn into_vec(self) -> Vec<T>;
 
     /// Iterates linearly over the matrix returning its data and respective indices.
     ///
@@ -50,6 +52,7 @@ pub trait CompressedMatrix<T>: SparseMatrix<T> {
     /// }
     /// ```
     fn iter_linear(&self) -> CompressedLinear<T>;
+
     /// Iterates linearly over of the matrix returning its mutable data and respective column indices.
     ///
     /// # Examples
@@ -81,4 +84,13 @@ pub trait CompressedMatrix<T>: SparseMatrix<T> {
     /// }
     /// ```
     fn iter_linear_mut(&mut self) -> CompressedLinearMut<T>;
+
+    /// Returns a mutable slice of the underlying data.
+    fn mut_data(&mut self) -> &mut [T];
+
+    /// Construct a new matrix based only in rows and cols lengh
+    fn new(rows: usize, cols: usize, data: Vec<T>, indices: Vec<usize>, ptrs: Vec<usize>) -> Self;
+
+    /// Returns pointers (offsets)
+    fn ptrs(&self) -> &[usize];
 }

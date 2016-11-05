@@ -47,11 +47,36 @@ impl<T: Copy + One + Zero> CscMatrix<T> {
 }
 
 impl<T: Copy + One + Zero> CompressedMatrix<T> for CscMatrix<T> {
+    fn data(&self) -> &[T] {
+        self.compressed.data()
+    }
+
     fn from_triplets<R>(rows: usize, cols: usize, triplets: &[R]) -> CscMatrix<T>
         where R: Triplet<T>
     {
         CscMatrix { compressed: Compressed::from_triplets(rows, cols, triplets) }
     }
+
+    fn indices(&self) -> &[usize] {
+        self.compressed.indices()
+    }
+
+    fn into_vec(self) -> Vec<T> {
+        self.compressed.into_vec()
+    }
+
+    fn iter_linear(&self) -> CompressedLinear<T> {
+        self.compressed.iter_linear()
+    }
+
+    fn iter_linear_mut(&mut self) -> CompressedLinearMut<T> {
+        self.compressed.iter_linear_mut()
+    }
+
+    fn mut_data(&mut self) -> &mut [T] {
+        self.compressed.mut_data()
+    }
+
     fn new(rows: usize,
            cols: usize,
            data: Vec<T>,
@@ -61,54 +86,38 @@ impl<T: Copy + One + Zero> CompressedMatrix<T> for CscMatrix<T> {
         CscMatrix { compressed: Compressed::new(cols, rows, data, indices, ptrs) }
     }
 
-    fn indices(&self) -> &[usize] {
-        self.compressed.indices()
-    }
     fn ptrs(&self) -> &[usize] {
         self.compressed.ptrs()
-    }
-
-    fn iter_linear(&self) -> CompressedLinear<T> {
-        self.compressed.iter_linear()
-    }
-    fn iter_linear_mut(&mut self) -> CompressedLinearMut<T> {
-        self.compressed.iter_linear_mut()
     }
 }
 
 impl<T: Copy + One + Zero> SparseMatrix<T> for CscMatrix<T> {
-    fn from_diag(diag: &[T]) -> CscMatrix<T> {
-        CscMatrix { compressed: Compressed::from_diag(diag) }
-    }
-    fn identity(size: usize) -> CscMatrix<T> {
-        CscMatrix { compressed: Compressed::identity(size) }
-    }
-
     fn cols(&self) -> usize {
         self.compressed.rows()
     }
-    fn nnz(&self) -> usize {
-        self.compressed.nnz()
-    }
-    fn rows(&self) -> usize {
-        self.compressed.cols()
+
+    fn from_diag(diag: &[T]) -> CscMatrix<T> {
+        CscMatrix { compressed: Compressed::from_diag(diag) }
     }
 
     fn get(&self, row: usize, col: usize) -> T {
         self.compressed.get(col, row)
     }
-    fn transpose(&mut self) {
-        self.compressed.transpose()
+
+    fn identity(size: usize) -> CscMatrix<T> {
+        CscMatrix { compressed: Compressed::identity(size) }
     }
 
-    fn data(&self) -> &[T] {
-        self.compressed.data()
+    fn nnz(&self) -> usize {
+        self.compressed.nnz()
     }
-    fn mut_data(&mut self) -> &mut [T] {
-        self.compressed.mut_data()
+
+    fn rows(&self) -> usize {
+        self.compressed.cols()
     }
-    fn into_vec(self) -> Vec<T> {
-        self.compressed.into_vec()
+
+    fn transpose(&mut self) {
+        self.compressed.transpose()
     }
 }
 
