@@ -2,6 +2,24 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
+# 0.3.6
+
+### Breaking Changes
+
+- None
+
+### Features
+
+- None
+
+### Bug Fixes
+
+- Improved numerical stability of the LUP decomposition.
+
+### Minor Changes
+
+- None
+
 # 0.3.5
 
 ### New Contributors
