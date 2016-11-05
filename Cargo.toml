@@ -16,3 +16,4 @@ matrixmultiply = "0.1.8"
 
 [dev-dependencies]
 rand = "0.3"
+quickcheck = "0.4"

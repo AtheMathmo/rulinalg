@@ -99,6 +99,10 @@ pub mod utils;
 pub mod vector;
 pub mod ulp;
 
+#[cfg(test)]
+#[macro_use]
+extern crate quickcheck;
+
 /// Trait for linear algebra metrics.
 ///
 /// Currently only implements basic euclidean norm.
