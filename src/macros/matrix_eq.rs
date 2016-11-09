@@ -12,7 +12,7 @@ pub trait ComparisonFailure {
 }
 
 #[doc(hidden)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct ElementComparisonFailure<T, E> where E: ComparisonFailure {
     pub x: T,
     pub y: T,
@@ -37,7 +37,7 @@ impl<T, E> fmt::Display for ElementComparisonFailure<T, E> where T: fmt::Display
 }
 
 #[doc(hidden)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum MatrixComparisonResult<T, C, E> where T: Copy, C: ElementwiseComparator<T, E>, E: ComparisonFailure {
     Match,
     MismatchedDimensions { dim_x: (usize, usize), dim_y: (usize, usize) },
@@ -127,7 +127,7 @@ pub fn elementwise_matrix_comparison<T, M, C, E>(x: &M, y: &M, comparator: C) ->
 struct AbsoluteError<T>(pub T);
 
 #[doc(hidden)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct AbsoluteElementwiseComparator<T> {
     pub tol: T
 }
@@ -168,7 +168,7 @@ impl<T> ElementwiseComparator<T, AbsoluteError<T>> for AbsoluteElementwiseCompar
 }
 
 #[doc(hidden)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct ExactElementwiseComparator;
 
 #[doc(hidden)]
@@ -196,7 +196,7 @@ impl<T> ElementwiseComparator<T, ExactError> for ExactElementwiseComparator
 }
 
 #[doc(hidden)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct UlpElementwiseComparator {
     pub tol: u64
 }
@@ -233,7 +233,7 @@ impl<T> ElementwiseComparator<T, UlpError> for UlpElementwiseComparator
 }
 
 #[doc(hidden)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct FloatElementwiseComparator<T> {
     abs: AbsoluteElementwiseComparator<T>,
     ulp: UlpElementwiseComparator
@@ -506,7 +506,9 @@ mod tests {
     use super::{AbsoluteElementwiseComparator, AbsoluteError, ElementwiseComparator,
         ExactElementwiseComparator, ExactError,
         UlpElementwiseComparator, UlpError,
-        FloatElementwiseComparator};
+        FloatElementwiseComparator,
+        elementwise_matrix_comparison, MatrixComparisonResult};
+    use matrix::Matrix;
     use ulp::{Ulp, UlpComparisonResult};
     use quickcheck::TestResult;
     use std::f64;
@@ -705,6 +707,145 @@ mod tests {
             let ulpcomp = UlpElementwiseComparator { tol: max_ulp };
 
             comp.compare(a, b) == ulpcomp.compare(a, b)
+        }
+    }
+
+    quickcheck! {
+        fn property_elementwise_comparison_incompatible_matrices_yield_dimension_mismatch(
+            m: usize,
+            n: usize,
+            p: usize,
+            q: usize) -> TestResult {
+            if m == p && n == q {
+                return TestResult::discard()
+            }
+
+            // It does not actually matter which comparator we use here, but we need to pick one
+            let comp = ExactElementwiseComparator;
+            let ref x = Matrix::new(m, n, vec![0; m * n]);
+            let ref y = Matrix::new(p, q, vec![0; p * q]);
+
+            let expected = MatrixComparisonResult::MismatchedDimensions { dim_x: (m, n), dim_y: (p, q) };
+
+            TestResult::from_bool(elementwise_matrix_comparison(x, y, comp) == expected)
+        }
+    }
+
+    quickcheck! {
+        fn property_elementwise_comparison_matrix_matches_self(m: usize, n: usize) -> bool {
+            let comp = ExactElementwiseComparator;
+            let ref x = Matrix::new(m, n, vec![0; m * n]);
+
+            elementwise_matrix_comparison(x, x, comp) == MatrixComparisonResult::Match
+        }
+    }
+
+    #[test]
+    fn elementwise_matrix_comparison_reports_correct_mismatches() {
+        use super::MatrixComparisonResult::MismatchedElements;
+        use super::ElementComparisonFailure;
+
+        let comp = ExactElementwiseComparator;
+
+        {
+            // Single element matrices
+            let ref x = matrix![1];
+            let ref y = matrix![2];
+
+            let expected = MismatchedElements {
+                comparator: comp,
+                mismatches: vec![ElementComparisonFailure {
+                    x: 1, y: 2,
+                    error: ExactError,
+                    row: 0, col: 0
+                }]
+            };
+
+            assert_eq!(elementwise_matrix_comparison(x, y, comp), expected);
+        }
+
+        {
+            // Mismatch in top-left and bottom-corner elements for a short matrix
+            let ref x = matrix![0, 1, 2;
+                                3, 4, 5];
+            let ref y = matrix![1, 1, 2;
+                                3, 4, 6];
+            let mismatches = vec![
+                ElementComparisonFailure {
+                    x: 0, y: 1,
+                    error: ExactError,
+                    row: 0, col: 0
+                },
+                ElementComparisonFailure {
+                    x: 5, y: 6,
+                    error: ExactError,
+                    row: 1, col: 2
+                }
+            ];
+
+            let expected = MismatchedElements {
+                comparator: comp,
+                mismatches: mismatches
+            };
+
+            assert_eq!(elementwise_matrix_comparison(x, y, comp), expected);
+        }
+
+        {
+            // Mismatch in top-left and bottom-corner elements for a tall matrix
+            let ref x = matrix![0, 1;
+                                2, 3;
+                                4, 5];
+            let ref y = matrix![1, 1;
+                                2, 3;
+                                4, 6];
+            let mismatches = vec![
+                ElementComparisonFailure {
+                    x: 0, y: 1,
+                    error: ExactError,
+                    row: 0, col: 0
+                },
+                ElementComparisonFailure {
+                    x: 5, y: 6,
+                    error: ExactError,
+                    row: 2, col: 1
+                }
+            ];
+
+            let expected = MismatchedElements {
+                comparator: comp,
+                mismatches: mismatches
+            };
+
+            assert_eq!(elementwise_matrix_comparison(x, y, comp), expected);
+        }
+
+        {
+            // Check some arbitrary elements
+            let ref x = matrix![0, 1, 2, 3;
+                                4, 5, 6, 7];
+            let ref y = matrix![0, 1, 3, 3;
+                                4, 6, 6, 7];
+
+            let mismatches = vec![
+                ElementComparisonFailure {
+                    x: 2, y: 3,
+                    error: ExactError,
+                    row: 0, col: 2
+                },
+                ElementComparisonFailure {
+                    x: 5, y: 6,
+                    error: ExactError,
+                    row: 1, col: 1
+                }
+            ];
+
+            let expected = MismatchedElements {
+                comparator: comp,
+                mismatches: mismatches
+            };
+
+            assert_eq!(elementwise_matrix_comparison(x, y, comp), expected);
         }
     }
 
