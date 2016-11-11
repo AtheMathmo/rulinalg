@@ -11,5 +11,9 @@ pub use self::matrix_eq::{
     AbsoluteElementwiseComparator,
     ExactElementwiseComparator,
     UlpElementwiseComparator,
-    FloatElementwiseComparator
+    FloatElementwiseComparator,
+
+    // The following are just imported because we want to
+    // expose trait bounds in the documentation
+    ElementwiseComparator
 };

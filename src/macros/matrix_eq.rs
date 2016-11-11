@@ -44,9 +44,18 @@ pub enum MatrixComparisonResult<T, C, E> where T: Copy, C: ElementwiseComparator
     MismatchedElements { comparator: C, mismatches: Vec<ElementComparisonFailure<T, E>> }
 }
 
-#[doc(hidden)]
+/// Trait that describes elementwise comparators for [assert_matrix_eq!](macro.assert_matrix_eq!.html).
+///
+/// Usually you should not need to interface with this trait directly. It is a part of the documentation
+/// only so that the trait bounds for the comparators are made public.
 pub trait ElementwiseComparator<T, E> where T: Copy, E: ComparisonFailure {
+    /// Compares two elements.
+    ///
+    /// Returns `None` if the comparator deems the two elements to satisfy equality criteria.
+    /// Otherwise, returns the error associated with the comparator.
     fn compare(&self, x: T, y: T) -> Option<E>;
+
+    /// A description of the comparator.
     fn description(&self) -> String;
 }
 
@@ -126,9 +135,10 @@ pub fn elementwise_matrix_comparison<T, M, C, E>(x: &M, y: &M, comparator: C) ->
 #[derive(Copy, Clone, Debug, PartialEq)]
 struct AbsoluteError<T>(pub T);
 
-#[doc(hidden)]
+/// The `abs` comparator used with [assert_matrix_eq!](macro.assert_matrix_eq!.html).
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct AbsoluteElementwiseComparator<T> {
+    /// The maximum absolute difference tolerated (inclusive).
     pub tol: T
 }
 
@@ -167,7 +177,7 @@ impl<T> ElementwiseComparator<T, AbsoluteError<T>> for AbsoluteElementwiseCompar
     }
 }
 
-#[doc(hidden)]
+/// The `exact` comparator used with [assert_matrix_eq!](macro.assert_matrix_eq!.html).
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct ExactElementwiseComparator;
 
@@ -195,9 +205,10 @@ impl<T> ElementwiseComparator<T, ExactError> for ExactElementwiseComparator
     }
 }
 
-#[doc(hidden)]
+/// The `ulp` comparator used with [assert_matrix_eq!](macro.assert_matrix_eq!.html).
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct UlpElementwiseComparator {
+    /// The maximum difference in ULP units tolerated (inclusive).
     pub tol: u64
 }
 
@@ -232,7 +243,7 @@ impl<T> ElementwiseComparator<T, UlpError> for UlpElementwiseComparator
     }
 }
 
-#[doc(hidden)]
+/// The `float` comparator used with [assert_matrix_eq!](macro.assert_matrix_eq!.html).
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct FloatElementwiseComparator<T> {
     abs: AbsoluteElementwiseComparator<T>,
