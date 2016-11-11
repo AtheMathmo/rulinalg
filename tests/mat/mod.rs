@@ -82,6 +82,13 @@ fn matrix_lup_decomp() {
                     0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, -4.0];
 
     assert!(c.lup_decomp().is_ok());
+
+    let d = matrix![1.0, 1.0, 0.0, 0.0;
+                    0.0, 0.0, 1.0, 0.0;
+                    -1.0, 0.0, 0.0, 0.0;
+                    0.0, 0.0, 0.0, 1.0];
+
+    assert!(d.lup_decomp().is_ok());
 }
 
 #[test]
