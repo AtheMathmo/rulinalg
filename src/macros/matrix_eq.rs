@@ -61,25 +61,43 @@ pub trait ElementwiseComparator<T, E> where T: Copy, E: ComparisonFailure {
 
 impl<T, C, E> MatrixComparisonResult<T, C, E> where T: Copy + fmt::Display, C: ElementwiseComparator<T, E>, E: ComparisonFailure {
     pub fn panic_message(&self) -> Option<String> {
+        const MAX_MISMATCH_REPORTS: usize = 12;
+
         match self {
             &MatrixComparisonResult::MismatchedElements { ref comparator, ref mismatches } => {
                 // TODO: Aligned output
                 let mut formatted_mismatches = String::new();
-                for mismatch in mismatches {
+
+                let mismatches_overflow = mismatches.len() > MAX_MISMATCH_REPORTS;
+                let overflow_msg = if mismatches_overflow {
+                    let num_hidden_entries = mismatches.len() - MAX_MISMATCH_REPORTS;
+                    format!(" ... ({} mismatching elements not shown)\n", num_hidden_entries)
+                } else {
+                    String::new()
+                };
+
+                for mismatch in mismatches.iter().take(MAX_MISMATCH_REPORTS) {
                     formatted_mismatches.push_str(" ");
                     formatted_mismatches.push_str(&mismatch.to_string());
                     formatted_mismatches.push_str("\n");
                 }
+
+                // Strip off the last newline from the above
+                formatted_mismatches = formatted_mismatches.trim_right().to_string();
+
                 Some(format!("\n
-Matrices X and Y have {num} mismatched element pairs. The mismatched elements are listed below, in the format
+Matrices X and Y have {num} mismatched element pairs.
+The mismatched elements are listed below, in the format
 (row, col): x = X[[row, col]], y = Y[[row, col]].
 
 {mismatches}
+{overflow_msg}
 Comparison criterion: {description}
 \n",
                     num = mismatches.len(),
                     description = comparator.description(),
-                    mismatches = formatted_mismatches))
+                    mismatches = formatted_mismatches,
+                    overflow_msg = overflow_msg))
             },
             &MatrixComparisonResult::MismatchedDimensions { dim_x, dim_y } => {
                 Some(format!("\n
