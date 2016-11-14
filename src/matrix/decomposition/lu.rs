@@ -40,7 +40,7 @@ impl<T> Matrix<T> where T: Any + Float
             let mut curr_max_idx = index;
             let mut curr_max = u[[curr_max_idx, curr_max_idx]];
 
-            for i in curr_max_idx..n {
+            for i in (curr_max_idx+1)..n {
                 if u[[i, index]].abs() > curr_max.abs() {
                     curr_max = u[[i, index]];
                     curr_max_idx = i;
