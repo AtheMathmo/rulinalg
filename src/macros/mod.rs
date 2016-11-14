@@ -8,6 +8,7 @@ mod matrix_eq;
 
 pub use self::matrix_eq::{
     elementwise_matrix_comparison,
+    elementwise_vector_comparison,
     AbsoluteElementwiseComparator,
     ExactElementwiseComparator,
     UlpElementwiseComparator,
