@@ -1,4 +1,4 @@
-use matrix::{Matrix, BaseMatrix, BaseMatrixMut};
+use matrix::{Matrix, BaseMatrixMut};
 use error::{Error, ErrorKind};
 
 use std::any::Any;
@@ -32,6 +32,7 @@ impl<T> Matrix<T> where T: Any + Float
     /// - Matrix cannot be LUP decomposed.
     pub fn lup_decomp(&self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
         let n = self.cols;
+        assert!(self.rows == n, "Matrix must be square for LUP decomposition.");
         let mut l = Matrix::<T>::zeros(n, n);
         let mut u = self.clone();
         let mut p = Matrix::<T>::identity(n);
