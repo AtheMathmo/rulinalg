@@ -544,7 +544,34 @@ ULP tolerance: {ulp}",
 ///
 /// # Error reporting
 ///
-/// TODO: An example of how the macro reports comparison failures. (do this as one of the last steps, after the format has been finalized)
+/// One of the main motivations for the `assert_matrix_eq!` macro is the ability to give
+/// useful error messages which help pinpoint the problems. For example, consider the example
+///
+/// ```
+/// #[macro_use]
+/// extern crate rulinalg;
+///
+/// fn main() {
+///     let a = matrix![1.00, 2.00;
+///                     3.00, 4.00];
+///     let b = matrix![1.01, 2.00;
+///                     3.40, 4.00];
+///     assert_matrix_eq!(a, b, comp = abs, tol = 1e-8);
+/// }
+/// ```
+///
+/// which yields the output
+///
+/// ```text
+/// Matrices X and Y have 2 mismatched element pairs.
+/// The mismatched elements are listed below, in the format
+/// (row, col): x = X[[row, col]], y = Y[[row, col]].
+///
+/// (0, 0): x = 1, y = 1.01. Absolute error: 0.010000000000000009.
+/// (1, 0): x = 3, y = 3.4. Absolute error: 0.3999999999999999.
+///
+/// Comparison criterion: absolute difference, |x - y| <= 0.00000001.
+/// ```
 ///
 /// # Examples
 ///
