@@ -591,7 +591,7 @@ ULP tolerance: {ulp}",
 /// One of the main motivations for the `assert_matrix_eq!` macro is the ability to give
 /// useful error messages which help pinpoint the problems. For example, consider the example
 ///
-/// ```
+/// ```rust,should_panic
 /// #[macro_use]
 /// extern crate rulinalg;
 ///
