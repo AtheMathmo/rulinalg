@@ -23,7 +23,9 @@ pub struct MatrixElementComparisonFailure<T, E> where E: ComparisonFailure {
     pub col: usize
 }
 
-impl<T, E> fmt::Display for MatrixElementComparisonFailure<T, E> where T: fmt::Display, E: ComparisonFailure {
+impl<T, E> fmt::Display for MatrixElementComparisonFailure<T, E>
+    where T: fmt::Display,
+          E: ComparisonFailure {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f,
                "({i}, {j}): x = {x}, y = {y}.{reason}",
@@ -40,7 +42,10 @@ impl<T, E> fmt::Display for MatrixElementComparisonFailure<T, E> where T: fmt::D
 
 #[doc(hidden)]
 #[derive(Debug, PartialEq)]
-pub enum MatrixComparisonResult<T, C, E> where T: Copy, C: ElementwiseComparator<T, E>, E: ComparisonFailure {
+pub enum MatrixComparisonResult<T, C, E>
+    where T: Copy,
+          C: ElementwiseComparator<T, E>,
+          E: ComparisonFailure {
     Match,
     MismatchedDimensions { dim_x: (usize, usize), dim_y: (usize, usize) },
     MismatchedElements { comparator: C, mismatches: Vec<MatrixElementComparisonFailure<T, E>> }
@@ -61,7 +66,10 @@ pub trait ElementwiseComparator<T, E> where T: Copy, E: ComparisonFailure {
     fn description(&self) -> String;
 }
 
-impl<T, C, E> MatrixComparisonResult<T, C, E> where T: Copy + fmt::Display, C: ElementwiseComparator<T, E>, E: ComparisonFailure {
+impl<T, C, E> MatrixComparisonResult<T, C, E>
+    where T: Copy + fmt::Display,
+          C: ElementwiseComparator<T, E>,
+          E: ComparisonFailure {
     pub fn panic_message(&self) -> Option<String> {
 
         match self {
@@ -123,7 +131,8 @@ pub struct VectorElementComparisonFailure<T, E> where E: ComparisonFailure {
     pub index: usize
 }
 
-impl<T, E> fmt::Display for VectorElementComparisonFailure<T, E> where T: fmt::Display, E: ComparisonFailure {
+impl<T, E> fmt::Display for VectorElementComparisonFailure<T, E>
+    where T: fmt::Display, E: ComparisonFailure {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f,
                "#{index}: x = {x}, y = {y}.{reason}",
@@ -139,10 +148,19 @@ impl<T, E> fmt::Display for VectorElementComparisonFailure<T, E> where T: fmt::D
 
 #[doc(hidden)]
 #[derive(Debug, PartialEq)]
-pub enum VectorComparisonResult<T, C, E> where T: Copy, C: ElementwiseComparator<T, E>, E: ComparisonFailure {
+pub enum VectorComparisonResult<T, C, E>
+    where T: Copy,
+          C: ElementwiseComparator<T, E>,
+          E: ComparisonFailure {
     Match,
-    MismatchedDimensions { dim_x: usize, dim_y: usize },
-    MismatchedElements { comparator: C, mismatches: Vec<VectorElementComparisonFailure<T, E>> }
+    MismatchedDimensions {
+        dim_x: usize,
+        dim_y: usize
+    },
+    MismatchedElements {
+        comparator: C,
+        mismatches: Vec<VectorElementComparisonFailure<T, E>>
+    }
 }
 
 impl <T, C, E> VectorComparisonResult<T, C, E>
@@ -198,7 +216,8 @@ Dimensions of vectors x and y do not match.
 }
 
 #[doc(hidden)]
-pub fn elementwise_matrix_comparison<T, M, C, E>(x: &M, y: &M, comparator: C) -> MatrixComparisonResult<T, C, E>
+pub fn elementwise_matrix_comparison<T, M, C, E>(x: &M, y: &M, comparator: C)
+    -> MatrixComparisonResult<T, C, E>
     where M: BaseMatrix<T>, T: Copy, C: ElementwiseComparator<T, E>, E: ComparisonFailure {
     if x.rows() == y.rows() && x.cols() == y.cols() {
         let mismatches = {
@@ -226,16 +245,25 @@ pub fn elementwise_matrix_comparison<T, M, C, E>(x: &M, y: &M, comparator: C) ->
         if mismatches.is_empty() {
             MatrixComparisonResult::Match
         } else {
-            MatrixComparisonResult::MismatchedElements { comparator: comparator, mismatches: mismatches }
+            MatrixComparisonResult::MismatchedElements {
+                comparator: comparator,
+                mismatches: mismatches
+            }
         }
     } else {
-        MatrixComparisonResult::MismatchedDimensions { dim_x: (x.rows(), x.cols()), dim_y: (y.rows(), y.cols()) }
+        MatrixComparisonResult::MismatchedDimensions {
+            dim_x: (x.rows(), x.cols()),
+            dim_y: (y.rows(), y.cols())
+        }
     }
 }
 
 #[doc(hidden)]
-pub fn elementwise_vector_comparison<T, C, E>(x: &[T], y: &[T], comparator: C) -> VectorComparisonResult<T, C, E>
-    where T: Copy, C: ElementwiseComparator<T, E>, E: ComparisonFailure {
+pub fn elementwise_vector_comparison<T, C, E>(x: &[T], y: &[T], comparator: C)
+    -> VectorComparisonResult<T, C, E>
+    where T: Copy,
+          C: ElementwiseComparator<T, E>,
+          E: ComparisonFailure {
     // The reason this function takes a slice and not a Vector ref,
     // is that we the assert_vector_eq! macro to work with both
     // references and owned values
@@ -261,7 +289,10 @@ pub fn elementwise_vector_comparison<T, C, E>(x: &[T], y: &[T], comparator: C) -
         if mismatches.is_empty() {
             VectorComparisonResult::Match
         } else {
-            VectorComparisonResult::MismatchedElements { comparator: comparator, mismatches: mismatches }
+            VectorComparisonResult::MismatchedElements {
+                comparator: comparator,
+                mismatches: mismatches
+            }
         }
     } else {
         VectorComparisonResult::MismatchedDimensions { dim_x: x.len(), dim_y: y.len() }
@@ -357,8 +388,10 @@ impl ComparisonFailure for UlpError {
     fn failure_reason(&self) -> Option<String> {
         use ulp::UlpComparisonResult;
         match self.0 {
-            UlpComparisonResult::Difference(diff) => Some(format!("Difference: {diff} ULP.", diff=diff)),
-            UlpComparisonResult::IncompatibleSigns => Some(format!("Numbers have incompatible signs.")),
+            UlpComparisonResult::Difference(diff) =>
+                Some(format!("Difference: {diff} ULP.", diff=diff)),
+            UlpComparisonResult::IncompatibleSigns =>
+                Some(format!("Numbers have incompatible signs.")),
             _ => None
         }
     }
@@ -376,7 +409,8 @@ impl<T> ElementwiseComparator<T, UlpError> for UlpElementwiseComparator
     }
 
     fn description(&self) -> String {
-        format!("ULP difference less than or equal to {tol}. See documentation for details.", tol = self.tol)
+        format!("ULP difference less than or equal to {tol}. See documentation for details.",
+                tol = self.tol)
     }
 }
 
@@ -449,7 +483,8 @@ ULP tolerance: {ulp}",
 ///   that do not compare equal.
 ///
 /// # Usage
-/// Given two matrices `x` and `y`, the default invocation performs an exact elementwise comparison of the two matrices.
+/// Given two matrices `x` and `y`, the default invocation performs an exact elementwise
+/// comparison of the two matrices.
 ///
 /// ```
 /// # #[macro_use] extern crate rulinalg; fn main() { let x = matrix![1.0f64]; let y = matrix![1.0f64];
@@ -458,9 +493,9 @@ ULP tolerance: {ulp}",
 /// # }
 /// ```
 ///
-/// An exact comparison is often not desirable. In particular, with floating point types, rounding errors
-/// or other sources of inaccuracies tend to complicate the matter. For this purpose, `assert_matrix_eq!`
-/// provides several comparators.
+/// An exact comparison is often not desirable. In particular, with floating point types,
+/// rounding errors or other sources of inaccuracies tend to complicate the matter.
+/// For this purpose, `assert_matrix_eq!` provides several comparators.
 ///
 /// ```
 /// # #[macro_use] extern crate rulinalg; fn main() {
@@ -472,8 +507,9 @@ ULP tolerance: {ulp}",
 /// assert_matrix_eq!(x, y, comp = ulp, tol = 8);
 /// # }
 /// ```
-/// **Note**: The `comp` argument *must* be specified after `x` and `y`, and cannot come after comparator-specific options.
-/// This is a deliberate design decision, with the rationale that assertions should look as uniform as possible for
+/// **Note**: The `comp` argument *must* be specified after `x` and `y`, and cannot come
+/// after comparator-specific options. This is a deliberate design decision,
+/// with the rationale that assertions should look as uniform as possible for
 /// the sake of readability.
 ///
 ///
@@ -484,17 +520,20 @@ ULP tolerance: {ulp}",
 /// ### The `float` comparator
 /// The `float` comparator is designed to be a conservative default for comparing floating-point numbers.
 /// It is inspired by the `AlmostEqualUlpsAndAbs` comparison function proposed in the excellent blog post
-/// [Comparing Floating Point Numbers, 2012 Edition](https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/)
+/// [Comparing Floating Point Numbers, 2012 Edition]
+/// (https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/)
 /// by Bruce Dawson.
 ///
-/// If you expect the two matrices to be almost exactly the same, but you want to leave some room for (very small) rounding errors,
-/// then this comparator should be your default choice.
+/// If you expect the two matrices to be almost exactly the same, but you want to leave some
+/// room for (very small) rounding errors, then this comparator should be your default choice.
 ///
 /// The comparison criterion can be summarized as follows:
 ///
-/// 1. If `assert_matrix_eq!(x, y, comp = abs, tol = max_eps)` holds for `max_eps` close to the machine epsilon for the floating point type,
+/// 1. If `assert_matrix_eq!(x, y, comp = abs, tol = max_eps)` holds for `max_eps` close to the
+///    machine epsilon for the floating point type,
 ///    then the comparison is successful.
-/// 2. Otherwise, returns the result of `assert_matrix_eq!(x, y, comp = ulp, tol = max_ulp)`, where `max_ulp` is a small positive integer constant.
+/// 2. Otherwise, returns the result of `assert_matrix_eq!(x, y, comp = ulp, tol = max_ulp)`,
+///    where `max_ulp` is a small positive integer constant.
 ///
 /// The `max_eps` and `max_ulp` parameters can be tweaked to your preference with the syntax:
 ///
@@ -506,24 +545,27 @@ ULP tolerance: {ulp}",
 /// # }
 /// ```
 ///
-/// These additional parameters can be specified in any order after the choice of comparator, and do not both need to be present.
+/// These additional parameters can be specified in any order after the choice of comparator,
+/// and do not both need to be present.
 ///
 /// ### The `abs` comparator
-/// Compares the absolute difference between individual elements against the specified tolerance. Specifically,
-/// for every pair of elements x and y picked from the same row and column in X and Y respectively,
-/// the criterion is defined by
+/// Compares the absolute difference between individual elements against the specified tolerance.
+/// Specifically, for every pair of elements x and y picked from the same row and column in X and Y
+/// respectively, the criterion is defined by
 ///
 /// ```text
 ///     | x - y | <= tol.
 /// ```
 ///
-/// In addition to floating point numbers, the comparator can also be used for integral numbers, both signed and unsigned.
-/// In order to avoid unsigned underflow, the difference is always computed by subtracting the smaller number from the larger number.
+/// In addition to floating point numbers, the comparator can also be used for integral numbers,
+/// both signed and unsigned. In order to avoid unsigned underflow, the difference is always
+/// computed by subtracting the smaller number from the larger number.
 /// Note that the type of `tol` is required to be the same as that of the scalar field.
 ///
 ///
 /// ### The `ulp` comparator
-/// Elementwise comparison of floating point numbers based on their [ULP](https://en.wikipedia.org/wiki/Unit_in_the_last_place) difference.
+/// Elementwise comparison of floating point numbers based on their
+/// [ULP](https://en.wikipedia.org/wiki/Unit_in_the_last_place) difference.
 /// Once again, this is inspired by the proposals
 /// [in the aforementioned blog post by Bruce Dawon]
 /// (https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/),
@@ -531,11 +573,13 @@ ULP tolerance: {ulp}",
 ///
 /// Note that the ULP difference of two floating point numbers is not defined in the following cases:
 ///
-/// - The two numbers have different signs. The only exception here is +0 and -0, which are considered an exact match.
+/// - The two numbers have different signs. The only exception here is +0 and -0,
+///   which are considered an exact match.
 /// - One of the numbers is NaN.
 ///
-/// ULP-based comparison is typically used when two numbers are expected to be very, very close to each other. However,
-/// it is typically not very useful very close to zero, which is discussed in the linked blog post above.
+/// ULP-based comparison is typically used when two numbers are expected to be very,
+/// very close to each other. However, it is typically not very useful very close to zero,
+/// which is discussed in the linked blog post above.
 /// The error in many mathematical functions can often be bounded by a certain number of ULP, and so
 /// this comparator is particularly useful if this number is known.
 ///
@@ -609,7 +653,8 @@ macro_rules! assert_matrix_eq {
             // which does not work due to generics.
             use $crate::macros::{elementwise_matrix_comparison, ExactElementwiseComparator};
             use $crate::matrix::BaseMatrix;
-            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), ExactElementwiseComparator).panic_message();
+            let comp = ExactElementwiseComparator;
+            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), comp).panic_message();
             if let Some(msg) = msg {
                 // Note: We need the panic to incur here inside of the macro in order
                 // for the line number to be correct when using it for tests,
@@ -624,7 +669,8 @@ Please see the documentation for ways to compare matrices approximately.\n\n",
         {
             use $crate::macros::{elementwise_matrix_comparison, ExactElementwiseComparator};
             use $crate::matrix::BaseMatrix;
-            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), ExactElementwiseComparator).panic_message();
+            let comp = ExactElementwiseComparator;
+            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), comp).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
@@ -634,7 +680,8 @@ Please see the documentation for ways to compare matrices approximately.\n\n",
         {
             use $crate::macros::{elementwise_matrix_comparison, AbsoluteElementwiseComparator};
             use $crate::matrix::BaseMatrix;
-            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), AbsoluteElementwiseComparator { tol: $tol }).panic_message();
+            let comp = AbsoluteElementwiseComparator { tol: $tol };
+            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), comp).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
@@ -644,7 +691,8 @@ Please see the documentation for ways to compare matrices approximately.\n\n",
         {
             use $crate::macros::{elementwise_matrix_comparison, UlpElementwiseComparator};
             use $crate::matrix::BaseMatrix;
-            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), UlpElementwiseComparator { tol: $tol }).panic_message();
+            let comp = UlpElementwiseComparator { tol: $tol };
+            let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), comp).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
@@ -689,7 +737,8 @@ macro_rules! assert_vector_eq {
             // we don't attempt to call elementwise_matrix_comparison with a &&BaseMatrix type (double reference),
             // which does not work due to generics.
             use $crate::macros::{elementwise_vector_comparison, ExactElementwiseComparator};
-            let msg = elementwise_vector_comparison($x.data(), $y.data(), ExactElementwiseComparator).panic_message();
+            let comp = ExactElementwiseComparator;
+            let msg = elementwise_vector_comparison($x.data(), $y.data(), comp).panic_message();
             if let Some(msg) = msg {
                 // Note: We need the panic to incur here inside of the macro in order
                 // for the line number to be correct when using it for tests,
@@ -703,7 +752,8 @@ Please see the documentation for ways to compare vectors approximately.\n\n",
     ($x:expr, $y:expr, comp = exact) => {
         {
             use $crate::macros::{elementwise_vector_comparison, ExactElementwiseComparator};
-            let msg = elementwise_vector_comparison($x.data(), $y.data(), ExactElementwiseComparator).panic_message();
+            let comp = ExactElementwiseComparator;
+            let msg = elementwise_vector_comparison($x.data(), $y.data(), comp).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
@@ -712,7 +762,8 @@ Please see the documentation for ways to compare vectors approximately.\n\n",
     ($x:expr, $y:expr, comp = abs, tol = $tol:expr) => {
         {
             use $crate::macros::{elementwise_vector_comparison, AbsoluteElementwiseComparator};
-            let msg = elementwise_vector_comparison($x.data(), $y.data(), AbsoluteElementwiseComparator { tol: $tol }).panic_message();
+            let comp = AbsoluteElementwiseComparator { tol: $tol };
+            let msg = elementwise_vector_comparison($x.data(), $y.data(), comp).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
@@ -721,7 +772,8 @@ Please see the documentation for ways to compare vectors approximately.\n\n",
     ($x:expr, $y:expr, comp = ulp, tol = $tol:expr) => {
         {
             use $crate::macros::{elementwise_vector_comparison, UlpElementwiseComparator};
-            let msg = elementwise_vector_comparison($x.data(), $y.data(), UlpElementwiseComparator { tol: $tol }).panic_message();
+            let comp = UlpElementwiseComparator { tol: $tol };
+            let msg = elementwise_vector_comparison($x.data(), $y.data(), ).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
