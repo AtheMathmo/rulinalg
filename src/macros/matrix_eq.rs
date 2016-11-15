@@ -773,7 +773,7 @@ Please see the documentation for ways to compare vectors approximately.\n\n",
         {
             use $crate::macros::{elementwise_vector_comparison, UlpElementwiseComparator};
             let comp = UlpElementwiseComparator { tol: $tol };
-            let msg = elementwise_vector_comparison($x.data(), $y.data(), ).panic_message();
+            let msg = elementwise_vector_comparison($x.data(), $y.data(), comp).panic_message();
             if let Some(msg) = msg {
                 panic!(msg);
             }
