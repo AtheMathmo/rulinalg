@@ -676,7 +676,11 @@ Please see the documentation for ways to compare matrices approximately.\n\n",
     };
 }
 
-/// TODO
+/// Compare vectors for exact or approximate equality.
+///
+/// This macro works analogously to [assert_matrix_eq!](macro.assert_matrix_eq.html),
+/// but is used for comparing instances of [Vector](vector/struct.Vector.html) rather than
+/// matrices.
 #[macro_export]
 macro_rules! assert_vector_eq {
     ($x:expr, $y:expr) => {
