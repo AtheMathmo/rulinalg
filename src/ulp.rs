@@ -33,7 +33,6 @@ pub enum UlpComparisonResult
 /// need to implement this. In the case when a custom implementation is necessary,
 /// please see the possible return values for [UlpComparisonResult](ulp/enum.UlpComparisonResult.html).
 /// Otherwise, we can recommend to read the source code of the included `f32` and `f64` implementations.
-
 pub trait Ulp {
     /// Returns the difference between two floating point numbers, measured in ULP.
     fn ulp_diff(a: &Self, b: &Self) -> UlpComparisonResult;
