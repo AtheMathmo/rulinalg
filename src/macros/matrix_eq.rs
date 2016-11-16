@@ -187,9 +187,9 @@ impl <T, C, E> VectorComparisonResult<T, C, E>
                 formatted_mismatches = formatted_mismatches.trim_right().to_string();
 
                 Some(format!("\n
-Vectors x and y have {num} mismatched element pairs.
+Vectors X and Y have {num} mismatched element pairs.
 The mismatched elements are listed below, in the format
-#index: x = x[index], y = y[index].
+#index: x = X[index], y = Y[index].
 
 {mismatches}
 {overflow_msg}
@@ -202,9 +202,9 @@ Comparison criterion: {description}
             },
             &VectorComparisonResult::MismatchedDimensions { dim_x, dim_y } => {
                 Some(format!("\n
-Dimensions of vectors x and y do not match.
- dim(x) = {dim_x}
- dim(y) = {dim_y}
+Dimensions of vectors X and Y do not match.
+ dim(X) = {dim_x}
+ dim(Y) = {dim_y}
 \n",
                     dim_x = dim_x,
                     dim_y = dim_y))
