@@ -20,7 +20,7 @@ pub enum UlpComparisonResult
 /// Floating point types for which two instances can be compared for Unit in the Last Place (ULP) difference.
 ///
 /// Implementing this trait enables the usage of the `ulp` comparator in
-/// [assert_matrix_eq!](macro.assert_matrix_eq!.html) for the given type.
+/// [assert_matrix_eq!](../macro.assert_matrix_eq!.html) for the given type.
 ///
 /// The definition here leverages the fact that for two adjacent floating point numbers,
 /// their integer representations are also adjacent.
