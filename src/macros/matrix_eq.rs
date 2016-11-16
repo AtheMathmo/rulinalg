@@ -58,9 +58,8 @@ pub enum MatrixComparisonResult<T, C, E>
 pub trait ElementwiseComparator<T, E> where T: Copy, E: ComparisonFailure {
     /// Compares two elements.
     ///
-    /// Returns `None` if the comparator deems the two elements to satisfy equality criteria.
-    /// Otherwise, returns the error associated with the comparator.
-    fn compare(&self, x: T, y: T) -> Option<E>;
+    /// Returns the error associated with the comparison if it failed.
+    fn compare(&self, x: T, y: T) -> Result<(), E>;
 
     /// A description of the comparator.
     fn description(&self) -> String;
@@ -228,7 +227,7 @@ pub fn elementwise_matrix_comparison<T, M, C, E>(x: &M, y: &M, comparator: C)
                 for j in 0 .. x.cols() {
                     let a = x[[i, j]].to_owned();
                     let b = y[[i, j]].to_owned();
-                    if let Some(error) = comparator.compare(a, b) {
+                    if let Err(error) = comparator.compare(a, b) {
                         mismatches.push(MatrixElementComparisonFailure {
                             x: a,
                             y: b,
@@ -274,7 +273,7 @@ pub fn elementwise_vector_comparison<T, C, E>(x: &[T], y: &[T], comparator: C)
             for i in 0 .. n {
                 let a = x[i].to_owned();
                 let b = y[i].to_owned();
-                if let Some(error) = comparator.compare(a, b) {
+                if let Err(error) = comparator.compare(a, b) {
                     mismatches.push(VectorElementComparisonFailure {
                         x: a,
                         y: b,
@@ -321,7 +320,7 @@ impl<T> ComparisonFailure for AbsoluteError<T> where T: fmt::Display {
 impl<T> ElementwiseComparator<T, AbsoluteError<T>> for AbsoluteElementwiseComparator<T>
     where T: Copy + fmt::Display + Num + PartialOrd<T> {
 
-    fn compare(&self, a: T, b: T) -> Option<AbsoluteError<T>> {
+    fn compare(&self, a: T, b: T) -> Result<(), AbsoluteError<T>> {
         assert!(self.tol >= T::zero());
 
         // Note: Cannot use num::abs because we do not want to restrict
@@ -329,13 +328,13 @@ impl<T> ElementwiseComparator<T, AbsoluteError<T>> for AbsoluteElementwiseCompar
         // handle unsigned types).
 
         if a == b {
-            None
+            Ok(())
         } else {
             let distance = if a > b { a - b } else { b - a };
             if distance <= self.tol {
-                None
+                Ok(())
             } else {
-                Some(AbsoluteError(distance))
+                Err(AbsoluteError(distance))
             }
         }
     }
@@ -360,11 +359,11 @@ impl ComparisonFailure for ExactError {
 impl<T> ElementwiseComparator<T, ExactError> for ExactElementwiseComparator
     where T: Copy + fmt::Display + PartialEq<T> {
 
-    fn compare(&self, a: T, b: T) -> Option<ExactError> {
+    fn compare(&self, a: T, b: T) -> Result<(), ExactError> {
         if a == b {
-            None
+            Ok(())
         } else {
-            Some(ExactError)
+            Err(ExactError)
         }
     }
 
@@ -400,11 +399,11 @@ impl ComparisonFailure for UlpError {
 impl<T> ElementwiseComparator<T, UlpError> for UlpElementwiseComparator
     where T: Copy + Ulp {
 
-    fn compare(&self, a: T, b: T) -> Option<UlpError> {
+    fn compare(&self, a: T, b: T) -> Result<(), UlpError> {
         let diff = Ulp::ulp_diff(&a, &b);
         match diff {
-            ulp::UlpComparisonResult::ExactMatch => None,
-            _ => Some(UlpError(diff))
+            ulp::UlpComparisonResult::ExactMatch => Ok(()),
+            _ => Err(UlpError(diff))
         }
     }
 
@@ -448,14 +447,14 @@ impl<T> FloatElementwiseComparator<T> where T: Float + Ulp {
 
 impl<T> ElementwiseComparator<T, UlpError> for FloatElementwiseComparator<T>
     where T: Copy + Ulp + Float + fmt::Display {
-    fn compare(&self, a: T, b: T) -> Option<UlpError> {
+    fn compare(&self, a: T, b: T) -> Result<(), UlpError> {
         // First perform an absolute comparison with a presumably very small epsilon tolerance
-        if let Some(_) = self.abs.compare(a, b) {
+        if let Err(_) = self.abs.compare(a, b) {
             // Then fall back to an ULP-based comparison
             self.ulp.compare(a, b)
         } else {
             // If the epsilon comparison succeeds, we have a match
-            None
+             Ok(())
         }
     }
 
@@ -837,11 +836,11 @@ mod tests {
     pub fn absolute_comparator_integer() {
         let comp = AbsoluteElementwiseComparator { tol: 1 };
 
-        assert_eq!(comp.compare(0, 0), None);
-        assert_eq!(comp.compare(1, 0), None);
-        assert_eq!(comp.compare(-1, 0), None);
-        assert_eq!(comp.compare(2, 0), Some(AbsoluteError(2)));
-        assert_eq!(comp.compare(-2, 0), Some(AbsoluteError(2)));
+        assert_eq!(comp.compare(0, 0), Ok(()));
+        assert_eq!(comp.compare(1, 0), Ok(()));
+        assert_eq!(comp.compare(-1, 0), Ok(()));
+        assert_eq!(comp.compare(2, 0), Err(AbsoluteError(2)));
+        assert_eq!(comp.compare(-2, 0), Err(AbsoluteError(2)));
     }
 
     #[test]
@@ -850,11 +849,11 @@ mod tests {
 
         // Note: floating point math is not generally exact, but
         // here we only compare with 0.0, so we can expect exact results.
-        assert_eq!(comp.compare(0.0, 0.0), None);
-        assert_eq!(comp.compare(1.0, 0.0), None);
-        assert_eq!(comp.compare(-1.0, 0.0), None);
-        assert_eq!(comp.compare(2.0, 0.0), Some(AbsoluteError(2.0)));
-        assert_eq!(comp.compare(-2.0, 0.0), Some(AbsoluteError(2.0)));
+        assert_eq!(comp.compare(0.0, 0.0), Ok(()));
+        assert_eq!(comp.compare(1.0, 0.0), Ok(()));
+        assert_eq!(comp.compare(-1.0, 0.0), Ok(()));
+        assert_eq!(comp.compare(2.0, 0.0), Err(AbsoluteError(2.0)));
+        assert_eq!(comp.compare(-2.0, 0.0), Err(AbsoluteError(2.0)));
     }
 
     quickcheck! {
@@ -889,8 +888,8 @@ mod tests {
 
             // The comparator is defined by <=, not <
             let comp = AbsoluteElementwiseComparator { tol: tol };
-            let includes_tol = comp.compare(tol, 0.0).is_none();
-            let excludes_next_after_tol = comp.compare(next_f64(tol), 0.0).is_some();
+            let includes_tol = comp.compare(tol, 0.0).is_ok();
+            let excludes_next_after_tol = comp.compare(next_f64(tol), 0.0).is_err();
             TestResult::from_bool(includes_tol && excludes_next_after_tol)
         }
     }
@@ -899,22 +898,22 @@ mod tests {
     pub fn exact_comparator_integer() {
         let comp = ExactElementwiseComparator;
 
-        assert_eq!(comp.compare(0, 0), None);
-        assert_eq!(comp.compare(1, 0), Some(ExactError));
-        assert_eq!(comp.compare(-1, 0), Some(ExactError));
-        assert_eq!(comp.compare(1, -1), Some(ExactError));
+        assert_eq!(comp.compare(0, 0), Ok(()));
+        assert_eq!(comp.compare(1, 0), Err(ExactError));
+        assert_eq!(comp.compare(-1, 0), Err(ExactError));
+        assert_eq!(comp.compare(1, -1), Err(ExactError));
     }
 
     #[test]
     pub fn exact_comparator_floating_point() {
         let comp = ExactElementwiseComparator;
 
-        assert_eq!(comp.compare(0.0, 0.0), None);
-        assert_eq!(comp.compare(-0.0, -0.0), None);
-        assert_eq!(comp.compare(-0.0, 0.0), None);
-        assert_eq!(comp.compare(1.0, 0.0), Some(ExactError));
-        assert_eq!(comp.compare(-1.0, 0.0), Some(ExactError));
-        assert_eq!(comp.compare(f64::NAN, 5.0), Some(ExactError));
+        assert_eq!(comp.compare(0.0, 0.0), Ok(()));
+        assert_eq!(comp.compare(-0.0, -0.0), Ok(()));
+        assert_eq!(comp.compare(-0.0, 0.0), Ok(()));
+        assert_eq!(comp.compare(1.0, 0.0), Err(ExactError));
+        assert_eq!(comp.compare(-1.0, 0.0), Err(ExactError));
+        assert_eq!(comp.compare(f64::NAN, 5.0), Err(ExactError));
     }
 
     quickcheck! {
@@ -937,8 +936,8 @@ mod tests {
             let result = comp.compare(a, b);
 
             match a == b {
-                true =>  result == None,
-                false => result == Some(ExactError)
+                true =>  result == Ok(()),
+                false => result == Err(ExactError)
             }
         }
     }
@@ -949,8 +948,8 @@ mod tests {
             let result = comp.compare(a, b);
 
             match a == b {
-                true =>  result == None,
-                false => result == Some(ExactError)
+                true =>  result == Ok(()),
+                false => result == Err(ExactError)
             }
         }
     }
@@ -961,11 +960,11 @@ mod tests {
         // to make a sample here
         let comp = UlpElementwiseComparator { tol: 1 };
 
-        assert_eq!(comp.compare(0.0, 0.0), None);
-        assert_eq!(comp.compare(0.0, -0.0), None);
-        assert_eq!(comp.compare(-1.0, 1.0), Some(UlpError(UlpComparisonResult::IncompatibleSigns)));
-        assert_eq!(comp.compare(1.0, 0.0), Some(UlpError(f64::ulp_diff(&1.0, &0.0))));
-        assert_eq!(comp.compare(f64::NAN, 0.0), Some(UlpError(UlpComparisonResult::Nan)));;
+        assert_eq!(comp.compare(0.0, 0.0), Ok(()));
+        assert_eq!(comp.compare(0.0, -0.0), Ok(()));
+        assert_eq!(comp.compare(-1.0, 1.0), Err(UlpError(UlpComparisonResult::IncompatibleSigns)));
+        assert_eq!(comp.compare(1.0, 0.0), Err(UlpError(f64::ulp_diff(&1.0, &0.0))));
+        assert_eq!(comp.compare(f64::NAN, 0.0), Err(UlpError(UlpComparisonResult::Nan)));;
     }
 
     quickcheck! {
@@ -987,9 +986,9 @@ mod tests {
             use ulp::UlpComparisonResult::{ExactMatch, Difference};
 
             match f64::ulp_diff(&a, &b) {
-                ExactMatch =>                      result == None,
-                Difference(diff) if diff <= tol => result == None,
-                otherwise =>                       result == Some(UlpError(otherwise))
+                ExactMatch =>                      result.is_ok(),
+                Difference(diff) if diff <= tol => result.is_ok(),
+                otherwise =>                       result == Err(UlpError(otherwise))
             }
         }
     }
@@ -1008,8 +1007,8 @@ mod tests {
             // Recall that the float comparator returns UlpError, so we cannot compare the results
             // of abscomp directly
             TestResult::from_bool(match abscomp.compare(a, b) {
-                Some(AbsoluteError(_)) => result.is_some(),
-                None =>                   result.is_none()
+                Err(AbsoluteError(_)) =>   result.is_err(),
+                Ok(_) =>                   result.is_ok()
             })
         }
     }
