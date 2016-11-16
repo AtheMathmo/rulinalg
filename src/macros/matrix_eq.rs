@@ -617,6 +617,13 @@ ULP tolerance: {ulp}",
 /// Comparison criterion: absolute difference, |x - y| <= 0.00000001.
 /// ```
 ///
+/// # Trait bounds on elements
+/// Each comparator has specific requirements on which traits the elements
+/// need to implement. To discover which traits are required for each comparator,
+/// we refer the reader to implementors of
+/// [ElementwiseComparator](macros/trait.ElementwiseComparator.html),
+/// which provides the underlying comparison for the various macro invocations.
+///
 /// # Examples
 ///
 /// ```
