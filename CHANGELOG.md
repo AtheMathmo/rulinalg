@@ -2,7 +2,31 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
-# 0.3.6
+## 0.3.7
+
+### New Contributors
+
+- [mabruckner](https://github.com/mabruckner)
+
+### Breaking Changes
+
+- None
+
+### Features
+
+- Added new `assert_matrix_eq!` and `assert_vector_eq!` macros
+for easier equality checks. Provides multiple equality comparisons:
+`ulp`, `abs`, `float`, `exact`.
+
+### Bug Fixes
+
+- Further improvements (performance and stability) to the LU decomposition algorithm.
+
+### Minor Changes
+
+- Removed import warning on `lu` module.
+
+## 0.3.6
 
 ### Breaking Changes
 
@@ -20,7 +44,7 @@ This document will be used to keep track of changes made between release version
 
 - None
 
-# 0.3.5
+## 0.3.5
 
 ### New Contributors
 
@@ -47,7 +71,7 @@ They no longer `assert!` that a matrix is triangular.
 - All tests are now using `matrix!` macro and other
 tidier constructors.
 
-# 0.3.4
+## 0.3.4
 
 ### New Contributors
 
