@@ -1,5 +1,3 @@
-//! Macros for the linear algebra modules.
-
 /// The `matrix!` macro enables easy construction of small matrices.
 ///
 /// This is particularly useful when writing tests involving matrices.
