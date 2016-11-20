@@ -403,6 +403,7 @@ impl<T> ElementwiseComparator<T, UlpError> for UlpElementwiseComparator
         let diff = Ulp::ulp_diff(&a, &b);
         match diff {
             ulp::UlpComparisonResult::ExactMatch => Ok(()),
+            ulp::UlpComparisonResult::Difference(diff) if diff <= self.tol => Ok(()),
             _ => Err(UlpError(diff))
         }
     }
@@ -990,6 +991,24 @@ mod tests {
                 Difference(diff) if diff <= tol => result.is_ok(),
                 otherwise =>                       result == Err(UlpError(otherwise))
             }
+        }
+    }
+
+    quickcheck! {
+        fn property_ulp_comparator_next_f64_is_ok_when_inside_tolerance(x: f64) -> TestResult {
+            let y = next_f64(x);
+
+            if !(x.is_finite() && y.is_finite() && x.signum() == y.signum()) {
+                return TestResult::discard()
+            }
+
+            let comp0 = UlpElementwiseComparator { tol: 0 };
+            let comp1 = UlpElementwiseComparator { tol: 1 };
+
+            let tol_0_fails = comp0.compare(x, y) == Err(UlpError(UlpComparisonResult::Difference(1)));
+            let tol_1_succeeds = comp1.compare(x, y) == Ok(());
+
+            TestResult::from_bool(tol_0_fails && tol_1_succeeds)
         }
     }
 
