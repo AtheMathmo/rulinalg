@@ -153,11 +153,11 @@ pub trait BaseMatrix<T>: Sized {
     /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
     ///
     /// // Prints "2" three times.
-    /// for row in a.iter_rows() {
+    /// for row in a.row_iter() {
     ///     println!("{}", row.len());
     /// }
     /// ```
-    fn iter_rows(&self) -> Rows<T> {
+    fn row_iter(&self) -> Rows<T> {
         Rows {
             slice_start: self.as_ptr(),
             row_pos: 0,
@@ -182,13 +182,13 @@ pub trait BaseMatrix<T>: Sized {
     ///                 3, 4, 5;
     ///                 6, 7, 8];
     /// // Print super diag [1, 5]
-    /// for d in a.iter_diag(DiagOffset::Above(1)) {
+    /// for d in a.diag_iter(DiagOffset::Above(1)) {
     ///     println!("{}", d);
     /// }
     ///
     /// // Print sub diag [3, 7]
-    /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
-    /// for d in a.iter_diag(DiagOffset::from(-1)) {
+    /// // Equivalent to `diag_iter(DiagOffset::Below(1))`
+    /// for d in a.diag_iter(DiagOffset::from(-1)) {
     ///     println!("{}", d);
     /// }
     /// # }
@@ -200,8 +200,8 @@ pub trait BaseMatrix<T>: Sized {
     /// out-of-bounds this function will panic.
     ///
     /// This function will never panic if the `Main` diagonal
-    /// offset is used. 
-    fn iter_diag(&self, k: DiagOffset) -> Diagonal<T, Self> {
+    /// offset is used.
+    fn diag_iter(&self, k: DiagOffset) -> Diagonal<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
             DiagOffset::Above(m) => {
@@ -242,7 +242,7 @@ pub trait BaseMatrix<T>: Sized {
     fn sum_rows(&self) -> Vector<T>
         where T: Copy + Zero + Add<T, Output = T>
     {
-        let sum_rows = self.iter_rows().fold(vec![T::zero(); self.cols()], |row_sum, r| {
+        let sum_rows = self.row_iter().fold(vec![T::zero(); self.cols()], |row_sum, r| {
             utils::vec_bin_op(&row_sum, r, |sum, val| sum + val)
         });
         Vector::new(sum_rows)
@@ -269,7 +269,7 @@ pub trait BaseMatrix<T>: Sized {
         where T: Copy + Zero + Add<T, Output = T>
     {
         let mut col_sum = Vec::with_capacity(self.rows());
-        col_sum.extend(self.iter_rows().map(|row| utils::unrolled_sum(row)));
+        col_sum.extend(self.row_iter().map(|row| utils::unrolled_sum(row)));
         Vector::new(col_sum)
     }
 
@@ -288,7 +288,7 @@ pub trait BaseMatrix<T>: Sized {
     fn sum(&self) -> T
         where T: Copy + Zero + Add<T, Output = T>
     {
-        self.iter_rows()
+        self.row_iter()
             .fold(T::zero(), |sum, row| sum + utils::unrolled_sum(row))
     }
 
@@ -296,7 +296,7 @@ pub trait BaseMatrix<T>: Sized {
     fn into_matrix(self) -> Matrix<T>
         where T: Copy
     {
-        self.iter_rows().collect()
+        self.row_iter().collect()
     }
 
     /// Select rows from matrix
@@ -420,7 +420,7 @@ pub trait BaseMatrix<T>: Sized {
         assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
 
         let mut data = Vec::with_capacity(self.rows() * self.cols());
-        for (self_r, m_r) in self.iter_rows().zip(m.iter_rows()) {
+        for (self_r, m_r) in self.row_iter().zip(m.row_iter()) {
             data.extend_from_slice(&utils::vec_bin_op(self_r, m_r, T::mul));
         }
         Matrix::new(self.rows(), self.cols(), data)
@@ -451,7 +451,7 @@ pub trait BaseMatrix<T>: Sized {
         assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
 
         let mut data = Vec::with_capacity(self.rows() * self.cols());
-        for (self_r, m_r) in self.iter_rows().zip(m.iter_rows()) {
+        for (self_r, m_r) in self.row_iter().zip(m.row_iter()) {
             data.extend_from_slice(&utils::vec_bin_op(self_r, m_r, T::div));
         }
         Matrix::new(self.rows(), self.cols(), data)
@@ -535,7 +535,7 @@ pub trait BaseMatrix<T>: Sized {
 
         let mut new_data = Vec::with_capacity((self.cols() + m.cols()) * self.rows());
 
-        for (self_row, m_row) in self.iter_rows().zip(m.iter_rows()) {
+        for (self_row, m_row) in self.row_iter().zip(m.row_iter()) {
             new_data.extend_from_slice(self_row);
             new_data.extend_from_slice(m_row);
         }
@@ -574,7 +574,7 @@ pub trait BaseMatrix<T>: Sized {
 
         let mut new_data = Vec::with_capacity((self.rows() + m.rows()) * self.cols());
 
-        for row in self.iter_rows().chain(m.iter_rows()) {
+        for row in self.row_iter().chain(m.row_iter()) {
             new_data.extend_from_slice(row);
         }
 
@@ -608,7 +608,7 @@ pub trait BaseMatrix<T>: Sized {
     fn diag(&self) -> Vector<T>
         where T: Copy
     {
-        self.iter_diag(DiagOffset::Main).cloned().collect::<Vec<_>>().into()
+        self.diag_iter(DiagOffset::Main).cloned().collect::<Vec<_>>().into()
     }
 
     /// Tranposes the given matrix
@@ -749,7 +749,7 @@ pub trait BaseMatrix<T>: Sized {
                 format!("Vector size {0} != {1} Matrix column count.",
                         y.size(),
                         self.cols()));
-        
+
         forward_substitution(self, y)
     }
 
@@ -1005,7 +1005,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
     ///
-    /// for row in a.iter_rows_mut() {
+    /// for row in a.row_iter_mut() {
     ///     for r in row {
     ///         *r = *r + 1;
     ///     }
@@ -1014,7 +1014,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// // Now contains the range 1..7
     /// println!("{}", a);
     /// ```
-    fn iter_rows_mut(&mut self) -> RowsMut<T> {
+    fn row_iter_mut(&mut self) -> RowsMut<T> {
         RowsMut {
             slice_start: self.as_mut_ptr(),
             row_pos: 0,
@@ -1040,14 +1040,14 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///                     6, 7, 8];
     ///
     /// // Increment super diag
-    /// for d in a.iter_diag_mut(DiagOffset::Above(1)) {
+    /// for d in a.diag_iter_mut(DiagOffset::Above(1)) {
     ///     *d = *d + 1;
     /// }
     ///
     /// // Zero the sub-diagonal (sets 3 and 7 to 0)
-    /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
-    /// for sub_d in a.iter_diag_mut(DiagOffset::from(-1)) {
-    ///     *sub_d = 0;   
+    /// // Equivalent to `diag_iter(DiagOffset::Below(1))`
+    /// for sub_d in a.diag_iter_mut(DiagOffset::from(-1)) {
+    ///     *sub_d = 0;
     /// }
     ///
     /// println!("{}", a);
@@ -1060,8 +1060,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// out-of-bounds this function will panic.
     ///
     /// This function will never panic if the `Main` diagonal
-    /// offset is used. 
-    fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
+    /// offset is used.
+    fn diag_iter_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
             DiagOffset::Above(m) => {
@@ -1111,7 +1111,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
                 "Target has different row count to self.");
         assert!(self.cols() == target.cols(),
                 "Target has different column count to self.");
-        for (s, t) in self.iter_rows_mut().zip(target.iter_rows()) {
+        for (s, t) in self.row_iter_mut().zip(target.row_iter()) {
             // Vectorized assignment per row.
             utils::in_place_vec_bin_op(s, t, |x, &y| *x = y);
         }
@@ -1279,7 +1279,7 @@ impl<T> BaseMatrix<T> for Matrix<T> {
         let mut new_data = self.data.clone();
         new_data.reserve(m.rows() * m.cols());
 
-        for row in m.iter_rows() {
+        for row in m.row_iter() {
             new_data.extend_from_slice(row);
         }
 
@@ -1725,24 +1725,24 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn test_iter_diag_too_high() {
+    fn test_diag_iter_too_high() {
         let a = matrix![0.0, 1.0, 2.0, 3.0;
                         4.0, 5.0, 6.0, 7.0;
                         8.0, 9.0, 10.0, 11.0];
 
-        for _ in a.iter_diag(DiagOffset::Above(4)) {
+        for _ in a.diag_iter(DiagOffset::Above(4)) {
 
         }
     }
 
     #[test]
     #[should_panic]
-    fn test_iter_diag_too_low() {
+    fn test_diag_iter_too_low() {
         let a = matrix![0.0, 1.0, 2.0, 3.0;
                         4.0, 5.0, 6.0, 7.0;
                         8.0, 9.0, 10.0, 11.0];
 
-        for _ in a.iter_diag(DiagOffset::Below(3)) {
+        for _ in a.diag_iter(DiagOffset::Below(3)) {
 
         }
     }
