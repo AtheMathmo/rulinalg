@@ -1,4 +1,7 @@
-use matrix::{Matrix, BaseMatrixMut, forward_substitution, back_substitution};
+use matrix::{
+    Matrix, BaseMatrix, BaseMatrixMut,
+    forward_substitution, back_substitution
+};
 use vector::Vector;
 use error::{Error};
 use matrix::Decomposition;
@@ -121,10 +124,54 @@ impl<T> LuDecomposition<T> where T: Any + Float {
         let b = try!(forward_substitution(&self.lu.l, &self.lu.p * b));
         back_substitution(&self.lu.u, b)
     }
+
+    /// Computes the inverse of the matrix which this LUP decomposition
+    /// represents.
+    pub fn inverse(&self) -> Result<Matrix<T>, Error> {
+        let n = self.lu.u.rows();
+        let mut inv = Matrix::zeros(n, n);
+        let mut e = Vector::zeros(n);
+
+        // To compute the inverse of a matrix A, note that
+        // we can simply solve the system
+        // AX = I,
+        // where X is the inverse of A, and I is the identity
+        // matrix of appropriate dimension.
+
+        // Solve for each column of the inverse matrix
+        for i in 0 .. n {
+            e[i] = T::one();
+
+            let y = try!(self.solve(e));
+
+            for j in 0 .. n {
+                inv[[i, j]] = y[j];
+            }
+
+            e = Vector::zeros(n);
+        }
+
+        Ok(inv)
+    }
+
+    /// Computes the determinant of the decomposed matrix.
+    pub fn det(&self) -> T {
+        use matrix::parity;
+        use matrix::DiagOffset::Main;
+
+        // Recall that the determinant of a triangular matrix
+        // is the product of its diagonal entries
+        let u_det = self.lu.u.iter_diag(Main).fold(T::one(), |x, &y| x * y);
+        let l_det = self.lu.l.iter_diag(Main).fold(T::one(), |x, &y| x * y);
+        // The determinant of a permutation matrix is simply its parity
+        let p_det = parity(&self.lu.p);
+        p_det * u_det * l_det
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::LuDecomposition;
     use matrix::{Matrix, Decomposition};
     use matrix::LU;
 
@@ -137,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn test_lup_decomp_singular_matrix() {
+    fn test_lu_singular_matrix() {
         // The LUP decomposition for a singular matrix
         // is not unique, so we can not explicitly check the
         // L, U and P matrices against known values directly.
@@ -172,5 +219,48 @@ mod tests {
             let LU { l, u, p } = x.clone().lu().decompose();
             assert_matrix_eq!(x, p.transpose() * l * u, comp = float);
         }
+    }
+
+    #[test]
+    pub fn lu_inverse_identity() {
+        let lu = LuDecomposition::<f64> {
+            lu: LU {
+                l: Matrix::identity(3),
+                u: Matrix::identity(3),
+                p: Matrix::identity(3)
+            }
+        };
+
+        let inv = lu.inverse().expect("Matrix is invertible.");
+
+        assert_matrix_eq!(inv, Matrix::identity(3), comp = float);
+    }
+
+    #[test]
+    pub fn lu_det_identity() {
+        let lu = LuDecomposition::<f64> {
+            lu: LU {
+                l: Matrix::identity(3),
+                u: Matrix::identity(3),
+                p: Matrix::identity(3)
+            }
+        };
+
+        let det = lu.det();
+
+        assert_eq!(det, 1.0);
+    }
+
+    #[test]
+    pub fn lu_det_arbitrary_matrices() {
+        let x = matrix![-3.0, -1.0, -5.0,  1.0;
+                         4.0,  3.0,  2.0, -3.0;
+                         1.0, -1.0,  4.0, -5.0;
+                         4.0,  3.0,  2.0,  5.0];
+        // This works now, but changes to the algorithms may
+        // perturb the determinant just enough for an exact comparison
+        // to fail. Should really use some kind of approximate floating point
+        // comparison here...
+        assert_eq!(x.lu().det(), 56.0);
     }
 }
