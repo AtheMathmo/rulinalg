@@ -145,7 +145,7 @@ impl<T> LuDecomposition<T> where T: Any + Float {
             let y = try!(self.solve(e));
 
             for j in 0 .. n {
-                inv[[i, j]] = y[j];
+                inv[[j, i]] = y[j];
             }
 
             e = Vector::zeros(n);
@@ -234,6 +234,21 @@ mod tests {
         let inv = lu.inverse().expect("Matrix is invertible.");
 
         assert_matrix_eq!(inv, Matrix::identity(3), comp = float);
+    }
+
+    #[test]
+    pub fn lu_inverse_arbitrary_matrix() {
+        let x = matrix![5.0, 0.0, 0.0, 1.0;
+                        2.0, 2.0, 2.0, 1.0;
+                        4.0, 5.0, 5.0, 5.0;
+                        1.0, 6.0, 4.0, 5.0];
+
+        let inv = matrix![1.85185185185185203e-01,   1.85185185185185175e-01, -7.40740740740740561e-02, -1.02798428206033007e-17;
+                          1.66666666666666630e-01,   6.66666666666666519e-01, -6.66666666666666519e-01,  4.99999999999999833e-01;
+                         -3.88888888888888840e-01,   1.11111111111111174e-01,  5.55555555555555358e-01, -4.99999999999999833e-01;
+                          7.40740740740740838e-02,  -9.25925925925925819e-01,  3.70370370370370294e-01,  5.13992141030165006e-17];
+
+        assert_matrix_eq!(inv, x.lu().inverse().unwrap(), comp = float);
     }
 
     #[test]
