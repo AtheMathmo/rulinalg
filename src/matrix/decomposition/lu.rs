@@ -174,6 +174,7 @@ mod tests {
     use super::LuDecomposition;
     use matrix::{Matrix, Decomposition};
     use matrix::LU;
+    use libnum::Float;
 
     #[test]
     #[should_panic]
@@ -237,7 +238,7 @@ mod tests {
     }
 
     #[test]
-    pub fn lu_inverse_arbitrary_matrix() {
+    pub fn lu_inverse_arbitrary_invertible_matrix() {
         let x = matrix![5.0, 0.0, 0.0, 1.0;
                         2.0, 2.0, 2.0, 1.0;
                         4.0, 5.0, 5.0, 5.0;
@@ -252,6 +253,15 @@ mod tests {
     }
 
     #[test]
+    pub fn lu_inverse_arbitrary_singular_matrix() {
+        let x = matrix![ 5.0,  0.0,  0.0,  1.0;
+                         0.0,  2.0,  2.0,  1.0;
+                        15.0,  4.0,  4.0, 10.0;
+                         5.0,  2.0,  2.0, 32.0];
+        assert!(x.lu().inverse().is_err());
+    }
+
+    #[test]
     pub fn lu_det_identity() {
         let lu = LuDecomposition::<f64> {
             lu: LU {
@@ -261,9 +271,28 @@ mod tests {
             }
         };
 
-        let det = lu.det();
+        assert_eq!(lu.det(), 1.0);
+    }
 
-        assert_eq!(det, 1.0);
+    #[test]
+    pub fn lu_det_arbitrary_invertible_matrix() {
+        let x = matrix![ 5.0,  0.0,  0.0,  1.0;
+                         0.0,  2.0,  2.0,  1.0;
+                        15.0,  4.0,  7.0, 10.0;
+                         5.0,  2.0, 17.0, 32.0];
+
+        let expected_det = 149.99999999999997;
+        let diff = x.lu().det() - expected_det;
+        assert!(diff.abs() < 1e-12);
+    }
+
+    #[test]
+    pub fn lu_det_arbitrary_singular_matrix() {
+        let x = matrix![ 5.0,  0.0,  0.0,  1.0;
+                         0.0,  2.0,  2.0,  1.0;
+                        15.0,  4.0,  4.0, 10.0;
+                         5.0,  2.0,  2.0, 32.0];
+        assert_eq!(x.lu().det(), 0.0);
     }
 
     #[test]
@@ -272,10 +301,9 @@ mod tests {
                          4.0,  3.0,  2.0, -3.0;
                          1.0, -1.0,  4.0, -5.0;
                          4.0,  3.0,  2.0,  5.0];
-        // This works now, but changes to the algorithms may
-        // perturb the determinant just enough for an exact comparison
-        // to fail. Should really use some kind of approximate floating point
-        // comparison here...
-        assert_eq!(x.lu().det(), 56.0);
+
+        let expected_det = 56.0;
+        let diff = x.lu().det() - expected_det;
+        assert!(diff.abs() < 1e-13);
     }
 }
