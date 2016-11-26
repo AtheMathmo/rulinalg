@@ -26,7 +26,9 @@ pub enum ErrorKind {
     /// A failure due to some algebraic constraints not being met.
     AlgebraFailure,
     /// Tried to divide by zero
-    DivByZero
+    DivByZero,
+    /// Failure due to inability to convert between scalar types
+    ScalarConversionFailure
 }
 
 impl Error {
