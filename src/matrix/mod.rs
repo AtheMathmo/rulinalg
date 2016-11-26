@@ -20,6 +20,7 @@ mod decomposition;
 mod impl_ops;
 mod mat_mul;
 mod iter;
+mod permutation_matrix;
 pub mod slice;
 
 pub use self::slice::{BaseMatrix, BaseMatrixMut};
@@ -28,6 +29,8 @@ pub use self::decomposition::{
     LU,
     LuDecomposition
 };
+
+pub use self::permutation_matrix::{PermutationMatrix};
 
 /// Matrix dimensions
 #[derive(Debug, Clone, Copy)]
