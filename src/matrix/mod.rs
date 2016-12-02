@@ -811,7 +811,12 @@ fn parity<T, M>(m: &M) -> T
             while !visited[next] {
                 len += 1;
                 visited[next] = true;
-                next = utils::find(&m.get_row(next).unwrap(), T::one());
+                unsafe {
+                    next = utils::find(&m.get_row_unchecked(next)
+                                    .as_contiguous_slice()
+                                    .unwrap(),
+                                T::one());
+                }
             }
 
             if len % 2 == 0 {

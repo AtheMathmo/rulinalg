@@ -70,6 +70,19 @@ pub trait BaseMatrix<T>: Sized {
         }
     }
 
+    /// TODO: actual documentation
+    ///
+    /// I'm not a fan of this function at all right now.
+    fn as_contiguous_slice(&self) -> Option<&[T]> {
+        if self.rows() == 1 {
+            unsafe {
+                Some(::std::slice::from_raw_parts(self.as_ptr(), self.cols()))
+            }
+        } else {
+            None
+        }
+    }
+
     /// Get a reference to a point in the matrix without bounds checking.
     unsafe fn get_unchecked(&self, index: [usize; 2]) -> &T {
         &*(self.as_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
@@ -81,16 +94,20 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use]
+    /// # extern crate rulinalg;
+    ///
+    /// # fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let slice = a.sub_slice([1,1], 2, 2);
-    /// let row = slice.get_row(1);
-    /// let expected = vec![7usize, 8];
-    /// assert_eq!(row, Some(&*expected));
-    /// assert!(slice.get_row(5).is_none());
+    /// let mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let row = mat.get_row(1).unwrap();
+    /// let expected = matrix![3usize, 4, 5];
+    /// assert_matrix_eq!(row, expected);
+    /// assert!(mat.get_row(5).is_none());
+    /// # }
     /// ```
-    fn get_row(&self, index: usize) -> Option<&[T]> {
+    fn get_row(&self, index: usize) -> Option<MatrixSlice<T>> {
         if index < self.rows() {
             unsafe { Some(self.get_row_unchecked(index)) }
         } else {
@@ -103,17 +120,24 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use]
+    /// # extern crate rulinalg;
+    ///
+    /// # fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let slice = a.sub_slice([1,1], 2, 2);
-    /// let row = unsafe { slice.get_row_unchecked(1) };
-    /// let mut expected = vec![7usize, 8];
-    /// assert_eq!(row, &*expected);
+    /// let mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let row = unsafe { mat.get_row_unchecked(2) };
+    /// let expected = matrix![6usize, 7, 8];
+    /// assert_matrix_eq!(row, expected);
+    /// # }
     /// ```
-    unsafe fn get_row_unchecked(&self, index: usize) -> &[T] {
+    unsafe fn get_row_unchecked(&self, index: usize) -> MatrixSlice<T> {
         let ptr = self.as_ptr().offset((self.row_stride() * index) as isize);
-        ::std::slice::from_raw_parts(ptr, self.cols())
+        MatrixSlice::from_raw_parts(ptr,
+                                    1,
+                                    self.cols(),
+                                    self.row_stride())
     }
 
     /// Returns an iterator over the matrix data.
@@ -336,7 +360,7 @@ pub trait BaseMatrix<T>: Sized {
         for row in row_iter.clone() {
             unsafe {
                 let slice = self.get_row_unchecked(*row);
-                mat_vec.extend_from_slice(slice);
+                mat_vec.extend_from_slice(slice.as_contiguous_slice().unwrap());
             }
         }
 
@@ -848,6 +872,19 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         }
     }
 
+    /// TODO: actual documentation
+    ///
+    /// I'm not a fan of this function at all right now.
+    fn as_mut_contiguous_slice(&mut self) -> Option<&mut [T]> {
+        if self.rows() == 1 {
+            unsafe {
+                Some(::std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.cols()))
+            }
+        } else {
+            None
+        }
+    }
+
     /// Get a mutable reference to a point in the matrix without bounds checks.
     unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut T {
         &mut *(self.as_mut_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
@@ -893,18 +930,23 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use]
+    /// # extern crate rulinalg;
+    ///
+    /// # fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
-    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let mut slice = a.sub_slice_mut([1,1], 2, 2);
+    /// let mut mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut slice = mat.sub_slice_mut([1,1], 2, 2);
     /// {
-    ///     let row = slice.get_row_mut(1);
-    ///     let mut expected = vec![7usize, 8];
-    ///     assert_eq!(row, Some(&mut *expected));
+    ///     let row = slice.get_row_mut(1).unwrap();
+    ///     let mut expected = matrix![7usize, 8];
+    ///     assert_matrix_eq!(row, expected);
     /// }
     /// assert!(slice.get_row_mut(5).is_none());
+    /// # }
     /// ```
-    fn get_row_mut(&mut self, index: usize) -> Option<&mut [T]> {
+    fn get_row_mut(&mut self, index: usize) -> Option<MatrixSliceMut<T>> {
         if index < self.rows() {
             unsafe { Some(self.get_row_unchecked_mut(index)) }
         } else {
@@ -918,17 +960,25 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use]
+    /// # extern crate rulinalg;
+    ///
+    /// # fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
-    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let mut slice = a.sub_slice_mut([1,1], 2, 2);
+    /// let mut mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut slice = mat.sub_slice_mut([1,1], 2, 2);
     /// let row = unsafe { slice.get_row_unchecked_mut(1) };
-    /// let mut expected = vec![7usize, 8];
-    /// assert_eq!(row, &mut *expected);
+    /// let mut expected = matrix![7usize, 8];
+    /// assert_matrix_eq!(row, expected);
+    /// # }
     /// ```
-    unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> &mut [T] {
+    unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> MatrixSliceMut<T> {
         let ptr = self.as_mut_ptr().offset((self.row_stride() * index) as isize);
-        ::std::slice::from_raw_parts_mut(ptr, self.cols())
+        MatrixSliceMut::from_raw_parts(ptr,
+                                            1,
+                                            self.cols(),
+                                            self.row_stride())
     }
 
     /// Swaps two rows in a matrix.
