@@ -101,15 +101,15 @@ pub trait BaseMatrix<T>: Sized {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let col = mat.get_col(1).unwrap();
+    /// let col = mat.col(1).unwrap();
     /// let expected = matrix![1usize; 4; 7];
     /// assert_matrix_eq!(col, expected);
-    /// assert!(mat.get_col(5).is_none());
+    /// assert!(mat.col(5).is_none());
     /// # }
     /// ```
-    fn get_col(&self, index: usize) -> Option<MatrixSlice<T>> {
+    fn col(&self, index: usize) -> Option<MatrixSlice<T>> {
         if index < self.cols() {
-            unsafe { Some(self.get_col_unchecked(index)) }
+            unsafe { Some(self.col_unchecked(index)) }
         } else {
             None
         }
@@ -128,12 +128,12 @@ pub trait BaseMatrix<T>: Sized {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let col = unsafe { mat.get_col_unchecked(2) };
+    /// let col = unsafe { mat.col_unchecked(2) };
     /// let expected = matrix![2usize; 5; 8];
     /// assert_matrix_eq!(col, expected);
     /// # }
     /// ```
-    unsafe fn get_col_unchecked(&self, index: usize) -> MatrixSlice<T> {
+    unsafe fn col_unchecked(&self, index: usize) -> MatrixSlice<T> {
         let ptr = self.as_ptr().offset(index as isize);
         MatrixSlice::from_raw_parts(ptr,
                                     self.rows(),
@@ -154,15 +154,15 @@ pub trait BaseMatrix<T>: Sized {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let row = mat.get_row(1).unwrap();
+    /// let row = mat.row(1).unwrap();
     /// let expected = matrix![3usize, 4, 5];
     /// assert_matrix_eq!(row, expected);
-    /// assert!(mat.get_row(5).is_none());
+    /// assert!(mat.row(5).is_none());
     /// # }
     /// ```
-    fn get_row(&self, index: usize) -> Option<MatrixSlice<T>> {
+    fn row(&self, index: usize) -> Option<MatrixSlice<T>> {
         if index < self.rows() {
-            unsafe { Some(self.get_row_unchecked(index)) }
+            unsafe { Some(self.row_unchecked(index)) }
         } else {
             None
         }
@@ -180,12 +180,12 @@ pub trait BaseMatrix<T>: Sized {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let row = unsafe { mat.get_row_unchecked(2) };
+    /// let row = unsafe { mat.row_unchecked(2) };
     /// let expected = matrix![6usize, 7, 8];
     /// assert_matrix_eq!(row, expected);
     /// # }
     /// ```
-    unsafe fn get_row_unchecked(&self, index: usize) -> MatrixSlice<T> {
+    unsafe fn row_unchecked(&self, index: usize) -> MatrixSlice<T> {
         let ptr = self.as_ptr().offset((self.row_stride() * index) as isize);
         MatrixSlice::from_raw_parts(ptr,
                                     1,
@@ -412,7 +412,7 @@ pub trait BaseMatrix<T>: Sized {
 
         for row in row_iter.clone() {
             unsafe {
-                let slice = self.get_row_unchecked(*row);
+                let slice = self.row_unchecked(*row);
                 mat_vec.extend_from_slice(slice.as_contiguous_slice().unwrap());
             }
         }
@@ -992,16 +992,16 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// let mut mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     /// let mut slice = mat.sub_slice_mut([1,1], 2, 2);
     /// {
-    ///     let col = slice.get_col_mut(1).unwrap();
+    ///     let col = slice.col_mut(1).unwrap();
     ///     let mut expected = matrix![5usize; 8];
     ///     assert_matrix_eq!(col, expected);
     /// }
-    /// assert!(slice.get_col_mut(5).is_none());
+    /// assert!(slice.col_mut(5).is_none());
     /// # }
     /// ```
-    fn get_col_mut(&mut self, index: usize) -> Option<MatrixSliceMut<T>> {
+    fn col_mut(&mut self, index: usize) -> Option<MatrixSliceMut<T>> {
         if index < self.cols() {
-            unsafe { Some(self.get_col_unchecked_mut(index)) }
+            unsafe { Some(self.col_unchecked_mut(index)) }
         } else {
             None
         }
@@ -1021,12 +1021,12 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// let mut mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     /// let mut slice = mat.sub_slice_mut([1,1], 2, 2);
-    /// let col = unsafe { slice.get_col_unchecked_mut(1) };
+    /// let col = unsafe { slice.col_unchecked_mut(1) };
     /// let mut expected = matrix![5usize; 8];
     /// assert_matrix_eq!(col, expected);
     /// # }
     /// ```
-    unsafe fn get_col_unchecked_mut(&mut self, index: usize) -> MatrixSliceMut<T> {
+    unsafe fn col_unchecked_mut(&mut self, index: usize) -> MatrixSliceMut<T> {
         let ptr = self.as_mut_ptr().offset(index as isize);
         MatrixSliceMut::from_raw_parts(ptr,
                                         self.rows(),
@@ -1049,16 +1049,16 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// let mut mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     /// let mut slice = mat.sub_slice_mut([1,1], 2, 2);
     /// {
-    ///     let row = slice.get_row_mut(1).unwrap();
+    ///     let row = slice.row_mut(1).unwrap();
     ///     let mut expected = matrix![7usize, 8];
     ///     assert_matrix_eq!(row, expected);
     /// }
-    /// assert!(slice.get_row_mut(5).is_none());
+    /// assert!(slice.row_mut(5).is_none());
     /// # }
     /// ```
-    fn get_row_mut(&mut self, index: usize) -> Option<MatrixSliceMut<T>> {
+    fn row_mut(&mut self, index: usize) -> Option<MatrixSliceMut<T>> {
         if index < self.rows() {
-            unsafe { Some(self.get_row_unchecked_mut(index)) }
+            unsafe { Some(self.row_unchecked_mut(index)) }
         } else {
             None
         }
@@ -1078,12 +1078,12 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// let mut mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
     /// let mut slice = mat.sub_slice_mut([1,1], 2, 2);
-    /// let row = unsafe { slice.get_row_unchecked_mut(1) };
+    /// let row = unsafe { slice.row_unchecked_mut(1) };
     /// let mut expected = matrix![7usize, 8];
     /// assert_matrix_eq!(row, expected);
     /// # }
     /// ```
-    unsafe fn get_row_unchecked_mut(&mut self, index: usize) -> MatrixSliceMut<T> {
+    unsafe fn row_unchecked_mut(&mut self, index: usize) -> MatrixSliceMut<T> {
         let ptr = self.as_mut_ptr().offset((self.row_stride() * index) as isize);
         MatrixSliceMut::from_raw_parts(ptr,
                                             1,
