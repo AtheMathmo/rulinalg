@@ -6,6 +6,7 @@
 //! Most of the logic for manipulating matrices is generically implemented
 //! via `BaseMatrix` and `BaseMatrixMut` trait.
 
+use std;
 use std::any::Any;
 use std::fmt;
 use std::marker::PhantomData;
@@ -20,6 +21,7 @@ mod decomposition;
 mod impl_ops;
 mod mat_mul;
 mod iter;
+mod deref;
 pub mod slice;
 
 pub use self::slice::{BaseMatrix, BaseMatrixMut};
@@ -73,6 +75,57 @@ pub struct MatrixSliceMut<'a, T: 'a> {
     marker: PhantomData<&'a mut T>,
 }
 
+/// Row of a matrix.
+///
+/// This struct points to a slice making up
+/// a row in a matrix. You can deref this
+/// struct to retrieve a `MatrixSlice` of
+/// the row.
+///
+/// TODO: Deref example
+#[derive(Debug)]
+pub struct Row<'a, T: 'a> {
+    row: MatrixSlice<'a, T>
+}
+
+/// Mutable row of a matrix.
+///
+/// This struct points to a mutable slice
+/// making up a row in a matrix. You can deref
+/// this struct to retrieve a `MatrixSlice`
+/// of the row.
+///
+/// TODO: Deref example
+#[derive(Debug)]
+pub struct RowMut<'a, T: 'a> {
+    row: MatrixSliceMut<'a, T>
+}
+
+impl<'a, T: 'a> Row<'a, T> {
+    /// Returns the row as a slice.
+    pub fn raw_slice(&self) -> &'a [T] {
+        unsafe {
+            std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols())
+        }
+    }
+}
+
+impl<'a, T: 'a> RowMut<'a, T> {
+    /// Returns the row as a slice.
+    pub fn raw_slice(&self) -> &'a [T] {
+        unsafe {
+            std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols())
+        }
+    }
+
+    /// Returns the row as a slice.
+    pub fn raw_slice_mut(&mut self) -> &'a mut [T] {
+        unsafe {
+            std::slice::from_raw_parts_mut(self.row.as_mut_ptr(), self.row.cols())
+        }
+    }
+}
+
 /// Row iterator.
 #[derive(Debug)]
 pub struct Rows<'a, T: 'a> {
@@ -93,6 +146,32 @@ pub struct RowsMut<'a, T: 'a> {
     slice_cols: usize,
     row_stride: isize,
     _marker: PhantomData<&'a mut T>,
+}
+
+/// Column of a matrix.
+///
+/// This struct points to a `MatrixSlice`
+/// making up a column in a matrix.
+/// You can deref this struct to retrieve
+/// the raw column `MatrixSlice`.
+///
+/// TODO: Deref example
+#[derive(Debug)]
+pub struct Column<'a, T: 'a> {
+    col: MatrixSlice<'a, T>
+}
+
+/// Mutable column of a matrix.
+///
+/// This struct points to a `MatrixSliceMut`
+/// making up a column in a matrix.
+/// You can deref this struct to retrieve
+/// the raw column `MatrixSliceMut`.
+///
+/// TODO: Deref example
+#[derive(Debug)]
+pub struct ColumnMut<'a, T: 'a> {
+    col: MatrixSliceMut<'a, T>
 }
 
 /// Diagonal offset (used by Diagonal iterator).
