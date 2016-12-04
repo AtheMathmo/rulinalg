@@ -1523,6 +1523,84 @@ impl<'a, T> BaseMatrixMut<T> for MatrixSliceMut<'a, T> {
     }
 }
 
+impl<'a, T> BaseMatrix<T> for Row<'a, T> {
+    fn rows(&self) -> usize {
+        1
+    }
+    fn cols(&self) -> usize {
+        self.row.cols()
+    }
+    fn row_stride(&self) -> usize {
+        self.row.row_stride()
+    }
+
+    fn as_ptr(&self) -> *const T {
+        self.row.as_ptr()
+    }
+}
+
+impl<'a, T> BaseMatrix<T> for RowMut<'a, T> {
+    fn rows(&self) -> usize {
+        1
+    }
+    fn cols(&self) -> usize {
+        self.row.cols()
+    }
+    fn row_stride(&self) -> usize {
+        self.row.row_stride()
+    }
+
+    fn as_ptr(&self) -> *const T {
+        self.row.as_ptr()
+    }
+}
+
+impl<'a, T> BaseMatrixMut<T> for RowMut<'a, T> {
+    /// Top left index of the slice.
+    fn as_mut_ptr(&mut self) -> *mut T {
+        self.row.as_mut_ptr()
+    }
+}
+
+impl<'a, T> BaseMatrix<T> for Column<'a, T> {
+    fn rows(&self) -> usize {
+        self.col.rows()
+    }
+    fn cols(&self) -> usize {
+        1
+    }
+    fn row_stride(&self) -> usize {
+        self.col.row_stride()
+    }
+
+    fn as_ptr(&self) -> *const T {
+        self.col.as_ptr()
+    }
+}
+
+impl<'a, T> BaseMatrix<T> for ColumnMut<'a, T> {
+    fn rows(&self) -> usize {
+        self.col.rows()
+    }
+    fn cols(&self) -> usize {
+        1
+    }
+    fn row_stride(&self) -> usize {
+        self.col.row_stride()
+    }
+
+    fn as_ptr(&self) -> *const T {
+        self.col.as_ptr()
+    }
+}
+
+impl<'a, T> BaseMatrixMut<T> for ColumnMut<'a, T> {
+    /// Top left index of the slice.
+    fn as_mut_ptr(&mut self) -> *mut T {
+        self.col.as_mut_ptr()
+    }
+}
+
 impl<'a, T> MatrixSlice<'a, T> {
     /// Produce a `MatrixSlice` from a `Matrix`
     ///

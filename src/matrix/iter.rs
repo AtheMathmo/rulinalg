@@ -2,7 +2,8 @@ use std::iter::{ExactSizeIterator, FromIterator};
 use std::mem;
 use std::slice;
 
-use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Diagonal, DiagonalMut};
+use super::{Matrix, MatrixSlice, MatrixSliceMut};
+use super::{Row, RowMut, Rows, RowsMut, Diagonal, DiagonalMut};
 use super::slice::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
 
 
