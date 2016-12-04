@@ -88,6 +88,59 @@ pub trait BaseMatrix<T>: Sized {
         &*(self.as_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
     }
 
+    /// Returns the column of a matrix at the given index.
+    /// `None` if the index is out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate rulinalg;
+    ///
+    /// # fn main() {
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    ///
+    /// let mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let col = mat.get_col(1).unwrap();
+    /// let expected = matrix![1usize; 4; 7];
+    /// assert_matrix_eq!(col, expected);
+    /// assert!(mat.get_col(5).is_none());
+    /// # }
+    /// ```
+    fn get_col(&self, index: usize) -> Option<MatrixSlice<T>> {
+        if index < self.cols() {
+            unsafe { Some(self.get_col_unchecked(index)) }
+        } else {
+            None
+        }
+    }
+
+    /// Returns the column of a matrix at the given
+    /// index without doing a bounds check.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate rulinalg;
+    ///
+    /// # fn main() {
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    ///
+    /// let mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let col = unsafe { mat.get_col_unchecked(2) };
+    /// let expected = matrix![2usize; 5; 8];
+    /// assert_matrix_eq!(col, expected);
+    /// # }
+    /// ```
+    unsafe fn get_col_unchecked(&self, index: usize) -> MatrixSlice<T> {
+        let ptr = self.as_ptr().offset(index as isize);
+        MatrixSlice::from_raw_parts(ptr,
+                                    self.rows(),
+                                    1,
+                                    self.row_stride())
+    }
+
     /// Returns the row of a matrix at the given index.
     /// `None` if the index is out of bounds.
     ///
@@ -924,6 +977,63 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         }
     }
 
+    /// Returns a mutable reference to the column of a matrix at the given index.
+    /// `None` if the index is out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate rulinalg;
+    ///
+    /// # fn main() {
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
+    ///
+    /// let mut mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut slice = mat.sub_slice_mut([1,1], 2, 2);
+    /// {
+    ///     let col = slice.get_col_mut(1).unwrap();
+    ///     let mut expected = matrix![5usize; 8];
+    ///     assert_matrix_eq!(col, expected);
+    /// }
+    /// assert!(slice.get_col_mut(5).is_none());
+    /// # }
+    /// ```
+    fn get_col_mut(&mut self, index: usize) -> Option<MatrixSliceMut<T>> {
+        if index < self.cols() {
+            unsafe { Some(self.get_col_unchecked_mut(index)) }
+        } else {
+            None
+        }
+    }
+
+    /// Returns a mutable reference to the column of a matrix at the given index
+    /// without doing a bounds check.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate rulinalg;
+    ///
+    /// # fn main() {
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
+    ///
+    /// let mut mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut slice = mat.sub_slice_mut([1,1], 2, 2);
+    /// let col = unsafe { slice.get_col_unchecked_mut(1) };
+    /// let mut expected = matrix![5usize; 8];
+    /// assert_matrix_eq!(col, expected);
+    /// # }
+    /// ```
+    unsafe fn get_col_unchecked_mut(&mut self, index: usize) -> MatrixSliceMut<T> {
+        let ptr = self.as_mut_ptr().offset(index as isize);
+        MatrixSliceMut::from_raw_parts(ptr,
+                                        self.rows(),
+                                        1,
+                                        self.row_stride())
+    }
+
     /// Returns a mutable reference to the row of a matrix at the given index.
     /// `None` if the index is out of bounds.
     ///
@@ -955,7 +1065,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     }
 
     /// Returns a mutable reference to the row of a matrix at the given index
-    /// without doing unbounds checking
+    /// without doing a bounds check.
     ///
     /// # Examples
     ///
