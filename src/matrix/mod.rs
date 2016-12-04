@@ -892,8 +892,7 @@ fn parity<T, M>(m: &M) -> T
                 visited[next] = true;
                 unsafe {
                     next = utils::find(&m.row_unchecked(next)
-                                    .as_contiguous_slice()
-                                    .unwrap(),
+                                    .raw_slice(),
                                 T::one());
                 }
             }
