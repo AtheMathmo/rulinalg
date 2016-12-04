@@ -921,19 +921,6 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         }
     }
 
-    /// TODO: actual documentation
-    ///
-    /// I'm not a fan of this function at all right now.
-    fn as_mut_contiguous_slice(&mut self) -> Option<&mut [T]> {
-        if self.rows() == 1 {
-            unsafe {
-                Some(::std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.cols()))
-            }
-        } else {
-            None
-        }
-    }
-
     /// Get a mutable reference to a point in the matrix without bounds checks.
     unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut T {
         &mut *(self.as_mut_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
