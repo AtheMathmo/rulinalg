@@ -82,8 +82,20 @@ pub struct MatrixSliceMut<'a, T: 'a> {
 /// struct to retrieve a `MatrixSlice` of
 /// the row.
 ///
-/// TODO: Deref example
-#[derive(Debug)]
+/// # Example
+///
+/// ```
+/// # #[macro_use] extern crate rulinalg; fn main() {
+/// use rulinalg::matrix::BaseMatrix;
+///
+/// let mat = matrix![1.0, 2.0;
+///                   3.0, 4.0];
+///
+/// let row = mat.row(1).unwrap();
+/// assert_eq!((*row + 2.0).sum(), 11.0);
+/// # }
+/// ```
+#[derive(Debug, Clone, Copy)]
 pub struct Row<'a, T: 'a> {
     row: MatrixSlice<'a, T>
 }
@@ -95,7 +107,24 @@ pub struct Row<'a, T: 'a> {
 /// this struct to retrieve a `MatrixSlice`
 /// of the row.
 ///
-/// TODO: Deref example
+/// # Example
+///
+/// ```
+/// # #[macro_use] extern crate rulinalg; fn main() {
+/// use rulinalg::matrix::BaseMatrixMut;
+///
+/// let mut mat = matrix![1.0, 2.0;
+///                   3.0, 4.0];
+///
+/// {
+///     let mut row = mat.row_mut(1).unwrap();
+///     *row += 2.0;
+/// }
+/// let expected = matrix![1.0, 2.0;
+///                        5.0, 6.0];
+/// assert_matrix_eq!(mat, expected);
+/// # }
+/// ```
 #[derive(Debug)]
 pub struct RowMut<'a, T: 'a> {
     row: MatrixSliceMut<'a, T>
@@ -160,8 +189,20 @@ pub struct RowsMut<'a, T: 'a> {
 /// You can deref this struct to retrieve
 /// the raw column `MatrixSlice`.
 ///
-/// TODO: Deref example
-#[derive(Debug)]
+/// # Example
+///
+/// ```
+/// # #[macro_use] extern crate rulinalg; fn main() {
+/// use rulinalg::matrix::BaseMatrix;
+///
+/// let mat = matrix![1.0, 2.0;
+///                   3.0, 4.0];
+///
+/// let col = mat.col(1).unwrap();
+/// assert_eq!((*col + 2.0).sum(), 10.0);
+/// # }
+/// ```
+#[derive(Debug, Clone, Copy)]
 pub struct Column<'a, T: 'a> {
     col: MatrixSlice<'a, T>
 }
@@ -173,7 +214,23 @@ pub struct Column<'a, T: 'a> {
 /// You can deref this struct to retrieve
 /// the raw column `MatrixSliceMut`.
 ///
-/// TODO: Deref example
+/// # Example
+///
+/// ```
+/// # #[macro_use] extern crate rulinalg; fn main() {
+/// use rulinalg::matrix::BaseMatrixMut;
+///
+/// let mut mat = matrix![1.0, 2.0;
+///                   3.0, 4.0];
+/// {
+///     let mut column = mat.col_mut(1).unwrap();
+///     *column += 2.0;
+/// }
+/// let expected = matrix![1.0, 4.0;
+///                        3.0, 6.0];
+/// assert_matrix_eq!(mat, expected);
+/// # }
+/// ```
 #[derive(Debug)]
 pub struct ColumnMut<'a, T: 'a> {
     col: MatrixSliceMut<'a, T>
