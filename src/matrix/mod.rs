@@ -101,6 +101,11 @@ pub struct RowMut<'a, T: 'a> {
     row: MatrixSliceMut<'a, T>
 }
 
+
+//
+// MAYBE WE SHOULD MOVE SOME OF THIS STUFF OUT
+//
+
 impl<'a, T: 'a> Row<'a, T> {
     /// Returns the row as a slice.
     pub fn raw_slice(&self) -> &'a [T] {
@@ -712,7 +717,8 @@ impl<'a, T: Float> Metric<T> for MatrixSlice<'a, T> {
         let mut s = T::zero();
 
         for row in self.iter_rows() {
-            s = s + utils::dot(row, row);
+            let raw_slice = row.raw_slice();
+            s = s + utils::dot(raw_slice, raw_slice);
         }
         s.sqrt()
     }
@@ -737,7 +743,8 @@ impl<'a, T: Float> Metric<T> for MatrixSliceMut<'a, T> {
         let mut s = T::zero();
 
         for row in self.iter_rows() {
-            s = s + utils::dot(row, row);
+            let raw_slice = row.raw_slice();
+            s = s + utils::dot(raw_slice, raw_slice);
         }
         s.sqrt()
     }

@@ -223,7 +223,7 @@ pub trait BaseMatrix<T>: Sized {
     ///
     /// // Prints "2" three times.
     /// for row in a.iter_rows() {
-    ///     println!("{}", row.len());
+    ///     println!("{}", row.cols());
     /// }
     /// ```
     fn iter_rows(&self) -> Rows<T> {
@@ -312,7 +312,7 @@ pub trait BaseMatrix<T>: Sized {
         where T: Copy + Zero + Add<T, Output = T>
     {
         let sum_rows = self.iter_rows().fold(vec![T::zero(); self.cols()], |row_sum, r| {
-            utils::vec_bin_op(&row_sum, r, |sum, val| sum + val)
+            utils::vec_bin_op(&row_sum, r.raw_slice(), |sum, val| sum + val)
         });
         Vector::new(sum_rows)
     }
@@ -338,7 +338,7 @@ pub trait BaseMatrix<T>: Sized {
         where T: Copy + Zero + Add<T, Output = T>
     {
         let mut col_sum = Vec::with_capacity(self.rows());
-        col_sum.extend(self.iter_rows().map(|row| utils::unrolled_sum(row)));
+        col_sum.extend(self.iter_rows().map(|row| utils::unrolled_sum(row.raw_slice())));
         Vector::new(col_sum)
     }
 
@@ -358,7 +358,7 @@ pub trait BaseMatrix<T>: Sized {
         where T: Copy + Zero + Add<T, Output = T>
     {
         self.iter_rows()
-            .fold(T::zero(), |sum, row| sum + utils::unrolled_sum(row))
+            .fold(T::zero(), |sum, row| sum + utils::unrolled_sum(row.raw_slice()))
     }
 
     /// Convert the matrix struct into a owned Matrix.
@@ -490,7 +490,9 @@ pub trait BaseMatrix<T>: Sized {
 
         let mut data = Vec::with_capacity(self.rows() * self.cols());
         for (self_r, m_r) in self.iter_rows().zip(m.iter_rows()) {
-            data.extend_from_slice(&utils::vec_bin_op(self_r, m_r, T::mul));
+            data.extend_from_slice(&utils::vec_bin_op(self_r.raw_slice(),
+                                                        m_r.raw_slice(),
+                                                        T::mul));
         }
         Matrix::new(self.rows(), self.cols(), data)
     }
@@ -521,7 +523,9 @@ pub trait BaseMatrix<T>: Sized {
 
         let mut data = Vec::with_capacity(self.rows() * self.cols());
         for (self_r, m_r) in self.iter_rows().zip(m.iter_rows()) {
-            data.extend_from_slice(&utils::vec_bin_op(self_r, m_r, T::div));
+            data.extend_from_slice(&utils::vec_bin_op(self_r.raw_slice(),
+                                                        m_r.raw_slice(),
+                                                        T::div));
         }
         Matrix::new(self.rows(), self.cols(), data)
     }
@@ -605,8 +609,8 @@ pub trait BaseMatrix<T>: Sized {
         let mut new_data = Vec::with_capacity((self.cols() + m.cols()) * self.rows());
 
         for (self_row, m_row) in self.iter_rows().zip(m.iter_rows()) {
-            new_data.extend_from_slice(self_row);
-            new_data.extend_from_slice(m_row);
+            new_data.extend_from_slice(self_row.raw_slice());
+            new_data.extend_from_slice(m_row.raw_slice());
         }
 
         Matrix {
@@ -644,7 +648,7 @@ pub trait BaseMatrix<T>: Sized {
         let mut new_data = Vec::with_capacity((self.rows() + m.rows()) * self.cols());
 
         for row in self.iter_rows().chain(m.iter_rows()) {
-            new_data.extend_from_slice(row);
+            new_data.extend_from_slice(row.raw_slice());
         }
 
         Matrix {
@@ -1193,8 +1197,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
     ///
-    /// for row in a.iter_rows_mut() {
-    ///     for r in row {
+    /// for mut row in a.iter_rows_mut() {
+    ///     for r in row.raw_slice_mut() {
     ///         *r = *r + 1;
     ///     }
     /// }
@@ -1299,9 +1303,11 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
                 "Target has different row count to self.");
         assert!(self.cols() == target.cols(),
                 "Target has different column count to self.");
-        for (s, t) in self.iter_rows_mut().zip(target.iter_rows()) {
+        for (mut s, t) in self.iter_rows_mut().zip(target.iter_rows()) {
             // Vectorized assignment per row.
-            utils::in_place_vec_bin_op(s, t, |x, &y| *x = y);
+            utils::in_place_vec_bin_op(s.raw_slice_mut(),
+                                        t.raw_slice(),
+                                        |x, &y| *x = y);
         }
     }
 
@@ -1468,7 +1474,7 @@ impl<T> BaseMatrix<T> for Matrix<T> {
         new_data.reserve(m.rows() * m.cols());
 
         for row in m.iter_rows() {
-            new_data.extend_from_slice(row);
+            new_data.extend_from_slice(row.raw_slice());
         }
 
         Matrix {

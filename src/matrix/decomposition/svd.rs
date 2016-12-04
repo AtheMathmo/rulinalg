@@ -326,7 +326,7 @@ mod tests {
             assert!(!row.iter().take(idx).any(|&x| x > 1e-10));
             assert!(!row.iter().skip(idx + 1).any(|&x| x > 1e-10));
             // Assert non-negativity of diagonal elements
-            assert!(row[idx] >= 0.0);
+            assert!(row.raw_slice()[idx] >= 0.0);
         }
 
         let recovered = u * b * v.transpose();
@@ -349,7 +349,7 @@ mod tests {
 
         let mut singular_triplets = u_transposed.iter_rows().zip(b.diag().into_iter()).zip(v_transposed.iter_rows())
             // chained zipping results in nested tuple. Flatten it.
-            .map(|((u_col, singular_value), v_col)| (Vector::new(u_col), singular_value, Vector::new(v_col)));
+            .map(|((u_col, singular_value), v_col)| (Vector::new(u_col.raw_slice()), singular_value, Vector::new(v_col.raw_slice())));
 
         assert!(singular_triplets.by_ref()
             // For a matrix M, each singular value σ and left and right singular vectors u and v respectively
