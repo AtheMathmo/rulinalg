@@ -326,6 +326,7 @@ mod tests {
             assert!(!row.iter().take(idx).any(|&x| x > 1e-10));
             assert!(!row.iter().skip(idx + 1).any(|&x| x > 1e-10));
             // Assert non-negativity of diagonal elements
+            // TODO: Fix when indexing fixed
             assert!(row.raw_slice()[idx] >= 0.0);
         }
 

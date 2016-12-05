@@ -86,6 +86,7 @@ impl<'a, T> Iterator for $rows<'a, T> {
             unsafe {
 // Get pointer and create a slice from raw parts
                 let ptr = self.slice_start.offset(self.row_pos as isize * self.row_stride);
+                // TODO: Remove after benching
                 //row = slice::$slice_from_parts(ptr, self.slice_cols);
                 row = $row_base {
                     row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
@@ -105,6 +106,7 @@ impl<'a, T> Iterator for $rows<'a, T> {
             unsafe {
 // Get pointer to last row and create a slice from raw parts
                 let ptr = self.slice_start.offset((self.slice_rows - 1) as isize * self.row_stride);
+                // TODO: Remove after benching
                 //Some(slice::$slice_from_parts(ptr, self.slice_cols))
                 Some($row_base {
                     row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
@@ -120,6 +122,7 @@ impl<'a, T> Iterator for $rows<'a, T> {
             let row: $row_type;
             unsafe {
                 let ptr = self.slice_start.offset((self.row_pos + n) as isize * self.row_stride);
+                // TODO: Remove after benching
                 //row = slice::$slice_from_parts(ptr, self.slice_cols);
                 row = $row_base {
                     row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
@@ -144,6 +147,7 @@ impl<'a, T> Iterator for $rows<'a, T> {
     );
 );
 
+// TODO: Remove after benching
 // impl_iter_rows!(Rows, &'a [T], from_raw_parts);
 // impl_iter_rows!(RowsMut, &'a mut [T], from_raw_parts_mut);
 impl_iter_rows!(Rows, Row<'a, T>, Row, MatrixSlice);
@@ -184,6 +188,7 @@ impl<'a, T> ExactSizeIterator for RowsMut<'a, T> {}
 /// // where the first entry is less than 6.
 /// let b = a.iter_rows()
 ///          .skip(1)
+///          // TODO: Fix when indexing implemented
 ///          .filter(|x| x.raw_slice()[0] < 6)
 ///          .collect::<Matrix<usize>>();
 ///

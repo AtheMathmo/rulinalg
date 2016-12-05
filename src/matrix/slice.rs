@@ -1185,9 +1185,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
     ///
     /// for mut row in a.iter_rows_mut() {
-    ///     for r in row.raw_slice_mut() {
-    ///         *r = *r + 1;
-    ///     }
+    ///     *row += 1;
     /// }
     ///
     /// // Now contains the range 1..7
