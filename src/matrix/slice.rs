@@ -200,7 +200,7 @@ pub trait BaseMatrix<T>: Sized {
     /// out-of-bounds this function will panic.
     ///
     /// This function will never panic if the `Main` diagonal
-    /// offset is used. 
+    /// offset is used.
     fn iter_diag(&self, k: DiagOffset) -> Diagonal<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
@@ -749,7 +749,7 @@ pub trait BaseMatrix<T>: Sized {
                 format!("Vector size {0} != {1} Matrix column count.",
                         y.size(),
                         self.cols()));
-        
+
         forward_substitution(self, y)
     }
 
@@ -933,14 +933,28 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
 
     /// Swaps two rows in a matrix.
     ///
+    /// If `a == b`, this method does nothing.
+    ///
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg;
+    /// # fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
-    /// let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<_>>());
-    /// a.swap_rows(1, 3);
-    /// assert_eq!(a.into_vec(), vec![0,1,6,7,4,5,2,3]);
+    /// let mut x = matrix![0, 1;
+    ///                     2, 3;
+    ///                     4, 5;
+    ///                     6, 7];
+    ///
+    /// x.swap_rows(1, 3);
+    /// let expected = matrix![0, 1;
+    ///                        6, 7;
+    ///                        4, 5;
+    ///                        2, 3];
+    ///
+    /// assert_matrix_eq!(x, expected);
+    /// # }
     /// ```
     ///
     /// # Panics
@@ -952,30 +966,45 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         assert!(b < self.rows(),
                 format!("Row index {0} larger than row count {1}", b, self.rows()));
 
-        unsafe {
-            let row_a = slice::from_raw_parts_mut(self.as_mut_ptr()
-                                                      .offset((self.row_stride() * a) as isize),
-                                                  self.cols());
-            let row_b = slice::from_raw_parts_mut(self.as_mut_ptr()
-                                                      .offset((self.row_stride() * b) as isize),
-                                                  self.cols());
+        if a != b {
+            unsafe {
+                let row_a = slice::from_raw_parts_mut(self.as_mut_ptr()
+                                                        .offset((self.row_stride() * a) as isize),
+                                                    self.cols());
+                let row_b = slice::from_raw_parts_mut(self.as_mut_ptr()
+                                                        .offset((self.row_stride() * b) as isize),
+                                                    self.cols());
 
-            for (x, y) in row_a.into_iter().zip(row_b.into_iter()) {
-                mem::swap(x, y);
+                for (x, y) in row_a.into_iter().zip(row_b.into_iter()) {
+                    mem::swap(x, y);
+                }
             }
         }
+
     }
 
     /// Swaps two columns in a matrix.
     ///
+    /// If `a == b`, this method does nothing.
+    ///
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg;
+    /// # fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
-    /// let mut a = Matrix::new(4, 2, (0..8).collect::<Vec<_>>());
-    /// a.swap_cols(0, 1);
-    /// assert_eq!(a.into_vec(), vec![1,0,3,2,5,4,7,6]);
+    /// let mut x = matrix![0, 1;
+    ///                     2, 3;
+    ///                     4, 5];
+    ///
+    /// x.swap_cols(0, 1);
+    /// let expected = matrix![1, 0;
+    ///                        3, 2;
+    ///                        5, 4];
+    ///
+    /// assert_matrix_eq!(x, expected);
+    /// # }
     /// ```
     ///
     /// # Panics
@@ -987,13 +1016,16 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         assert!(b < self.cols(),
                 format!("Row index {0} larger than row count {1}", b, self.rows()));
 
-        unsafe {
-            for i in 0..self.rows() {
-                let a_ptr : *mut T = self.get_unchecked_mut([i, a]);
-                let b_ptr : *mut T = self.get_unchecked_mut([i, b]);
-                ptr::swap(a_ptr, b_ptr);
+        if a != b {
+            unsafe {
+                for i in 0..self.rows() {
+                    let a_ptr : *mut T = self.get_unchecked_mut([i, a]);
+                    let b_ptr : *mut T = self.get_unchecked_mut([i, b]);
+                    ptr::swap(a_ptr, b_ptr);
+                }
             }
         }
+
     }
 
     /// Iterate over the mutable rows of the matrix.
@@ -1047,7 +1079,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// // Zero the sub-diagonal (sets 3 and 7 to 0)
     /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
     /// for sub_d in a.iter_diag_mut(DiagOffset::from(-1)) {
-    ///     *sub_d = 0;   
+    ///     *sub_d = 0;
     /// }
     ///
     /// println!("{}", a);
@@ -1060,7 +1092,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// out-of-bounds this function will panic.
     ///
     /// This function will never panic if the `Main` diagonal
-    /// offset is used. 
+    /// offset is used.
     fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
