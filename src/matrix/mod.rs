@@ -91,7 +91,7 @@ pub struct MatrixSliceMut<'a, T: 'a> {
 /// let mat = matrix![1.0, 2.0;
 ///                   3.0, 4.0];
 ///
-/// let row = mat.row(1).unwrap();
+/// let row = mat.row(1);
 /// assert_eq!((*row + 2.0).sum(), 11.0);
 /// # }
 /// ```
@@ -114,10 +114,10 @@ pub struct Row<'a, T: 'a> {
 /// use rulinalg::matrix::BaseMatrixMut;
 ///
 /// let mut mat = matrix![1.0, 2.0;
-///                   3.0, 4.0];
+///                       3.0, 4.0];
 ///
 /// {
-///     let mut row = mat.row_mut(1).unwrap();
+///     let mut row = mat.row_mut(1);
 ///     *row += 2.0;
 /// }
 /// let expected = matrix![1.0, 2.0;
@@ -198,7 +198,7 @@ pub struct RowsMut<'a, T: 'a> {
 /// let mat = matrix![1.0, 2.0;
 ///                   3.0, 4.0];
 ///
-/// let col = mat.col(1).unwrap();
+/// let col = mat.col(1);
 /// assert_eq!((*col + 2.0).sum(), 10.0);
 /// # }
 /// ```
@@ -223,7 +223,7 @@ pub struct Column<'a, T: 'a> {
 /// let mut mat = matrix![1.0, 2.0;
 ///                   3.0, 4.0];
 /// {
-///     let mut column = mat.col_mut(1).unwrap();
+///     let mut column = mat.col_mut(1);
 ///     *column += 2.0;
 /// }
 /// let expected = matrix![1.0, 4.0;

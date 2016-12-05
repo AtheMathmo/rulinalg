@@ -268,7 +268,7 @@ impl<'a, T: 'a + Copy> FromIterator<$row_type> for Matrix<T> {
         }
 
         for row in iterator {
-            assert!(row.row.cols() == cols, "Iterator slice length must be constant.");
+            assert!(row.row.cols() == cols, "Iterator row size must be constant.");
             mat_data.extend_from_slice(row.raw_slice());
             rows += 1;
         }

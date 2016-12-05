@@ -82,24 +82,26 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate rulinalg;
-    ///
-    /// # fn main() {
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let col = mat.col(1).unwrap();
+    /// let mat = matrix![0, 1, 2;
+    ///                   3, 4, 5;
+    ///                   6, 7, 8];
+    /// let col = mat.col(1);
     /// let expected = matrix![1usize; 4; 7];
     /// assert_matrix_eq!(*col, expected);
-    /// assert!(mat.col(5).is_none());
     /// # }
     /// ```
-    fn col(&self, index: usize) -> Option<Column<T>> {
+    ///
+    /// # Panics
+    ///
+    /// Will panic if the column index is out of bounds.
+    fn col(&self, index: usize) -> Column<T> {
         if index < self.cols() {
-            unsafe { Some(self.col_unchecked(index)) }
+            unsafe { self.col_unchecked(index) }
         } else {
-            None
+            panic!("Column index out of bounds.")
         }
     }
 
@@ -109,13 +111,12 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate rulinalg;
-    ///
-    /// # fn main() {
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mat = matrix![0, 1, 2;
+    ///                   3, 4, 5;
+    ///                   6, 7, 8];
     /// let col = unsafe { mat.col_unchecked(2) };
     /// let expected = matrix![2usize; 5; 8];
     /// assert_matrix_eq!(*col, expected);
@@ -132,29 +133,30 @@ pub trait BaseMatrix<T>: Sized {
     }
 
     /// Returns the row of a matrix at the given index.
-    /// `None` if the index is out of bounds.
     ///
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate rulinalg;
-    ///
-    /// # fn main() {
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let row = mat.row(1).unwrap();
+    /// let mat = matrix![0, 1, 2;
+    ///                   3, 4, 5;
+    ///                   6, 7, 8];
+    /// let row = mat.row(1);
     /// let expected = matrix![3usize, 4, 5];
     /// assert_matrix_eq!(*row, expected);
-    /// assert!(mat.row(5).is_none());
     /// # }
     /// ```
-    fn row(&self, index: usize) -> Option<Row<T>> {
+    ///
+    /// # Panics
+    ///
+    /// Will panic if the row index is out of bounds.
+    fn row(&self, index: usize) -> Row<T> {
         if index < self.rows() {
-            unsafe { Some(self.row_unchecked(index)) }
+            unsafe { self.row_unchecked(index) }
         } else {
-            None
+            panic!("Row index out of bounds.")
         }
     }
 
@@ -163,13 +165,12 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate rulinalg;
-    ///
-    /// # fn main() {
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mat = matrix![0, 1, 2;
+    ///                   3, 4, 5;
+    ///                   6, 7, 8];
     /// let row = unsafe { mat.row_unchecked(2) };
     /// let expected = matrix![6usize, 7, 8];
     /// assert_matrix_eq!(*row, expected);
@@ -190,13 +191,17 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let slice = a.sub_slice([1,1], 2, 2);
+    /// let mat = matrix![0, 1, 2;
+    ///                   3, 4, 5;
+    ///                   6, 7, 8];
+    /// let slice = mat.sub_slice([1,1], 2, 2);
     ///
     /// let slice_data = slice.iter().map(|v| *v).collect::<Vec<usize>>();
     /// assert_eq!(slice_data, vec![4,5,7,8]);
+    /// # }
     /// ```
     fn iter<'a>(&self) -> SliceIter<'a, T>
         where T: 'a
@@ -972,21 +977,26 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
-    /// let mut mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut mat = matrix![0, 1, 2;
+    ///                       3, 4, 5;
+    ///                       6, 7, 8];
     /// let mut slice = mat.sub_slice_mut([1,1], 2, 2);
     /// {
-    ///     let col = slice.col_mut(1).unwrap();
+    ///     let col = slice.col_mut(1);
     ///     let mut expected = matrix![5usize; 8];
     ///     assert_matrix_eq!(*col, expected);
     /// }
-    /// assert!(slice.col_mut(5).is_none());
     /// # }
     /// ```
-    fn col_mut(&mut self, index: usize) -> Option<ColumnMut<T>> {
+    ///
+    /// # Panics
+    ///
+    /// Will panic if the column index is out of bounds.
+    fn col_mut(&mut self, index: usize) -> ColumnMut<T> {
         if index < self.cols() {
-            unsafe { Some(self.col_unchecked_mut(index)) }
+            unsafe { self.col_unchecked_mut(index) }
         } else {
-            None
+            panic!("Column index out of bounds.")
         }
     }
 
@@ -1002,7 +1012,9 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
-    /// let mut mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut mat = matrix![0, 1, 2;
+    ///                       3, 4, 5;
+    ///                       6, 7, 8];
     /// let mut slice = mat.sub_slice_mut([1,1], 2, 2);
     /// let col = unsafe { slice.col_unchecked_mut(1) };
     /// let mut expected = matrix![5usize; 8];
@@ -1031,21 +1043,26 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
-    /// let mut mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut mat = matrix![0, 1, 2;
+    ///                       3, 4, 5;
+    ///                       6, 7, 8];
     /// let mut slice = mat.sub_slice_mut([1,1], 2, 2);
     /// {
-    ///     let row = slice.row_mut(1).unwrap();
+    ///     let row = slice.row_mut(1);
     ///     let mut expected = matrix![7usize, 8];
     ///     assert_matrix_eq!(*row, expected);
     /// }
-    /// assert!(slice.row_mut(5).is_none());
     /// # }
     /// ```
-    fn row_mut(&mut self, index: usize) -> Option<RowMut<T>> {
+    ///
+    /// # Panics
+    ///
+    /// Will panic if the row index is out of bounds.
+    fn row_mut(&mut self, index: usize) -> RowMut<T> {
         if index < self.rows() {
-            unsafe { Some(self.row_unchecked_mut(index)) }
+            unsafe { self.row_unchecked_mut(index) }
         } else {
-            None
+            panic!("Row index out of bounds.")
         }
     }
 
@@ -1061,7 +1078,9 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
-    /// let mut mat = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
+    /// let mut mat = matrix![0, 1, 2;
+    ///                       3, 4, 5;
+    ///                       6, 7, 8];
     /// let mut slice = mat.sub_slice_mut([1,1], 2, 2);
     /// let row = unsafe { slice.row_unchecked_mut(1) };
     /// let mut expected = matrix![7usize, 8];
