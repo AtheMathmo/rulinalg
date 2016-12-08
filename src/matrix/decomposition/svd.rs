@@ -327,7 +327,7 @@ mod tests {
             assert!(!row.iter().skip(idx + 1).any(|&x| x > 1e-10));
             // Assert non-negativity of diagonal elements
             // TODO: Fix when indexing fixed
-            assert!(row.raw_slice()[idx] >= 0.0);
+            assert!(row[idx] >= 0.0);
         }
 
         let recovered = u * b * v.transpose();

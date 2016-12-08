@@ -1,6 +1,5 @@
-use super::Matrix;
-use super::MatrixSlice;
-use super::MatrixSliceMut;
+use super::{Matrix, MatrixSlice, MatrixSliceMut};
+use super::{Row, RowMut, Column, ColumnMut};
 use super::slice::{BaseMatrix, BaseMatrixMut};
 
 use super::super::utils;
@@ -76,6 +75,46 @@ impl<T> IndexMut<[usize; 2]> for Matrix<T> {
                 "Column index is greater than column dimension.");
         let self_cols = self.cols;
         unsafe { self.data.get_unchecked_mut(idx[0] * self_cols + idx[1]) }
+    }
+}
+
+impl<'a, T> Index<usize> for Row<'a, T> {
+    type Output = T;
+    fn index(&self, idx: usize) -> &T {
+        &self.row[[0, idx]]
+    }
+}
+
+impl<'a, T> Index<usize> for RowMut<'a, T> {
+    type Output = T;
+    fn index(&self, idx: usize) -> &T {
+        &self.row[[0, idx]]
+    }
+}
+
+impl<'a, T> IndexMut<usize> for RowMut<'a, T> {
+    fn index_mut(&mut self, idx: usize) -> &mut T {
+        &mut self.row[[0, idx]]
+    }
+}
+
+impl<'a, T> Index<usize> for Column<'a, T> {
+    type Output = T;
+    fn index(&self, idx: usize) -> &T {
+        &self.col[[idx, 0]]
+    }
+}
+
+impl<'a, T> Index<usize> for ColumnMut<'a, T> {
+    type Output = T;
+    fn index(&self, idx: usize) -> &T {
+        &self.col[[idx, 0]]
+    }
+}
+
+impl<'a, T> IndexMut<usize> for ColumnMut<'a, T> {
+    fn index_mut(&mut self, idx: usize) -> &mut T {
+        &mut self.col[[idx, 0]]
     }
 }
 
