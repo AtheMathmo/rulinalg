@@ -18,6 +18,8 @@ mod hessenberg;
 mod lu;
 mod eigen;
 
+pub use self::lu::{LU, LuDecomposition};
+
 use std::any::Any;
 
 use matrix::{Matrix};
@@ -27,6 +29,15 @@ use utils;
 use error::{Error, ErrorKind};
 
 use libnum::{Float};
+
+/// TODO
+pub trait Decomposition {
+    /// TODO
+    type Factors;
+
+    /// TODO
+    fn decompose(self) -> Self::Factors;
+}
 
 impl<T> Matrix<T>
     where T: Any + Float

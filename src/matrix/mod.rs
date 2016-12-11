@@ -25,6 +25,11 @@ mod deref;
 pub mod slice;
 
 pub use self::slice::{BaseMatrix, BaseMatrixMut};
+pub use self::decomposition::{
+    Decomposition,
+    LU,
+    LuDecomposition
+};
 
 /// Matrix dimensions
 #[derive(Debug, Clone, Copy)]
@@ -600,10 +605,7 @@ impl<T: Any + Float> Matrix<T> {
     /// - The matrix cannot be decomposed into an LUP form to solve.
     /// - There is no valid solution as the matrix is singular.
     pub fn solve(&self, y: Vector<T>) -> Result<Vector<T>, Error> {
-        let (l, u, p) = try!(self.lup_decomp());
-
-        let b = try!(forward_substitution(&l, p * y));
-        back_substitution(&u, b)
+        self.clone().lu().solve(y)
     }
 
     /// Computes the inverse of the matrix.
@@ -633,10 +635,7 @@ impl<T: Any + Float> Matrix<T> {
         assert!(self.rows == self.cols, "Matrix is not square.");
 
         let mut inv_t_data = Vec::<T>::new();
-        let (l, u, p) = try!(self.lup_decomp().map_err(|_| {
-            Error::new(ErrorKind::DecompFailure,
-                       "Could not compute LUP factorization for inverse.")
-        }));
+        let LU { l, u, p } = self.clone().lu().decompose();
 
         let mut d = T::one();
 
@@ -712,11 +711,7 @@ impl<T: Any + Float> Matrix<T> {
             (self[[0, 1]] * self[[1, 0]] * self[[2, 2]]) -
             (self[[0, 2]] * self[[1, 1]] * self[[2, 0]])
         } else {
-            let (l, u, p) = match self.lup_decomp() {
-                Ok(x) => x,
-                Err(ref e) if *e.kind() == ErrorKind::DivByZero => return T::zero(),
-                _ => { panic!("Could not compute LUP decomposition."); }
-            };
+            let LU { l, u, p } = self.clone().lu().decompose();
 
             let mut d = T::one();
 
