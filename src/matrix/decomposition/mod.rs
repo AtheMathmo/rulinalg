@@ -20,9 +20,8 @@ mod eigen;
 
 use std::any::Any;
 
-use matrix::{Matrix};
+use matrix::{Matrix, BaseMatrix};
 use vector::Vector;
-use Metric;
 use utils;
 use error::{Error, ErrorKind};
 

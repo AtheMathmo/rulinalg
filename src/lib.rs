@@ -98,15 +98,11 @@ pub mod error;
 pub mod utils;
 pub mod vector;
 pub mod ulp;
+pub mod norm;
 
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
 
-/// Trait for linear algebra metrics.
-///
-/// Currently only implements basic euclidean norm.
-pub trait Metric<T> {
-    /// Computes the euclidean norm.
-    fn norm(&self) -> T;
-}
+pub use norm::{VectorNorm, MatrixNorm};
+pub use norm::{VectorMetric, MatrixMetric};

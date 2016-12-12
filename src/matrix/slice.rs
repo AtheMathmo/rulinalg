@@ -24,6 +24,7 @@ use matrix::{Row, RowMut, Column, ColumnMut, Rows, RowsMut, Axes};
 use matrix::{DiagOffset, Diagonal, DiagonalMut};
 use matrix::{back_substitution, forward_substitution};
 use vector::Vector;
+use norm::{MatrixNorm, Euclidean};
 use utils;
 use libnum::{Zero, Float};
 use error::Error;
@@ -345,6 +346,24 @@ pub trait BaseMatrix<T>: Sized {
         let mut col_sum = Vec::with_capacity(self.rows());
         col_sum.extend(self.iter_rows().map(|row| utils::unrolled_sum(row.raw_slice())));
         Vector::new(col_sum)
+    }
+
+    /// Compute euclidean norm for matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    ///
+    /// let a = Matrix::new(2,1, vec![3.0,4.0]);
+    /// let c = a.norm();
+    ///
+    /// assert_eq!(c, 5.0);
+    /// ```
+    fn norm(&self) -> T
+        where T: Float
+    {
+        Euclidean.norm(self)
     }
 
     /// The sum of all elements in the matrix

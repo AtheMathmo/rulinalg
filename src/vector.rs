@@ -9,7 +9,8 @@ use std::cmp::PartialEq;
 use std::fmt;
 use std::slice::{Iter, IterMut};
 use std::vec::IntoIter;
-use Metric;
+
+use norm::{VectorNorm, Euclidean};
 use utils;
 
 /// The Vector struct.
@@ -333,6 +334,24 @@ impl<T: Copy + Div<T, Output = T>> Vector<T> {
     pub fn elediv(&self, v: &Vector<T>) -> Vector<T> {
         assert_eq!(self.size, v.size);
         Vector::new(utils::ele_div(&self.data, &v.data))
+    }
+}
+
+impl<T: Float> Vector<T> {
+    /// Compute euclidean norm for vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::vector::Vector;
+    ///
+    /// let a = Vector::new(vec![3.0,4.0]);
+    /// let c = a.norm();
+    ///
+    /// assert_eq!(c, 5.0);
+    /// ```
+    pub fn norm(&self) -> T {
+        Euclidean.norm(self)
     }
 }
 
@@ -699,31 +718,6 @@ impl<T> IndexMut<usize> for Vector<T> {
     }
 }
 
-impl<T: Float> Metric<T> for Vector<T> {
-    /// Compute euclidean norm for vector.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::vector::Vector;
-    /// use rulinalg::Metric;
-    ///
-    /// let a = Vector::new(vec![3.0,4.0]);
-    /// let c = a.norm();
-    ///
-    /// assert_eq!(c, 5.0);
-    /// ```
-    fn norm(&self) -> T {
-        let mut s = T::zero();
-
-        for u in &self.data {
-            s = s + (*u) * (*u);
-        }
-
-        s.sqrt()
-    }
-}
-
 macro_rules! impl_op_assign_vec_scalar (
     ($assign_trt:ident, $trt:ident, $op:ident, $op_assign:ident, $doc:expr) => (
 
@@ -785,7 +779,6 @@ impl_op_assign_vec!(SubAssign, Sub, sub, sub_assign, "subtraction");
 #[cfg(test)]
 mod tests {
     use super::Vector;
-    use super::super::Metric;
 
     #[test]
     fn test_display() {

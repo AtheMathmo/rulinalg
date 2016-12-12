@@ -1,6 +1,5 @@
 use matrix::{Matrix, MatrixSliceMut, BaseMatrix, BaseMatrixMut};
 use error::{Error, ErrorKind};
-use Metric;
 
 use std::cmp;
 use std::any::Any;

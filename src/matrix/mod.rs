@@ -12,7 +12,6 @@ use std::fmt;
 use std::marker::PhantomData;
 use libnum::{One, Zero, Float, FromPrimitive};
 
-use Metric;
 use error::{Error, ErrorKind};
 use utils;
 use vector::Vector;
@@ -731,79 +730,6 @@ impl<T: Any + Float> Matrix<T> {
 
             sgn * d
         }
-    }
-}
-
-impl<T: Float> Metric<T> for Matrix<T> {
-    /// Compute euclidean norm for matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::Matrix;
-    /// use rulinalg::Metric;
-    ///
-    /// let a = Matrix::new(2,1, vec![3.0,4.0]);
-    /// let c = a.norm();
-    ///
-    /// assert_eq!(c, 5.0);
-    /// ```
-    fn norm(&self) -> T {
-        let s = utils::dot(&self.data, &self.data);
-
-        s.sqrt()
-    }
-}
-
-impl<'a, T: Float> Metric<T> for MatrixSlice<'a, T> {
-    /// Compute euclidean norm for matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSlice};
-    /// use rulinalg::Metric;
-    ///
-    /// let a = Matrix::new(2,1, vec![3.0,4.0]);
-    /// let b = MatrixSlice::from_matrix(&a, [0,0], 2, 1);
-    /// let c = b.norm();
-    ///
-    /// assert_eq!(c, 5.0);
-    /// ```
-    fn norm(&self) -> T {
-        let mut s = T::zero();
-
-        for row in self.iter_rows() {
-            let raw_slice = row.raw_slice();
-            s = s + utils::dot(raw_slice, raw_slice);
-        }
-        s.sqrt()
-    }
-}
-
-impl<'a, T: Float> Metric<T> for MatrixSliceMut<'a, T> {
-    /// Compute euclidean norm for matrix.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSliceMut};
-    /// use rulinalg::Metric;
-    ///
-    /// let mut a = Matrix::new(2,1, vec![3.0,4.0]);
-    /// let b = MatrixSliceMut::from_matrix(&mut a, [0,0], 2, 1);
-    /// let c = b.norm();
-    ///
-    /// assert_eq!(c, 5.0);
-    /// ```
-    fn norm(&self) -> T {
-        let mut s = T::zero();
-
-        for row in self.iter_rows() {
-            let raw_slice = row.raw_slice();
-            s = s + utils::dot(raw_slice, raw_slice);
-        }
-        s.sqrt()
     }
 }
 
