@@ -55,7 +55,7 @@ impl<'a, 'b, U, T, M1, M2> MatrixMetric<'a, 'b, T, M1, M2> for U
     }
 }
 
-/// The Euclidean norm and metric.
+/// The Euclidean norm
 #[derive(Debug)]
 pub struct Euclidean;
 
@@ -74,5 +74,57 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Euclidean {
         }
 
         s.sqrt()
+    }
+}
+
+/// The Lp norm
+#[derive(Debug)]
+pub struct Lp<T: Float>(T);
+
+impl<T: Float> VectorNorm<T> for Lp<T> {
+    fn norm(&self, v: &Vector<T>) -> T {
+        if self.0 < T::one() {
+            panic!("p value in Lp norm must >= 1")
+        } else if self.0.is_infinite() {
+            // Compute supremum
+            let mut abs_sup = T::zero();
+            for d in v {
+                if d.abs() > abs_sup {
+                    abs_sup = *d;
+                }
+            }
+            abs_sup
+        } else {
+            // Compute standard lp norm
+            let mut s = T::zero();
+            for x in v {
+                s = s + x.abs().powf(self.0);
+            }
+            s.powf(self.0.recip())
+        }
+    }
+}
+
+impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Lp<T> {
+    fn norm(&self, m: &M) -> T {
+        if self.0 < T::one() {
+            panic!("p value in Lp norm must >= 1")
+        } else if self.0.is_infinite() {
+            // Compute supremum
+            let mut abs_sup = T::zero();
+            for d in m.iter() {
+                if d.abs() > abs_sup {
+                    abs_sup = *d;
+                }
+            }
+            abs_sup
+        } else {
+            // Compute standard lp norm
+            let mut s = T::zero();
+            for x in m.iter() {
+                s = s + x.abs().powf(self.0);
+            }
+            s.powf(self.0.recip())
+        }
     }
 }
