@@ -175,3 +175,26 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Lp<T> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use vector::Vector;
+    use matrix::MatrixSlice;
+
+    #[test]
+    fn test_euclidean_vector() {
+        let v = Vector::new(vec![3.0, 4.0]);
+        assert!((VectorNorm::norm(&Euclidean, &v) - 5.0) < 1e-30);
+    }
+
+    #[test]
+    fn test_euclidean_matrix() {
+        let m = matrix![3.0, 4.0;
+                        1.0, 3.0];
+        assert!((MatrixNorm::norm(&Euclidean, &m) - 35.0.sqrt()) < 1e-30);
+
+        let slice = MatrixSlice::from_matrix(&m, [0,0], 1, 2);
+        assert!((MatrixNorm::norm(&Euclidean, &slice) - 5.0) < 1e-30);
+    }
+}
