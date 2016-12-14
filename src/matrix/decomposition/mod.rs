@@ -21,6 +21,7 @@ mod eigen;
 use std::any::Any;
 
 use matrix::{Matrix, BaseMatrix};
+use norm::Euclidean;
 use vector::Vector;
 use utils;
 use error::{Error, ErrorKind};
@@ -87,6 +88,6 @@ impl<T> Matrix<T>
         v[0] = T::one();
         let v = Matrix::new(size, 1, v);
 
-        Ok(&v / v.norm())
+        Ok(&v / v.norm(Euclidean))
     }
 }

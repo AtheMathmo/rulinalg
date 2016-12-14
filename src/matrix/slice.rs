@@ -24,7 +24,7 @@ use matrix::{Row, RowMut, Column, ColumnMut, Rows, RowsMut, Axes};
 use matrix::{DiagOffset, Diagonal, DiagonalMut};
 use matrix::{back_substitution, forward_substitution};
 use vector::Vector;
-use norm::{MatrixNorm, Euclidean};
+use norm::{MatrixNorm, MatrixMetric};
 use utils;
 use libnum::{Zero, Float};
 use error::Error;
@@ -333,12 +333,15 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
+    /// let a = matrix![1.0, 2.0;
+    ///                 3.0, 4.0];
     ///
     /// let c = a.sum_cols();
     /// assert_eq!(*c.data(), vec![3.0, 7.0]);
+    /// # }
     /// ```
     fn sum_cols(&self) -> Vector<T>
         where T: Copy + Zero + Add<T, Output = T>
@@ -348,22 +351,52 @@ pub trait BaseMatrix<T>: Sized {
         Vector::new(col_sum)
     }
 
-    /// Compute euclidean norm for matrix.
+    /// Compute given matrix norm for matrix.
     ///
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::matrix::BaseMatrix;
+    /// use rulinalg::norm::Euclidean;
     ///
-    /// let a = Matrix::new(2,1, vec![3.0,4.0]);
-    /// let c = a.norm();
+    /// let a = matrix![3.0, 4.0];
+    /// let c = a.norm(Euclidean);
     ///
     /// assert_eq!(c, 5.0);
+    /// # }
     /// ```
-    fn norm(&self) -> T
+    fn norm<N: MatrixNorm<T, Self>>(&self, norm: N) -> T
         where T: Float
     {
-        Euclidean.norm(self)
+        norm.norm(self)
+    }
+
+    /// Compute the metric distance between two matrices.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::matrix::BaseMatrix;
+    /// use rulinalg::norm::Euclidean;
+    ///
+    /// let a = matrix![3.0, 4.0;
+    ///                 1.0, 2.0];
+    /// let b = matrix![2.0, 5.0;
+    ///                 0.0, 3.0];
+    ///
+    /// // Compute the square root of the sum of
+    /// // elementwise squared-differences
+    /// let c = a.metric(&b, Euclidean);
+    ///
+    /// assert_eq!(c, 2.0);
+    /// # }
+    /// ```
+    fn metric<'a, 'b, B, M>(&'a self, mat: &'b B, metric: M) -> T 
+        where B: 'b + BaseMatrix<T>, M: MatrixMetric<'a, 'b, T, Self, B>
+    {
+        metric.metric(self, mat)
     }
 
     /// The sum of all elements in the matrix
@@ -371,12 +404,15 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::matrix::BaseMatrix;
     ///
-    /// let a = Matrix::new(2,2,vec![1.0,2.0,3.0,4.0]);
+    /// let a = matrix![1.0, 2.0;
+    ///                 3.0, 4.0];
     ///
     /// let c = a.sum();
     /// assert_eq!(c, 10.0);
+    /// # }
     /// ```
     fn sum(&self) -> T
         where T: Copy + Zero + Add<T, Output = T>

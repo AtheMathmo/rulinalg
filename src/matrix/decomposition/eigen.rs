@@ -1,4 +1,5 @@
 use matrix::{Matrix, MatrixSliceMut, BaseMatrix, BaseMatrixMut};
+use norm::Euclidean;
 use error::{Error, ErrorKind};
 
 use std::cmp;
@@ -22,8 +23,8 @@ impl<T: Any + Float + Signed> Matrix<T> {
             converged = true;
 
             for i in 0..n {
-                let mut c = self.select_cols(&[i]).norm();
-                let mut r = self.select_rows(&[i]).norm();
+                let mut c = self.select_cols(&[i]).norm(Euclidean);
+                let mut r = self.select_rows(&[i]).norm(Euclidean);
 
                 let s = c * c + r * r;
                 let mut f = T::one();
