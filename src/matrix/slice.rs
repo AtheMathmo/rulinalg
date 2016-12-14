@@ -1,4 +1,4 @@
-//! Traits for matrices operations.
+//! Traits for matrix operations.
 //!
 //! These traits defines operations for structs representing matrices arranged in row-major order.
 //!

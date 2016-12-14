@@ -1,4 +1,27 @@
 //! The norm module
+//!
+//! This module contains implementations of various linear algebra norms.
+//! The implementations are contained within the `VectorNorm` and 
+//! `MatrixNorm` traits. This module also contains `VectorMetric` and
+//! `MatrixMetric` traits which are used to compute the metric distance.
+//!
+//! These traits can be used directly by importing implementors from
+//! this module. In most cases it will be easier to use the `norm` and
+//! `metric` functions which exist for both vectors and matrices. These
+//! functions take generic arguments for the norm to be used.
+//!
+//! In general you should use the least generic norm that fits your purpose.
+//! For example you would choose to use a `Euclidean` norm instead of an
+//! `Lp(2.0)` norm - despite them being mathematically equivalent. 
+//!
+//! # Defining your own norm
+//!
+//! Note that these traits enforce no requirements on the norm. It is up
+//! to the user to ensure that they define a norm correctly.
+//!
+//! To define your own norm you need to implement the `MatrixNorm`
+//! and/or the `VectorNorm` on your own struct. When you have defined
+//! a norm you get the _induced metric_ for free.
 
 use matrix::BaseMatrix;
 use vector::Vector;
@@ -34,7 +57,8 @@ pub trait MatrixMetric<'a, 'b, T, M1: 'a + BaseMatrix<T>, M2: 'b + BaseMatrix<T>
 /// The induced vector metric
 ///
 /// Given a norm `N`, the induced vector metric `M` computes
-/// the metric distance `d` as follows:
+/// the metric distance, `d`, between two vectors `v1` and `v2`
+/// as follows:
 ///
 /// `d = M(v1, v2) = N(v1 - v2)`
 impl<U, T> VectorMetric<T> for U
@@ -44,6 +68,13 @@ impl<U, T> VectorMetric<T> for U
     }
 }
 
+/// The induced matrix metric
+///
+/// Given a norm `N`, the induced matrix metric `M` computes
+/// the metric distance, `d`, between two matrices `m1` and `m2`
+/// as follows:
+///
+/// `d = M(m1, m2) = N(m1 - m2)`
 impl<'a, 'b, U, T, M1, M2> MatrixMetric<'a, 'b, T, M1, M2> for U
     where U: MatrixNorm<T, M1>,
     M1: 'a + BaseMatrix<T>,
@@ -56,6 +87,11 @@ impl<'a, 'b, U, T, M1, M2> MatrixMetric<'a, 'b, T, M1, M2> for U
 }
 
 /// The Euclidean norm
+///
+/// The Euclidean norm computes the square-root
+/// of the sum of squares.
+///
+/// `||v|| = SQRT(SUM(v_i * v_i))`
 #[derive(Debug)]
 pub struct Euclidean;
 
@@ -78,6 +114,17 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Euclidean {
 }
 
 /// The Lp norm
+///
+/// The Lp norm computes the `p`th root
+/// of the sum of elements to the `p`th power.
+///
+/// The Lp norm requires `p` to be greater than
+/// or equal `1`.
+///
+/// # p = infinity
+///
+/// In the special case where `p` is positive infinity,
+/// the Lp norm becomes a supremum over the absolute values.
 #[derive(Debug)]
 pub struct Lp<T: Float>(T);
 
