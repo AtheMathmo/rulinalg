@@ -211,6 +211,15 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn test_euclidean_vector_metric_bad_dim() {
+        let v = Vector::new(vec![3.0, 4.0]);
+        let v2 = Vector::new(vec![1.0, 2.0, 3.0]);
+
+        VectorMetric::metric(&Euclidean, &v, &v2);
+    }
+
+    #[test]
     fn test_euclidean_matrix_metric() {
         let m = matrix![3.0, 4.0;
                         1.0, 3.0];
