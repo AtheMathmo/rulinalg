@@ -7,6 +7,7 @@ use std::ops::{Mul, Add, Div, Sub, Index, IndexMut, Neg, MulAssign, DivAssign, S
 use libnum::{One, Zero, Float, FromPrimitive};
 use std::cmp::PartialEq;
 use std::fmt;
+use std::iter::FromIterator;
 use std::slice::{Iter, IterMut};
 use std::vec::IntoIter;
 use Metric;
@@ -96,6 +97,13 @@ impl<'a, T> IntoIterator for &'a Vector<T> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
+    }
+}
+
+impl<T> FromIterator<T> for Vector<T> {
+    fn from_iter<I>(iter: I) -> Self where I: IntoIterator<Item=T> {
+        let values: Vec<T> = iter.into_iter().collect();
+        Vector::new(values)
     }
 }
 
@@ -1152,6 +1160,18 @@ mod tests {
             our_refcovered_vec.push(*i);
         }
         assert_eq!(our_refcovered_vec, our_vec);
+    }
+
+    #[test]
+    fn vector_from_iter() {
+        let v1: Vector<usize> = (2..5).collect();
+        let exp1 = Vector::new(vec![2, 3, 4]);
+        assert_eq!(v1, exp1);
+
+        let orig: Vec<f64> = vec![2., 3., 4.];
+        let v2: Vector<f64> = orig.iter().map(|x| x + 1.).collect();
+        let exp2 = Vector::new(vec![3., 4., 5.]);
+        assert_eq!(v2, exp2);
     }
 
     #[test]
