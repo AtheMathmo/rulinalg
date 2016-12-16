@@ -135,9 +135,9 @@ impl<T: Float> VectorNorm<T> for Lp<T> {
         } else if self.0.is_infinite() {
             // Compute supremum
             let mut abs_sup = T::zero();
-            for d in v {
-                if d.abs() > abs_sup {
-                    abs_sup = *d;
+            for d in v.iter().map(|d| d.abs()) {
+                if d > abs_sup {
+                    abs_sup = d;
                 }
             }
             abs_sup
@@ -159,9 +159,9 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Lp<T> {
         } else if self.0.is_infinite() {
             // Compute supremum
             let mut abs_sup = T::zero();
-            for d in m.iter() {
-                if d.abs() > abs_sup {
-                    abs_sup = *d;
+            for d in m.iter().map(|d| d.abs()) {
+                if d > abs_sup {
+                    abs_sup = d;
                 }
             }
             abs_sup
@@ -179,6 +179,8 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Lp<T> {
 #[cfg(test)]
 mod tests {
     use libnum::Float;
+    use std::f64;
+
     use super::*;
     use vector::Vector;
     use matrix::{Matrix, MatrixSlice};
@@ -241,5 +243,49 @@ mod tests {
         let m2 = matrix![1.0, 2.0, 3.0];
 
         MatrixMetric::metric(&Euclidean, &m, &m2);
+    }
+
+    #[test]
+    fn test_lp_vector_supremum() {
+        let v = Vector::new(vec![-5.0, 3.0]);
+
+        let sup = VectorNorm::norm(&Lp(f64::INFINITY), &v);
+        assert_eq!(sup, 5.0);
+    }
+
+    #[test]
+    fn test_lp_matrix_supremum() {
+        let m = matrix![0.0, -2.0;
+                        3.5, 1.0];
+
+        let sup = MatrixNorm::norm(&Lp(f64::INFINITY), &m);
+        assert_eq!(sup, 3.5);
+    }
+
+    #[test]
+    fn test_lp_vector_one() {
+        let v = Vector::new(vec![1.0, 2.0, -2.0]);
+        assert_eq!(VectorNorm::norm(&Lp(1.0), &v), 5.0);
+    }
+
+    #[test]
+    fn test_lp_matrix_one() {
+        let m = matrix![1.0, -2.0;
+                        0.5, 1.0];
+        assert_eq!(MatrixNorm::norm(&Lp(1.0), &m), 4.5);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_lp_vector_bad_p() {
+        let v = Vector::new(vec![]);
+        VectorNorm::norm(&Lp(0.5), &v);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_lp_matrix_bad_p() {
+        let m = matrix![];
+        MatrixNorm::norm(&Lp(0.5), &m);
     }
 }
