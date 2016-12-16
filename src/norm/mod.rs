@@ -180,21 +180,56 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Lp<T> {
 mod tests {
     use super::*;
     use vector::Vector;
-    use matrix::MatrixSlice;
+    use matrix::{Matrix, MatrixSlice};
 
     #[test]
-    fn test_euclidean_vector() {
+    fn test_euclidean_vector_norm() {
         let v = Vector::new(vec![3.0, 4.0]);
         assert!((VectorNorm::norm(&Euclidean, &v) - 5.0) < 1e-30);
     }
 
     #[test]
-    fn test_euclidean_matrix() {
+    fn test_euclidean_matrix_norm() {
         let m = matrix![3.0, 4.0;
                         1.0, 3.0];
         assert!((MatrixNorm::norm(&Euclidean, &m) - 35.0.sqrt()) < 1e-30);
 
         let slice = MatrixSlice::from_matrix(&m, [0,0], 1, 2);
         assert!((MatrixNorm::norm(&Euclidean, &slice) - 5.0) < 1e-30);
+    }
+
+    #[test]
+    fn test_euclidean_vector_metric() {
+        let v = Vector::new(vec![3.0, 4.0]);
+        assert!((VectorMetric::metric(&Euclidean, &v, &v)) < 1e-30);
+
+        let v1 = Vector::new(vec![0.0, 0.0]);
+        assert!((VectorMetric::metric(&Euclidean, &v, &v1) - 5.0) < 1e-30);
+
+        let v2 = Vector::new(vec![4.0, 3.0]);
+        assert!((VectorMetric::metric(&Euclidean, &v, &v2) - 2.0.sqrt()) < 1e-30);
+    }
+
+    #[test]
+    fn test_euclidean_matrix_metric() {
+        let m = matrix![3.0, 4.0;
+                        1.0, 3.0];
+        assert!((MatrixMetric::metric(&Euclidean, &m, &m)) < 1e-30);
+
+        let m1 = Matrix::zeros(2, 2);
+        assert!((MatrixMetric::metric(&Euclidean, &m, &m1) - 35.0.sqrt()) < 1e-30);
+
+        let m2 = matrix![2.0, 3.0;
+                         2.0, 4.0];
+        assert!((MatrixMetric::metric(&Euclidean, &m, &m2) - 2.0) < 1e-30);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_euclidean_matrix_metric_bad_dim() {
+        let m = matrix![3.0, 4.0];
+        let m2 = matrix![1.0, 2.0, 3.0];
+
+        MatrixMetric::metric(&Euclidean, &m, &m2);
     }
 }
