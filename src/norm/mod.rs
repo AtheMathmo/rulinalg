@@ -178,6 +178,7 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Lp<T> {
 
 #[cfg(test)]
 mod tests {
+    use libnum::Float;
     use super::*;
     use vector::Vector;
     use matrix::{Matrix, MatrixSlice};
