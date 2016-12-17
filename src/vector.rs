@@ -47,8 +47,6 @@ impl<T> Vector<T> {
     /// and constructs a new vector such that `V_i = f(i)`,
     /// where `i` is the index.
     ///
-    /// Requires the vector data.
-    ///
     /// # Examples
     ///
     /// ```
@@ -850,7 +848,7 @@ mod tests {
     }
 
     #[test]
-    fn create_vector_new_from_fn() {
+    fn create_vector_from_fn() {
         let v1 = Vector::from_fn(3, |x| x + 1);
         assert_eq!(v1, Vector::new(vec![1, 2, 3]));
 
