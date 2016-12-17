@@ -76,13 +76,13 @@ impl<T: Any + Float + Signed> Matrix<T> {
 
     }
 
-    fn francis_shift_eigenvalues(&self) -> Result<Vec<T>, Error> {
+    fn francis_shift_eigenvalues(self) -> Result<Vec<T>, Error> {
         let n = self.rows();
         debug_assert!(n > 2,
                       "Francis shift only works on matrices greater than 2x2.");
         debug_assert!(n == self.cols, "Matrix must be square for Francis shift.");
 
-        let mut h = try!(self.clone()
+        let mut h = try!(self
             .upper_hessenberg()
             .map_err(|_| Error::new(ErrorKind::DecompFailure, "Could not compute eigenvalues.")));
         h.balance_matrix();
@@ -183,7 +183,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// # Failures
     ///
     /// - Eigenvalues cannot be computed.
-    pub fn eigenvalues(&self) -> Result<Vec<T>, Error> {
+    pub fn eigenvalues(self) -> Result<Vec<T>, Error> {
         let n = self.rows();
         assert!(n == self.cols,
                 "Matrix must be square for eigenvalue computation.");
@@ -196,7 +196,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
     }
 
     fn direct_2_by_2_eigendecomp(&self) -> Result<(Vec<T>, Matrix<T>), Error> {
-        let eigenvalues = try!(self.eigenvalues());
+        let eigenvalues = try!(self.direct_2_by_2_eigenvalues());
         // Thanks to
         // http://www.math.harvard.edu/archive/21b_fall_04/exhibits/2dmatrices/index.html
         // for this characterization—
@@ -217,13 +217,13 @@ impl<T: Any + Float + Signed> Matrix<T> {
         }
     }
 
-    fn francis_shift_eigendecomp(&self) -> Result<(Vec<T>, Matrix<T>), Error> {
+    fn francis_shift_eigendecomp(self) -> Result<(Vec<T>, Matrix<T>), Error> {
         let n = self.rows();
         debug_assert!(n > 2,
                       "Francis shift only works on matrices greater than 2x2.");
         debug_assert!(n == self.cols, "Matrix must be square for Francis shift.");
 
-        let (u, mut h) = try!(self.clone().upper_hess_decomp().map_err(|_| {
+        let (u, mut h) = try!(self.upper_hess_decomp().map_err(|_| {
             Error::new(ErrorKind::DecompFailure,
                        "Could not compute eigen decomposition.")
         }));
@@ -346,7 +346,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// # Failures
     ///
     /// - The eigen decomposition can not be computed.
-    pub fn eigendecomp(&self) -> Result<(Vec<T>, Matrix<T>), Error> {
+    pub fn eigendecomp(self) -> Result<(Vec<T>, Matrix<T>), Error> {
         let n = self.rows();
         assert!(n == self.cols, "Matrix must be square for eigendecomp.");
 
@@ -397,7 +397,7 @@ mod tests {
     #[test]
     fn test_2_by_2_matrix_eigendecomp() {
         let a = matrix!(20., 4.; 20., 16.);
-        let (eigenvals, eigenvecs) = a.eigendecomp().unwrap();
+        let (eigenvals, eigenvecs) = a.clone().eigendecomp().unwrap();
 
         let lambda_1 = eigenvals[0];
         let lambda_2 = eigenvals[1];
@@ -416,7 +416,7 @@ mod tests {
                         22., 29., 36.;
                         27., 36., 45.);
 
-        let eigs = a.eigenvalues().unwrap();
+        let eigs = a.clone().eigenvalues().unwrap();
 
         let eig_1 = 90.4026;
         let eig_2 = 0.5973;

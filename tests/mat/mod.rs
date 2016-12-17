@@ -64,7 +64,7 @@ fn matrix_lup_decomp() {
                     0., 0., 0., 6., 5.;
                     0., 0., 0., 5., 6.);
 
-    let (l, u, p) = b.lup_decomp().expect("Matrix SHOULD be able to be decomposed...");
+    let (l, u, p) = b.clone().lup_decomp().expect("Matrix SHOULD be able to be decomposed...");
     let k = p.transpose() * l * u;
 
     for i in 0..25 {
