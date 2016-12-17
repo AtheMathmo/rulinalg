@@ -215,6 +215,25 @@ impl<T: Copy + PartialOrd> Vector<T> {
 
         Vector::new(new_data)
     }
+
+    /// Sort elements of the Vector. Different from Vec, it can sort float values.
+    ///
+    /// # Panics
+    ///
+    /// Panics if ``.partial_comp`` returns ``None``
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::vector::Vector;
+    ///
+    /// let mut a = Vector::new(vec![1., 3., 2., 4., 0.]);
+    /// a.sort();
+    /// assert_eq!(a, Vector::new(vec![0., 1., 2., 3., 4.]));
+    /// ```
+    pub fn sort(&mut self) {
+        self.mut_data().sort_by(|a, b| a.partial_cmp(b).unwrap())
+    }
 }
 
 impl<T: Clone + Zero> Vector<T> {
@@ -784,6 +803,8 @@ impl_op_assign_vec!(SubAssign, Sub, sub, sub_assign, "subtraction");
 
 #[cfg(test)]
 mod tests {
+    use std::f64;
+
     use super::Vector;
     use super::super::Metric;
 
@@ -1164,5 +1185,24 @@ mod tests {
         }
 
         assert_eq!(our_vector.into_vec(), vec![2., 3., 4., 5.]);
+    }
+
+    #[test]
+    fn vector_sort() {
+        let mut vec1: Vector<f64> = Vector::new(vec![1., 3., 2., 4.]);
+        vec1.sort();
+        assert_eq!(vec1, Vector::new(vec![1., 2., 3., 4.]));
+
+        let mut vec2: Vector<usize> = Vector::new(vec![5, 3, 1, 4]);
+        vec2.sort();
+        assert_eq!(vec2, Vector::new(vec![1, 3, 4, 5]));
+    }
+
+    #[test]
+    #[should_panic]
+    fn vector_sort_panic() {
+        // NaN, Inf
+        let mut vec1: Vector<f64> = Vector::new(vec![f64::NAN, 1., 2.]);
+        vec1.sort();
     }
 }
