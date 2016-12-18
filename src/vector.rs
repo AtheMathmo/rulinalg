@@ -43,6 +43,29 @@ impl<T> Vector<T> {
         }
     }
 
+    /// Constructor for Vector struct that takes a function `f`
+    /// and constructs a new vector such that `V_i = f(i)`,
+    /// where `i` is the index.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::vector::Vector;
+    ///
+    /// let v = Vector::from_fn(4, |x| x * 3);
+    /// assert_eq!(v, Vector::new(vec![0, 3, 6, 9]));
+    /// ```
+    pub fn from_fn<F>(size: usize, mut f: F) -> Vector<T>
+        where F: FnMut(usize) -> T {
+
+        let data: Vec<T> = (0..size).into_iter().map(|x| f(x)).collect();
+
+        Vector {
+            size: size,
+            data: data,
+        }
+    }
+
     /// Returns the size of the Vector.
     pub fn size(&self) -> usize {
         self.size
@@ -822,6 +845,25 @@ mod tests {
         let from_vec = Vector::new(data_vec.clone());
         let from_slice = Vector::new(data_slice);
         assert_eq!(from_vec, from_slice);
+    }
+
+    #[test]
+    fn create_vector_from_fn() {
+        let v1 = Vector::from_fn(3, |x| x + 1);
+        assert_eq!(v1, Vector::new(vec![1, 2, 3]));
+
+        let v2 = Vector::from_fn(3, |x| x as f64);
+        assert_eq!(v2, Vector::new(vec![0., 1., 2.]));
+
+        let mut z = 0;
+        let v3 = Vector::from_fn(3, |x| { z += 1; x + z });
+        assert_eq!(v3, Vector::new(vec![0 + 1, 1 + 2, 2 + 3]));
+
+        let v4 = Vector::from_fn(3, move |x| x + 1);
+        assert_eq!(v4, Vector::new(vec![1, 2, 3]));
+
+        let v5 = Vector::from_fn(0, |x| x);
+        assert_eq!(v5, Vector::new(vec![]));
     }
 
     #[test]
