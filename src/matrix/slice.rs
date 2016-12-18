@@ -1679,23 +1679,6 @@ impl<'a, T> MatrixSlice<'a, T> {
             marker: PhantomData::<&'a T>,
         }
     }
-
-    /// Produce a `MatrixSlice` from an existing `MatrixSlice`.
-    ///
-    /// This function will be deprecated. Prefer using `BaseMatrix::sub_slice`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSlice};
-    ///
-    /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
-    /// let new_slice = slice.reslice([0,0], 1, 1);
-    /// ```
-    pub fn reslice(self, start: [usize; 2], rows: usize, cols: usize) -> MatrixSlice<'a, T> {
-        self.sub_slice(start, rows, cols)
-    }
 }
 
 impl<'a, T> MatrixSliceMut<'a, T> {
@@ -1768,23 +1751,6 @@ impl<'a, T> MatrixSliceMut<'a, T> {
             row_stride: row_stride,
             marker: PhantomData::<&'a mut T>,
         }
-    }
-
-    /// Produce a `MatrixSliceMut` from an existing `MatrixSliceMut`.
-    ///
-    /// This function will be deprecated. Prefer using `BaseMatrixMut::sub_slice_mut` instead;
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSliceMut};
-    ///
-    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
-    /// let new_slice = slice.reslice([0,0], 1, 1);
-    /// ```
-    pub fn reslice(mut self, start: [usize; 2], rows: usize, cols: usize) -> MatrixSliceMut<'a, T> {
-        self.sub_slice_mut(start, rows, cols)
     }
 }
 
@@ -1872,36 +1838,6 @@ mod tests {
 
         assert_eq!(b.rows(), 2);
         assert_eq!(b.cols(), 2);
-    }
-
-    #[test]
-    fn reslice() {
-        let mut a = Matrix::new(4, 4, (0..16).collect::<Vec<_>>());
-
-        {
-            let b = MatrixSlice::from_matrix(&a, [1, 1], 3, 3);
-            let c = b.reslice([0, 1], 2, 2);
-
-            assert_eq!(c.rows(), 2);
-            assert_eq!(c.cols(), 2);
-
-            assert_eq!(c[[0, 0]], 6);
-            assert_eq!(c[[0, 1]], 7);
-            assert_eq!(c[[1, 0]], 10);
-            assert_eq!(c[[1, 1]], 11);
-        }
-
-        let b = MatrixSliceMut::from_matrix(&mut a, [1, 1], 3, 3);
-
-        let c = b.reslice([0, 1], 2, 2);
-
-        assert_eq!(c.rows(), 2);
-        assert_eq!(c.cols(), 2);
-
-        assert_eq!(c[[0, 0]], 6);
-        assert_eq!(c[[0, 1]], 7);
-        assert_eq!(c[[1, 0]], 10);
-        assert_eq!(c[[1, 1]], 11);
     }
 
     #[test]
