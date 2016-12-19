@@ -668,21 +668,23 @@ pub trait BaseMatrix<T>: Sized {
     /// Examples
     ///
     /// ```
-    /// #[macro_use]
-    /// extern crate rulinalg;
+    /// # #[macro_use]
+    /// # extern crate rulinalg;
     ///
     /// use rulinalg::vector::Vector;
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// fn main() {
-    ///     let a = matrix!(1,2,3; 4,5,6; 7,8,9).diag().cloned().collect::<Vec<_>>();
-    ///     let b = matrix!(1,2; 3,4; 5,6).diag().cloned().collect::<Vec<_>>();
-    ///     let c = matrix!(1,2,3; 4,5,6).diag().cloned().collect::<Vec<_>>();
+    /// # fn main() {
+    ///     let a = matrix![1, 2, 3;
+    ///                     4, 5, 6;
+    ///                     7, 8, 9].diag().cloned().collect::<Vec<_>>();
+    ///     let b = matrix![1, 2;
+    ///                     3, 4;
+    ///                     5, 6].diag().cloned().collect::<Vec<_>>();
     ///
-    ///     assert_eq!(a, vec![1,5,9]);
-    ///     assert_eq!(b, vec![1,4]);
-    ///     assert_eq!(c, vec![1,5]);
-    /// }
+    ///     assert_eq!(a, vec![1, 5, 9]);
+    ///     assert_eq!(b, vec![1, 4]);
+    /// # }
     /// ```
     fn diag(&self) -> Diagonal<T, Self>
     {
