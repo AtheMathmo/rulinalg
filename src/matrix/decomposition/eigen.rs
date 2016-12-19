@@ -159,7 +159,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
             }
         }
 
-        Ok(h.diag().into_vec())
+        Ok(h.diag().cloned().collect::<Vec<_>>())
     }
 
     /// Eigenvalues of a square matrix.
@@ -318,7 +318,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
             }
         }
 
-        Ok((h.diag().into_vec(), u * transformation))
+        Ok((h.diag().cloned().collect::<Vec<_>>(), u * transformation))
     }
 
     /// Eigendecomposition of a square matrix.

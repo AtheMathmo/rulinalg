@@ -183,7 +183,7 @@ pub trait BaseMatrix<T>: Sized {
                                     1,
                                     self.cols(),
                                     self.row_stride())
-        }                                    
+        }
     }
 
     /// Returns an iterator over the matrix data.
@@ -668,25 +668,27 @@ pub trait BaseMatrix<T>: Sized {
     /// Examples
     ///
     /// ```
+    /// # #[macro_use]
+    /// # extern crate rulinalg;
+    ///
     /// use rulinalg::vector::Vector;
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let a = Matrix::new(3,3,vec![1,2,3,4,5,6,7,8,9]);
-    /// let b = Matrix::new(3,2,vec![1,2,3,4,5,6]);
-    /// let c = Matrix::new(2,3,vec![1,2,3,4,5,6]);
+    /// # fn main() {
+    /// let a = matrix![1, 2, 3;
+    ///                 4, 5, 6;
+    ///                 7, 8, 9].diag().cloned().collect::<Vec<_>>();
+    /// let b = matrix![1, 2;
+    ///                 3, 4;
+    ///                 5, 6].diag().cloned().collect::<Vec<_>>();
     ///
-    /// let d = &a.diag(); // 1,5,9
-    /// let e = &b.diag(); // 1,4
-    /// let f = &c.diag(); // 1,5
-    ///
-    /// assert_eq!(*d.data(), vec![1,5,9]);
-    /// assert_eq!(*e.data(), vec![1,4]);
-    /// assert_eq!(*f.data(), vec![1,5]);
+    /// assert_eq!(a, vec![1, 5, 9]);
+    /// assert_eq!(b, vec![1, 4]);
+    /// # }
     /// ```
-    fn diag(&self) -> Vector<T>
-        where T: Copy
+    fn diag(&self) -> Diagonal<T, Self>
     {
-        self.iter_diag(DiagOffset::Main).cloned().collect::<Vec<_>>().into()
+        self.iter_diag(DiagOffset::Main)
     }
 
     /// Tranposes the given matrix
