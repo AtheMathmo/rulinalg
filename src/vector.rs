@@ -74,13 +74,13 @@ impl<T> Vector<T> {
     }
 
     /// Returns a pointer to the element at the given index, without doing
-    /// bounds checking. So use it very carefully!
+    /// bounds checking.
     pub unsafe fn get_unchecked(&self, index: usize) -> &T {
         self.data.get_unchecked(index)
     }
 
-    /// Returns an unsafe mutable pointer to the element in index.
-    /// So use it very carefully!
+    /// Returns an unsafe mutable pointer to the element at the given index,
+    /// without doing bounds checking.
     pub unsafe fn get_unchecked_mut(&mut self, index: usize) -> &mut T {
         self.data.get_unchecked_mut(index)
     }
