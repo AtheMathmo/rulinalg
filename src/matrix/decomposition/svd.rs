@@ -346,7 +346,7 @@ mod tests {
 
         let mut singular_triplets = u_transposed.iter_rows().zip(b.diag()).zip(v_transposed.iter_rows())
             // chained zipping results in nested tuple. Flatten it.
-            .map(|((u_col, singular_value), v_col)| (Vector::new(u_col), singular_value, Vector::new(v_col)));
+            .map(|((u_col, singular_value), v_col)| (Vector::new(u_col.raw_slice()), singular_value, Vector::new(v_col.raw_slice())));
 
         assert!(singular_triplets.by_ref()
             // For a matrix M, each singular value σ and left and right singular vectors u and v respectively

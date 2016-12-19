@@ -1,11 +1,10 @@
 use std::iter::{ExactSizeIterator, FromIterator};
 use std::mem;
-use std::slice;
+//use std::slice;
 
-use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Diagonal, DiagonalMut};
+use super::{Matrix, MatrixSlice, MatrixSliceMut};
+use super::{Row, RowMut, Rows, RowsMut, Diagonal, DiagonalMut};
 use super::slice::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
-
-
 
 macro_rules! impl_iter_diag (
     ($diag:ident, $diag_base:ident, $diag_type:ty, $as_ptr:ident) => (
@@ -67,16 +66,14 @@ impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
 }
 
 impl<'a, T, M: $diag_base<T>> ExactSizeIterator for $diag<'a, T, M> {}
-
     );
-
 );
 
 impl_iter_diag!(Diagonal, BaseMatrix, &'a T, as_ptr);
 impl_iter_diag!(DiagonalMut, BaseMatrixMut, &'a mut T, as_mut_ptr);
 
 macro_rules! impl_iter_rows (
-    ($rows:ident, $row_type:ty, $slice_from_parts:ident) => (
+    ($rows:ident, $row_type:ty, $row_base:ident, $slice_base:ident) => (
 
 /// Iterates over the rows in the matrix.
 impl<'a, T> Iterator for $rows<'a, T> {
@@ -89,7 +86,9 @@ impl<'a, T> Iterator for $rows<'a, T> {
             unsafe {
 // Get pointer and create a slice from raw parts
                 let ptr = self.slice_start.offset(self.row_pos as isize * self.row_stride);
-                row = slice::$slice_from_parts(ptr, self.slice_cols);
+                row = $row_base {
+                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
+                };
             }
 
             self.row_pos += 1;
@@ -105,7 +104,9 @@ impl<'a, T> Iterator for $rows<'a, T> {
             unsafe {
 // Get pointer to last row and create a slice from raw parts
                 let ptr = self.slice_start.offset((self.slice_rows - 1) as isize * self.row_stride);
-                Some(slice::$slice_from_parts(ptr, self.slice_cols))
+                Some($row_base {
+                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
+                })
             }
         } else {
             None
@@ -117,7 +118,9 @@ impl<'a, T> Iterator for $rows<'a, T> {
             let row: $row_type;
             unsafe {
                 let ptr = self.slice_start.offset((self.row_pos + n) as isize * self.row_stride);
-                row = slice::$slice_from_parts(ptr, self.slice_cols);
+                row = $row_base {
+                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
+                }
             }
 
             self.row_pos += n + 1;
@@ -138,8 +141,8 @@ impl<'a, T> Iterator for $rows<'a, T> {
     );
 );
 
-impl_iter_rows!(Rows, &'a [T], from_raw_parts);
-impl_iter_rows!(RowsMut, &'a mut [T], from_raw_parts_mut);
+impl_iter_rows!(Rows, Row<'a, T>, Row, MatrixSlice);
+impl_iter_rows!(RowsMut, RowMut<'a, T>, RowMut, MatrixSliceMut);
 
 impl<'a, T> ExactSizeIterator for Rows<'a, T> {}
 impl<'a, T> ExactSizeIterator for RowsMut<'a, T> {}
@@ -224,6 +227,57 @@ impl<'a, T: 'a + Copy> FromIterator<&'a [T]> for Matrix<T> {
         }
     }
 }
+
+macro_rules! impl_from_iter_row(
+    ($row_type:ty) => (
+impl<'a, T: 'a + Copy> FromIterator<$row_type> for Matrix<T> {
+    fn from_iter<I: IntoIterator<Item = $row_type>>(iterable: I) -> Self {
+        let mut mat_data: Vec<T>;
+        let cols: usize;
+        let mut rows = 0;
+
+        let mut iterator = iterable.into_iter();
+
+        match iterator.next() {
+            None => {
+                return Matrix {
+                    data: Vec::new(),
+                    rows: 0,
+                    cols: 0,
+                }
+            }
+            Some(row) => {
+                rows += 1;
+                // Here we set the capacity - get iterator size and the cols
+                let (lower_rows, _) = iterator.size_hint();
+                cols = row.row.cols();
+
+                mat_data = Vec::with_capacity(lower_rows.saturating_add(1).saturating_mul(cols));
+                mat_data.extend_from_slice(row.raw_slice());
+            }
+        }
+
+        for row in iterator {
+            assert!(row.row.cols() == cols, "Iterator row size must be constant.");
+            mat_data.extend_from_slice(row.raw_slice());
+            rows += 1;
+        }
+
+        mat_data.shrink_to_fit();
+
+        Matrix {
+            data: mat_data,
+            rows: rows,
+            cols: cols,
+        }
+    }
+}
+    );
+);
+
+impl_from_iter_row!(Row<'a, T>);
+impl_from_iter_row!(RowMut<'a, T>);
+
 
 impl<'a, T> IntoIterator for MatrixSlice<'a, T> {
     type Item = &'a T;
@@ -500,15 +554,15 @@ mod tests {
         let data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
 
         for (i, row) in a.iter_rows().enumerate() {
-            assert_eq!(data[i], *row);
+            assert_eq!(data[i], *row.raw_slice());
         }
 
         for (i, row) in a.iter_rows_mut().enumerate() {
-            assert_eq!(data[i], *row);
+            assert_eq!(data[i], *row.raw_slice());
         }
 
-        for row in a.iter_rows_mut() {
-            for r in row {
+        for mut row in a.iter_rows_mut() {
+            for r in row.raw_slice_mut() {
                 *r = 0;
             }
         }
@@ -527,7 +581,7 @@ mod tests {
         let data = [[0, 1], [3, 4]];
 
         for (i, row) in b.iter_rows().enumerate() {
-            assert_eq!(data[i], *row);
+            assert_eq!(data[i], *row.raw_slice());
         }
     }
 
@@ -543,15 +597,15 @@ mod tests {
             let data = [[0, 1], [3, 4]];
 
             for (i, row) in b.iter_rows().enumerate() {
-                assert_eq!(data[i], *row);
+                assert_eq!(data[i], *row.raw_slice());
             }
 
             for (i, row) in b.iter_rows_mut().enumerate() {
-                assert_eq!(data[i], *row);
+                assert_eq!(data[i], *row.raw_slice());
             }
 
-            for row in b.iter_rows_mut() {
-                for r in row {
+            for mut row in b.iter_rows_mut() {
+                for r in row.raw_slice_mut() {
                     *r = 0;
                 }
             }
@@ -568,10 +622,10 @@ mod tests {
 
         let mut row_iter = a.iter_rows();
 
-        assert_eq!([0, 1, 2], *row_iter.nth(0).unwrap());
-        assert_eq!([6, 7, 8], *row_iter.nth(1).unwrap());
+        assert_eq!([0, 1, 2], *row_iter.nth(0).unwrap().raw_slice());
+        assert_eq!([6, 7, 8], *row_iter.nth(1).unwrap().raw_slice());
 
-        assert_eq!(None, row_iter.next());
+        assert!(row_iter.next().is_none());
     }
 
     #[test]
@@ -582,12 +636,12 @@ mod tests {
 
         let row_iter = a.iter_rows();
 
-        assert_eq!([6, 7, 8], *row_iter.last().unwrap());
+        assert_eq!([6, 7, 8], *row_iter.last().unwrap().raw_slice());
 
         let mut row_iter = a.iter_rows();
 
         row_iter.next();
-        assert_eq!([6, 7, 8], *row_iter.last().unwrap());
+        assert_eq!([6, 7, 8], *row_iter.last().unwrap().raw_slice());
 
         let mut row_iter = a.iter_rows();
 
@@ -596,7 +650,7 @@ mod tests {
         row_iter.next();
         row_iter.next();
 
-        assert_eq!(None, row_iter.last());
+        assert!(row_iter.last().is_none());
     }
 
     #[test]
@@ -632,7 +686,7 @@ mod tests {
 
         assert_eq!((0, Some(0)), row_iter.size_hint());
 
-        assert_eq!(None, row_iter.next());
+        assert!(row_iter.next().is_none());
         assert_eq!((0, Some(0)), row_iter.size_hint());
     }
 
