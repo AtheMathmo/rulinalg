@@ -183,7 +183,7 @@ pub trait BaseMatrix<T>: Sized {
                                     1,
                                     self.cols(),
                                     self.row_stride())
-        }                                    
+        }
     }
 
     /// Returns an iterator over the matrix data.
@@ -668,20 +668,21 @@ pub trait BaseMatrix<T>: Sized {
     /// Examples
     ///
     /// ```
+    /// #[macro_use]
+    /// extern crate rulinalg;
+    ///
     /// use rulinalg::vector::Vector;
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let a = Matrix::new(3,3,vec![1,2,3,4,5,6,7,8,9]);
-    /// let b = Matrix::new(3,2,vec![1,2,3,4,5,6]);
-    /// let c = Matrix::new(2,3,vec![1,2,3,4,5,6]);
+    /// fn main() {
+    ///     let a = matrix!(1,2,3; 4,5,6; 7,8,9).diag().cloned().collect::<Vec<_>>();
+    ///     let b = matrix!(1,2; 3,4; 5,6).diag().cloned().collect::<Vec<_>>();
+    ///     let c = matrix!(1,2,3; 4,5,6).diag().cloned().collect::<Vec<_>>();
     ///
-    /// let d = a.diag().cloned().collect::<Vec<_>>(); // 1,5,9
-    /// let e = b.diag().cloned().collect::<Vec<_>>(); // 1,4
-    /// let f = c.diag().cloned().collect::<Vec<_>>(); // 1,5
-    ///
-    /// assert_eq!(d, vec![1,5,9]);
-    /// assert_eq!(e, vec![1,4]);
-    /// assert_eq!(f, vec![1,5]);
+    ///     assert_eq!(a, vec![1,5,9]);
+    ///     assert_eq!(b, vec![1,4]);
+    ///     assert_eq!(c, vec![1,5]);
+    /// }
     /// ```
     fn diag(&self) -> Diagonal<T, Self>
     {
