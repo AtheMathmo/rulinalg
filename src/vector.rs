@@ -97,6 +97,18 @@ impl<T> Vector<T> {
         self.mut_data().iter_mut()
     }
 
+    /// Returns a pointer to the element at the given index, without doing
+    /// bounds checking.
+    pub unsafe fn get_unchecked(&self, index: usize) -> &T {
+        self.data.get_unchecked(index)
+    }
+
+    /// Returns an unsafe mutable pointer to the element at the given index,
+    /// without doing bounds checking.
+    pub unsafe fn get_unchecked_mut(&mut self, index: usize) -> &mut T {
+        self.data.get_unchecked_mut(index)
+    }
+
 }
 
 impl<T> Into<Vec<T>> for Vector<T> {
@@ -1226,5 +1238,21 @@ mod tests {
         }
 
         assert_eq!(our_vector.into_vec(), vec![2., 3., 4., 5.]);
+    }
+
+    #[test]
+    fn vector_get_unchecked() {
+        let v1 = Vector::new(vec![1, 2, 3]);
+        unsafe {
+            assert_eq!(v1.get_unchecked(1), &2);
+        }
+
+        let mut v2 = Vector::new(vec![1, 2, 3]);
+
+        unsafe {
+            let elem = v2.get_unchecked_mut(1);
+            *elem = 4;
+        }
+        assert_eq!(v2, Vector::new(vec![1, 4, 3]));
     }
 }
