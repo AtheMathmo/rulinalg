@@ -45,6 +45,26 @@ fn lp_2_mat_100_50(b: &mut Bencher) {
 }
 
 #[bench]
+fn lp_3_mat_10_50(b: &mut Bencher) {
+    let a = Matrix::new(10, 50, vec![2.0;500]);
+    let lp = Lp(3.0);
+
+    b.iter(|| {
+    	let _ = black_box(MatrixNorm::norm(&lp, &a));
+    });
+}
+
+#[bench]
+fn lp_3_mat_100_50(b: &mut Bencher) {
+    let a = Matrix::new(100, 50, vec![2.0;5000]);
+    let lp = Lp(3.0);
+
+    b.iter(|| {
+    	let _ = black_box(MatrixNorm::norm(&lp, &a));
+    });
+}
+
+#[bench]
 fn euclidean_mat_10_50(b: &mut Bencher) {
     let a = Matrix::new(10, 50, vec![2.0;500]);
 
@@ -82,6 +102,30 @@ fn sum_abs_mat_100_50(b: &mut Bencher) {
         let mut s = 0.0;
         for x in a.iter() {
             black_box(s = s + x.abs());
+        }
+    });
+}
+
+#[bench]
+fn sum_abs_powi_3_mat_10_50(b: &mut Bencher) {
+    let a = Matrix::new(10, 50, vec![2.0;500]);
+    
+    b.iter(|| {
+        let mut s = 0.0;
+        for x in a.iter() {
+            black_box(s = s + x.abs().powi(3));
+        }
+    });
+}
+
+#[bench]
+fn sum_abs_powi_3_mat_100_50(b: &mut Bencher) {
+    let a = Matrix::new(100, 50, vec![2.0;5000]);
+    
+    b.iter(|| {
+        let mut s = 0.0;
+        for x in a.iter() {
+            black_box(s = s + x.abs().powi(3));
         }
     });
 }
