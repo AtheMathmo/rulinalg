@@ -21,7 +21,11 @@
 //!
 //! To define your own norm you need to implement the `MatrixNorm`
 //! and/or the `VectorNorm` on your own struct. When you have defined
-//! a norm you get the _induced metric_ for free.
+//! a norm you get the _induced metric_ for free. This means that any
+//! object which implements the `VectorNorm` or `MatrixNorm` will
+//! automatically implement the `VectorMetric` and `MatrixMetric` traits
+//! respectively. This induced metric will compute the norm of the
+//! difference between the vectors or matrices.
 
 use matrix::BaseMatrix;
 use vector::Vector;
@@ -115,8 +119,10 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Euclidean {
 
 /// The Lp norm
 ///
-/// The Lp norm computes the `p`th root
-/// of the sum of elements to the `p`th power.
+/// The
+/// [Lp norm](https://en.wikipedia.org/wiki/Norm_(mathematics)#p-norm)
+/// computes the `p`th root of the sum of elements
+/// to the `p`th power.
 ///
 /// The Lp norm requires `p` to be greater than
 /// or equal `1`.
@@ -127,6 +133,26 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Euclidean {
 /// the Lp norm becomes a supremum over the absolute values.
 #[derive(Debug)]
 pub struct Lp<T: Float>(T);
+
+impl<T: Float> Lp<T> {
+    /// Returns the L_infinity norm.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::norm::{MatrixNorm, Lp};
+    ///
+    /// let l_inf = Lp::infinity();
+    /// let mat = matrix![ 1.0, 2.0;
+    ///                   -4.0, 1.5];
+    /// assert_eq!(l_inf.norm(&mat), 4.0);
+    /// # }
+    /// ```
+    pub fn infinity() -> Lp<T> {
+        Lp(T::infinity())
+    }
+}
 
 impl<T: Float> VectorNorm<T> for Lp<T> {
     fn norm(&self, v: &Vector<T>) -> T {
@@ -188,29 +214,29 @@ mod tests {
     #[test]
     fn test_euclidean_vector_norm() {
         let v = Vector::new(vec![3.0, 4.0]);
-        assert!((VectorNorm::norm(&Euclidean, &v) - 5.0) < 1e-30);
+        assert!((VectorNorm::norm(&Euclidean, &v) - 5.0) < 1e-14);
     }
 
     #[test]
     fn test_euclidean_matrix_norm() {
         let m = matrix![3.0, 4.0;
                         1.0, 3.0];
-        assert!((MatrixNorm::norm(&Euclidean, &m) - 35.0.sqrt()) < 1e-30);
+        assert!((MatrixNorm::norm(&Euclidean, &m) - 35.0.sqrt()) < 1e-14);
 
         let slice = MatrixSlice::from_matrix(&m, [0,0], 1, 2);
-        assert!((MatrixNorm::norm(&Euclidean, &slice) - 5.0) < 1e-30);
+        assert!((MatrixNorm::norm(&Euclidean, &slice) - 5.0) < 1e-14);
     }
 
     #[test]
     fn test_euclidean_vector_metric() {
         let v = Vector::new(vec![3.0, 4.0]);
-        assert!((VectorMetric::metric(&Euclidean, &v, &v)) < 1e-30);
+        assert!((VectorMetric::metric(&Euclidean, &v, &v)) < 1e-14);
 
         let v1 = Vector::new(vec![0.0, 0.0]);
-        assert!((VectorMetric::metric(&Euclidean, &v, &v1) - 5.0) < 1e-30);
+        assert!((VectorMetric::metric(&Euclidean, &v, &v1) - 5.0) < 1e-14);
 
         let v2 = Vector::new(vec![4.0, 3.0]);
-        assert!((VectorMetric::metric(&Euclidean, &v, &v2) - 2.0.sqrt()) < 1e-30);
+        assert!((VectorMetric::metric(&Euclidean, &v, &v2) - 2.0.sqrt()) < 1e-14);
     }
 
     #[test]
@@ -226,14 +252,14 @@ mod tests {
     fn test_euclidean_matrix_metric() {
         let m = matrix![3.0, 4.0;
                         1.0, 3.0];
-        assert!((MatrixMetric::metric(&Euclidean, &m, &m)) < 1e-30);
+        assert!((MatrixMetric::metric(&Euclidean, &m, &m)) < 1e-14);
 
         let m1 = Matrix::zeros(2, 2);
-        assert!((MatrixMetric::metric(&Euclidean, &m, &m1) - 35.0.sqrt()) < 1e-30);
+        assert!((MatrixMetric::metric(&Euclidean, &m, &m1) - 35.0.sqrt()) < 1e-14);
 
         let m2 = matrix![2.0, 3.0;
                          2.0, 4.0];
-        assert!((MatrixMetric::metric(&Euclidean, &m, &m2) - 2.0) < 1e-30);
+        assert!((MatrixMetric::metric(&Euclidean, &m, &m2) - 2.0) < 1e-14);
     }
 
     #[test]
