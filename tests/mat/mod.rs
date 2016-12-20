@@ -1,6 +1,6 @@
 use rulinalg::vector::Vector;
 use rulinalg::matrix::Matrix;
-use rulinalg::matrix::slice::BaseMatrix;
+use rulinalg::matrix::base::BaseMatrix;
 
 #[test]
 fn test_solve() {

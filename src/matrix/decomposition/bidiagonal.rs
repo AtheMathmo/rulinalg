@@ -103,7 +103,7 @@ impl<T> Matrix<T>
 #[cfg(test)]
 mod tests {
     use matrix::Matrix;
-    use matrix::slice::BaseMatrix;
+    use matrix::base::BaseMatrix;
 
     fn validate_bidiag(mat: &Matrix<f64>,
                        b: &Matrix<f64>,
