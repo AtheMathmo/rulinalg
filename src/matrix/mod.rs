@@ -38,7 +38,7 @@ pub enum Axes {
 /// The `Matrix` struct.
 ///
 /// Can be instantiated with any type.
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Matrix<T> {
     rows: usize,
     cols: usize,
@@ -348,17 +348,6 @@ impl<T> Matrix<T> {
     /// Consumes the Matrix and returns the Vec of data.
     pub fn into_vec(self) -> Vec<T> {
         self.data
-    }
-}
-
-impl<T: Clone> Clone for Matrix<T> {
-    /// Clones the Matrix.
-    fn clone(&self) -> Matrix<T> {
-        Matrix {
-            rows: self.rows,
-            cols: self.cols,
-            data: self.data.clone(),
-        }
     }
 }
 
