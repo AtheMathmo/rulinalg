@@ -132,7 +132,7 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Euclidean {
 /// In the special case where `p` is positive infinity,
 /// the Lp norm becomes a supremum over the absolute values.
 #[derive(Debug)]
-pub struct Lp<T: Float>(T);
+pub struct Lp<T: Float>(pub T);
 
 impl<T: Float> Lp<T> {
     /// Returns the L_infinity norm.
