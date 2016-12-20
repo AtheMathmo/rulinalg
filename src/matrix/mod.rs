@@ -38,7 +38,7 @@ pub enum Axes {
 /// The `Matrix` struct.
 ///
 /// Can be instantiated with any type.
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Matrix<T> {
     rows: usize,
     cols: usize,
@@ -351,17 +351,6 @@ impl<T> Matrix<T> {
     }
 }
 
-impl<T: Clone> Clone for Matrix<T> {
-    /// Clones the Matrix.
-    fn clone(&self) -> Matrix<T> {
-        Matrix {
-            rows: self.rows,
-            cols: self.cols,
-            data: self.data.clone(),
-        }
-    }
-}
-
 impl<T: Clone + Zero> Matrix<T> {
     /// Constructs matrix of all zeros.
     ///
@@ -599,7 +588,7 @@ impl<T: Any + Float> Matrix<T> {
     ///
     /// - The matrix cannot be decomposed into an LUP form to solve.
     /// - There is no valid solution as the matrix is singular.
-    pub fn solve(&self, y: Vector<T>) -> Result<Vector<T>, Error> {
+    pub fn solve(self, y: Vector<T>) -> Result<Vector<T>, Error> {
         let (l, u, p) = try!(self.lup_decomp());
 
         let b = try!(forward_substitution(&l, p * y));
@@ -614,7 +603,7 @@ impl<T: Any + Float> Matrix<T> {
     /// use rulinalg::matrix::Matrix;
     ///
     /// let a = Matrix::new(2,2, vec![2.,3.,1.,2.]);
-    /// let inv = a.inverse().expect("This matrix should have an inverse!");
+    /// let inv = a.clone().inverse().expect("This matrix should have an inverse!");
     ///
     /// let I = a * inv;
     ///
@@ -629,8 +618,10 @@ impl<T: Any + Float> Matrix<T> {
     ///
     /// - The matrix could not be LUP decomposed.
     /// - The matrix has zero determinant.
-    pub fn inverse(&self) -> Result<Matrix<T>, Error> {
-        assert!(self.rows == self.cols, "Matrix is not square.");
+    pub fn inverse(self) -> Result<Matrix<T>, Error> {
+        let rows = self.rows;
+        let cols = self.cols;
+        assert!(rows == cols, "Matrix is not square.");
 
         let mut inv_t_data = Vec::<T>::new();
         let (l, u, p) = try!(self.lup_decomp().map_err(|_| {
@@ -652,8 +643,8 @@ impl<T: Any + Float> Matrix<T> {
                                   "Matrix is singular and cannot be inverted."));
         }
 
-        for i in 0..self.rows {
-            let mut id_col = vec![T::zero(); self.cols];
+        for i in 0..rows {
+            let mut id_col = vec![T::zero(); cols];
             id_col[i] = T::one();
 
             let b = forward_substitution(&l, &p * Vector::new(id_col))
@@ -664,7 +655,7 @@ impl<T: Any + Float> Matrix<T> {
 
         }
 
-        Ok(Matrix::new(self.rows, self.cols, inv_t_data).transpose())
+        Ok(Matrix::new(rows, cols, inv_t_data).transpose())
     }
 
     /// Computes the determinant of the matrix.
@@ -685,7 +676,7 @@ impl<T: Any + Float> Matrix<T> {
     /// # Panics
     ///
     /// - The matrix is not square.
-    pub fn det(&self) -> T {
+    pub fn det(self) -> T {
         assert!(self.rows == self.cols, "Matrix is not square.");
 
         let n = self.cols;

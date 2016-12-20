@@ -251,7 +251,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
             }
         }
 
-        let c_eigs = try!(c.eigenvalues());
+        let c_eigs = try!(c.clone().eigenvalues());
 
         // Choose eigenvalue closes to c[1,1].
         let lambda: T;
