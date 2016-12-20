@@ -1,6 +1,6 @@
 use super::{Matrix, MatrixSlice, MatrixSliceMut};
 use super::{Row, RowMut, Column, ColumnMut};
-use super::slice::{BaseMatrix, BaseMatrixMut};
+use super::base::{BaseMatrix, BaseMatrixMut};
 
 use super::super::utils;
 use super::super::vector::Vector;
