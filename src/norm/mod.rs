@@ -158,14 +158,14 @@ impl<T: Float> VectorNorm<T> for Lp<T> {
                 }
                 abs_sup
             },
-            Lp::Integer(i) => {
-                assert!(i >= 1, "p value in Lp norm must be >= 1");
+            Lp::Integer(p) => {
+                assert!(p >= 1, "p value in Lp norm must be >= 1");
                 // Compute standard lp norm
                 let mut s = T::zero();
                 for x in v {
-                    s = s + x.abs().powi(i);
+                    s = s + x.abs().powi(p);
                 }
-                s.powf(T::from(i).expect("Could not cast i32 to float").recip())
+                s.powf(T::from(p).expect("Could not cast i32 to float").recip())
             },
             Lp::Float(p) => {
                 assert!(p >= T::one(), "p value in Lp norm must be >= 1");
@@ -197,8 +197,8 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Lp<T> {
                 assert!(p >= 1, "p value in Lp norm must be >= 1");
                 // Compute standard lp norm
                 let mut s = T::zero();
-                for x in m.iter().map(|d| d.abs()) {
-                    s = s + x.powi(p);
+                for x in m.iter() {
+                    s = s + x.abs().powi(p);
                 }
                 s.powf(T::from(p).expect("Could not cast i32 to float").recip())
             },
@@ -206,8 +206,8 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Lp<T> {
                 assert!(p >= T::one(), "p value in Lp norm must be >= 1");
                 // Compute standard lp norm
                 let mut s = T::zero();
-                for x in m.iter().map(|d| d.abs()) {
-                    s = s + x.powf(p);
+                for x in m.iter() {
+                    s = s + x.abs().powf(p);
                 }
                 s.powf(p.recip())
             }
