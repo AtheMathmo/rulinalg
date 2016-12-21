@@ -131,73 +131,84 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Euclidean {
 ///
 /// In the special case where `p` is positive infinity,
 /// the Lp norm becomes a supremum over the absolute values.
+///
+/// TODO: Explain enum a little more
 #[derive(Debug)]
-pub struct Lp<T: Float>(pub T);
-
-impl<T: Float> Lp<T> {
-    /// Returns the L_infinity norm.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::norm::{MatrixNorm, Lp};
-    ///
-    /// let l_inf = Lp::infinity();
-    /// let mat = matrix![ 1.0, 2.0;
-    ///                   -4.0, 1.5];
-    /// assert_eq!(l_inf.norm(&mat), 4.0);
-    /// # }
-    /// ```
-    pub fn infinity() -> Lp<T> {
-        Lp(T::infinity())
-    }
+pub enum Lp<T: Float> {
+    /// The L-infinity norm (supremum)
+    Infinity,
+    /// The Lp norm where p is an integer
+    Integer(i32),
+    /// The Lp norm where p is a float
+    Float(T)
 }
 
 impl<T: Float> VectorNorm<T> for Lp<T> {
     fn norm(&self, v: &Vector<T>) -> T {
-        if self.0 < T::one() {
-            panic!("p value in Lp norm must >= 1")
-        } else if self.0.is_infinite() {
-            // Compute supremum
-            let mut abs_sup = T::zero();
-            for d in v.iter().map(|d| d.abs()) {
-                if d > abs_sup {
-                    abs_sup = d;
+        match *self {
+            Lp::Infinity => {
+                // Compute supremum
+                let mut abs_sup = T::zero();
+                for d in v.iter().map(|d| d.abs()) {
+                    if d > abs_sup {
+                        abs_sup = d;
+                    }
                 }
+                abs_sup
+            },
+            Lp::Integer(i) => {
+                assert!(i >= 1, "p value in Lp norm must be >= 1");
+                // Compute standard lp norm
+                let mut s = T::zero();
+                for x in v {
+                    s = s + x.abs().powi(i);
+                }
+                s.powf(T::from(i).expect("Could not cast i32 to float").recip())
+            },
+            Lp::Float(p) => {
+                assert!(p >= T::one(), "p value in Lp norm must be >= 1");
+                // Compute standard lp norm
+                let mut s = T::zero();
+                for x in v {
+                    s = s + x.abs().powf(p);
+                }
+                s.powf(p.recip())
             }
-            abs_sup
-        } else {
-            // Compute standard lp norm
-            let mut s = T::zero();
-            for x in v {
-                s = s + x.abs().powf(self.0);
-            }
-            s.powf(self.0.recip())
         }
     }
 }
 
 impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Lp<T> {
     fn norm(&self, m: &M) -> T {
-        if self.0 < T::one() {
-            panic!("p value in Lp norm must >= 1")
-        } else if self.0.is_infinite() {
-            // Compute supremum
-            let mut abs_sup = T::zero();
-            for d in m.iter().map(|d| d.abs()) {
-                if d > abs_sup {
-                    abs_sup = d;
+        match *self {
+            Lp::Infinity => {
+                // Compute supremum
+                let mut abs_sup = T::zero();
+                for d in m.iter().map(|d| d.abs()) {
+                    if d > abs_sup {
+                        abs_sup = d;
+                    }
                 }
+                abs_sup
+            },
+            Lp::Integer(p) => {
+                assert!(p >= 1, "p value in Lp norm must be >= 1");
+                // Compute standard lp norm
+                let mut s = T::zero();
+                for x in m.iter().map(|d| d.abs()) {
+                    s = s + x.powi(p);
+                }
+                s.powf(T::from(p).expect("Could not cast i32 to float").recip())
+            },
+            Lp::Float(p) => {
+                assert!(p >= T::one(), "p value in Lp norm must be >= 1");
+                // Compute standard lp norm
+                let mut s = T::zero();
+                for x in m.iter().map(|d| d.abs()) {
+                    s = s + x.powf(p);
+                }
+                s.powf(p.recip())
             }
-            abs_sup
-        } else {
-            // Compute standard lp norm
-            let mut s = T::zero();
-            for x in m.iter() {
-                s = s + x.abs().powf(self.0);
-            }
-            s.powf(self.0.recip())
         }
     }
 }
@@ -275,7 +286,7 @@ mod tests {
     fn test_lp_vector_supremum() {
         let v = Vector::new(vec![-5.0, 3.0]);
 
-        let sup = VectorNorm::norm(&Lp(f64::INFINITY), &v);
+        let sup = VectorNorm::norm(&Lp::Infinity, &v);
         assert_eq!(sup, 5.0);
     }
 
@@ -284,34 +295,61 @@ mod tests {
         let m = matrix![0.0, -2.0;
                         3.5, 1.0];
 
-        let sup = MatrixNorm::norm(&Lp(f64::INFINITY), &m);
+        let sup = MatrixNorm::norm(&Lp::Infinity, &m);
         assert_eq!(sup, 3.5);
     }
 
     #[test]
     fn test_lp_vector_one() {
         let v = Vector::new(vec![1.0, 2.0, -2.0]);
-        assert_eq!(VectorNorm::norm(&Lp(1.0), &v), 5.0);
+        assert_eq!(VectorNorm::norm(&Lp::Integer(1), &v), 5.0);
     }
 
     #[test]
     fn test_lp_matrix_one() {
         let m = matrix![1.0, -2.0;
                         0.5, 1.0];
-        assert_eq!(MatrixNorm::norm(&Lp(1.0), &m), 4.5);
+        assert_eq!(MatrixNorm::norm(&Lp::Integer(1), &m), 4.5);
+    }
+
+    #[test]
+    fn test_lp_vector_float() {
+        let v = Vector::new(vec![1.0, 2.0, -2.0]);
+        assert_eq!(VectorNorm::norm(&Lp::Float(1.0), &v), 5.0);
+    }
+
+    #[test]
+    fn test_lp_matrix_float() {
+        let m = matrix![1.0, -2.0;
+                        0.5, 1.0];
+        assert_eq!(MatrixNorm::norm(&Lp::Float(1.0), &m), 4.5);
     }
 
     #[test]
     #[should_panic]
     fn test_lp_vector_bad_p() {
         let v = Vector::new(vec![]);
-        VectorNorm::norm(&Lp(0.5), &v);
+        VectorNorm::norm(&Lp::Float(0.5), &v);
     }
 
     #[test]
     #[should_panic]
     fn test_lp_matrix_bad_p() {
         let m = matrix![];
-        MatrixNorm::norm(&Lp(0.5), &m);
+        MatrixNorm::norm(&Lp::Float(0.5), &m);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_lp_vector_bad_int_p() {
+        let v: Vector<f64> = Vector::new(vec![]);
+        VectorNorm::norm(&Lp::Integer(0), &v);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_lp_matrix_bad_int_p() {
+        let m: Matrix<f64> = matrix![];
+        MatrixNorm::norm(&Lp::Integer(0), &m);
     }
 }
