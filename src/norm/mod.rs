@@ -165,7 +165,6 @@ impl<T: Float> VectorNorm<T> for Lp<T> {
                 for x in v {
                     s = s + x.abs().powi(i);
                 }
-                s
                 s.powf(T::from(i).expect("Could not cast i32 to float").recip())
             },
             Lp::Float(p) => {
