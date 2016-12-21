@@ -127,12 +127,14 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Euclidean {
 /// The Lp norm requires `p` to be greater than
 /// or equal `1`.
 ///
-/// # p = infinity
+/// We use an enum for this norm to allow us to explicitly handle
+/// special cases at compile time. For example, we have an `Infinity`
+/// variant which handles the special case when the `Lp` norm is a
+/// supremum over absolute values. The `Integer` variant gives us a
+/// performance boost when `p` is an integer.
 ///
-/// In the special case where `p` is positive infinity,
-/// the Lp norm becomes a supremum over the absolute values.
-///
-/// TODO: Explain enum a little more
+/// You should avoid matching directly against this enum as it is likely
+/// to grow.
 #[derive(Debug)]
 pub enum Lp<T: Float> {
     /// The L-infinity norm (supremum)
@@ -163,6 +165,7 @@ impl<T: Float> VectorNorm<T> for Lp<T> {
                 for x in v {
                     s = s + x.abs().powi(i);
                 }
+                s
                 s.powf(T::from(i).expect("Could not cast i32 to float").recip())
             },
             Lp::Float(p) => {
