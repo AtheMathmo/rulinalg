@@ -246,13 +246,13 @@ pub trait BaseMatrix<T>: Sized {
     ///                 3, 4, 5;
     ///                 6, 7, 8];
     /// // Print super diag [1, 5]
-    /// for d in a.iter_diag(DiagOffset::Above(1)) {
+    /// for d in a.diag_iter(DiagOffset::Above(1)) {
     ///     println!("{}", d);
     /// }
     ///
     /// // Print sub diag [3, 7]
-    /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
-    /// for d in a.iter_diag(DiagOffset::from(-1)) {
+    /// // Equivalent to `diag_iter(DiagOffset::Below(1))`
+    /// for d in a.diag_iter(DiagOffset::from(-1)) {
     ///     println!("{}", d);
     /// }
     /// # }
@@ -265,7 +265,7 @@ pub trait BaseMatrix<T>: Sized {
     ///
     /// This function will never panic if the `Main` diagonal
     /// offset is used.
-    fn iter_diag(&self, k: DiagOffset) -> Diagonal<T, Self> {
+    fn diag_iter(&self, k: DiagOffset) -> Diagonal<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
             DiagOffset::Above(m) => {
@@ -676,7 +676,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # }
     /// ```
     fn diag(&self) -> Diagonal<T, Self> {
-        self.iter_diag(DiagOffset::Main)
+        self.diag_iter(DiagOffset::Main)
     }
 
     /// Tranposes the given matrix
@@ -1218,13 +1218,13 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///                     6, 7, 8];
     ///
     /// // Increment super diag
-    /// for d in a.iter_diag_mut(DiagOffset::Above(1)) {
+    /// for d in a.diag_iter_mut(DiagOffset::Above(1)) {
     ///     *d = *d + 1;
     /// }
     ///
     /// // Zero the sub-diagonal (sets 3 and 7 to 0)
-    /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
-    /// for sub_d in a.iter_diag_mut(DiagOffset::from(-1)) {
+    /// // Equivalent to `diag_iter(DiagOffset::Below(1))`
+    /// for sub_d in a.diag_iter_mut(DiagOffset::from(-1)) {
     ///     *sub_d = 0;
     /// }
     ///
@@ -1239,7 +1239,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// This function will never panic if the `Main` diagonal
     /// offset is used.
-    fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
+    fn diag_iter_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
             DiagOffset::Above(m) => {
@@ -1919,24 +1919,24 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn test_iter_diag_too_high() {
+    fn test_diag_iter_too_high() {
         let a = matrix![0.0, 1.0, 2.0, 3.0;
                         4.0, 5.0, 6.0, 7.0;
                         8.0, 9.0, 10.0, 11.0];
 
-        for _ in a.iter_diag(DiagOffset::Above(4)) {
+        for _ in a.diag_iter(DiagOffset::Above(4)) {
 
         }
     }
 
     #[test]
     #[should_panic]
-    fn test_iter_diag_too_low() {
+    fn test_diag_iter_too_low() {
         let a = matrix![0.0, 1.0, 2.0, 3.0;
                         4.0, 5.0, 6.0, 7.0;
                         8.0, 9.0, 10.0, 11.0];
 
-        for _ in a.iter_diag(DiagOffset::Below(3)) {
+        for _ in a.diag_iter(DiagOffset::Below(3)) {
 
         }
     }
