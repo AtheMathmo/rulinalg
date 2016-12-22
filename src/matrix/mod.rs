@@ -97,7 +97,7 @@ pub struct MatrixSliceMut<'a, T: 'a> {
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct Row<'a, T: 'a> {
-    row: MatrixSlice<'a, T>
+    row: MatrixSlice<'a, T>,
 }
 
 /// Mutable row of a matrix.
@@ -127,36 +127,29 @@ pub struct Row<'a, T: 'a> {
 /// ```
 #[derive(Debug)]
 pub struct RowMut<'a, T: 'a> {
-    row: MatrixSliceMut<'a, T>
+    row: MatrixSliceMut<'a, T>,
 }
 
 
-//
 // MAYBE WE SHOULD MOVE SOME OF THIS STUFF OUT
 //
 
 impl<'a, T: 'a> Row<'a, T> {
     /// Returns the row as a slice.
     pub fn raw_slice(&self) -> &'a [T] {
-        unsafe {
-            std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols())
-        }
+        unsafe { std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols()) }
     }
 }
 
 impl<'a, T: 'a> RowMut<'a, T> {
     /// Returns the row as a slice.
     pub fn raw_slice(&self) -> &'a [T] {
-        unsafe {
-            std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols())
-        }
+        unsafe { std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols()) }
     }
 
     /// Returns the row as a slice.
     pub fn raw_slice_mut(&mut self) -> &'a mut [T] {
-        unsafe {
-            std::slice::from_raw_parts_mut(self.row.as_mut_ptr(), self.row.cols())
-        }
+        unsafe { std::slice::from_raw_parts_mut(self.row.as_mut_ptr(), self.row.cols()) }
     }
 }
 
@@ -204,7 +197,7 @@ pub struct RowsMut<'a, T: 'a> {
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct Column<'a, T: 'a> {
-    col: MatrixSlice<'a, T>
+    col: MatrixSlice<'a, T>,
 }
 
 /// Mutable column of a matrix.
@@ -233,7 +226,7 @@ pub struct Column<'a, T: 'a> {
 /// ```
 #[derive(Debug)]
 pub struct ColumnMut<'a, T: 'a> {
-    col: MatrixSliceMut<'a, T>
+    col: MatrixSliceMut<'a, T>,
 }
 
 /// Diagonal offset (used by Diagonal iterator).
@@ -706,7 +699,9 @@ impl<T: Any + Float> Matrix<T> {
             let (l, u, p) = match self.lup_decomp() {
                 Ok(x) => x,
                 Err(ref e) if *e.kind() == ErrorKind::DivByZero => return T::zero(),
-                _ => { panic!("Could not compute LUP decomposition."); }
+                _ => {
+                    panic!("Could not compute LUP decomposition.");
+                }
             };
 
             let mut d = T::one();
@@ -764,7 +759,7 @@ impl<'a, T: Float> Metric<T> for MatrixSlice<'a, T> {
     fn norm(&self) -> T {
         let mut s = T::zero();
 
-        for row in self.iter_rows() {
+        for row in self.row_iter() {
             let raw_slice = row.raw_slice();
             s = s + utils::dot(raw_slice, raw_slice);
         }
@@ -790,7 +785,7 @@ impl<'a, T: Float> Metric<T> for MatrixSliceMut<'a, T> {
     fn norm(&self) -> T {
         let mut s = T::zero();
 
-        for row in self.iter_rows() {
+        for row in self.row_iter() {
             let raw_slice = row.raw_slice();
             s = s + utils::dot(raw_slice, raw_slice);
         }
@@ -872,7 +867,7 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
           M: BaseMatrix<T>
 {
     if m.is_empty() {
-        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."))
+        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."));
     }
 
     let mut x = vec![T::zero(); y.size()];
@@ -885,9 +880,7 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
             }
 
             let diag = *m.get_unchecked([i, i]);
-            if diag.abs() < T::min_positive_value() +
-                T::min_positive_value()
-            {
+            if diag.abs() < T::min_positive_value() + T::min_positive_value() {
                 return Err(Error::new(ErrorKind::AlgebraFailure,
                                       "Linear system cannot be solved (matrix is singular)."));
             }
@@ -904,7 +897,7 @@ fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
           M: BaseMatrix<T>
 {
     if m.is_empty() {
-        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."))
+        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."));
     }
 
     let mut x = Vec::with_capacity(y.size());
@@ -947,8 +940,8 @@ fn parity<T, M>(m: &M) -> T
                 visited[next] = true;
                 unsafe {
                     next = utils::find(&m.row_unchecked(next)
-                                    .raw_slice(),
-                                T::one());
+                                           .raw_slice(),
+                                       T::one());
                 }
             }
 
@@ -986,15 +979,15 @@ mod tests {
 
     #[test]
     fn test_new_mat_from_fn() {
-      let mut counter = 0;
-      let m : Matrix<usize> = Matrix::from_fn(3, 2, |_, _| {
-        let value = counter;
-        counter += 1;
-        value
-      });
-      assert!(m.rows() == 3);
-      assert!(m.cols() == 2);
-      assert!(m.data == vec![0, 1, 2, 3, 4, 5]);
+        let mut counter = 0;
+        let m: Matrix<usize> = Matrix::from_fn(3, 2, |_, _| {
+            let value = counter;
+            counter += 1;
+            value
+        });
+        assert!(m.rows() == 3);
+        assert!(m.cols() == 2);
+        assert!(m.data == vec![0, 1, 2, 3, 4, 5]);
     }
 
     #[test]
