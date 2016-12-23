@@ -109,7 +109,7 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Euclidean {
     fn norm(&self, m: &M) -> T {
         let mut s = T::zero();
 
-        for row in m.iter_rows() {
+        for row in m.row_iter() {
             s = s + utils::dot(row.raw_slice(), row.raw_slice());
         }
 

@@ -125,12 +125,7 @@ pub trait BaseMatrix<T>: Sized {
     /// ```
     unsafe fn col_unchecked(&self, index: usize) -> Column<T> {
         let ptr = self.as_ptr().offset(index as isize);
-        Column{
-            col: MatrixSlice::from_raw_parts(ptr,
-                                    self.rows(),
-                                    1,
-                                    self.row_stride())
-        }
+        Column { col: MatrixSlice::from_raw_parts(ptr, self.rows(), 1, self.row_stride()) }
     }
 
     /// Returns the row of a matrix at the given index.
@@ -179,12 +174,7 @@ pub trait BaseMatrix<T>: Sized {
     /// ```
     unsafe fn row_unchecked(&self, index: usize) -> Row<T> {
         let ptr = self.as_ptr().offset((self.row_stride() * index) as isize);
-        Row {
-            row: MatrixSlice::from_raw_parts(ptr,
-                                    1,
-                                    self.cols(),
-                                    self.row_stride())
-        }                                    
+        Row { row: MatrixSlice::from_raw_parts(ptr, 1, self.cols(), self.row_stride()) }
     }
 
     /// Returns an iterator over the matrix data.
@@ -228,11 +218,11 @@ pub trait BaseMatrix<T>: Sized {
     /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
     ///
     /// // Prints "2" three times.
-    /// for row in a.iter_rows() {
+    /// for row in a.row_iter() {
     ///     println!("{}", row.cols());
     /// }
     /// ```
-    fn iter_rows(&self) -> Rows<T> {
+    fn row_iter(&self) -> Rows<T> {
         Rows {
             slice_start: self.as_ptr(),
             row_pos: 0,
@@ -257,13 +247,13 @@ pub trait BaseMatrix<T>: Sized {
     ///                 3, 4, 5;
     ///                 6, 7, 8];
     /// // Print super diag [1, 5]
-    /// for d in a.iter_diag(DiagOffset::Above(1)) {
+    /// for d in a.diag_iter(DiagOffset::Above(1)) {
     ///     println!("{}", d);
     /// }
     ///
     /// // Print sub diag [3, 7]
-    /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
-    /// for d in a.iter_diag(DiagOffset::from(-1)) {
+    /// // Equivalent to `diag_iter(DiagOffset::Below(1))`
+    /// for d in a.diag_iter(DiagOffset::from(-1)) {
     ///     println!("{}", d);
     /// }
     /// # }
@@ -276,17 +266,19 @@ pub trait BaseMatrix<T>: Sized {
     ///
     /// This function will never panic if the `Main` diagonal
     /// offset is used.
-    fn iter_diag(&self, k: DiagOffset) -> Diagonal<T, Self> {
+    fn diag_iter(&self, k: DiagOffset) -> Diagonal<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
             DiagOffset::Above(m) => {
-                assert!(m < self.cols(), "Offset diagonal is not within matrix dimensions.");
+                assert!(m < self.cols(),
+                        "Offset diagonal is not within matrix dimensions.");
                 (min(self.rows(), self.cols() - m), m)
-            },
+            }
             DiagOffset::Below(m) => {
-                assert!(m < self.rows(), "Offset diagonal is not within matrix dimensions.");
+                assert!(m < self.rows(),
+                        "Offset diagonal is not within matrix dimensions.");
                 (min(self.rows() - m, self.cols()), m * self.row_stride())
-            },
+            }
         };
 
         Diagonal {
@@ -317,7 +309,7 @@ pub trait BaseMatrix<T>: Sized {
     fn sum_rows(&self) -> Vector<T>
         where T: Copy + Zero + Add<T, Output = T>
     {
-        let sum_rows = self.iter_rows().fold(vec![T::zero(); self.cols()], |row_sum, r| {
+        let sum_rows = self.row_iter().fold(vec![T::zero(); self.cols()], |row_sum, r| {
             utils::vec_bin_op(&row_sum, r.raw_slice(), |sum, val| sum + val)
         });
         Vector::new(sum_rows)
@@ -347,7 +339,7 @@ pub trait BaseMatrix<T>: Sized {
         where T: Copy + Zero + Add<T, Output = T>
     {
         let mut col_sum = Vec::with_capacity(self.rows());
-        col_sum.extend(self.iter_rows().map(|row| utils::unrolled_sum(row.raw_slice())));
+        col_sum.extend(self.row_iter().map(|row| utils::unrolled_sum(row.raw_slice())));
         Vector::new(col_sum)
     }
 
@@ -417,15 +409,16 @@ pub trait BaseMatrix<T>: Sized {
     fn sum(&self) -> T
         where T: Copy + Zero + Add<T, Output = T>
     {
-        self.iter_rows()
-            .fold(T::zero(), |sum, row| sum + utils::unrolled_sum(row.raw_slice()))
+        self.row_iter()
+            .fold(T::zero(),
+                  |sum, row| sum + utils::unrolled_sum(row.raw_slice()))
     }
 
     /// Convert the matrix struct into a owned Matrix.
     fn into_matrix(self) -> Matrix<T>
         where T: Copy
     {
-        self.iter_rows().collect()
+        self.row_iter().collect()
     }
 
     /// Select rows from matrix
@@ -549,10 +542,8 @@ pub trait BaseMatrix<T>: Sized {
         assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
 
         let mut data = Vec::with_capacity(self.rows() * self.cols());
-        for (self_r, m_r) in self.iter_rows().zip(m.iter_rows()) {
-            data.extend_from_slice(&utils::vec_bin_op(self_r.raw_slice(),
-                                                        m_r.raw_slice(),
-                                                        T::mul));
+        for (self_r, m_r) in self.row_iter().zip(m.row_iter()) {
+            data.extend_from_slice(&utils::vec_bin_op(self_r.raw_slice(), m_r.raw_slice(), T::mul));
         }
         Matrix::new(self.rows(), self.cols(), data)
     }
@@ -582,10 +573,8 @@ pub trait BaseMatrix<T>: Sized {
         assert!(self.cols() == m.cols(), "Matrix column counts not equal.");
 
         let mut data = Vec::with_capacity(self.rows() * self.cols());
-        for (self_r, m_r) in self.iter_rows().zip(m.iter_rows()) {
-            data.extend_from_slice(&utils::vec_bin_op(self_r.raw_slice(),
-                                                        m_r.raw_slice(),
-                                                        T::div));
+        for (self_r, m_r) in self.row_iter().zip(m.row_iter()) {
+            data.extend_from_slice(&utils::vec_bin_op(self_r.raw_slice(), m_r.raw_slice(), T::div));
         }
         Matrix::new(self.rows(), self.cols(), data)
     }
@@ -668,7 +657,7 @@ pub trait BaseMatrix<T>: Sized {
 
         let mut new_data = Vec::with_capacity((self.cols() + m.cols()) * self.rows());
 
-        for (self_row, m_row) in self.iter_rows().zip(m.iter_rows()) {
+        for (self_row, m_row) in self.row_iter().zip(m.row_iter()) {
             new_data.extend_from_slice(self_row.raw_slice());
             new_data.extend_from_slice(m_row.raw_slice());
         }
@@ -707,7 +696,7 @@ pub trait BaseMatrix<T>: Sized {
 
         let mut new_data = Vec::with_capacity((self.rows() + m.rows()) * self.cols());
 
-        for row in self.iter_rows().chain(m.iter_rows()) {
+        for row in self.row_iter().chain(m.row_iter()) {
             new_data.extend_from_slice(row.raw_slice());
         }
 
@@ -723,25 +712,26 @@ pub trait BaseMatrix<T>: Sized {
     /// Examples
     ///
     /// ```
+    /// # #[macro_use]
+    /// # extern crate rulinalg;
+    ///
     /// use rulinalg::vector::Vector;
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let a = Matrix::new(3,3,vec![1,2,3,4,5,6,7,8,9]);
-    /// let b = Matrix::new(3,2,vec![1,2,3,4,5,6]);
-    /// let c = Matrix::new(2,3,vec![1,2,3,4,5,6]);
+    /// # fn main() {
+    /// let a = matrix![1, 2, 3;
+    ///                 4, 5, 6;
+    ///                 7, 8, 9].diag().cloned().collect::<Vec<_>>();
+    /// let b = matrix![1, 2;
+    ///                 3, 4;
+    ///                 5, 6].diag().cloned().collect::<Vec<_>>();
     ///
-    /// let d = &a.diag(); // 1,5,9
-    /// let e = &b.diag(); // 1,4
-    /// let f = &c.diag(); // 1,5
-    ///
-    /// assert_eq!(*d.data(), vec![1,5,9]);
-    /// assert_eq!(*e.data(), vec![1,4]);
-    /// assert_eq!(*f.data(), vec![1,5]);
+    /// assert_eq!(a, vec![1, 5, 9]);
+    /// assert_eq!(b, vec![1, 4]);
+    /// # }
     /// ```
-    fn diag(&self) -> Vector<T>
-        where T: Copy
-    {
-        self.iter_diag(DiagOffset::Main).cloned().collect::<Vec<_>>().into()
+    fn diag(&self) -> Diagonal<T, Self> {
+        self.diag_iter(DiagOffset::Main)
     }
 
     /// Tranposes the given matrix
@@ -1078,12 +1068,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// ```
     unsafe fn col_unchecked_mut(&mut self, index: usize) -> ColumnMut<T> {
         let ptr = self.as_mut_ptr().offset(index as isize);
-        ColumnMut {
-            col: MatrixSliceMut::from_raw_parts(ptr,
-                                        self.rows(),
-                                        1,
-                                        self.row_stride())
-        }
+        ColumnMut { col: MatrixSliceMut::from_raw_parts(ptr, self.rows(), 1, self.row_stride()) }
     }
 
     /// Returns a mutable reference to the row of a matrix at the given index.
@@ -1144,12 +1129,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// ```
     unsafe fn row_unchecked_mut(&mut self, index: usize) -> RowMut<T> {
         let ptr = self.as_mut_ptr().offset((self.row_stride() * index) as isize);
-        RowMut {
-            row: MatrixSliceMut::from_raw_parts(ptr,
-                                            1,
-                                            self.cols(),
-                                            self.row_stride())
-        }
+        RowMut { row: MatrixSliceMut::from_raw_parts(ptr, 1, self.cols(), self.row_stride()) }
     }
 
     /// Swaps two rows in a matrix.
@@ -1189,12 +1169,14 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
 
         if a != b {
             unsafe {
-                let row_a = slice::from_raw_parts_mut(self.as_mut_ptr()
-                                                        .offset((self.row_stride() * a) as isize),
-                                                    self.cols());
-                let row_b = slice::from_raw_parts_mut(self.as_mut_ptr()
-                                                        .offset((self.row_stride() * b) as isize),
-                                                    self.cols());
+                let row_a =
+                    slice::from_raw_parts_mut(self.as_mut_ptr()
+                                                  .offset((self.row_stride() * a) as isize),
+                                              self.cols());
+                let row_b =
+                    slice::from_raw_parts_mut(self.as_mut_ptr()
+                                                  .offset((self.row_stride() * b) as isize),
+                                              self.cols());
 
                 for (x, y) in row_a.into_iter().zip(row_b.into_iter()) {
                     mem::swap(x, y);
@@ -1240,8 +1222,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         if a != b {
             unsafe {
                 for i in 0..self.rows() {
-                    let a_ptr : *mut T = self.get_unchecked_mut([i, a]);
-                    let b_ptr : *mut T = self.get_unchecked_mut([i, b]);
+                    let a_ptr: *mut T = self.get_unchecked_mut([i, a]);
+                    let b_ptr: *mut T = self.get_unchecked_mut([i, b]);
                     ptr::swap(a_ptr, b_ptr);
                 }
             }
@@ -1258,14 +1240,14 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
     ///
-    /// for mut row in a.iter_rows_mut() {
+    /// for mut row in a.row_iter_mut() {
     ///     *row += 1;
     /// }
     ///
     /// // Now contains the range 1..7
     /// println!("{}", a);
     /// ```
-    fn iter_rows_mut(&mut self) -> RowsMut<T> {
+    fn row_iter_mut(&mut self) -> RowsMut<T> {
         RowsMut {
             slice_start: self.as_mut_ptr(),
             row_pos: 0,
@@ -1291,13 +1273,13 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///                     6, 7, 8];
     ///
     /// // Increment super diag
-    /// for d in a.iter_diag_mut(DiagOffset::Above(1)) {
+    /// for d in a.diag_iter_mut(DiagOffset::Above(1)) {
     ///     *d = *d + 1;
     /// }
     ///
     /// // Zero the sub-diagonal (sets 3 and 7 to 0)
-    /// // Equivalent to `iter_diag(DiagOffset::Below(1))`
-    /// for sub_d in a.iter_diag_mut(DiagOffset::from(-1)) {
+    /// // Equivalent to `diag_iter(DiagOffset::Below(1))`
+    /// for sub_d in a.diag_iter_mut(DiagOffset::from(-1)) {
     ///     *sub_d = 0;
     /// }
     ///
@@ -1312,17 +1294,19 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// This function will never panic if the `Main` diagonal
     /// offset is used.
-    fn iter_diag_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
+    fn diag_iter_mut(&mut self, k: DiagOffset) -> DiagonalMut<T, Self> {
         let (diag_len, diag_start) = match k.into() {
             DiagOffset::Main => (min(self.rows(), self.cols()), 0),
             DiagOffset::Above(m) => {
-                assert!(m < self.cols(), "Offset diagonal is not within matrix dimensions.");
+                assert!(m < self.cols(),
+                        "Offset diagonal is not within matrix dimensions.");
                 (min(self.rows(), self.cols() - m), m)
-            },
+            }
             DiagOffset::Below(m) => {
-                assert!(m < self.rows(), "Offset diagonal is not within matrix dimensions.");
+                assert!(m < self.rows(),
+                        "Offset diagonal is not within matrix dimensions.");
                 (min(self.rows() - m, self.cols()), m * self.row_stride())
-            },
+            }
         };
 
 
@@ -1362,11 +1346,9 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
                 "Target has different row count to self.");
         assert!(self.cols() == target.cols(),
                 "Target has different column count to self.");
-        for (mut s, t) in self.iter_rows_mut().zip(target.iter_rows()) {
+        for (mut s, t) in self.row_iter_mut().zip(target.row_iter()) {
             // Vectorized assignment per row.
-            utils::in_place_vec_bin_op(s.raw_slice_mut(),
-                                        t.raw_slice(),
-                                        |x, &y| *x = y);
+            utils::in_place_vec_bin_op(s.raw_slice_mut(), t.raw_slice(), |x, &y| *x = y);
         }
     }
 
@@ -1532,7 +1514,7 @@ impl<T> BaseMatrix<T> for Matrix<T> {
         let mut new_data = self.data.clone();
         new_data.reserve(m.rows() * m.cols());
 
-        for row in m.iter_rows() {
+        for row in m.row_iter() {
             new_data.extend_from_slice(row.raw_slice());
         }
 
@@ -1734,23 +1716,6 @@ impl<'a, T> MatrixSlice<'a, T> {
             marker: PhantomData::<&'a T>,
         }
     }
-
-    /// Produce a `MatrixSlice` from an existing `MatrixSlice`.
-    ///
-    /// This function will be deprecated. Prefer using `BaseMatrix::sub_slice`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSlice};
-    ///
-    /// let a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
-    /// let new_slice = slice.reslice([0,0], 1, 1);
-    /// ```
-    pub fn reslice(self, start: [usize; 2], rows: usize, cols: usize) -> MatrixSlice<'a, T> {
-        self.sub_slice(start, rows, cols)
-    }
 }
 
 impl<'a, T> MatrixSliceMut<'a, T> {
@@ -1823,23 +1788,6 @@ impl<'a, T> MatrixSliceMut<'a, T> {
             row_stride: row_stride,
             marker: PhantomData::<&'a mut T>,
         }
-    }
-
-    /// Produce a `MatrixSliceMut` from an existing `MatrixSliceMut`.
-    ///
-    /// This function will be deprecated. Prefer using `BaseMatrixMut::sub_slice_mut` instead;
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::matrix::{Matrix, MatrixSliceMut};
-    ///
-    /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
-    /// let slice = MatrixSliceMut::from_matrix(&mut a, [1,1], 2, 2);
-    /// let new_slice = slice.reslice([0,0], 1, 1);
-    /// ```
-    pub fn reslice(mut self, start: [usize; 2], rows: usize, cols: usize) -> MatrixSliceMut<'a, T> {
-        self.sub_slice_mut(start, rows, cols)
     }
 }
 
@@ -1927,36 +1875,6 @@ mod tests {
 
         assert_eq!(b.rows(), 2);
         assert_eq!(b.cols(), 2);
-    }
-
-    #[test]
-    fn reslice() {
-        let mut a = Matrix::new(4, 4, (0..16).collect::<Vec<_>>());
-
-        {
-            let b = MatrixSlice::from_matrix(&a, [1, 1], 3, 3);
-            let c = b.reslice([0, 1], 2, 2);
-
-            assert_eq!(c.rows(), 2);
-            assert_eq!(c.cols(), 2);
-
-            assert_eq!(c[[0, 0]], 6);
-            assert_eq!(c[[0, 1]], 7);
-            assert_eq!(c[[1, 0]], 10);
-            assert_eq!(c[[1, 1]], 11);
-        }
-
-        let b = MatrixSliceMut::from_matrix(&mut a, [1, 1], 3, 3);
-
-        let c = b.reslice([0, 1], 2, 2);
-
-        assert_eq!(c.rows(), 2);
-        assert_eq!(c.cols(), 2);
-
-        assert_eq!(c[[0, 0]], 6);
-        assert_eq!(c[[0, 1]], 7);
-        assert_eq!(c[[1, 0]], 10);
-        assert_eq!(c[[1, 1]], 11);
     }
 
     #[test]
@@ -2056,24 +1974,24 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn test_iter_diag_too_high() {
+    fn test_diag_iter_too_high() {
         let a = matrix![0.0, 1.0, 2.0, 3.0;
                         4.0, 5.0, 6.0, 7.0;
                         8.0, 9.0, 10.0, 11.0];
 
-        for _ in a.iter_diag(DiagOffset::Above(4)) {
+        for _ in a.diag_iter(DiagOffset::Above(4)) {
 
         }
     }
 
     #[test]
     #[should_panic]
-    fn test_iter_diag_too_low() {
+    fn test_diag_iter_too_low() {
         let a = matrix![0.0, 1.0, 2.0, 3.0;
                         4.0, 5.0, 6.0, 7.0;
                         8.0, 9.0, 10.0, 11.0];
 
-        for _ in a.iter_diag(DiagOffset::Below(3)) {
+        for _ in a.diag_iter(DiagOffset::Below(3)) {
 
         }
     }

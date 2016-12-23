@@ -30,11 +30,11 @@ impl<T> Matrix<T> where T: Any + Float
     /// # Failures
     ///
     /// - Matrix cannot be LUP decomposed.
-    pub fn lup_decomp(&self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
+    pub fn lup_decomp(self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
         let n = self.cols;
         assert!(self.rows == n, "Matrix must be square for LUP decomposition.");
         let mut l = Matrix::<T>::zeros(n, n);
-        let mut u = self.clone();
+        let mut u = self;
         let mut p = Matrix::<T>::identity(n);
 
         for index in 0..n {

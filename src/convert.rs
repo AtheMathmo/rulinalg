@@ -18,7 +18,9 @@ impl<T> From<Vec<T>> for Vector<T> {
     }
 }
 
-impl<'a, T> From<&'a [T]> for Vector<T> where T: Clone {
+impl<'a, T> From<&'a [T]> for Vector<T>
+    where T: Clone
+{
     fn from(slice: &'a [T]) -> Self {
         Vector::new(slice.to_owned())
     }
@@ -34,7 +36,7 @@ macro_rules! impl_matrix_from {
     ($slice_type:ident) => {
         impl<'a, T: Copy> From<$slice_type<'a, T>> for Matrix<T> {
             fn from(slice: $slice_type<'a, T>) -> Self {
-                slice.iter_rows().collect::<Matrix<T>>()
+                slice.row_iter().collect::<Matrix<T>>()
             }
         }
     }
@@ -74,12 +76,14 @@ impl<T: ToPrimitive> Matrix<T> {
     ///   the new type.
     pub fn try_into<U: NumCast>(self) -> Result<Matrix<U>, Error> {
         let (m, n) = (self.rows(), self.cols());
-        let ref make_error = || Error::new(ErrorKind::ScalarConversionFailure,
-                                       "Failed to convert between scalar types.");
+        let ref make_error = || {
+            Error::new(ErrorKind::ScalarConversionFailure,
+                       "Failed to convert between scalar types.")
+        };
         let converted_data = self.into_vec()
-                                 .into_iter()
-                                 .map(|x| U::from(x).ok_or_else(make_error))
-                                 .collect::<Result<Vec<_>, Error>>();
+            .into_iter()
+            .map(|x| U::from(x).ok_or_else(make_error))
+            .collect::<Result<Vec<_>, Error>>();
 
         Ok(Matrix::<U>::new(m, n, try!(converted_data)))
     }
@@ -151,7 +155,7 @@ mod tests {
         }
 
         {
-            let x: Matrix<u8>  = matrix![];
+            let x: Matrix<u8> = matrix![];
             let y: Matrix<u64> = x.try_into().unwrap();
             assert_matrix_eq!(y, matrix![]);
         }
@@ -194,13 +198,13 @@ mod tests {
             // large absolute value. Yet, Rust will cast and round as necessary,
             // so we only check that the result is Ok.
             {
-                let x: Matrix<i64> = matrix![ 1, 2, i64::max_value()];
+                let x: Matrix<i64> = matrix![1, 2, i64::max_value()];
                 let y_result = x.try_into::<f64>();
                 assert!(y_result.is_ok());
             }
 
             {
-                let x: Matrix<i64> = matrix![ 1, 2, i64::min_value()];
+                let x: Matrix<i64> = matrix![1, 2, i64::min_value()];
                 let y_result = x.try_into::<f64>();
                 assert!(y_result.is_ok());
             }
@@ -224,7 +228,7 @@ mod tests {
             // large absolute value. Yet, Rust will cast and round as necessary,
             // so we only check that the result is Ok.
             {
-                let x: Matrix<u64> = matrix![ 1, 2, u64::max_value()];
+                let x: Matrix<u64> = matrix![1, 2, u64::max_value()];
                 let y_result = x.try_into::<f64>();
                 assert!(y_result.is_ok());
             }

@@ -7,6 +7,7 @@ use std::ops::{Mul, Add, Div, Sub, Index, IndexMut, Neg, MulAssign, DivAssign, S
 use libnum::{One, Zero, Float, FromPrimitive};
 use std::cmp::PartialEq;
 use std::fmt;
+use std::iter::FromIterator;
 use std::slice::{Iter, IterMut};
 use std::vec::IntoIter;
 
@@ -44,6 +45,29 @@ impl<T> Vector<T> {
         }
     }
 
+    /// Constructor for Vector struct that takes a function `f`
+    /// and constructs a new vector such that `V_i = f(i)`,
+    /// where `i` is the index.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::vector::Vector;
+    ///
+    /// let v = Vector::from_fn(4, |x| x * 3);
+    /// assert_eq!(v, Vector::new(vec![0, 3, 6, 9]));
+    /// ```
+    pub fn from_fn<F>(size: usize, mut f: F) -> Vector<T>
+        where F: FnMut(usize) -> T {
+
+        let data: Vec<T> = (0..size).into_iter().map(|x| f(x)).collect();
+
+        Vector {
+            size: size,
+            data: data,
+        }
+    }
+
     /// Returns the size of the Vector.
     pub fn size(&self) -> usize {
         self.size
@@ -74,6 +98,18 @@ impl<T> Vector<T> {
         self.mut_data().iter_mut()
     }
 
+    /// Returns a pointer to the element at the given index, without doing
+    /// bounds checking.
+    pub unsafe fn get_unchecked(&self, index: usize) -> &T {
+        self.data.get_unchecked(index)
+    }
+
+    /// Returns an unsafe mutable pointer to the element at the given index,
+    /// without doing bounds checking.
+    pub unsafe fn get_unchecked_mut(&mut self, index: usize) -> &mut T {
+        self.data.get_unchecked_mut(index)
+    }
+
 }
 
 impl<T> Into<Vec<T>> for Vector<T> {
@@ -97,6 +133,13 @@ impl<'a, T> IntoIterator for &'a Vector<T> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
+    }
+}
+
+impl<T> FromIterator<T> for Vector<T> {
+    fn from_iter<I>(iter: I) -> Self where I: IntoIterator<Item=T> {
+        let values: Vec<T> = iter.into_iter().collect();
+        Vector::new(values)
     }
 }
 
@@ -840,6 +883,25 @@ mod tests {
     }
 
     #[test]
+    fn create_vector_from_fn() {
+        let v1 = Vector::from_fn(3, |x| x + 1);
+        assert_eq!(v1, Vector::new(vec![1, 2, 3]));
+
+        let v2 = Vector::from_fn(3, |x| x as f64);
+        assert_eq!(v2, Vector::new(vec![0., 1., 2.]));
+
+        let mut z = 0;
+        let v3 = Vector::from_fn(3, |x| { z += 1; x + z });
+        assert_eq!(v3, Vector::new(vec![0 + 1, 1 + 2, 2 + 3]));
+
+        let v4 = Vector::from_fn(3, move |x| x + 1);
+        assert_eq!(v4, Vector::new(vec![1, 2, 3]));
+
+        let v5 = Vector::from_fn(0, |x| x);
+        assert_eq!(v5, Vector::new(vec![]));
+    }
+
+    #[test]
     fn create_vector_zeros() {
         let a = Vector::<f32>::zeros(7);
 
@@ -1170,6 +1232,18 @@ mod tests {
     }
 
     #[test]
+    fn vector_from_iter() {
+        let v1: Vector<usize> = (2..5).collect();
+        let exp1 = Vector::new(vec![2, 3, 4]);
+        assert_eq!(v1, exp1);
+
+        let orig: Vec<f64> = vec![2., 3., 4.];
+        let v2: Vector<f64> = orig.iter().map(|x| x + 1.).collect();
+        let exp2 = Vector::new(vec![3., 4., 5.]);
+        assert_eq!(v2, exp2);
+    }
+
+    #[test]
     fn vector_index_mut() {
         let our_vec = vec![1., 2., 3., 4.];
         let mut our_vector = Vector::new(our_vec.clone());
@@ -1179,5 +1253,21 @@ mod tests {
         }
 
         assert_eq!(our_vector.into_vec(), vec![2., 3., 4., 5.]);
+    }
+
+    #[test]
+    fn vector_get_unchecked() {
+        let v1 = Vector::new(vec![1, 2, 3]);
+        unsafe {
+            assert_eq!(v1.get_unchecked(1), &2);
+        }
+
+        let mut v2 = Vector::new(vec![1, 2, 3]);
+
+        unsafe {
+            let elem = v2.get_unchecked_mut(1);
+            *elem = 4;
+        }
+        assert_eq!(v2, Vector::new(vec![1, 4, 3]));
     }
 }

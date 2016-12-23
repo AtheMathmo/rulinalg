@@ -37,7 +37,7 @@ pub enum Axes {
 /// The `Matrix` struct.
 ///
 /// Can be instantiated with any type.
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Matrix<T> {
     rows: usize,
     cols: usize,
@@ -96,7 +96,7 @@ pub struct MatrixSliceMut<'a, T: 'a> {
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct Row<'a, T: 'a> {
-    row: MatrixSlice<'a, T>
+    row: MatrixSlice<'a, T>,
 }
 
 /// Mutable row of a matrix.
@@ -126,36 +126,29 @@ pub struct Row<'a, T: 'a> {
 /// ```
 #[derive(Debug)]
 pub struct RowMut<'a, T: 'a> {
-    row: MatrixSliceMut<'a, T>
+    row: MatrixSliceMut<'a, T>,
 }
 
 
-//
 // MAYBE WE SHOULD MOVE SOME OF THIS STUFF OUT
 //
 
 impl<'a, T: 'a> Row<'a, T> {
     /// Returns the row as a slice.
     pub fn raw_slice(&self) -> &'a [T] {
-        unsafe {
-            std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols())
-        }
+        unsafe { std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols()) }
     }
 }
 
 impl<'a, T: 'a> RowMut<'a, T> {
     /// Returns the row as a slice.
     pub fn raw_slice(&self) -> &'a [T] {
-        unsafe {
-            std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols())
-        }
+        unsafe { std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols()) }
     }
 
     /// Returns the row as a slice.
     pub fn raw_slice_mut(&mut self) -> &'a mut [T] {
-        unsafe {
-            std::slice::from_raw_parts_mut(self.row.as_mut_ptr(), self.row.cols())
-        }
+        unsafe { std::slice::from_raw_parts_mut(self.row.as_mut_ptr(), self.row.cols()) }
     }
 }
 
@@ -203,7 +196,7 @@ pub struct RowsMut<'a, T: 'a> {
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct Column<'a, T: 'a> {
-    col: MatrixSlice<'a, T>
+    col: MatrixSlice<'a, T>,
 }
 
 /// Mutable column of a matrix.
@@ -232,7 +225,7 @@ pub struct Column<'a, T: 'a> {
 /// ```
 #[derive(Debug)]
 pub struct ColumnMut<'a, T: 'a> {
-    col: MatrixSliceMut<'a, T>
+    col: MatrixSliceMut<'a, T>,
 }
 
 /// Diagonal offset (used by Diagonal iterator).
@@ -347,17 +340,6 @@ impl<T> Matrix<T> {
     /// Consumes the Matrix and returns the Vec of data.
     pub fn into_vec(self) -> Vec<T> {
         self.data
-    }
-}
-
-impl<T: Clone> Clone for Matrix<T> {
-    /// Clones the Matrix.
-    fn clone(&self) -> Matrix<T> {
-        Matrix {
-            rows: self.rows,
-            cols: self.cols,
-            data: self.data.clone(),
-        }
     }
 }
 
@@ -598,7 +580,7 @@ impl<T: Any + Float> Matrix<T> {
     ///
     /// - The matrix cannot be decomposed into an LUP form to solve.
     /// - There is no valid solution as the matrix is singular.
-    pub fn solve(&self, y: Vector<T>) -> Result<Vector<T>, Error> {
+    pub fn solve(self, y: Vector<T>) -> Result<Vector<T>, Error> {
         let (l, u, p) = try!(self.lup_decomp());
 
         let b = try!(forward_substitution(&l, p * y));
@@ -613,7 +595,7 @@ impl<T: Any + Float> Matrix<T> {
     /// use rulinalg::matrix::Matrix;
     ///
     /// let a = Matrix::new(2,2, vec![2.,3.,1.,2.]);
-    /// let inv = a.inverse().expect("This matrix should have an inverse!");
+    /// let inv = a.clone().inverse().expect("This matrix should have an inverse!");
     ///
     /// let I = a * inv;
     ///
@@ -628,8 +610,10 @@ impl<T: Any + Float> Matrix<T> {
     ///
     /// - The matrix could not be LUP decomposed.
     /// - The matrix has zero determinant.
-    pub fn inverse(&self) -> Result<Matrix<T>, Error> {
-        assert!(self.rows == self.cols, "Matrix is not square.");
+    pub fn inverse(self) -> Result<Matrix<T>, Error> {
+        let rows = self.rows;
+        let cols = self.cols;
+        assert!(rows == cols, "Matrix is not square.");
 
         let mut inv_t_data = Vec::<T>::new();
         let (l, u, p) = try!(self.lup_decomp().map_err(|_| {
@@ -651,8 +635,8 @@ impl<T: Any + Float> Matrix<T> {
                                   "Matrix is singular and cannot be inverted."));
         }
 
-        for i in 0..self.rows {
-            let mut id_col = vec![T::zero(); self.cols];
+        for i in 0..rows {
+            let mut id_col = vec![T::zero(); cols];
             id_col[i] = T::one();
 
             let b = forward_substitution(&l, &p * Vector::new(id_col))
@@ -663,7 +647,7 @@ impl<T: Any + Float> Matrix<T> {
 
         }
 
-        Ok(Matrix::new(self.rows, self.cols, inv_t_data).transpose())
+        Ok(Matrix::new(rows, cols, inv_t_data).transpose())
     }
 
     /// Computes the determinant of the matrix.
@@ -684,7 +668,7 @@ impl<T: Any + Float> Matrix<T> {
     /// # Panics
     ///
     /// - The matrix is not square.
-    pub fn det(&self) -> T {
+    pub fn det(self) -> T {
         assert!(self.rows == self.cols, "Matrix is not square.");
 
         let n = self.cols;
@@ -714,7 +698,9 @@ impl<T: Any + Float> Matrix<T> {
             let (l, u, p) = match self.lup_decomp() {
                 Ok(x) => x,
                 Err(ref e) if *e.kind() == ErrorKind::DivByZero => return T::zero(),
-                _ => { panic!("Could not compute LUP decomposition."); }
+                _ => {
+                    panic!("Could not compute LUP decomposition.");
+                }
             };
 
             let mut d = T::one();
@@ -807,7 +793,7 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
           M: BaseMatrix<T>
 {
     if m.is_empty() {
-        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."))
+        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."));
     }
 
     let mut x = vec![T::zero(); y.size()];
@@ -820,9 +806,7 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
             }
 
             let diag = *m.get_unchecked([i, i]);
-            if diag.abs() < T::min_positive_value() +
-                T::min_positive_value()
-            {
+            if diag.abs() < T::min_positive_value() + T::min_positive_value() {
                 return Err(Error::new(ErrorKind::AlgebraFailure,
                                       "Linear system cannot be solved (matrix is singular)."));
             }
@@ -839,7 +823,7 @@ fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
           M: BaseMatrix<T>
 {
     if m.is_empty() {
-        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."))
+        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."));
     }
 
     let mut x = Vec::with_capacity(y.size());
@@ -882,8 +866,8 @@ fn parity<T, M>(m: &M) -> T
                 visited[next] = true;
                 unsafe {
                     next = utils::find(&m.row_unchecked(next)
-                                    .raw_slice(),
-                                T::one());
+                                           .raw_slice(),
+                                       T::one());
                 }
             }
 
@@ -921,15 +905,15 @@ mod tests {
 
     #[test]
     fn test_new_mat_from_fn() {
-      let mut counter = 0;
-      let m : Matrix<usize> = Matrix::from_fn(3, 2, |_, _| {
-        let value = counter;
-        counter += 1;
-        value
-      });
-      assert!(m.rows() == 3);
-      assert!(m.cols() == 2);
-      assert!(m.data == vec![0, 1, 2, 3, 4, 5]);
+        let mut counter = 0;
+        let m: Matrix<usize> = Matrix::from_fn(3, 2, |_, _| {
+            let value = counter;
+            counter += 1;
+            value
+        });
+        assert!(m.rows() == 3);
+        assert!(m.cols() == 2);
+        assert!(m.data == vec![0, 1, 2, 3, 4, 5]);
     }
 
     #[test]
