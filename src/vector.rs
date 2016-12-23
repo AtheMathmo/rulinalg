@@ -10,7 +10,8 @@ use std::fmt;
 use std::iter::FromIterator;
 use std::slice::{Iter, IterMut};
 use std::vec::IntoIter;
-use Metric;
+
+use norm::{VectorNorm, VectorMetric};
 use utils;
 
 /// The Vector struct.
@@ -379,6 +380,45 @@ impl<T: Copy + Div<T, Output = T>> Vector<T> {
     }
 }
 
+impl<T: Float> Vector<T> {
+    /// Compute vector norm for vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::vector::Vector;
+    /// use rulinalg::norm::Euclidean;
+    ///
+    /// let a = Vector::new(vec![3.0,4.0]);
+    /// let c = a.norm(Euclidean);
+    ///
+    /// assert_eq!(c, 5.0);
+    /// ```
+    pub fn norm<N: VectorNorm<T>>(&self, norm: N) -> T {
+        norm.norm(self)
+    }
+
+    /// Compute metric distance between two vectors.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::vector::Vector;
+    /// use rulinalg::norm::Euclidean;
+    ///
+    /// let a = Vector::new(vec![3.0, 4.0]);
+    /// let b = Vector::new(vec![0.0, 8.0]);
+    ///
+    /// // Compute the square root of the sum of
+    /// // elementwise squared-differences
+    /// let c = a.metric(&b, Euclidean);
+    /// assert_eq!(c, 5.0);
+    /// ```
+    pub fn metric<M: VectorMetric<T>>(&self, v: &Vector<T>, m: M) -> T {
+        m.metric(self, v)
+    }
+}
+
 impl<T: Float + FromPrimitive> Vector<T> {
     /// The mean of the vector.
     ///
@@ -742,31 +782,6 @@ impl<T> IndexMut<usize> for Vector<T> {
     }
 }
 
-impl<T: Float> Metric<T> for Vector<T> {
-    /// Compute euclidean norm for vector.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::vector::Vector;
-    /// use rulinalg::Metric;
-    ///
-    /// let a = Vector::new(vec![3.0,4.0]);
-    /// let c = a.norm();
-    ///
-    /// assert_eq!(c, 5.0);
-    /// ```
-    fn norm(&self) -> T {
-        let mut s = T::zero();
-
-        for u in &self.data {
-            s = s + (*u) * (*u);
-        }
-
-        s.sqrt()
-    }
-}
-
 macro_rules! impl_op_assign_vec_scalar (
     ($assign_trt:ident, $trt:ident, $op:ident, $op_assign:ident, $doc:expr) => (
 
@@ -828,7 +843,7 @@ impl_op_assign_vec!(SubAssign, Sub, sub, sub_assign, "subtraction");
 #[cfg(test)]
 mod tests {
     use super::Vector;
-    use super::super::Metric;
+    use norm::Euclidean;
 
     #[test]
     fn test_display() {
@@ -1112,10 +1127,10 @@ mod tests {
     }
 
     #[test]
-    fn vector_norm() {
+    fn vector_euclidean_norm() {
         let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
 
-        let b = a.norm();
+        let b = a.norm(Euclidean);
 
         assert_eq!(b, (1. + 4. + 9. + 16. + 25. + 36. as f32).sqrt());
     }
