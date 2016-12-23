@@ -4,7 +4,42 @@ use std::mem;
 
 use super::{Matrix, MatrixSlice, MatrixSliceMut};
 use super::{Row, RowMut, Rows, RowsMut, Diagonal, DiagonalMut};
-use super::slice::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
+use super::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
+
+macro_rules! impl_slice_iter (
+    ($slice_iter:ident, $data_type:ty) => (
+/// Iterates over the matrix slice data in row-major order.
+impl<'a, T> Iterator for $slice_iter<'a, T> {
+    type Item = $data_type;
+
+    fn next(&mut self) -> Option<$data_type> {
+// Set the position of the next element
+        if self.row_pos < self.slice_rows {
+            unsafe {
+                let iter_ptr = self.slice_start.offset((
+                                self.row_pos * self.row_stride + self.col_pos)
+                                as isize);
+
+// If end of row, set to start of next row
+                if self.col_pos == self.slice_cols - 1 {
+                    self.row_pos += 1usize;
+                    self.col_pos = 0usize;
+                } else {
+                    self.col_pos += 1usize;
+                }
+
+                Some(mem::transmute(iter_ptr))
+            }
+        } else {
+            None
+        }
+    }
+}
+    );
+);
+
+impl_slice_iter!(SliceIter, &'a T);
+impl_slice_iter!(SliceIterMut, &'a mut T);
 
 macro_rules! impl_diag_iter (
     ($diag:ident, $diag_base:ident, $diag_type:ty, $as_ptr:ident) => (
@@ -336,7 +371,7 @@ impl<'a, T> IntoIterator for &'a mut MatrixSliceMut<'a, T> {
 #[cfg(test)]
 mod tests {
     use super::super::{DiagOffset, Matrix, MatrixSlice, MatrixSliceMut};
-    use super::super::slice::{BaseMatrix, BaseMatrixMut};
+    use super::super::{BaseMatrix, BaseMatrixMut};
 
     #[test]
     fn test_diag_offset_equivalence() {

@@ -288,10 +288,7 @@ impl_slice_mul!(MatrixSliceMut, MatrixSliceMut);
 
 #[cfg(test)]
 mod tests {
-    use super::super::Matrix;
-    use super::super::MatrixSlice;
-    use super::super::MatrixSliceMut;
-    use matrix::slice::BaseMatrix;
+    use matrix::{BaseMatrix, Matrix, MatrixSlice, MatrixSliceMut};
 
     #[test]
     fn matrix_mul_f32() {
