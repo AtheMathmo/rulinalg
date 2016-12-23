@@ -704,7 +704,7 @@ impl<'a, T> $assign_trt<Matrix<T>> for MatrixSliceMut<'a, T>
     where T: Copy + $trt<T, Output=T>
 {
     fn $op_assign(&mut self, _rhs: Matrix<T>) {
-        for (mut slice_row, target_row) in self.iter_rows_mut().zip(_rhs.iter_rows()) {
+        for (mut slice_row, target_row) in self.row_iter_mut().zip(_rhs.row_iter()) {
             utils::in_place_vec_bin_op(slice_row.raw_slice_mut(),
                                         target_row.raw_slice(),
                                         |x, &y| {*x = (*x).$op(y) });
@@ -719,8 +719,8 @@ impl<'a, 'b, T> $assign_trt<&'b Matrix<T>> for MatrixSliceMut<'a, T>
     where T: Copy + $trt<T, Output=T>
 {
     fn $op_assign(&mut self, _rhs: &Matrix<T>) {
-        for (mut slice_row, target_row) in self.iter_rows_mut()
-                                        .zip(_rhs.iter_rows()) {
+        for (mut slice_row, target_row) in self.row_iter_mut()
+                                        .zip(_rhs.row_iter()) {
             utils::in_place_vec_bin_op(slice_row.raw_slice_mut(),
                                         target_row.raw_slice(),
                                         |x, &y| {*x = (*x).$op(y) });
@@ -745,8 +745,8 @@ impl<'a, 'b, T> $assign_trt<$target_slice<'b, T>> for MatrixSliceMut<'a, T>
     where T: Copy + $trt<T, Output=T>
 {
     fn $op_assign(&mut self, _rhs: $target_slice<T>) {
-        for (mut slice_row, target_row) in self.iter_rows_mut()
-                                            .zip(_rhs.iter_rows()) {
+        for (mut slice_row, target_row) in self.row_iter_mut()
+                                            .zip(_rhs.row_iter()) {
             utils::in_place_vec_bin_op(slice_row.raw_slice_mut(),
                                         target_row.raw_slice(),
                                         |x, &y| {*x = (*x).$op(y) });
@@ -761,8 +761,8 @@ impl<'a, 'b, 'c, T> $assign_trt<&'c $target_slice<'b, T>> for MatrixSliceMut<'a,
     where T: Copy + $trt<T, Output=T>
 {
     fn $op_assign(&mut self, _rhs: &$target_slice<T>) {
-        for (mut slice_row, target_row) in self.iter_rows_mut()
-                                            .zip(_rhs.iter_rows()) {
+        for (mut slice_row, target_row) in self.row_iter_mut()
+                                            .zip(_rhs.row_iter()) {
             utils::in_place_vec_bin_op(slice_row.raw_slice_mut(),
                                         target_row.raw_slice(),
                                         |x, &y| {*x = (*x).$op(y) });
@@ -786,7 +786,7 @@ macro_rules! impl_op_assign_mat_slice (
 impl<'a, T> $assign_trt<$target_mat<'a, T>> for Matrix<T>
     where T: Copy + $trt<T, Output=T> {
     fn $op_assign(&mut self, _rhs: $target_mat<T>) {
-        for (mut slice_row, target_row) in self.iter_rows_mut().zip(_rhs.iter_rows()) {
+        for (mut slice_row, target_row) in self.row_iter_mut().zip(_rhs.row_iter()) {
             utils::in_place_vec_bin_op(slice_row.raw_slice_mut(),
                                         target_row.raw_slice(),
                                         |x, &y| {*x = (*x).$op(y) });
@@ -800,7 +800,7 @@ impl<'a, T> $assign_trt<$target_mat<'a, T>> for Matrix<T>
 impl<'a, 'b, T> $assign_trt<&'b $target_mat<'a, T>> for Matrix<T>
     where T: Copy + $trt<T, Output=T> {
     fn $op_assign(&mut self, _rhs: &$target_mat<T>) {
-        for (mut slice_row, target_row) in self.iter_rows_mut().zip(_rhs.iter_rows()) {
+        for (mut slice_row, target_row) in self.row_iter_mut().zip(_rhs.row_iter()) {
             utils::in_place_vec_bin_op(slice_row.raw_slice_mut(),
                                         target_row.raw_slice(),
                                         |x, &y| {*x = (*x).$op(y) });
