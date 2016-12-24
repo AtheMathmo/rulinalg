@@ -1,6 +1,6 @@
 [package]
 name = "rulinalg"
-version = "0.3.7"
+version = "0.4.0"
 authors = ["AtheMathmo"]
 
 description = "A linear algebra library."
@@ -12,7 +12,7 @@ license = "MIT"
 
 [dependencies]
 num = {version = "0.1.36", default-features = false }
-matrixmultiply = "0.1.8"
+matrixmultiply = "0.1.13"
 
 [dev-dependencies]
 rand = "0.3"
