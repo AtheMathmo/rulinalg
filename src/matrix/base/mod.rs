@@ -494,6 +494,7 @@ pub trait BaseMatrix<T>: Sized {
                 }
                 Vector::new(maxs)
             },
+
             Axes::Row => {
                 let mut maxs: Vec<T> = self.row(0).raw_slice().into();
                 for row in self.row_iter().skip(0) {
