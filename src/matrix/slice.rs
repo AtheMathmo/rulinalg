@@ -1,5 +1,4 @@
 use matrix::{Matrix, MatrixSlice, MatrixSliceMut};
-
 use std::marker::PhantomData;
 
 impl<'a, T> MatrixSlice<'a, T> {
