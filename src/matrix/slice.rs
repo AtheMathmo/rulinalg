@@ -469,6 +469,51 @@ pub trait BaseMatrix<T>: Sized {
         }
     }
 
+    /// Select rows from matrix into pre-allocated buffer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    ///
+    /// let a = Matrix::new(3, 3, (1..10).collect::<Vec<usize>>());
+    ///
+    /// let mut b = vec![0; 3];
+    /// a.select_rows_into(&[2], &mut b);
+    /// assert_eq!(&b, &[7, 8, 9]);
+    ///
+    /// let mut c = vec![0; 6];
+    /// a.select_rows_into(&[1,2], &mut c);
+    /// assert_eq!(&c, &[4, 5, 6, 7, 8, 9]);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// - Panics if row indices exceed the matrix dimensions.
+    /// - Panics if the target buffer has the wrong length.
+    fn select_rows_into<'a, I>(&self, rows: I, buffer: &mut [T])
+        where T: Copy,
+              I: IntoIterator<Item=&'a usize>,
+              I::IntoIter: ExactSizeIterator + Clone
+    {
+        let row_iter = rows.into_iter();
+        assert!(buffer.len() == row_iter.len() * self.cols(),
+            "buffer is incorrectly sized");
+
+        for row in row_iter.clone() {
+            assert!(*row < self.rows(),
+                    "Row index is greater than number of rows.");
+        }
+
+        let buffer_chunks = buffer.chunks_mut(self.cols());
+        for (row, chunk) in row_iter.clone().zip(buffer_chunks) {
+            unsafe {
+                let slice = self.get_row_unchecked(*row);
+                chunk.copy_from_slice(slice);
+            }
+        }
+    }
+
     /// Select columns from matrix
     ///
     /// # Examples
