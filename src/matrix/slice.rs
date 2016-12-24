@@ -146,14 +146,8 @@ impl<'a, T> MatrixSliceMut<'a, T> {
 
 #[cfg(test)]
 mod tests {
-<<<<<<< d8addee77053e8af52a8d5c6c7824ed8d76a23d4
-    use matrix::{BaseMatrix};
-    use matrix::{Matrix, MatrixSlice, MatrixSliceMut};
-=======
-    use super::{BaseMatrix, BaseMatrixMut};
-    use matrix::{Matrix, MatrixSlice, MatrixSliceMut, Axes, DiagOffset};
+    use matrix::{Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix, Axes};
     use vector::Vector;
->>>>>>> add tests
 
     #[test]
     #[should_panic]
@@ -189,23 +183,23 @@ mod tests {
 
     #[test]
     fn matrix_min_max() {
-        let a = matrix!(1., 3., 5., 4.;
+        let a = matrix![1., 3., 5., 4.;
                         2., 4., 7., 1.;
-                        1., 1., 0., 0.);
+                        1., 1., 0., 0.];
         assert_eq!(a.min(Axes::Col), Vector::new(vec![1., 1., 0.]));
         assert_eq!(a.min(Axes::Row), Vector::new(vec![1., 1., 0., 0.]));
 
         assert_eq!(a.max(Axes::Col), Vector::new(vec![5., 7., 1.]));
         assert_eq!(a.max(Axes::Row), Vector::new(vec![2., 4., 7., 4.]));
 
-        let r = matrix!(1., 3., 5., 4.);
+        let r = matrix![1., 3., 5., 4.];
         assert_eq!(r.min(Axes::Col), Vector::new(vec![1.]));
         assert_eq!(r.min(Axes::Row), Vector::new(vec![1., 3., 5., 4.]));
 
         assert_eq!(r.max(Axes::Col), Vector::new(vec![5.]));
         assert_eq!(r.max(Axes::Row), Vector::new(vec![1., 3., 5., 4.]));
 
-        let c = matrix!(1.; 2.; 3.);
+        let c = matrix![1.; 2.; 3.];
         assert_eq!(c.min(Axes::Col), Vector::new(vec![1., 2., 3.]));
         assert_eq!(c.min(Axes::Row), Vector::new(vec![1.]));
 
