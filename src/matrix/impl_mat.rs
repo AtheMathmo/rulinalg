@@ -541,7 +541,7 @@ impl<T: fmt::Display> fmt::Display for Matrix<T> {
 #[cfg(test)]
 mod tests {
     use vector::Vector;
-    use matrix::{BaseMatrix, Matrix};
+    use matrix::{Axes, BaseMatrix, Matrix};
     use libnum::abs;
 
     #[test]
@@ -789,8 +789,6 @@ mod tests {
 
     #[test]
     fn test_empty_mean() {
-        use super::Axes;
-
         let a: Matrix<f64> = matrix!();
 
         let c = a.mean(Axes::Row);
@@ -802,8 +800,6 @@ mod tests {
 
     #[test]
     fn test_invalid_variance() {
-        use super::Axes;
-
         // Only one row
         let a: Matrix<f32> = matrix!(1.0, 2.0);
 
