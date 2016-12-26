@@ -39,6 +39,7 @@ depreciated.
 `eigendecomp`, `lup_decomp`, `solve`, `inverse` and `det`.
 - The `get_row` no longer returns a `&[T]`. Instead it returns the new `Row` type.
 - Row iterator no longer has a `&[T]` item. Instead if uses the new `Row` type.
+- Moved the `BaseMatrix` and `BaseMatrixMut` traits to a new `matrix/base` module.
 
 ### Features
 
@@ -62,6 +63,7 @@ depreciated.
 
 - The `swap_rows` and `swap_cols` functions are now no-ops if given two identical
 indices.
+- Splitting out the `slice` module for developer QOL.
 
 ## 0.3.7
 
