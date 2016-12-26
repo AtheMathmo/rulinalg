@@ -1,5 +1,5 @@
 use rulinalg::matrix::Matrix;
-use rulinalg::matrix::slice::{BaseMatrix, BaseMatrixMut};
+use rulinalg::matrix::{BaseMatrix, BaseMatrixMut};
 use test::Bencher;
 use test::black_box;
 
