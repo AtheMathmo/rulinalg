@@ -4,12 +4,12 @@ This document will be used to keep track of changes made between release version
 
 ## 0.4.0
 
-This release includes mostly quality of life changes for users of rulinalg. We do some work to confirm more to community
+This release includes mostly quality of life changes for users of rulinalg. We do some work to conform more to community
 standards with naming, for example `iter_rows` becoming `row_iter`. Additionally several `Matrix` functions now consume `self`
 where before they took a reference and immediately cloned `self`.
 
-Another noticable change is the addition of new `Row` and `Column` types. These types are returns by functions which access
-single rows and columns in a matrix. With these new types we aim to make it easy for users to do matrix operations on single
+Another noticable change is the addition of new `Row` and `Column` types. These types are returned by functions which access
+single rows or columns in a matrix. With these new types we aim to make it easy for users to do matrix operations on single
 rows and columns while maintaining performance where necessary.
 
 This release also welcomes an overhaul of the `Metric` trait. This trait didn't really make sense and only allowed computation
