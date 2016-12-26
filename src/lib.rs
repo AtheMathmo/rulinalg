@@ -65,9 +65,9 @@
 //! # fn main() {
 //! // Construct a 3x3 matrix of f64
 //! // Commas separate columns and semi-colons separate rows
-//! let mat = matrix!(1.0, 2.0, 3.0;
+//! let mat = matrix![1.0, 2.0, 3.0;
 //!                   4.0, 5.0, 6.0;
-//!                   7.0, 8.0, 9.0);
+//!                   7.0, 8.0, 9.0];
 //! # }
 //! ```
 //!

@@ -17,9 +17,9 @@
 ///
 /// # fn main() {
 /// // Construct a 3x3 matrix of f64
-/// let mat = matrix!(1.0, 2.0, 3.0;
+/// let mat = matrix![1.0, 2.0, 3.0;
 ///                   4.0, 5.0, 6.0;
-///                   7.0, 8.0, 9.0);
+///                   7.0, 8.0, 9.0];
 /// # }
 /// ```
 ///
@@ -33,11 +33,11 @@
 /// use rulinalg::matrix::Matrix;
 ///
 /// // Construct a 2x3 matrix of f32
-/// let mat: Matrix<f32> = matrix!(1.0, 2.0, 3.0;
-///                                4.0, 5.0, 6.0);
+/// let mat: Matrix<f32> = matrix![1.0, 2.0, 3.0;
+///                                4.0, 5.0, 6.0];
 /// // Or
-/// let mat = matrix!(1.0, 2.0, 3.0;
-///                   4.0, 5.0, 6.0f32);
+/// let mat = matrix![1.0, 2.0, 3.0;
+///                   4.0, 5.0, 6.0f32];
 /// # }
 /// ```
 ///
@@ -73,8 +73,8 @@ mod tests {
     fn matrix_macro() {
         {
             // An arbitrary rectangular matrix
-            let mat = matrix!(1, 2, 3;
-                              4, 5, 6);
+            let mat = matrix![1, 2, 3;
+                              4, 5, 6];
             assert_eq!(2, mat.rows());
             assert_eq!(3, mat.cols());
             assert_eq!(&vec![1, 2, 3, 4, 5, 6], mat.data());
@@ -82,7 +82,7 @@ mod tests {
 
         {
             // A single row
-            let mat = matrix!(1, 2, 3);
+            let mat = matrix![1, 2, 3];
             assert_eq!(1, mat.rows());
             assert_eq!(3, mat.cols());
             assert_eq!(&vec![1, 2, 3], mat.data());
@@ -90,7 +90,7 @@ mod tests {
 
         {
             // A single element
-            let mat = matrix!(1);
+            let mat = matrix![1];
             assert_eq!(1, mat.rows());
             assert_eq!(1, mat.cols());
             assert_eq!(&vec![1], mat.data());
@@ -98,9 +98,9 @@ mod tests {
 
         {
             // A floating point matrix
-            let mat = matrix!(1.0, 2.0, 3.0;
+            let mat = matrix![1.0, 2.0, 3.0;
                               4.0, 5.0, 6.0;
-                              7.0, 8.0, 9.0);
+                              7.0, 8.0, 9.0];
             let ref expected_data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
             assert_eq!(3, mat.rows());
             assert_eq!(3, mat.cols());

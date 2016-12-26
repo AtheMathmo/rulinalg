@@ -371,7 +371,7 @@ mod tests {
 
     #[test]
     fn test_2_by_2_matrix_eigenvalues() {
-        let a = matrix!(1., 2.; 3., 4.);
+        let a = matrix![1., 2.; 3., 4.];
         // characteristic polynomial is λ² − 5λ − 2 = 0
         assert_eq!(vec![(5. - (33.0f32).sqrt()) / 2., (5. + (33.0f32).sqrt()) / 2.],
                    a.eigenvalues().unwrap());
@@ -387,7 +387,7 @@ mod tests {
     #[test]
     fn test_2_by_2_matrix_complex_eigenvalues() {
         // This test currently fails - complex eigenvalues would be nice though!
-        let a = matrix!(1., -3.; 1., 1.);
+        let a = matrix![1., -3.; 1., 1.];
         // characteristic polynomial is λ² − λ + 4 = 0
 
         // Decomposition will fail
@@ -396,7 +396,7 @@ mod tests {
 
     #[test]
     fn test_2_by_2_matrix_eigendecomp() {
-        let a = matrix!(20., 4.; 20., 16.);
+        let a = matrix![20., 4.; 20., 16.];
         let (eigenvals, eigenvecs) = a.clone().eigendecomp().unwrap();
 
         let lambda_1 = eigenvals[0];
@@ -412,9 +412,9 @@ mod tests {
 
     #[test]
     fn test_3_by_3_eigenvals() {
-        let a = matrix!(17f64, 22., 27.;
+        let a = matrix![17f64, 22., 27.;
                         22., 29., 36.;
-                        27., 36., 45.);
+                        27., 36., 45.];
 
         let eigs = a.clone().eigenvalues().unwrap();
 
@@ -429,11 +429,11 @@ mod tests {
 
     #[test]
     fn test_5_by_5_eigenvals() {
-        let a = matrix!(1f64, 2.0, 3.0, 4.0, 5.0;
+        let a = matrix![1f64, 2.0, 3.0, 4.0, 5.0;
                         2.0, 4.0, 1.0, 2.0, 1.0;
                         3.0, 1.0, 7.0, 1.0, 1.0;
                         4.0, 2.0, 1.0, -1.0, 3.0;
-                        5.0, 1.0, 1.0, 3.0, 2.0);
+                        5.0, 1.0, 1.0, 3.0, 2.0];
 
         let eigs = a.eigenvalues().unwrap();
 
