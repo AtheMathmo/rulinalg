@@ -43,6 +43,31 @@ impl<T> Vector<T> {
         }
     }
 
+    /// Constructor for Vector struct that takes a function `f`
+    /// and constructs a new vector such that `X_i = f(i)`,
+    /// where `i` is the index.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::vector::Vector;
+    ///
+    /// // Let's assume you have function (such as `sin(x)`) based upon
+    /// // which you want to generate a vector:
+    /// let vector: Vector<f64> = Vector::from_fn(10, |idx| {
+    ///     (idx as f64).sin()
+    /// });
+    /// ```
+    pub fn from_fn<F>(size: usize, mut f: F) -> Vector<T>
+        where F: FnMut(usize) -> T
+    {
+        let mut data = Vec::with_capacity(size);
+        for idx in 0..size {
+            data.push(f(idx));
+        }
+        Vector::new(data)
+    }
+
     /// Returns the size of the Vector.
     pub fn size(&self) -> usize {
         self.size
