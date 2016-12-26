@@ -67,8 +67,7 @@ macro_rules! matrix {
 
 #[cfg(test)]
 mod tests {
-    use matrix::slice::BaseMatrix;
-    use matrix::Matrix;
+    use matrix::{Matrix, BaseMatrix};
 
     #[test]
     fn matrix_macro() {

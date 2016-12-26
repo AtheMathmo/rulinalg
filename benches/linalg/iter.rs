@@ -1,5 +1,5 @@
 use rulinalg::matrix::{Matrix, DiagOffset};
-use rulinalg::matrix::slice::BaseMatrix;
+use rulinalg::matrix::BaseMatrix;
 use test::Bencher;
 use test::black_box;
 
