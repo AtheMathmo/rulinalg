@@ -847,24 +847,24 @@ mod tests {
 
     #[test]
     fn test_display() {
-        let v = Vector::new(vec![1, 2, 3, 4]);
+        let v = vector![1, 2, 3, 4];
         assert_eq!(format!("{}", v), "[ 1, 2, 3, 4]");
 
-        let v2 = Vector::new(vec![3.3, 4.0, 5.0, 6.0]);
+        let v2 = vector![3.3, 4.0, 5.0, 6.0];
         assert_eq!(format!("{}", v2), "[ 3.3, 4, 5, 6]");
         assert_eq!(format!("{:.1}", v2), "[ 3.3, 4.0, 5.0, 6.0]");
     }
 
     #[test]
     fn test_equality() {
-        let v = Vector::new(vec![1, 2, 3, 4]);
+        let v = vector![1, 2, 3, 4];
         let v_redux = v.clone();
         assert_eq!(v, v_redux);
     }
 
     #[test]
     fn create_vector_new() {
-        let a = Vector::new(vec![1.0; 12]);
+        let a = vector![1.0; 12];
 
         assert_eq!(a.size(), 12);
 
@@ -885,17 +885,17 @@ mod tests {
     #[test]
     fn create_vector_from_fn() {
         let v1 = Vector::from_fn(3, |x| x + 1);
-        assert_eq!(v1, Vector::new(vec![1, 2, 3]));
+        assert_eq!(v1, vector![1, 2, 3]);
 
         let v2 = Vector::from_fn(3, |x| x as f64);
-        assert_eq!(v2, Vector::new(vec![0., 1., 2.]));
+        assert_eq!(v2, vector![0., 1., 2.]);
 
         let mut z = 0;
         let v3 = Vector::from_fn(3, |x| { z += 1; x + z });
-        assert_eq!(v3, Vector::new(vec![0 + 1, 1 + 2, 2 + 3]));
+        assert_eq!(v3, vector![0 + 1, 1 + 2, 2 + 3]);
 
         let v4 = Vector::from_fn(3, move |x| x + 1);
-        assert_eq!(v4, Vector::new(vec![1, 2, 3]));
+        assert_eq!(v4, vector![1, 2, 3]);
 
         let v5 = Vector::from_fn(0, |x| x);
         assert_eq!(v5, Vector::new(vec![]));
@@ -914,8 +914,8 @@ mod tests {
 
     #[test]
     fn vector_dot_product() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = Vector::new(vec![3.0; 6]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let b = vector![3.0; 6];
 
         let c = a.dot(&b);
 
@@ -924,7 +924,7 @@ mod tests {
 
     #[test]
     fn vector_f32_mul() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let b = 3.0;
 
         // Allocating new memory
@@ -958,7 +958,7 @@ mod tests {
 
     #[test]
     fn vector_f32_div() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let b = 3.0;
 
         // Allocating new memory
@@ -992,8 +992,8 @@ mod tests {
 
     #[test]
     fn vector_add() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = Vector::new(vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let b = vector![2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
 
         // Allocating new memory
         let c = &a + &b;
@@ -1026,7 +1026,7 @@ mod tests {
 
     #[test]
     fn vector_f32_add() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let b = 2.0;
 
         // Allocating new memory
@@ -1060,8 +1060,8 @@ mod tests {
 
     #[test]
     fn vector_sub() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = Vector::new(vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let b = vector![2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
 
         // Allocating new memory
         let c = &a - &b;
@@ -1094,7 +1094,7 @@ mod tests {
 
     #[test]
     fn vector_f32_sub() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let b = 2.0;
 
         // Allocating new memory
@@ -1128,7 +1128,7 @@ mod tests {
 
     #[test]
     fn vector_euclidean_norm() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
         let b = a.norm(Euclidean);
 
@@ -1234,12 +1234,12 @@ mod tests {
     #[test]
     fn vector_from_iter() {
         let v1: Vector<usize> = (2..5).collect();
-        let exp1 = Vector::new(vec![2, 3, 4]);
+        let exp1 = vector![2, 3, 4];
         assert_eq!(v1, exp1);
 
         let orig: Vec<f64> = vec![2., 3., 4.];
         let v2: Vector<f64> = orig.iter().map(|x| x + 1.).collect();
-        let exp2 = Vector::new(vec![3., 4., 5.]);
+        let exp2 = vector![3., 4., 5.];
         assert_eq!(v2, exp2);
     }
 
@@ -1257,17 +1257,17 @@ mod tests {
 
     #[test]
     fn vector_get_unchecked() {
-        let v1 = Vector::new(vec![1, 2, 3]);
+        let v1 = vector![1, 2, 3];
         unsafe {
             assert_eq!(v1.get_unchecked(1), &2);
         }
 
-        let mut v2 = Vector::new(vec![1, 2, 3]);
+        let mut v2 = vector![1, 2, 3];
 
         unsafe {
             let elem = v2.get_unchecked_mut(1);
             *elem = 4;
         }
-        assert_eq!(v2, Vector::new(vec![1, 4, 3]));
+        assert_eq!(v2, vector![1, 4, 3]);
     }
 }

@@ -388,7 +388,7 @@ pub trait BaseMatrix<T>: Sized {
     /// assert_eq!(c, 2.0);
     /// # }
     /// ```
-    fn metric<'a, 'b, B, M>(&'a self, mat: &'b B, metric: M) -> T 
+    fn metric<'a, 'b, B, M>(&'a self, mat: &'b B, metric: M) -> T
         where B: 'b + BaseMatrix<T>, M: MatrixMetric<'a, 'b, T, Self, B>
     {
         metric.metric(self, mat)

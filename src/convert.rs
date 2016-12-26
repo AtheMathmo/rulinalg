@@ -96,8 +96,8 @@ mod tests {
 
     #[test]
     fn inner_product_as_matrix_multiplication() {
-        let u: Vector<f32> = Vector::new(vec![1., 2., 3.]);
-        let v: Vector<f32> = Vector::new(vec![3., 4., 5.]);
+        let u: Vector<f32> = vector![1., 2., 3.];
+        let v: Vector<f32> = vector![3., 4., 5.];
         let dot_product = u.dot(&v);
 
         let um: Matrix<f32> = u.into();
