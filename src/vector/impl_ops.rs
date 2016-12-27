@@ -1,8 +1,3 @@
-//! The vector module.
-//!
-//! Currently contains all code
-//! relating to the vector linear algebra struct.
-
 use std::ops::{Mul, Add, Div, Sub, Rem,
                MulAssign, AddAssign, DivAssign, SubAssign, RemAssign,
                Neg, Not,
@@ -121,7 +116,9 @@ impl<T: Copy + $trt<T, Output = T>> $trt<Vector<T>> for Vector<T> {
     }
 }
 
-/// Vector addition with Vector reusing current memory.
+/// Vector
+#[doc=$doc]
+/// with Vector reusing current memory.
 impl<'a, T: Copy + $trt<T, Output = T>> $trt<&'a Vector<T>> for Vector<T> {
     type Output = Vector<T>;
 
