@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `assert_matrix_eq` macro in crate `rulinalg`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, assert_matrix_eq">
+
+    <title>rulinalg::assert_matrix_eq - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>rulinalg</a></p><script>window.sidebarCurrent = {name: 'assert_matrix_eq', ty: 'macro', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content macro">
+<h1 class='fqn'><span class='in-band'>Macro <a href='index.html'>rulinalg</a>::<wbr><a class='macro' href=''>assert_matrix_eq</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-5342' class='srclink' href='../src/rulinalg/src/macros/matrix_eq.rs.html#655-732' title='goto source code'>[src]</a></span></h1>
+<pre class='rust macro'>
+<span class='macro'>macro_rules</span><span class='macro'>!</span> <span class='ident'>assert_matrix_eq</span> {
+    (<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>x</span>:<span class='ident'>expr</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>y</span>:<span class='ident'>expr</span>) <span class='op'>=&gt;</span> { ... };
+    (<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>x</span>:<span class='ident'>expr</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>y</span>:<span class='ident'>expr</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>exact</span>) <span class='op'>=&gt;</span> { ... };
+    (<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>x</span>:<span class='ident'>expr</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>y</span>:<span class='ident'>expr</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>abs</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>tol</span>:<span class='ident'>expr</span>) <span class='op'>=&gt;</span> { ... };
+    (<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>x</span>:<span class='ident'>expr</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>y</span>:<span class='ident'>expr</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>ulp</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>tol</span>:<span class='ident'>expr</span>) <span class='op'>=&gt;</span> { ... };
+    (<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>x</span>:<span class='ident'>expr</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>y</span>:<span class='ident'>expr</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>) <span class='op'>=&gt;</span> { ... };
+    (<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>x</span>:<span class='ident'>expr</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>y</span>:<span class='ident'>expr</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>, $(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>key</span>:<span class='ident'>ident</span> <span class='op'>=</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>val</span>:<span class='ident'>expr</span>),<span class='op'>+</span>) <span class='op'>=&gt;</span> { ... };
+}</pre>
+<div class='docblock'><p>Compare matrices for exact or approximate equality.</p>
+
+<p>The <code>assert_matrix_eq!</code> simplifies the comparison of two matrices by
+providing the following features:</p>
+
+<ul>
+<li>Verifies that the dimensions of the matrices match.</li>
+<li>Offers both exact and approximate comparison of individual elements.</li>
+<li>Multiple types of comparators available, depending on the needs of the user.</li>
+<li>Built-in error reporting makes it easy to determine which elements of the two matrices
+that do not compare equal.</li>
+</ul>
+
+<h1 id='usage' class='section-header'><a href='#usage'>Usage</a></h1>
+<p>Given two matrices <code>x</code> and <code>y</code>, the default invocation performs an exact elementwise
+comparison of the two matrices.</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='comment'>// Performs elementwise exact comparison</span>
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+
+<p>An exact comparison is often not desirable. In particular, with floating point types,
+rounding errors or other sources of inaccuracies tend to complicate the matter.
+For this purpose, <code>assert_matrix_eq!</code> provides several comparators.</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='comment'>// Available comparators:</span>
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>exact</span>);
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>);
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>abs</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>1e-12</span>);
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>ulp</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>8</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+
+<p><strong>Note</strong>: The <code>comp</code> argument <em>must</em> be specified after <code>x</code> and <code>y</code>, and cannot come
+after comparator-specific options. This is a deliberate design decision,
+with the rationale that assertions should look as uniform as possible for
+the sake of readability.</p>
+
+<h3 id='the-exact-comparator' class='section-header'><a href='#the-exact-comparator'>The <code>exact</code> comparator</a></h3>
+<p>This comparator simply uses the default <code>==</code> operator to compare each pair of elements.
+The default comparator delegates the comparison to the <code>exact</code> comparator.</p>
+
+<h3 id='the-float-comparator' class='section-header'><a href='#the-float-comparator'>The <code>float</code> comparator</a></h3>
+<p>The <code>float</code> comparator is designed to be a conservative default for comparing floating-point numbers.
+It is inspired by the <code>AlmostEqualUlpsAndAbs</code> comparison function proposed in the excellent blog post
+<a href="https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/">Comparing Floating Point Numbers, 2012 Edition</a>
+by Bruce Dawson.</p>
+
+<p>If you expect the two matrices to be almost exactly the same, but you want to leave some
+room for (very small) rounding errors, then this comparator should be your default choice.</p>
+
+<p>The comparison criterion can be summarized as follows:</p>
+
+<ol>
+<li>If <code>assert_matrix_eq!(x, y, comp = abs, tol = max_eps)</code> holds for <code>max_eps</code> close to the
+machine epsilon for the floating point type,
+then the comparison is successful.</li>
+<li>Otherwise, returns the result of <code>assert_matrix_eq!(x, y, comp = ulp, tol = max_ulp)</code>,
+where <code>max_ulp</code> is a small positive integer constant.</li>
+</ol>
+
+<p>The <code>max_eps</code> and <code>max_ulp</code> parameters can be tweaked to your preference with the syntax:</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>, <span class='ident'>eps</span> <span class='op'>=</span> <span class='ident'>max_eps</span>, <span class='ident'>ulp</span> <span class='op'>=</span> <span class='ident'>max_ulp</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+
+<p>These additional parameters can be specified in any order after the choice of comparator,
+and do not both need to be present.</p>
+
+<h3 id='the-abs-comparator' class='section-header'><a href='#the-abs-comparator'>The <code>abs</code> comparator</a></h3>
+<p>Compares the absolute difference between individual elements against the specified tolerance.
+Specifically, for every pair of elements x and y picked from the same row and column in X and Y
+respectively, the criterion is defined by</p>
+
+<pre><code class="language-text">    | x - y | &lt;= tol.
+</code></pre>
+
+<p>In addition to floating point numbers, the comparator can also be used for integral numbers,
+both signed and unsigned. In order to avoid unsigned underflow, the difference is always
+computed by subtracting the smaller number from the larger number.
+Note that the type of <code>tol</code> is required to be the same as that of the scalar field.</p>
+
+<h3 id='the-ulp-comparator' class='section-header'><a href='#the-ulp-comparator'>The <code>ulp</code> comparator</a></h3>
+<p>Elementwise comparison of floating point numbers based on their
+<a href="https://en.wikipedia.org/wiki/Unit_in_the_last_place">ULP</a> difference.
+Once again, this is inspired by the proposals
+<a href="https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/">in the aforementioned blog post by Bruce Dawon</a>,
+but it handles some cases explicitly as to provide better error reporting.</p>
+
+<p>Note that the ULP difference of two floating point numbers is not defined in the following cases:</p>
+
+<ul>
+<li>The two numbers have different signs. The only exception here is +0 and -0,
+which are considered an exact match.</li>
+<li>One of the numbers is NaN.</li>
+</ul>
+
+<p>ULP-based comparison is typically used when two numbers are expected to be very,
+very close to each other. However, it is typically not very useful very close to zero,
+which is discussed in the linked blog post above.
+The error in many mathematical functions can often be bounded by a certain number of ULP, and so
+this comparator is particularly useful if this number is known.</p>
+
+<p>Note that the scalar type of the matrix must implement the <a href="ulp/trait.Ulp.html">Ulp trait</a> in order
+to be used with this comparator. By default, <code>f32</code> and <code>f64</code> implementations are provided.</p>
+
+<h1 id='error-reporting' class='section-header'><a href='#error-reporting'>Error reporting</a></h1>
+<p>One of the main motivations for the <code>assert_matrix_eq!</code> macro is the ability to give
+useful error messages which help pinpoint the problems. For example, consider the example</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='attribute'>#[<span class='ident'>macro_use</span>]</span>
+<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>rulinalg</span>;
+
+<span class='kw'>fn</span> <span class='ident'>main</span>() {
+    <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.00</span>, <span class='number'>2.00</span>;
+                    <span class='number'>3.00</span>, <span class='number'>4.00</span>];
+    <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.01</span>, <span class='number'>2.00</span>;
+                    <span class='number'>3.40</span>, <span class='number'>4.00</span>];
+    <span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>a</span>, <span class='ident'>b</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>abs</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>1e-8</span>);
+}<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+
+<p>which yields the output</p>
+
+<pre><code class="language-text">Matrices X and Y have 2 mismatched element pairs.
+The mismatched elements are listed below, in the format
+(row, col): x = X[[row, col]], y = Y[[row, col]].
+
+(0, 0): x = 1, y = 1.01. Absolute error: 0.010000000000000009.
+(1, 0): x = 3, y = 3.4. Absolute error: 0.3999999999999999.
+
+Comparison criterion: absolute difference, |x - y| &lt;= 0.00000001.
+</code></pre>
+
+<h1 id='trait-bounds-on-elements' class='section-header'><a href='#trait-bounds-on-elements'>Trait bounds on elements</a></h1>
+<p>Each comparator has specific requirements on which traits the elements
+need to implement. To discover which traits are required for each comparator,
+we refer the reader to implementors of
+<a href="macros/trait.ElementwiseComparator.html">ElementwiseComparator</a>,
+which provides the underlying comparison for the various macro invocations.</p>
+
+<h1 id='examples' class='section-header'><a href='#examples'>Examples</a></h1>
+<pre class='rust rust-example-rendered'>
+<span class='attribute'>#[<span class='ident'>macro_use</span>]</span>
+<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>rulinalg</span>;
+<span class='kw'>use</span> <span class='ident'>rulinalg</span>::<span class='ident'>matrix</span>::<span class='ident'>Matrix</span>;
+
+<span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>;
+                <span class='number'>3</span>, <span class='number'>4i64</span>];
+<span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>3</span>;
+                <span class='number'>3</span>, <span class='number'>4i64</span>];
+
+<span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.000</span>, <span class='number'>2.000</span>,
+                <span class='number'>3.000</span>, <span class='number'>4.000f64</span>];
+<span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>0.999</span>, <span class='number'>2.001</span>,
+                <span class='number'>2.998</span>, <span class='number'>4.000f64</span>];
+
+
+<span class='comment'>// comp = abs is also applicable to integers</span>
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>a</span>, <span class='ident'>b</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>abs</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>1</span>);
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>abs</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>0.01</span>);
+
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>a</span> <span class='op'>*</span> <span class='number'>2</span>, <span class='ident'>a</span> <span class='op'>+</span> <span class='ident'>a</span>);
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span> <span class='op'>*</span> <span class='number'>2.0</span>, <span class='ident'>x</span> <span class='op'>+</span> <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "rulinalg";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

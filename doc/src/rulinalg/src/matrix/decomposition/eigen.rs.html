@@ -512,8 +512,8 @@
 <span id="468">468</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>matrix</span>::{<span class='ident'>Matrix</span>, <span class='ident'>MatrixSliceMut</span>, <span class='ident'>BaseMatrix</span>, <span class='ident'>BaseMatrixMut</span>};
+<span class='kw'>use</span> <span class='ident'>norm</span>::<span class='ident'>Euclidean</span>;
 <span class='kw'>use</span> <span class='ident'>error</span>::{<span class='ident'>Error</span>, <span class='ident'>ErrorKind</span>};
-<span class='kw'>use</span> <span class='ident'>Metric</span>;
 
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>cmp</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>any</span>::<span class='ident'>Any</span>;
@@ -536,8 +536,8 @@
             <span class='ident'>converged</span> <span class='op'>=</span> <span class='bool-val'>true</span>;
 
             <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> <span class='number'>0</span>..<span class='ident'>n</span> {
-                <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>select_cols</span>(<span class='kw-2'>&amp;</span>[<span class='ident'>i</span>]).<span class='ident'>norm</span>();
-                <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>r</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>select_rows</span>(<span class='kw-2'>&amp;</span>[<span class='ident'>i</span>]).<span class='ident'>norm</span>();
+                <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>select_cols</span>(<span class='kw-2'>&amp;</span>[<span class='ident'>i</span>]).<span class='ident'>norm</span>(<span class='ident'>Euclidean</span>);
+                <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>r</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>select_rows</span>(<span class='kw-2'>&amp;</span>[<span class='ident'>i</span>]).<span class='ident'>norm</span>(<span class='ident'>Euclidean</span>);
 
                 <span class='kw'>let</span> <span class='ident'>s</span> <span class='op'>=</span> <span class='ident'>c</span> <span class='op'>*</span> <span class='ident'>c</span> <span class='op'>+</span> <span class='ident'>r</span> <span class='op'>*</span> <span class='ident'>r</span>;
                 <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>f</span> <span class='op'>=</span> <span class='ident'>T</span>::<span class='ident'>one</span>();
@@ -589,13 +589,13 @@
 
     }
 
-    <span class='kw'>fn</span> <span class='ident'>francis_shift_eigenvalues</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>francis_shift_eigenvalues</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
         <span class='kw'>let</span> <span class='ident'>n</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>rows</span>();
         <span class='macro'>debug_assert</span><span class='macro'>!</span>(<span class='ident'>n</span> <span class='op'>&gt;</span> <span class='number'>2</span>,
                       <span class='string'>&quot;Francis shift only works on matrices greater than 2x2.&quot;</span>);
         <span class='macro'>debug_assert</span><span class='macro'>!</span>(<span class='ident'>n</span> <span class='op'>==</span> <span class='self'>self</span>.<span class='ident'>cols</span>, <span class='string'>&quot;Matrix must be square for Francis shift.&quot;</span>);
 
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>h</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>clone</span>()
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>h</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>
             .<span class='ident'>upper_hessenberg</span>()
             .<span class='ident'>map_err</span>(<span class='op'>|</span>_<span class='op'>|</span> <span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>DecompFailure</span>, <span class='string'>&quot;Could not compute eigenvalues.&quot;</span>)));
         <span class='ident'>h</span>.<span class='ident'>balance_matrix</span>();
@@ -672,7 +672,7 @@
             }
         }
 
-        <span class='prelude-val'>Ok</span>(<span class='ident'>h</span>.<span class='ident'>diag</span>().<span class='ident'>into_vec</span>())
+        <span class='prelude-val'>Ok</span>(<span class='ident'>h</span>.<span class='ident'>diag</span>().<span class='ident'>cloned</span>().<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span>_<span class='op'>&gt;&gt;</span>())
     }
 
     <span class='doccomment'>/// Eigenvalues of a square matrix.</span>
@@ -696,7 +696,7 @@
     <span class='doccomment'>/// # Failures</span>
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// - Eigenvalues cannot be computed.</span>
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>eigenvalues</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>eigenvalues</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
         <span class='kw'>let</span> <span class='ident'>n</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>rows</span>();
         <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>n</span> <span class='op'>==</span> <span class='self'>self</span>.<span class='ident'>cols</span>,
                 <span class='string'>&quot;Matrix must be square for eigenvalue computation.&quot;</span>);
@@ -709,7 +709,7 @@
     }
 
     <span class='kw'>fn</span> <span class='ident'>direct_2_by_2_eigendecomp</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(<span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>), <span class='ident'>Error</span><span class='op'>&gt;</span> {
-        <span class='kw'>let</span> <span class='ident'>eigenvalues</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>eigenvalues</span>());
+        <span class='kw'>let</span> <span class='ident'>eigenvalues</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>direct_2_by_2_eigenvalues</span>());
         <span class='comment'>// Thanks to</span>
         <span class='comment'>// http://www.math.harvard.edu/archive/21b_fall_04/exhibits/2dmatrices/index.html</span>
         <span class='comment'>// for this characterization—</span>
@@ -730,13 +730,13 @@
         }
     }
 
-    <span class='kw'>fn</span> <span class='ident'>francis_shift_eigendecomp</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(<span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>), <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>francis_shift_eigendecomp</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(<span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>), <span class='ident'>Error</span><span class='op'>&gt;</span> {
         <span class='kw'>let</span> <span class='ident'>n</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>rows</span>();
         <span class='macro'>debug_assert</span><span class='macro'>!</span>(<span class='ident'>n</span> <span class='op'>&gt;</span> <span class='number'>2</span>,
                       <span class='string'>&quot;Francis shift only works on matrices greater than 2x2.&quot;</span>);
         <span class='macro'>debug_assert</span><span class='macro'>!</span>(<span class='ident'>n</span> <span class='op'>==</span> <span class='self'>self</span>.<span class='ident'>cols</span>, <span class='string'>&quot;Matrix must be square for Francis shift.&quot;</span>);
 
-        <span class='kw'>let</span> (<span class='ident'>u</span>, <span class='kw-2'>mut</span> <span class='ident'>h</span>) <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>clone</span>().<span class='ident'>upper_hess_decomp</span>().<span class='ident'>map_err</span>(<span class='op'>|</span>_<span class='op'>|</span> {
+        <span class='kw'>let</span> (<span class='ident'>u</span>, <span class='kw-2'>mut</span> <span class='ident'>h</span>) <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>upper_hess_decomp</span>().<span class='ident'>map_err</span>(<span class='op'>|</span>_<span class='op'>|</span> {
             <span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>DecompFailure</span>,
                        <span class='string'>&quot;Could not compute eigen decomposition.&quot;</span>)
         }));
@@ -831,7 +831,7 @@
             }
         }
 
-        <span class='prelude-val'>Ok</span>((<span class='ident'>h</span>.<span class='ident'>diag</span>().<span class='ident'>into_vec</span>(), <span class='ident'>u</span> <span class='op'>*</span> <span class='ident'>transformation</span>))
+        <span class='prelude-val'>Ok</span>((<span class='ident'>h</span>.<span class='ident'>diag</span>().<span class='ident'>cloned</span>().<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span>_<span class='op'>&gt;&gt;</span>(), <span class='ident'>u</span> <span class='op'>*</span> <span class='ident'>transformation</span>))
     }
 
     <span class='doccomment'>/// Eigendecomposition of a square matrix.</span>
@@ -859,7 +859,7 @@
     <span class='doccomment'>/// # Failures</span>
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// - The eigen decomposition can not be computed.</span>
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>eigendecomp</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(<span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>), <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>eigendecomp</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(<span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>), <span class='ident'>Error</span><span class='op'>&gt;</span> {
         <span class='kw'>let</span> <span class='ident'>n</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>rows</span>();
         <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>n</span> <span class='op'>==</span> <span class='self'>self</span>.<span class='ident'>cols</span>, <span class='string'>&quot;Matrix must be square for eigendecomp.&quot;</span>);
 
@@ -910,7 +910,7 @@
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>test_2_by_2_matrix_eigendecomp</span>() {
         <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>20.</span>, <span class='number'>4.</span>; <span class='number'>20.</span>, <span class='number'>16.</span>);
-        <span class='kw'>let</span> (<span class='ident'>eigenvals</span>, <span class='ident'>eigenvecs</span>) <span class='op'>=</span> <span class='ident'>a</span>.<span class='ident'>eigendecomp</span>().<span class='ident'>unwrap</span>();
+        <span class='kw'>let</span> (<span class='ident'>eigenvals</span>, <span class='ident'>eigenvecs</span>) <span class='op'>=</span> <span class='ident'>a</span>.<span class='ident'>clone</span>().<span class='ident'>eigendecomp</span>().<span class='ident'>unwrap</span>();
 
         <span class='kw'>let</span> <span class='ident'>lambda_1</span> <span class='op'>=</span> <span class='ident'>eigenvals</span>[<span class='number'>0</span>];
         <span class='kw'>let</span> <span class='ident'>lambda_2</span> <span class='op'>=</span> <span class='ident'>eigenvals</span>[<span class='number'>1</span>];
@@ -929,7 +929,7 @@
                         <span class='number'>22.</span>, <span class='number'>29.</span>, <span class='number'>36.</span>;
                         <span class='number'>27.</span>, <span class='number'>36.</span>, <span class='number'>45.</span>);
 
-        <span class='kw'>let</span> <span class='ident'>eigs</span> <span class='op'>=</span> <span class='ident'>a</span>.<span class='ident'>eigenvalues</span>().<span class='ident'>unwrap</span>();
+        <span class='kw'>let</span> <span class='ident'>eigs</span> <span class='op'>=</span> <span class='ident'>a</span>.<span class='ident'>clone</span>().<span class='ident'>eigenvalues</span>().<span class='ident'>unwrap</span>();
 
         <span class='kw'>let</span> <span class='ident'>eig_1</span> <span class='op'>=</span> <span class='number'>90.4026</span>;
         <span class='kw'>let</span> <span class='ident'>eig_2</span> <span class='op'>=</span> <span class='number'>0.5973</span>;

@@ -1,1 +1,1 @@
-initSidebarItems({});
+initSidebarItems({"struct":[["AbsoluteElementwiseComparator","The `abs` comparator used with assert_matrix_eq!."],["ExactElementwiseComparator","The `exact` comparator used with assert_matrix_eq!."],["FloatElementwiseComparator","The `float` comparator used with assert_matrix_eq!."],["UlpElementwiseComparator","The `ulp` comparator used with assert_matrix_eq!."]],"trait":[["ElementwiseComparator","Trait that describes elementwise comparators for assert_matrix_eq!."]]});

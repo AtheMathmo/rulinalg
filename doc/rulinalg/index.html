@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-0' class='srclink' href='../src/rulinalg/src/lib.rs.html#1-107' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-0' class='srclink' href='../src/rulinalg/src/lib.rs.html#1-108' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'>
 <h1 id='the-rulinalg-crate' class='section-header'><a href='#the-rulinalg-crate'>The rulinalg crate.</a></h1>
 <p>A crate that provides high-dimensional linear algebra
@@ -127,7 +127,8 @@ from <code>Matrix</code> structs and follow all of the borrowing rules of Rust.<
 
 <p>Note finally that much of the <code>Matrix</code>/<code>MatrixSlice</code>/<code>MatrixSliceMut</code> functionality is contained behind
 the <code>BaseMatrix</code>/<code>BaseMatrixMut</code> traits. This allows us to be generic over matrices or slices.</p>
-</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>pub use norm::{<a class='trait' href='../rulinalg/norm/trait.VectorNorm.html' title='rulinalg::norm::VectorNorm'>VectorNorm</a>, <a class='trait' href='../rulinalg/norm/trait.MatrixNorm.html' title='rulinalg::norm::MatrixNorm'>MatrixNorm</a>};</code></td></tr><tr><td><code>pub use norm::{<a class='trait' href='../rulinalg/norm/trait.VectorMetric.html' title='rulinalg::norm::VectorMetric'>VectorMetric</a>, <a class='trait' href='../rulinalg/norm/trait.MatrixMetric.html' title='rulinalg::norm::MatrixMetric'>MatrixMetric</a>};</code></td></tr></table><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
 <table>
                        <tr class=' module-item'>
                            <td><a class='mod' href='convert/index.html'
@@ -158,6 +159,20 @@ the <code>BaseMatrix</code>/<code>BaseMatrixMut</code> traits. This allows us to
                            </td>
                        </tr>
                        <tr class=' module-item'>
+                           <td><a class='mod' href='norm/index.html'
+                                  title='rulinalg::norm'>norm</a></td>
+                           <td class='docblock-short'>
+                                <p>The norm module</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='ulp/index.html'
+                                  title='rulinalg::ulp'>ulp</a></td>
+                           <td class='docblock-short'>
+                                <p>Tools for ULP-based comparison of floating point numbers.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
                            <td><a class='mod' href='utils/index.html'
                                   title='rulinalg::utils'>utils</a></td>
                            <td class='docblock-short'>
@@ -173,18 +188,24 @@ the <code>BaseMatrix</code>/<code>BaseMatrixMut</code> traits. This allows us to
                        </tr></table><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
 <table>
                        <tr class=' module-item'>
+                           <td><a class='macro' href='macro.assert_matrix_eq.html'
+                                  title='rulinalg::assert_matrix_eq'>assert_matrix_eq</a></td>
+                           <td class='docblock-short'>
+                                <p>Compare matrices for exact or approximate equality.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='macro' href='macro.assert_vector_eq.html'
+                                  title='rulinalg::assert_vector_eq'>assert_vector_eq</a></td>
+                           <td class='docblock-short'>
+                                <p>Compare vectors for exact or approximate equality.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
                            <td><a class='macro' href='macro.matrix.html'
                                   title='rulinalg::matrix'>matrix</a></td>
                            <td class='docblock-short'>
                                 <p>The <code>matrix!</code> macro enables easy construction of small matrices.</p>
-                           </td>
-                       </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
-<table>
-                       <tr class=' module-item'>
-                           <td><a class='trait' href='trait.Metric.html'
-                                  title='rulinalg::Metric'>Metric</a></td>
-                           <td class='docblock-short'>
-                                <p>Trait for linear algebra metrics.</p>
                            </td>
                        </tr></table></section>
     <section id='search' class="content hidden"></section>

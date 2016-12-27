@@ -470,9 +470,6 @@
 <span id="426">426</span>
 <span id="427">427</span>
 <span id="428">428</span>
-<span id="429">429</span>
-<span id="430">430</span>
-<span id="431">431</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='kw'>super</span>::{<span class='ident'>Matrix</span>, <span class='ident'>MatrixSlice</span>, <span class='ident'>MatrixSliceMut</span>, <span class='ident'>BaseMatrix</span>};
 
@@ -764,10 +761,7 @@
 
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
 <span class='kw'>mod</span> <span class='ident'>tests</span> {
-    <span class='kw'>use</span> <span class='kw'>super</span>::<span class='kw'>super</span>::<span class='ident'>Matrix</span>;
-    <span class='kw'>use</span> <span class='kw'>super</span>::<span class='kw'>super</span>::<span class='ident'>MatrixSlice</span>;
-    <span class='kw'>use</span> <span class='kw'>super</span>::<span class='kw'>super</span>::<span class='ident'>MatrixSliceMut</span>;
-    <span class='kw'>use</span> <span class='ident'>matrix</span>::<span class='ident'>slice</span>::<span class='ident'>BaseMatrix</span>;
+    <span class='kw'>use</span> <span class='ident'>matrix</span>::{<span class='ident'>BaseMatrix</span>, <span class='ident'>Matrix</span>, <span class='ident'>MatrixSlice</span>, <span class='ident'>MatrixSliceMut</span>};
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>matrix_mul_f32</span>() {

@@ -613,7 +613,7 @@
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>max_index</span> <span class='op'>=</span> <span class='number'>0</span>;
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>max</span> <span class='op'>=</span> <span class='ident'>u</span>[<span class='ident'>max_index</span>];
 
-    <span class='kw'>for</span> (<span class='ident'>i</span>, <span class='ident'>v</span>) <span class='kw'>in</span> (<span class='ident'>u</span>.<span class='ident'>iter</span>()).<span class='ident'>enumerate</span>() {
+    <span class='kw'>for</span> (<span class='ident'>i</span>, <span class='ident'>v</span>) <span class='kw'>in</span> <span class='ident'>u</span>.<span class='ident'>iter</span>().<span class='ident'>enumerate</span>().<span class='ident'>skip</span>(<span class='number'>1</span>) {
         <span class='kw'>if</span> <span class='ident'>max</span> <span class='op'>&lt;</span> <span class='op'>*</span><span class='ident'>v</span> {
             <span class='ident'>max_index</span> <span class='op'>=</span> <span class='ident'>i</span>;
             <span class='ident'>max</span> <span class='op'>=</span> <span class='op'>*</span><span class='ident'>v</span>;
@@ -645,7 +645,7 @@
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>min_index</span> <span class='op'>=</span> <span class='number'>0</span>;
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>min</span> <span class='op'>=</span> <span class='ident'>u</span>[<span class='ident'>min_index</span>];
 
-    <span class='kw'>for</span> (<span class='ident'>i</span>, <span class='ident'>v</span>) <span class='kw'>in</span> (<span class='ident'>u</span>.<span class='ident'>iter</span>()).<span class='ident'>enumerate</span>() {
+    <span class='kw'>for</span> (<span class='ident'>i</span>, <span class='ident'>v</span>) <span class='kw'>in</span> <span class='ident'>u</span>.<span class='ident'>iter</span>().<span class='ident'>enumerate</span>().<span class='ident'>skip</span>(<span class='number'>1</span>) {
         <span class='kw'>if</span> <span class='ident'>min</span> <span class='op'>&gt;</span> <span class='op'>*</span><span class='ident'>v</span> {
             <span class='ident'>min_index</span> <span class='op'>=</span> <span class='ident'>i</span>;
             <span class='ident'>min</span> <span class='op'>=</span> <span class='op'>*</span><span class='ident'>v</span>;

@@ -491,10 +491,6 @@
 <span id="447">447</span>
 <span id="448">448</span>
 <span id="449">449</span>
-<span id="450">450</span>
-<span id="451">451</span>
-<span id="452">452</span>
-<span id="453">453</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>matrix</span>::{<span class='ident'>Matrix</span>, <span class='ident'>BaseMatrix</span>, <span class='ident'>BaseMatrixMut</span>, <span class='ident'>MatrixSlice</span>, <span class='ident'>MatrixSliceMut</span>};
 <span class='kw'>use</span> <span class='ident'>error</span>::{<span class='ident'>Error</span>, <span class='ident'>ErrorKind</span>};
@@ -523,12 +519,11 @@
     <span class='comment'>// -1, which might be significantly faster in corner cases if we pick the matrix</span>
     <span class='comment'>// with the least amount of rows.</span>
     {
-        <span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='kw-2'>mut</span> <span class='ident'>shortest_matrix</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='ident'>u</span>.<span class='ident'>rows</span>() <span class='op'>&lt;=</span> <span class='ident'>v</span>.<span class='ident'>rows</span>() { <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>u</span> }
-                                      <span class='kw'>else</span> { <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>v</span> };
+        <span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='kw-2'>mut</span> <span class='ident'>shortest_matrix</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='ident'>u</span>.<span class='ident'>rows</span>() <span class='op'>&lt;=</span> <span class='ident'>v</span>.<span class='ident'>rows</span>() { <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>u</span> } <span class='kw'>else</span> { <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>v</span> };
         <span class='kw'>let</span> <span class='ident'>column_length</span> <span class='op'>=</span> <span class='ident'>shortest_matrix</span>.<span class='ident'>rows</span>();
         <span class='kw'>let</span> <span class='ident'>num_singular_values</span> <span class='op'>=</span> <span class='ident'>cmp</span>::<span class='ident'>min</span>(<span class='ident'>b</span>.<span class='ident'>rows</span>(), <span class='ident'>b</span>.<span class='ident'>cols</span>());
 
-        <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> <span class='number'>0</span> .. <span class='ident'>num_singular_values</span> {
+        <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> <span class='number'>0</span>..<span class='ident'>num_singular_values</span> {
             <span class='kw'>if</span> <span class='ident'>b</span>[[<span class='ident'>i</span>, <span class='ident'>i</span>]] <span class='op'>&lt;</span> <span class='ident'>T</span>::<span class='ident'>zero</span>() {
                 <span class='comment'>// Swap sign of singular value and column in u</span>
                 <span class='ident'>b</span>[[<span class='ident'>i</span>, <span class='ident'>i</span>]] <span class='op'>=</span> <span class='ident'>b</span>[[<span class='ident'>i</span>, <span class='ident'>i</span>]].<span class='ident'>abs</span>();
@@ -553,17 +548,15 @@
 
     <span class='comment'>// This unfortunately incurs two allocations since we have no (simple)</span>
     <span class='comment'>// way to iterate over a matrix diagonal, only to copy it into a new Vector</span>
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>indexed_sorted_values</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span>_<span class='op'>&gt;</span> <span class='op'>=</span> <span class='ident'>b</span>.<span class='ident'>diag</span>().<span class='ident'>into_vec</span>()
-        .<span class='ident'>into_iter</span>()
-        .<span class='ident'>enumerate</span>()
-        .<span class='ident'>collect</span>();
+    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>indexed_sorted_values</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span>_<span class='op'>&gt;</span> <span class='op'>=</span> <span class='ident'>b</span>.<span class='ident'>diag</span>().<span class='ident'>cloned</span>().<span class='ident'>enumerate</span>().<span class='ident'>collect</span>();
 
     <span class='comment'>// Sorting a vector of indices simultaneously with the singular values</span>
     <span class='comment'>// gives us a mapping between old and new (final) column indices.</span>
-    <span class='ident'>indexed_sorted_values</span>.<span class='ident'>sort_by</span>(<span class='op'>|</span><span class='kw-2'>&amp;</span>(_, <span class='kw-2'>ref</span> <span class='ident'>x</span>), <span class='kw-2'>&amp;</span>(_, <span class='kw-2'>ref</span> <span class='ident'>y</span>)<span class='op'>|</span>
-        <span class='ident'>x</span>.<span class='ident'>partial_cmp</span>(<span class='ident'>y</span>).<span class='ident'>expect</span>(<span class='string'>&quot;All singular values should be finite, and thus sortable.&quot;</span>)
-         .<span class='ident'>reverse</span>()
-    );
+    <span class='ident'>indexed_sorted_values</span>.<span class='ident'>sort_by</span>(<span class='op'>|</span><span class='kw-2'>&amp;</span>(_, <span class='kw-2'>ref</span> <span class='ident'>x</span>), <span class='kw-2'>&amp;</span>(_, <span class='kw-2'>ref</span> <span class='ident'>y</span>)<span class='op'>|</span> {
+        <span class='ident'>x</span>.<span class='ident'>partial_cmp</span>(<span class='ident'>y</span>)
+            .<span class='ident'>expect</span>(<span class='string'>&quot;All singular values should be finite, and thus sortable.&quot;</span>)
+            .<span class='ident'>reverse</span>()
+    });
 
     <span class='comment'>// Set the diagonal elements of the singular value matrix</span>
     <span class='kw'>for</span> (<span class='ident'>i</span>, <span class='kw-2'>&amp;</span>(_, <span class='ident'>value</span>)) <span class='kw'>in</span> <span class='ident'>indexed_sorted_values</span>.<span class='ident'>iter</span>().<span class='ident'>enumerate</span>() {
@@ -752,7 +745,7 @@
             }
         }
 
-        <span class='kw'>let</span> <span class='ident'>c_eigs</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>c</span>.<span class='ident'>eigenvalues</span>());
+        <span class='kw'>let</span> <span class='ident'>c_eigs</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>c</span>.<span class='ident'>clone</span>().<span class='ident'>eigenvalues</span>());
 
         <span class='comment'>// Choose eigenvalue closes to c[1,1].</span>
         <span class='kw'>let</span> <span class='ident'>lambda</span>: <span class='ident'>T</span>;
@@ -820,7 +813,7 @@
 
     <span class='kw'>fn</span> <span class='ident'>validate_svd</span>(<span class='ident'>mat</span>: <span class='kw-2'>&amp;</span><span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>f64</span><span class='op'>&gt;</span>, <span class='ident'>b</span>: <span class='kw-2'>&amp;</span><span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>f64</span><span class='op'>&gt;</span>, <span class='ident'>u</span>: <span class='kw-2'>&amp;</span><span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>f64</span><span class='op'>&gt;</span>, <span class='ident'>v</span>: <span class='kw-2'>&amp;</span><span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>f64</span><span class='op'>&gt;</span>) {
         <span class='comment'>// b is diagonal (the singular values)</span>
-        <span class='kw'>for</span> (<span class='ident'>idx</span>, <span class='ident'>row</span>) <span class='kw'>in</span> <span class='ident'>b</span>.<span class='ident'>iter_rows</span>().<span class='ident'>enumerate</span>() {
+        <span class='kw'>for</span> (<span class='ident'>idx</span>, <span class='ident'>row</span>) <span class='kw'>in</span> <span class='ident'>b</span>.<span class='ident'>row_iter</span>().<span class='ident'>enumerate</span>() {
             <span class='macro'>assert</span><span class='macro'>!</span>(<span class='op'>!</span><span class='ident'>row</span>.<span class='ident'>iter</span>().<span class='ident'>take</span>(<span class='ident'>idx</span>).<span class='ident'>any</span>(<span class='op'>|</span><span class='kw-2'>&amp;</span><span class='ident'>x</span><span class='op'>|</span> <span class='ident'>x</span> <span class='op'>&gt;</span> <span class='number'>1e-10</span>));
             <span class='macro'>assert</span><span class='macro'>!</span>(<span class='op'>!</span><span class='ident'>row</span>.<span class='ident'>iter</span>().<span class='ident'>skip</span>(<span class='ident'>idx</span> <span class='op'>+</span> <span class='number'>1</span>).<span class='ident'>any</span>(<span class='op'>|</span><span class='kw-2'>&amp;</span><span class='ident'>x</span><span class='op'>|</span> <span class='ident'>x</span> <span class='op'>&gt;</span> <span class='number'>1e-10</span>));
             <span class='comment'>// Assert non-negativity of diagonal elements</span>
@@ -845,9 +838,9 @@
         <span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>v_transposed</span> <span class='op'>=</span> <span class='ident'>v</span>.<span class='ident'>transpose</span>();
         <span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>mat_transposed</span> <span class='op'>=</span> <span class='ident'>mat</span>.<span class='ident'>transpose</span>();
 
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>singular_triplets</span> <span class='op'>=</span> <span class='ident'>u_transposed</span>.<span class='ident'>iter_rows</span>().<span class='ident'>zip</span>(<span class='ident'>b</span>.<span class='ident'>diag</span>().<span class='ident'>into_iter</span>()).<span class='ident'>zip</span>(<span class='ident'>v_transposed</span>.<span class='ident'>iter_rows</span>())
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>singular_triplets</span> <span class='op'>=</span> <span class='ident'>u_transposed</span>.<span class='ident'>row_iter</span>().<span class='ident'>zip</span>(<span class='ident'>b</span>.<span class='ident'>diag</span>()).<span class='ident'>zip</span>(<span class='ident'>v_transposed</span>.<span class='ident'>row_iter</span>())
             <span class='comment'>// chained zipping results in nested tuple. Flatten it.</span>
-            .<span class='ident'>map</span>(<span class='op'>|</span>((<span class='ident'>u_col</span>, <span class='ident'>singular_value</span>), <span class='ident'>v_col</span>)<span class='op'>|</span> (<span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='ident'>u_col</span>), <span class='ident'>singular_value</span>, <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='ident'>v_col</span>)));
+            .<span class='ident'>map</span>(<span class='op'>|</span>((<span class='ident'>u_col</span>, <span class='ident'>singular_value</span>), <span class='ident'>v_col</span>)<span class='op'>|</span> (<span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='ident'>u_col</span>.<span class='ident'>raw_slice</span>()), <span class='ident'>singular_value</span>, <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='ident'>v_col</span>.<span class='ident'>raw_slice</span>())));
 
         <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>singular_triplets</span>.<span class='ident'>by_ref</span>()
             <span class='comment'>// For a matrix M, each singular value σ and left and right singular vectors u and v respectively</span>
@@ -877,14 +870,10 @@
 
         <span class='kw'>let</span> (<span class='ident'>b</span>, <span class='ident'>u</span>, <span class='ident'>v</span>) <span class='op'>=</span> <span class='ident'>sort_svd</span>(<span class='ident'>b</span>, <span class='ident'>u</span>, <span class='ident'>v</span>);
 
-        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>b</span>.<span class='ident'>data</span>(), <span class='kw-2'>&amp;</span><span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>8.0</span>, <span class='number'>0.0</span>, <span class='number'>0.0</span>,
-                                  <span class='number'>0.0</span>, <span class='number'>4.0</span>, <span class='number'>0.0</span>,
-                                  <span class='number'>0.0</span>, <span class='number'>0.0</span>, <span class='number'>2.0</span>]);
-        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>u</span>.<span class='ident'>data</span>(), <span class='kw-2'>&amp;</span><span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>2.0</span>, <span class='number'>1.0</span>, <span class='number'>3.0</span>,
-                                  <span class='number'>5.0</span>, <span class='number'>4.0</span>, <span class='number'>6.0</span>]);
-        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>v</span>.<span class='ident'>data</span>(), <span class='kw-2'>&amp;</span><span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>22.0</span>, <span class='number'>21.0</span>, <span class='number'>23.0</span>,
-                                  <span class='number'>25.0</span>, <span class='number'>24.0</span>, <span class='number'>26.0</span>,
-                                  <span class='number'>28.0</span>, <span class='number'>27.0</span>, <span class='number'>29.0</span>]);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>b</span>.<span class='ident'>data</span>(), <span class='kw-2'>&amp;</span><span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>8.0</span>, <span class='number'>0.0</span>, <span class='number'>0.0</span>, <span class='number'>0.0</span>, <span class='number'>4.0</span>, <span class='number'>0.0</span>, <span class='number'>0.0</span>, <span class='number'>0.0</span>, <span class='number'>2.0</span>]);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>u</span>.<span class='ident'>data</span>(), <span class='kw-2'>&amp;</span><span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>2.0</span>, <span class='number'>1.0</span>, <span class='number'>3.0</span>, <span class='number'>5.0</span>, <span class='number'>4.0</span>, <span class='number'>6.0</span>]);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>v</span>.<span class='ident'>data</span>(),
+                   <span class='kw-2'>&amp;</span><span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>22.0</span>, <span class='number'>21.0</span>, <span class='number'>23.0</span>, <span class='number'>25.0</span>, <span class='number'>24.0</span>, <span class='number'>26.0</span>, <span class='number'>28.0</span>, <span class='number'>27.0</span>, <span class='number'>29.0</span>]);
 
     }
 
@@ -905,7 +894,7 @@
 
         <span class='comment'>// Assert the singular values are what we expect</span>
         <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>expected_values</span>.<span class='ident'>iter</span>()
-            .<span class='ident'>zip</span>(<span class='ident'>b</span>.<span class='ident'>diag</span>().<span class='ident'>data</span>().<span class='ident'>iter</span>())
+            .<span class='ident'>zip</span>(<span class='ident'>b</span>.<span class='ident'>diag</span>())
             .<span class='ident'>all</span>(<span class='op'>|</span>(<span class='ident'>expected</span>, <span class='ident'>actual</span>)<span class='op'>|</span> (<span class='ident'>expected</span> <span class='op'>-</span> <span class='ident'>actual</span>).<span class='ident'>abs</span>() <span class='op'>&lt;</span> <span class='number'>1e-14</span>));
     }
 
@@ -925,7 +914,7 @@
 
         <span class='comment'>// Assert the singular values are what we expect</span>
         <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>expected_values</span>.<span class='ident'>iter</span>()
-            .<span class='ident'>zip</span>(<span class='ident'>b</span>.<span class='ident'>diag</span>().<span class='ident'>data</span>().<span class='ident'>iter</span>())
+            .<span class='ident'>zip</span>(<span class='ident'>b</span>.<span class='ident'>diag</span>())
             .<span class='ident'>all</span>(<span class='op'>|</span>(<span class='ident'>expected</span>, <span class='ident'>actual</span>)<span class='op'>|</span> (<span class='ident'>expected</span> <span class='op'>-</span> <span class='ident'>actual</span>).<span class='ident'>abs</span>() <span class='op'>&lt;</span> <span class='number'>1e-14</span>));
     }
 
@@ -937,15 +926,18 @@
                           <span class='number'>4.0</span>,  <span class='number'>2.0</span>,  <span class='number'>1.0</span>, <span class='op'>-</span><span class='number'>1.0</span>,  <span class='number'>3.0</span>;
                           <span class='number'>5.0</span>,  <span class='number'>1.0</span>,  <span class='number'>1.0</span>,  <span class='number'>3.0</span>,  <span class='number'>2.0</span>);
 
-        <span class='kw'>let</span> <span class='ident'>expected_values</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[ <span class='number'>12.1739747429271112</span>,   <span class='number'>5.2681047320525831</span>,   <span class='number'>4.4942269799769843</span>,
-                                     <span class='number'>2.9279675877385123</span>,   <span class='number'>2.8758200827412224</span>];
+        <span class='kw'>let</span> <span class='ident'>expected_values</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>12.1739747429271112</span>,
+                                   <span class='number'>5.2681047320525831</span>,
+                                   <span class='number'>4.4942269799769843</span>,
+                                   <span class='number'>2.9279675877385123</span>,
+                                   <span class='number'>2.8758200827412224</span>];
 
         <span class='kw'>let</span> (<span class='ident'>b</span>, <span class='ident'>u</span>, <span class='ident'>v</span>) <span class='op'>=</span> <span class='ident'>mat</span>.<span class='ident'>clone</span>().<span class='ident'>svd</span>().<span class='ident'>unwrap</span>();
         <span class='ident'>validate_svd</span>(<span class='kw-2'>&amp;</span><span class='ident'>mat</span>, <span class='kw-2'>&amp;</span><span class='ident'>b</span>, <span class='kw-2'>&amp;</span><span class='ident'>u</span>, <span class='kw-2'>&amp;</span><span class='ident'>v</span>);
 
         <span class='comment'>// Assert the singular values are what we expect</span>
         <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>expected_values</span>.<span class='ident'>iter</span>()
-            .<span class='ident'>zip</span>(<span class='ident'>b</span>.<span class='ident'>diag</span>().<span class='ident'>data</span>().<span class='ident'>iter</span>())
+            .<span class='ident'>zip</span>(<span class='ident'>b</span>.<span class='ident'>diag</span>())
             .<span class='ident'>all</span>(<span class='op'>|</span>(<span class='ident'>expected</span>, <span class='ident'>actual</span>)<span class='op'>|</span> (<span class='ident'>expected</span> <span class='op'>-</span> <span class='ident'>actual</span>).<span class='ident'>abs</span>() <span class='op'>&lt;</span> <span class='number'>1e-12</span>));
     }
 }

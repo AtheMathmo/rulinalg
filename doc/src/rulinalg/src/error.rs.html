@@ -101,6 +101,8 @@
 <span id="57">57</span>
 <span id="58">58</span>
 <span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! Error handling for the linalg module.</span>
 
@@ -130,7 +132,9 @@
     <span class='doccomment'>/// A failure due to some algebraic constraints not being met.</span>
     <span class='ident'>AlgebraFailure</span>,
     <span class='doccomment'>/// Tried to divide by zero</span>
-    <span class='ident'>DivByZero</span>
+    <span class='ident'>DivByZero</span>,
+    <span class='doccomment'>/// Failure due to inability to convert between scalar types</span>
+    <span class='ident'>ScalarConversionFailure</span>
 }
 
 <span class='kw'>impl</span> <span class='ident'>Error</span> {

@@ -149,6 +149,7 @@
 <span id="105">105</span>
 <span id="106">106</span>
 <span id="107">107</span>
+<span id="108">108</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! # The rulinalg crate.</span>
 <span class='doccomment'>//!</span>
@@ -249,14 +250,15 @@
 <span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>error</span>;
 <span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>utils</span>;
 <span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>vector</span>;
+<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>ulp</span>;
+<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>norm</span>;
 
-<span class='doccomment'>/// Trait for linear algebra metrics.</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// Currently only implements basic euclidean norm.</span>
-<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>Metric</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
-    <span class='doccomment'>/// Computes the euclidean norm.</span>
-    <span class='kw'>fn</span> <span class='ident'>norm</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>T</span>;
-}
+<span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
+<span class='attribute'>#[<span class='ident'>macro_use</span>]</span>
+<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>quickcheck</span>;
+
+<span class='kw'>pub</span> <span class='kw'>use</span> <span class='ident'>norm</span>::{<span class='ident'>VectorNorm</span>, <span class='ident'>MatrixNorm</span>};
+<span class='kw'>pub</span> <span class='kw'>use</span> <span class='ident'>norm</span>::{<span class='ident'>VectorMetric</span>, <span class='ident'>MatrixMetric</span>};
 </pre>
 </section>
     <section id='search' class="content hidden"></section>
