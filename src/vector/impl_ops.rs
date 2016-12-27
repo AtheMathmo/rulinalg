@@ -6,46 +6,6 @@ use utils;
 
 use super::Vector;
 
-impl<T: Copy + Mul<T, Output = T>> Vector<T> {
-    /// The elementwise product of two vectors.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::vector::Vector;
-    ///
-    /// let a = Vector::new(vec![1.0,2.0,3.0,4.0]);
-    /// let b = Vector::new(vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = &a.elemul(&b);
-    /// assert_eq!(*c.data(), vec![1.0, 4.0, 9.0, 16.0]);
-    /// ```
-    pub fn elemul(&self, v: &Vector<T>) -> Vector<T> {
-        assert_eq!(self.size, v.size);
-        Vector::new(utils::ele_mul(&self.data, &v.data))
-    }
-}
-
-impl<T: Copy + Div<T, Output = T>> Vector<T> {
-    /// The elementwise division of two vectors.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rulinalg::vector::Vector;
-    ///
-    /// let a = Vector::new(vec![1.0,2.0,3.0,4.0]);
-    /// let b = Vector::new(vec![1.0,2.0,3.0,4.0]);
-    ///
-    /// let c = &a.elediv(&b);
-    /// assert_eq!(*c.data(), vec![1.0; 4]);
-    /// ```
-    pub fn elediv(&self, v: &Vector<T>) -> Vector<T> {
-        assert_eq!(self.size, v.size);
-        Vector::new(utils::ele_div(&self.data, &v.data))
-    }
-}
-
 macro_rules! impl_bin_op_scalar_vector (
     ($trt:ident, $op:ident, $sym:tt, $doc:expr) => (
 
@@ -320,37 +280,7 @@ mod tests {
         assert_eq!(c, exp);
     }
 
-    #[test]
-    fn vector_mul_f32_elemwise() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = Vector::new(vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
-
-        let exp = Vector::new(vec![2.0, 6.0, 12.0, 20.0, 30.0, 42.0]);
-
-        // Allocating new memory
-        let c = &a.elemul(&b);
-        assert_eq!(c, &exp);
-
-        // Allocating new memory
-        let c = a.elemul(&b);
-        assert_eq!(c, exp);
-    }
-
-    #[test]
-    fn vector_mul_int_elemwise() {
-        let a = Vector::new(vec![1, 2, 3, 4]);
-        let b = Vector::new(vec![2, 4, 6, 8]);
-
-        let exp = Vector::new(vec![2, 8, 18, 32]);
-
-        // Allocating new memory
-        let c = &a.elemul(&b);
-        assert_eq!(c, &exp);
-
-        // Allocating new memory
-        let c = a.elemul(&b);
-        assert_eq!(c, exp);
-    }
+    // mul_xxx_elemwise is tested in impl_vec
 
     #[test]
     fn vector_div_f32_broadcast() {
@@ -400,37 +330,7 @@ mod tests {
         assert_eq!(c, exp);
     }
 
-    #[test]
-    fn vector_div_f32_elemwise() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = Vector::new(vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
-
-        let exp = Vector::new(vec![1. / 2., 2. / 3., 3. / 4., 4. / 5., 5. / 6., 6. / 7.]);
-
-        // Allocating new memory
-        let c = &a.elediv(&b);
-        assert_eq!(c, &exp);
-
-        // Allocating new memory
-        let c = a.elediv(&b);
-        assert_eq!(c, exp);
-    }
-
-    #[test]
-    fn vector_div_int_elemwise() {
-        let a = Vector::new(vec![2, 4, 6, 8]);
-        let b = Vector::new(vec![2, 2, 3, 3]);
-
-        let exp = Vector::new(vec![1, 2, 2, 2]);
-
-        // Allocating new memory
-        let c = &a.elediv(&b);
-        assert_eq!(c, &exp);
-
-        // Allocating new memory
-        let c = a.elediv(&b);
-        assert_eq!(c, exp);
-    }
+    // div_xxx_elemwise is tested in impl_vec
 
     #[test]
     fn vector_add_f32_broadcast() {

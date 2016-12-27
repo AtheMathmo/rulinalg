@@ -1,3 +1,4 @@
+<<<<<<< eeeef406ebe79372c03029f8cf4c0e259331edae
 use std::ops::{Mul, Add, Div};
 use libnum::{One, Zero, Float, FromPrimitive};
 use std::fmt;
@@ -602,5 +603,73 @@ mod tests {
             *elem = 4;
         }
         assert_eq!(v2, vector![1, 4, 3]);
+    }
+
+
+    #[test]
+    fn vector_mul_f32_elemwise() {
+        // tested
+        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = Vector::new(vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+
+        let exp = Vector::new(vec![2.0, 6.0, 12.0, 20.0, 30.0, 42.0]);
+
+        // Allocating new memory
+        let c = &a.elemul(&b);
+        assert_eq!(c, &exp);
+
+        // Allocating new memory
+        let c = a.elemul(&b);
+        assert_eq!(c, exp);
+    }
+
+    #[test]
+    fn vector_mul_int_elemwise() {
+        let a = Vector::new(vec![1, 2, 3, 4]);
+        let b = Vector::new(vec![2, 4, 6, 8]);
+
+        let exp = Vector::new(vec![2, 8, 18, 32]);
+
+        // Allocating new memory
+        let c = &a.elemul(&b);
+        assert_eq!(c, &exp);
+
+        // Allocating new memory
+        let c = a.elemul(&b);
+        assert_eq!(c, exp);
+    }
+
+
+
+    #[test]
+    fn vector_div_f32_elemwise() {
+        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = Vector::new(vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+
+        let exp = Vector::new(vec![1. / 2., 2. / 3., 3. / 4., 4. / 5., 5. / 6., 6. / 7.]);
+
+        // Allocating new memory
+        let c = &a.elediv(&b);
+        assert_eq!(c, &exp);
+
+        // Allocating new memory
+        let c = a.elediv(&b);
+        assert_eq!(c, exp);
+    }
+
+    #[test]
+    fn vector_div_int_elemwise() {
+        let a = Vector::new(vec![2, 4, 6, 8]);
+        let b = Vector::new(vec![2, 2, 3, 3]);
+
+        let exp = Vector::new(vec![1, 2, 2, 2]);
+
+        // Allocating new memory
+        let c = &a.elediv(&b);
+        assert_eq!(c, &exp);
+
+        // Allocating new memory
+        let c = a.elediv(&b);
+        assert_eq!(c, exp);
     }
 }
