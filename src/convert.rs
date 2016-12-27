@@ -5,7 +5,9 @@
 
 use std::convert::From;
 
-use libnum::Zero;
+use libnum::{Zero, ToPrimitive, NumCast};
+
+use error::{Error, ErrorKind};
 
 use super::matrix::{DiagOffset, Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix};
 use super::vector::Vector;
@@ -16,7 +18,9 @@ impl<T> From<Vec<T>> for Vector<T> {
     }
 }
 
-impl<'a, T> From<&'a [T]> for Vector<T> where T: Clone {
+impl<'a, T> From<&'a [T]> for Vector<T>
+    where T: Clone
+{
     fn from(slice: &'a [T]) -> Self {
         Vector::new(slice.to_owned())
     }
@@ -32,7 +36,7 @@ macro_rules! impl_matrix_from {
     ($slice_type:ident) => {
         impl<'a, T: Copy> From<$slice_type<'a, T>> for Matrix<T> {
             fn from(slice: $slice_type<'a, T>) -> Self {
-                slice.iter_rows().collect::<Matrix<T>>()
+                slice.row_iter().collect::<Matrix<T>>()
             }
         }
     }
@@ -63,6 +67,27 @@ impl_diag_offset_from!(i16);
 impl_diag_offset_from!(i32);
 impl_diag_offset_from!(i64);
 impl_diag_offset_from!(isize);
+
+impl<T: ToPrimitive> Matrix<T> {
+    /// Attempts to convert the matrix into a new matrix of different scalar type.
+    ///
+    /// # Failures
+    /// - One or more of the elements in the matrix cannot be converted into
+    ///   the new type.
+    pub fn try_into<U: NumCast>(self) -> Result<Matrix<U>, Error> {
+        let (m, n) = (self.rows(), self.cols());
+        let ref make_error = || {
+            Error::new(ErrorKind::ScalarConversionFailure,
+                       "Failed to convert between scalar types.")
+        };
+        let converted_data = self.into_vec()
+            .into_iter()
+            .map(|x| U::from(x).ok_or_else(make_error))
+            .collect::<Result<Vec<_>, Error>>();
+
+        Ok(Matrix::<U>::new(m, n, try!(converted_data)))
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -107,6 +132,138 @@ mod tests {
         assert_eq!(a, DiagOffset::Below(3));
         let a: DiagOffset = 0.into();
         assert_eq!(a, DiagOffset::Main);
+    }
+
+    #[test]
+    fn try_into_empty_matrix() {
+        {
+            let x: Matrix<f64> = matrix![];
+            let y: Matrix<f32> = x.try_into().unwrap();
+            assert_matrix_eq!(y, matrix![]);
+        }
+
+        {
+            let x: Matrix<u64> = matrix![];
+            let y: Matrix<u32> = x.try_into().unwrap();
+            assert_matrix_eq!(y, matrix![]);
+        }
+
+        {
+            let x: Matrix<f64> = matrix![];
+            let y: Matrix<u64> = x.try_into().unwrap();
+            assert_matrix_eq!(y, matrix![]);
+        }
+
+        {
+            let x: Matrix<u8> = matrix![];
+            let y: Matrix<u64> = x.try_into().unwrap();
+            assert_matrix_eq!(y, matrix![]);
+        }
+    }
+
+    #[test]
+    fn try_into_f64_to_i64() {
+        let x: Matrix<f64> = matrix![ 1.0, 2.0;
+                                     -3.0, 4.0];
+        let y: Matrix<i64> = x.try_into().unwrap();
+        let expected = matrix![ 1, 2;
+                               -3, 4];
+        assert_matrix_eq!(y, expected);
+    }
+
+    #[test]
+    fn try_into_f64_to_u64() {
+        let x: Matrix<f64> = matrix![ 1.0, 2.0;
+                                      3.0, 4.0];
+        let y: Matrix<u64> = x.try_into().unwrap();
+        let expected = matrix![ 1, 2;
+                                3, 4];
+        assert_matrix_eq!(y, expected);
+    }
+
+    #[test]
+    fn try_into_i64_to_f64() {
+        {
+            let x: Matrix<i64> = matrix![ 1, 2;
+                                         -3, 4];
+            let y: Matrix<f64> = x.try_into().unwrap();
+
+            let expected = matrix![ 1.0, 2.0;
+                                   -3.0, 4.0];
+            assert_matrix_eq!(y, expected);
+        }
+
+        {
+            // Recall that f64 cannot exactly represent integers of sufficiently
+            // large absolute value. Yet, Rust will cast and round as necessary,
+            // so we only check that the result is Ok.
+            {
+                let x: Matrix<i64> = matrix![1, 2, i64::max_value()];
+                let y_result = x.try_into::<f64>();
+                assert!(y_result.is_ok());
+            }
+
+            {
+                let x: Matrix<i64> = matrix![1, 2, i64::min_value()];
+                let y_result = x.try_into::<f64>();
+                assert!(y_result.is_ok());
+            }
+        }
+    }
+
+    #[test]
+    fn try_into_u64_to_f64() {
+        {
+            let x: Matrix<u64> = matrix![ 1, 2;
+                                          3, 4];
+            let y: Matrix<f64> = x.try_into().unwrap();
+
+            let expected = matrix![ 1.0, 2.0;
+                                    3.0, 4.0];
+            assert_matrix_eq!(y, expected);
+        }
+
+        {
+            // Recall that f64 cannot exactly represent integers of sufficiently
+            // large absolute value. Yet, Rust will cast and round as necessary,
+            // so we only check that the result is Ok.
+            {
+                let x: Matrix<u64> = matrix![1, 2, u64::max_value()];
+                let y_result = x.try_into::<f64>();
+                assert!(y_result.is_ok());
+            }
+        }
+    }
+
+    #[test]
+    fn try_into_signed_unsigned() {
+        {
+            let x: Matrix<u64> = matrix![ 1, 2;
+                                          3, 4];
+            let y: Matrix<i64> = x.try_into().unwrap();
+
+            let expected = matrix![ 1, 2;
+                                    3, 4];
+            assert_matrix_eq!(y, expected);
+        }
+
+        {
+            let x: Matrix<i64> = matrix![ 1, 2;
+                                          3, 4];
+            let y: Matrix<u64> = x.try_into().unwrap();
+
+            let expected = matrix![ 1, 2;
+                                    3, 4];
+            assert_matrix_eq!(y, expected);
+        }
+
+        {
+            // Cannot cast negative values into unsigned
+            let x = matrix![ 1, -2;
+                             3,  4];
+            let y_result = x.try_into::<u64>();
+            assert!(y_result.is_err());
+        }
     }
 
 }

@@ -1,6 +1,27 @@
 use rulinalg::vector::Vector;
-use rulinalg::matrix::Matrix;
-use rulinalg::matrix::slice::BaseMatrix;
+use rulinalg::matrix::{BaseMatrix, Matrix};
+
+#[test]
+fn test_solve() {
+    let a = matrix![-4.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+                    1.0, -4.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0;
+                    0.0, 1.0, -4.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0;
+                    1.0, 0.0, 0.0, -4.0, 1.0, 0.0, 1.0, 0.0, 0.0;
+                    0.0, 1.0, 0.0, 1.0, -4.0, 1.0, 0.0, 1.0, 0.0;
+                    0.0, 0.0, 1.0, 0.0, 1.0, -4.0, 0.0, 0.0, 1.0;
+                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -4.0, 1.0, 0.0;
+                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, -4.0, 1.0;
+                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, -4.0];
+
+    let b = Vector::new(vec![-100.0, 0.0, 0.0, -100.0, 0.0, 0.0, -100.0, 0.0, 0.0]);
+
+    let c = a.solve(b).unwrap();
+    let true_solution = vec![42.85714286, 18.75, 7.14285714, 52.67857143,
+                             25.0, 9.82142857, 42.85714286, 18.75, 7.14285714];
+    
+    assert!(c.into_iter().zip(true_solution.into_iter()).all(|(x, y)| (x-y) < 1e-5));
+
+}
 
 #[test]
 fn test_l_triangular_solve_errs() {
@@ -36,18 +57,37 @@ fn matrix_lup_decomp() {
     assert_eq!(*l.data(), l_true);
     assert_eq!(*u.data(), u_true);
 
-    let e = matrix!(1., 2., 3., 4., 5.;
+    let b = matrix!(1., 2., 3., 4., 5.;
                     3., 0., 4., 5., 6.;
                     2., 1., 2., 3., 4.;
                     0., 0., 0., 6., 5.;
                     0., 0., 0., 5., 6.);
 
-    let (l, u, p) = e.lup_decomp().expect("Matrix SHOULD be able to be decomposed...");
+    let (l, u, p) = b.clone().lup_decomp().expect("Matrix SHOULD be able to be decomposed...");
     let k = p.transpose() * l * u;
 
     for i in 0..25 {
-        assert_eq!(e.data()[i], k.data()[i]);
+        assert_eq!(b.data()[i], k.data()[i]);
     }
+
+    let c = matrix![-4.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+                    1.0, -4.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0;
+                    0.0, 1.0, -4.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0;
+                    1.0, 0.0, 0.0, -4.0, 1.0, 0.0, 1.0, 0.0, 0.0;
+                    0.0, 1.0, 0.0, 1.0, -4.0, 1.0, 0.0, 1.0, 0.0;
+                    0.0, 0.0, 1.0, 0.0, 1.0, -4.0, 0.0, 0.0, 1.0;
+                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -4.0, 1.0, 0.0;
+                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, -4.0, 1.0;
+                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, -4.0];
+
+    assert!(c.lup_decomp().is_ok());
+
+    let d = matrix![1.0, 1.0, 0.0, 0.0;
+                    0.0, 0.0, 1.0, 0.0;
+                    -1.0, 0.0, 0.0, 0.0;
+                    0.0, 0.0, 0.0, 1.0];
+
+    assert!(d.lup_decomp().is_ok());
 }
 
 #[test]

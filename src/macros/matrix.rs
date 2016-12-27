@@ -1,5 +1,3 @@
-//! Macros for the linear algebra modules.
-
 /// The `matrix!` macro enables easy construction of small matrices.
 ///
 /// This is particularly useful when writing tests involving matrices.
@@ -69,8 +67,7 @@ macro_rules! matrix {
 
 #[cfg(test)]
 mod tests {
-    use matrix::slice::BaseMatrix;
-    use matrix::Matrix;
+    use matrix::{Matrix, BaseMatrix};
 
     #[test]
     fn matrix_macro() {

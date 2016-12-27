@@ -25,12 +25,11 @@ fn correct_svd_signs<T>(mut b: Matrix<T>,
     // -1, which might be significantly faster in corner cases if we pick the matrix
     // with the least amount of rows.
     {
-        let ref mut shortest_matrix = if u.rows() <= v.rows() { &mut u }
-                                      else { &mut v };
+        let ref mut shortest_matrix = if u.rows() <= v.rows() { &mut u } else { &mut v };
         let column_length = shortest_matrix.rows();
         let num_singular_values = cmp::min(b.rows(), b.cols());
 
-        for i in 0 .. num_singular_values {
+        for i in 0..num_singular_values {
             if b[[i, i]] < T::zero() {
                 // Swap sign of singular value and column in u
                 b[[i, i]] = b[[i, i]].abs();
@@ -55,17 +54,15 @@ fn sort_svd<T>(mut b: Matrix<T>,
 
     // This unfortunately incurs two allocations since we have no (simple)
     // way to iterate over a matrix diagonal, only to copy it into a new Vector
-    let mut indexed_sorted_values: Vec<_> = b.diag().into_vec()
-        .into_iter()
-        .enumerate()
-        .collect();
+    let mut indexed_sorted_values: Vec<_> = b.diag().cloned().enumerate().collect();
 
     // Sorting a vector of indices simultaneously with the singular values
     // gives us a mapping between old and new (final) column indices.
-    indexed_sorted_values.sort_by(|&(_, ref x), &(_, ref y)|
-        x.partial_cmp(y).expect("All singular values should be finite, and thus sortable.")
-         .reverse()
-    );
+    indexed_sorted_values.sort_by(|&(_, ref x), &(_, ref y)| {
+        x.partial_cmp(y)
+            .expect("All singular values should be finite, and thus sortable.")
+            .reverse()
+    });
 
     // Set the diagonal elements of the singular value matrix
     for (i, &(_, value)) in indexed_sorted_values.iter().enumerate() {
@@ -254,7 +251,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
             }
         }
 
-        let c_eigs = try!(c.eigenvalues());
+        let c_eigs = try!(c.clone().eigenvalues());
 
         // Choose eigenvalue closes to c[1,1].
         let lambda: T;
@@ -322,7 +319,7 @@ mod tests {
 
     fn validate_svd(mat: &Matrix<f64>, b: &Matrix<f64>, u: &Matrix<f64>, v: &Matrix<f64>) {
         // b is diagonal (the singular values)
-        for (idx, row) in b.iter_rows().enumerate() {
+        for (idx, row) in b.row_iter().enumerate() {
             assert!(!row.iter().take(idx).any(|&x| x > 1e-10));
             assert!(!row.iter().skip(idx + 1).any(|&x| x > 1e-10));
             // Assert non-negativity of diagonal elements
@@ -347,9 +344,9 @@ mod tests {
         let ref v_transposed = v.transpose();
         let ref mat_transposed = mat.transpose();
 
-        let mut singular_triplets = u_transposed.iter_rows().zip(b.diag().into_iter()).zip(v_transposed.iter_rows())
+        let mut singular_triplets = u_transposed.row_iter().zip(b.diag()).zip(v_transposed.row_iter())
             // chained zipping results in nested tuple. Flatten it.
-            .map(|((u_col, singular_value), v_col)| (Vector::new(u_col), singular_value, Vector::new(v_col)));
+            .map(|((u_col, singular_value), v_col)| (Vector::new(u_col.raw_slice()), singular_value, Vector::new(v_col.raw_slice())));
 
         assert!(singular_triplets.by_ref()
             // For a matrix M, each singular value σ and left and right singular vectors u and v respectively
@@ -379,14 +376,10 @@ mod tests {
 
         let (b, u, v) = sort_svd(b, u, v);
 
-        assert_eq!(b.data(), &vec![8.0, 0.0, 0.0,
-                                  0.0, 4.0, 0.0,
-                                  0.0, 0.0, 2.0]);
-        assert_eq!(u.data(), &vec![2.0, 1.0, 3.0,
-                                  5.0, 4.0, 6.0]);
-        assert_eq!(v.data(), &vec![22.0, 21.0, 23.0,
-                                  25.0, 24.0, 26.0,
-                                  28.0, 27.0, 29.0]);
+        assert_eq!(b.data(), &vec![8.0, 0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 2.0]);
+        assert_eq!(u.data(), &vec![2.0, 1.0, 3.0, 5.0, 4.0, 6.0]);
+        assert_eq!(v.data(),
+                   &vec![22.0, 21.0, 23.0, 25.0, 24.0, 26.0, 28.0, 27.0, 29.0]);
 
     }
 
@@ -407,7 +400,7 @@ mod tests {
 
         // Assert the singular values are what we expect
         assert!(expected_values.iter()
-            .zip(b.diag().data().iter())
+            .zip(b.diag())
             .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
     }
 
@@ -427,7 +420,7 @@ mod tests {
 
         // Assert the singular values are what we expect
         assert!(expected_values.iter()
-            .zip(b.diag().data().iter())
+            .zip(b.diag())
             .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
     }
 
@@ -439,15 +432,18 @@ mod tests {
                           4.0,  2.0,  1.0, -1.0,  3.0;
                           5.0,  1.0,  1.0,  3.0,  2.0);
 
-        let expected_values = vec![ 12.1739747429271112,   5.2681047320525831,   4.4942269799769843,
-                                     2.9279675877385123,   2.8758200827412224];
+        let expected_values = vec![12.1739747429271112,
+                                   5.2681047320525831,
+                                   4.4942269799769843,
+                                   2.9279675877385123,
+                                   2.8758200827412224];
 
         let (b, u, v) = mat.clone().svd().unwrap();
         validate_svd(&mat, &b, &u, &v);
 
         // Assert the singular values are what we expect
         assert!(expected_values.iter()
-            .zip(b.diag().data().iter())
+            .zip(b.diag())
             .all(|(expected, actual)| (expected - actual).abs() < 1e-12));
     }
 }

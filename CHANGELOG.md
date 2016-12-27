@@ -2,7 +2,112 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
-# 0.3.5
+## 0.4.0
+
+This release includes mostly quality of life changes for users of rulinalg. We do some work to conform more to community
+standards with naming, for example `iter_rows` becoming `row_iter`. Additionally several `Matrix` functions now consume `self`
+where before they took a reference and immediately cloned `self`.
+
+Another noticable change is the addition of new `Row` and `Column` types. These types are returned by functions which access
+single rows or columns in a matrix. With these new types we aim to make it easy for users to do matrix operations on single
+rows and columns while maintaining performance where necessary.
+
+This release also welcomes an overhaul of the `Metric` trait. This trait didn't really make sense and only allowed computation
+of the euclidean norm. We have created new `Norm` and `Metric` traits for both `Vector` and matrix types (we would like a single
+pair of traits but this is not possible without specialization). These new traits allow users to write code which is generic over
+norms and specify their own norms. We also provide `Metric` implementations for all `Norm` implementors by computing the norm of
+the difference between the objects.
+
+The full release notes are below.
+
+### New Contributors
+
+- [sinhrks](https://github.com/sinhrks)
+- [c410-f3r](https://github.com/c410-f3r)
+- [Andlon](https://github.com/Andlon)
+(Has been involved for a while but I missed him from these lists. Sorry!)
+
+### Breaking Changes
+
+- The `reslice` function for `MatrixSlice` and `MatrixSliceMut` has been
+depreciated.
+- Rename iterator functions to `*_iter(_mut)`. Affected functions are:
+`iter_diag`, `iter_diag_mut`, `iter_rows`, `iter_rows_mut`.
+- The `BaseMatrix` `diag` function now returns an iterator.
+- Removed the `Metric` trait and all implementations.
+- Some functions now consume `self` instead of cloning internally: `eigenvalues`,
+`eigendecomp`, `lup_decomp`, `solve`, `inverse` and `det`.
+- The `get_row` no longer returns a `&[T]`. Instead it returns the new `Row` type.
+- Row iterator no longer has a `&[T]` item. Instead if uses the new `Row` type.
+- Moved the `BaseMatrix` and `BaseMatrixMut` traits to a new `matrix/base` module.
+
+### Features
+
+- Implemented `FromIterator` for `Vector`.
+- Implemented `from_fn` for `Vector`.
+- Implemented `get_unchecked` for `Vector`.
+- Implemented `try_into` function using
+[num's `NumCast`](http://rust-num.github.io/num/num/cast/trait.NumCast.html) for `Matrix`.
+- Added new traits to replace `Metric`; `MatrixNorm` and `VectorNorm`. These come with
+`MatrixMetric` and `VectorMetric` traits too.
+- Added new `Euclidean` and `Lp` norms.
+- The `get_row` functions now return the new `Row` type.
+- Added a new `get_col` function which returns the new `Column` type.
+- The `row_iter` function uses the new `Row` type as the iterator `Item`.
+
+### Bug Fixes
+
+- Fixed a bug in the ULP comparator where only exact matches were allowed.
+
+### Minor Changes
+
+- The `swap_rows` and `swap_cols` functions are now no-ops if given two identical
+indices.
+- Splitting out the `slice` module for developer QOL.
+
+## 0.3.7
+
+### New Contributors
+
+- [mabruckner](https://github.com/mabruckner)
+
+### Breaking Changes
+
+- None
+
+### Features
+
+- Added new `assert_matrix_eq!` and `assert_vector_eq!` macros
+for easier equality checks. Provides multiple equality comparisons:
+`ulp`, `abs`, `float`, `exact`.
+
+### Bug Fixes
+
+- Further improvements (performance and stability) to the LU decomposition algorithm.
+
+### Minor Changes
+
+- Removed import warning on `lu` module.
+
+## 0.3.6
+
+### Breaking Changes
+
+- None
+
+### Features
+
+- None
+
+### Bug Fixes
+
+- Improved numerical stability of the LUP decomposition.
+
+### Minor Changes
+
+- None
+
+## 0.3.5
 
 ### New Contributors
 
@@ -29,7 +134,7 @@ They no longer `assert!` that a matrix is triangular.
 - All tests are now using `matrix!` macro and other
 tidier constructors.
 
-# 0.3.4
+## 0.3.4
 
 ### New Contributors
 

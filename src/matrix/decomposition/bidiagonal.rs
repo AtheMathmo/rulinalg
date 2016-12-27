@@ -61,9 +61,9 @@ impl<T> Matrix<T>
                 unsafe {
                     // Get the kth row from column k+1 to end.
                     row = std::slice::from_raw_parts(self.data
-                                                    .as_ptr()
-                                                    .offset((k * self.cols + k + 1) as isize),
-                                                n - k - 1);
+                                                         .as_ptr()
+                                                         .offset((k * self.cols + k + 1) as isize),
+                                                     n - k - 1);
                 }
 
                 let row_h_holder = try!(Matrix::make_householder(row).map_err(|_| {
@@ -102,20 +102,15 @@ impl<T> Matrix<T>
 
 #[cfg(test)]
 mod tests {
-    use matrix::Matrix;
-    use matrix::slice::BaseMatrix;
+    use matrix::{BaseMatrix, Matrix};
 
     fn validate_bidiag(mat: &Matrix<f64>,
                        b: &Matrix<f64>,
                        u: &Matrix<f64>,
                        v: &Matrix<f64>,
                        upper: bool) {
-        for (idx, row) in b.iter_rows().enumerate() {
-            let pair_start = if upper {
-                idx
-            } else {
-                idx.saturating_sub(1)
-            };
+        for (idx, row) in b.row_iter().enumerate() {
+            let pair_start = if upper { idx } else { idx.saturating_sub(1) };
             assert!(!row.iter().take(pair_start).any(|&x| x > 1e-10));
             assert!(!row.iter().skip(pair_start + 2).any(|&x| x > 1e-10));
         }

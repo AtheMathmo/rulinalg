@@ -1,14 +1,12 @@
-use matrix::{Matrix, BaseMatrix};
+use matrix::{Matrix, BaseMatrixMut};
 use error::{Error, ErrorKind};
-use utils;
 
 use std::any::Any;
 
-use libnum::{Float};
+use libnum::Float;
 
 impl<T> Matrix<T> where T: Any + Float
 {
-
     /// Computes L, U, and P for LUP decomposition.
     ///
     /// Returns L,U, and P respectively.
@@ -32,63 +30,45 @@ impl<T> Matrix<T> where T: Any + Float
     /// # Failures
     ///
     /// - Matrix cannot be LUP decomposed.
-    pub fn lup_decomp(&self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
+    pub fn lup_decomp(self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
         let n = self.cols;
         assert!(self.rows == n, "Matrix must be square for LUP decomposition.");
-
         let mut l = Matrix::<T>::zeros(n, n);
-        let mut u = Matrix::<T>::zeros(n, n);
-
-        let mt = self.transpose();
-
+        let mut u = self;
         let mut p = Matrix::<T>::identity(n);
 
-        // Compute the permutation matrix
-        for i in 0..n {
-            let (row,_) = utils::argmax(&mt.data[i*(n+1)..(i+1)*n]);
+        for index in 0..n {
+            let mut curr_max_idx = index;
+            let mut curr_max = u[[curr_max_idx, curr_max_idx]];
 
-            if row != 0 {
-                for j in 0..n {
-                    p.data.swap(i*n + j, row*n+j)
+            for i in (curr_max_idx+1)..n {
+                if u[[i, index]].abs() > curr_max.abs() {
+                    curr_max = u[[i, index]];
+                    curr_max_idx = i;
+                }
+            }
+            if curr_max.abs() < T::epsilon() {
+                return Err(Error::new(ErrorKind::DivByZero,
+                    "Singular matrix found in LUP decomposition. \
+                    A value in the diagonal of U == 0.0."));
+            }
+
+            if curr_max_idx != index {
+                l.swap_rows(index, curr_max_idx);
+                u.swap_rows(index, curr_max_idx);
+                p.swap_rows(index, curr_max_idx);
+            }
+            l[[index, index]] = T::one();
+            for i in (index+1)..n {
+                let mult = u[[i, index]]/curr_max;
+                l[[i, index]] = mult;
+                u[[i, index]] = T::zero();
+                for j in (index+1)..n {
+                    u[[i, j]] = u[[i,j]] - mult*u[[index, j]];
                 }
             }
         }
-
-        let a_2 = &p * self;
-
-        for i in 0..n {
-            l.data[i*(n+1)] = T::one();
-
-            for j in 0..i+1 {
-                let mut s1 = T::zero();
-
-                for k in 0..j {
-                    s1 = s1 + l.data[j*n + k] * u.data[k*n + i];
-                }
-
-                u.data[j*n + i] = a_2[[j,i]] - s1;
-            }
-
-            for j in i..n {
-                let mut s2 = T::zero();
-
-                for k in 0..i {
-                    s2 = s2 + l.data[j*n + k] * u.data[k*n + i];
-                }
-
-                let denom = u[[i,i]];
-
-                if denom == T::zero() {
-                    return Err(Error::new(ErrorKind::DivByZero,
-                        "Singular matrix found in LUP decomposition. \
-                        A value in the diagonal of U == 0.0."));
-                }
-                l.data[j*n + i] = (a_2[[j,i]] - s2) / denom;
-            }
-
-        }
-
-        Ok((l,u,p))
+        Ok((l, u, p))
     }
 }
 

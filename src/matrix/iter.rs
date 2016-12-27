@@ -1,13 +1,47 @@
 use std::iter::{ExactSizeIterator, FromIterator};
 use std::mem;
-use std::slice;
+// use std::slice;
 
-use super::{Matrix, MatrixSlice, MatrixSliceMut, Rows, RowsMut, Diagonal, DiagonalMut};
-use super::slice::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
+use super::{Matrix, MatrixSlice, MatrixSliceMut};
+use super::{Row, RowMut, Rows, RowsMut, Diagonal, DiagonalMut};
+use super::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
 
+macro_rules! impl_slice_iter (
+    ($slice_iter:ident, $data_type:ty) => (
+/// Iterates over the matrix slice data in row-major order.
+impl<'a, T> Iterator for $slice_iter<'a, T> {
+    type Item = $data_type;
 
+    fn next(&mut self) -> Option<$data_type> {
+// Set the position of the next element
+        if self.row_pos < self.slice_rows {
+            unsafe {
+                let iter_ptr = self.slice_start.offset((
+                                self.row_pos * self.row_stride + self.col_pos)
+                                as isize);
 
-macro_rules! impl_iter_diag (
+// If end of row, set to start of next row
+                if self.col_pos == self.slice_cols - 1 {
+                    self.row_pos += 1usize;
+                    self.col_pos = 0usize;
+                } else {
+                    self.col_pos += 1usize;
+                }
+
+                Some(mem::transmute(iter_ptr))
+            }
+        } else {
+            None
+        }
+    }
+}
+    );
+);
+
+impl_slice_iter!(SliceIter, &'a T);
+impl_slice_iter!(SliceIterMut, &'a mut T);
+
+macro_rules! impl_diag_iter (
     ($diag:ident, $diag_base:ident, $diag_type:ty, $as_ptr:ident) => (
 
 /// Iterates over the diagonals in the matrix.
@@ -67,16 +101,14 @@ impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
 }
 
 impl<'a, T, M: $diag_base<T>> ExactSizeIterator for $diag<'a, T, M> {}
-
     );
-
 );
 
-impl_iter_diag!(Diagonal, BaseMatrix, &'a T, as_ptr);
-impl_iter_diag!(DiagonalMut, BaseMatrixMut, &'a mut T, as_mut_ptr);
+impl_diag_iter!(Diagonal, BaseMatrix, &'a T, as_ptr);
+impl_diag_iter!(DiagonalMut, BaseMatrixMut, &'a mut T, as_mut_ptr);
 
-macro_rules! impl_iter_rows (
-    ($rows:ident, $row_type:ty, $slice_from_parts:ident) => (
+macro_rules! impl_row_iter (
+    ($rows:ident, $row_type:ty, $row_base:ident, $slice_base:ident) => (
 
 /// Iterates over the rows in the matrix.
 impl<'a, T> Iterator for $rows<'a, T> {
@@ -89,7 +121,9 @@ impl<'a, T> Iterator for $rows<'a, T> {
             unsafe {
 // Get pointer and create a slice from raw parts
                 let ptr = self.slice_start.offset(self.row_pos as isize * self.row_stride);
-                row = slice::$slice_from_parts(ptr, self.slice_cols);
+                row = $row_base {
+                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
+                };
             }
 
             self.row_pos += 1;
@@ -105,7 +139,9 @@ impl<'a, T> Iterator for $rows<'a, T> {
             unsafe {
 // Get pointer to last row and create a slice from raw parts
                 let ptr = self.slice_start.offset((self.slice_rows - 1) as isize * self.row_stride);
-                Some(slice::$slice_from_parts(ptr, self.slice_cols))
+                Some($row_base {
+                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
+                })
             }
         } else {
             None
@@ -117,7 +153,9 @@ impl<'a, T> Iterator for $rows<'a, T> {
             let row: $row_type;
             unsafe {
                 let ptr = self.slice_start.offset((self.row_pos + n) as isize * self.row_stride);
-                row = slice::$slice_from_parts(ptr, self.slice_cols);
+                row = $row_base {
+                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
+                }
             }
 
             self.row_pos += n + 1;
@@ -138,8 +176,8 @@ impl<'a, T> Iterator for $rows<'a, T> {
     );
 );
 
-impl_iter_rows!(Rows, &'a [T], from_raw_parts);
-impl_iter_rows!(RowsMut, &'a mut [T], from_raw_parts_mut);
+impl_row_iter!(Rows, Row<'a, T>, Row, MatrixSlice);
+impl_row_iter!(RowsMut, RowMut<'a, T>, RowMut, MatrixSliceMut);
 
 impl<'a, T> ExactSizeIterator for Rows<'a, T> {}
 impl<'a, T> ExactSizeIterator for RowsMut<'a, T> {}
@@ -174,7 +212,7 @@ impl<'a, T> ExactSizeIterator for RowsMut<'a, T> {}
 ///
 /// // Here we skip the first row and take only those
 /// // where the first entry is less than 6.
-/// let b = a.iter_rows()
+/// let b = a.row_iter()
 ///          .skip(1)
 ///          .filter(|x| x[0] < 6)
 ///          .collect::<Matrix<usize>>();
@@ -224,6 +262,57 @@ impl<'a, T: 'a + Copy> FromIterator<&'a [T]> for Matrix<T> {
         }
     }
 }
+
+macro_rules! impl_from_iter_row(
+    ($row_type:ty) => (
+impl<'a, T: 'a + Copy> FromIterator<$row_type> for Matrix<T> {
+    fn from_iter<I: IntoIterator<Item = $row_type>>(iterable: I) -> Self {
+        let mut mat_data: Vec<T>;
+        let cols: usize;
+        let mut rows = 0;
+
+        let mut iterator = iterable.into_iter();
+
+        match iterator.next() {
+            None => {
+                return Matrix {
+                    data: Vec::new(),
+                    rows: 0,
+                    cols: 0,
+                }
+            }
+            Some(row) => {
+                rows += 1;
+                // Here we set the capacity - get iterator size and the cols
+                let (lower_rows, _) = iterator.size_hint();
+                cols = row.row.cols();
+
+                mat_data = Vec::with_capacity(lower_rows.saturating_add(1).saturating_mul(cols));
+                mat_data.extend_from_slice(row.raw_slice());
+            }
+        }
+
+        for row in iterator {
+            assert!(row.row.cols() == cols, "Iterator row size must be constant.");
+            mat_data.extend_from_slice(row.raw_slice());
+            rows += 1;
+        }
+
+        mat_data.shrink_to_fit();
+
+        Matrix {
+            data: mat_data,
+            rows: rows,
+            cols: cols,
+        }
+    }
+}
+    );
+);
+
+impl_from_iter_row!(Row<'a, T>);
+impl_from_iter_row!(RowMut<'a, T>);
+
 
 impl<'a, T> IntoIterator for MatrixSlice<'a, T> {
     type Item = &'a T;
@@ -282,7 +371,7 @@ impl<'a, T> IntoIterator for &'a mut MatrixSliceMut<'a, T> {
 #[cfg(test)]
 mod tests {
     use super::super::{DiagOffset, Matrix, MatrixSlice, MatrixSliceMut};
-    use super::super::slice::{BaseMatrix, BaseMatrixMut};
+    use super::super::{BaseMatrix, BaseMatrixMut};
 
     #[test]
     fn test_diag_offset_equivalence() {
@@ -293,16 +382,16 @@ mod tests {
                         6.0, 7.0, 8.0];
 
         // Collect each diagonal and compare them
-        let d1 = a.iter_diag(DiagOffset::Main).collect::<Vec<_>>();
-        let d2 = a.iter_diag(DiagOffset::Above(0)).collect::<Vec<_>>();
-        let d3 = a.iter_diag(DiagOffset::Below(0)).collect::<Vec<_>>();
+        let d1 = a.diag_iter(DiagOffset::Main).collect::<Vec<_>>();
+        let d2 = a.diag_iter(DiagOffset::Above(0)).collect::<Vec<_>>();
+        let d3 = a.diag_iter(DiagOffset::Below(0)).collect::<Vec<_>>();
         assert_eq!(d1, d2);
         assert_eq!(d2, d3);
 
         let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 3);
-        let d1 = b.iter_diag(DiagOffset::Main).collect::<Vec<_>>();
-        let d2 = b.iter_diag(DiagOffset::Above(0)).collect::<Vec<_>>();
-        let d3 = b.iter_diag(DiagOffset::Below(0)).collect::<Vec<_>>();
+        let d1 = b.diag_iter(DiagOffset::Main).collect::<Vec<_>>();
+        let d2 = b.diag_iter(DiagOffset::Above(0)).collect::<Vec<_>>();
+        let d3 = b.diag_iter(DiagOffset::Below(0)).collect::<Vec<_>>();
         assert_eq!(d1, d2);
         assert_eq!(d2, d3);
     }
@@ -314,18 +403,18 @@ mod tests {
                             6.0, 7.0, 8.0];
 
         let diags = vec![0.0, 4.0, 8.0];
-        assert_eq!(a.iter_diag(DiagOffset::Main).cloned().collect::<Vec<_>>(), diags);
+        assert_eq!(a.diag_iter(DiagOffset::Main).cloned().collect::<Vec<_>>(), diags);
         let diags = vec![1.0, 5.0];
-        assert_eq!(a.iter_diag(DiagOffset::Above(1)).cloned().collect::<Vec<_>>(), diags);
+        assert_eq!(a.diag_iter(DiagOffset::Above(1)).cloned().collect::<Vec<_>>(), diags);
         let diags = vec![3.0, 7.0];
-        assert_eq!(a.iter_diag(DiagOffset::Below(1)).cloned().collect::<Vec<_>>(), diags);
+        assert_eq!(a.diag_iter(DiagOffset::Below(1)).cloned().collect::<Vec<_>>(), diags);
         let diags = vec![2.0];
-        assert_eq!(a.iter_diag(DiagOffset::Above(2)).cloned().collect::<Vec<_>>(), diags);
+        assert_eq!(a.diag_iter(DiagOffset::Above(2)).cloned().collect::<Vec<_>>(), diags);
         let diags = vec![6.0];
-        assert_eq!(a.iter_diag(DiagOffset::Below(2)).cloned().collect::<Vec<_>>(), diags);
+        assert_eq!(a.diag_iter(DiagOffset::Below(2)).cloned().collect::<Vec<_>>(), diags);
 
         {
-            let diags_iter_mut = a.iter_diag_mut(DiagOffset::Main);
+            let diags_iter_mut = a.diag_iter_mut(DiagOffset::Main);
             for d in diags_iter_mut {
                 *d = 1.0;
             }
@@ -338,9 +427,9 @@ mod tests {
 
     #[test]
     fn test_empty_matrix_diag() {
-        let a : Matrix<f32> = matrix![];
+        let a: Matrix<f32> = matrix![];
 
-        assert_eq!(None, a.iter_diag(DiagOffset::Main).next());
+        assert_eq!(None, a.diag_iter(DiagOffset::Main).next());
     }
 
     #[test]
@@ -352,19 +441,19 @@ mod tests {
             let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 4);
 
             let diags = vec![0.0, 5.0];
-            assert_eq!(b.iter_diag(DiagOffset::Main).cloned().collect::<Vec<_>>(), diags);
+            assert_eq!(b.diag_iter(DiagOffset::Main).cloned().collect::<Vec<_>>(), diags);
             let diags = vec![1.0, 6.0];
-            assert_eq!(b.iter_diag(DiagOffset::Above(1)).cloned().collect::<Vec<_>>(), diags);
+            assert_eq!(b.diag_iter(DiagOffset::Above(1)).cloned().collect::<Vec<_>>(), diags);
             let diags = vec![2.0, 7.0];
-            assert_eq!(b.iter_diag(DiagOffset::Above(2)).cloned().collect::<Vec<_>>(), diags);
+            assert_eq!(b.diag_iter(DiagOffset::Above(2)).cloned().collect::<Vec<_>>(), diags);
             let diags = vec![3.0];
-            assert_eq!(b.iter_diag(DiagOffset::Above(3)).cloned().collect::<Vec<_>>(), diags);
+            assert_eq!(b.diag_iter(DiagOffset::Above(3)).cloned().collect::<Vec<_>>(), diags);
             let diags = vec![4.0];
-            assert_eq!(b.iter_diag(DiagOffset::Below(1)).cloned().collect::<Vec<_>>(), diags);
+            assert_eq!(b.diag_iter(DiagOffset::Below(1)).cloned().collect::<Vec<_>>(), diags);
         }
 
         {
-            let diags_iter_mut = a.iter_diag_mut(DiagOffset::Main);
+            let diags_iter_mut = a.diag_iter_mut(DiagOffset::Main);
             for d in diags_iter_mut {
                 *d = 1.0;
             }
@@ -381,17 +470,17 @@ mod tests {
                         4.0, 5.0, 6.0, 7.0;
                         8.0, 9.0, 10.0, 11.0];
 
-        let mut diags_iter = a.iter_diag(DiagOffset::Main);
+        let mut diags_iter = a.diag_iter(DiagOffset::Main);
         assert_eq!(0.0, *diags_iter.nth(0).unwrap());
         assert_eq!(10.0, *diags_iter.nth(1).unwrap());
         assert_eq!(None, diags_iter.next());
 
-        let mut diags_iter = a.iter_diag(DiagOffset::Above(1));
+        let mut diags_iter = a.diag_iter(DiagOffset::Above(1));
         assert_eq!(6.0, *diags_iter.nth(1).unwrap());
         assert_eq!(11.0, *diags_iter.next().unwrap());
         assert_eq!(None, diags_iter.next());
 
-        let mut diags_iter = a.iter_diag(DiagOffset::Below(1));
+        let mut diags_iter = a.diag_iter(DiagOffset::Below(1));
         assert_eq!(9.0, *diags_iter.nth(1).unwrap());
         assert_eq!(None, diags_iter.next());
     }
@@ -401,19 +490,19 @@ mod tests {
         let a = matrix![0.0, 1.0, 2.0, 3.0;
                         4.0, 5.0, 6.0, 7.0;
                         8.0, 9.0, 10.0, 11.0];
-        let b = MatrixSlice::from_matrix(&a, [0,0], 2, 4);
+        let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 4);
 
-        let mut diags_iter = b.iter_diag(DiagOffset::Main);
+        let mut diags_iter = b.diag_iter(DiagOffset::Main);
         assert_eq!(5.0, *diags_iter.nth(1).unwrap());;
         assert_eq!(None, diags_iter.next());
 
-        let mut diags_iter = b.iter_diag(DiagOffset::Above(1));
+        let mut diags_iter = b.diag_iter(DiagOffset::Above(1));
         assert_eq!(6.0, *diags_iter.nth(1).unwrap());
         assert_eq!(None, diags_iter.next());
 
-        let mut diags_iter = b.iter_diag(DiagOffset::Below(1));
+        let mut diags_iter = b.diag_iter(DiagOffset::Below(1));
         assert_eq!(4.0, *diags_iter.nth(0).unwrap());
-        assert_eq!(None, diags_iter.next());        
+        assert_eq!(None, diags_iter.next());
     }
 
     #[test]
@@ -422,14 +511,14 @@ mod tests {
                         3.0, 4.0, 5.0;
                         6.0, 7.0, 8.0];
 
-        let diags_iter = a.iter_diag(DiagOffset::Main);
+        let diags_iter = a.diag_iter(DiagOffset::Main);
         assert_eq!(8.0, *diags_iter.last().unwrap());
 
-        let diags_iter = a.iter_diag(DiagOffset::Above(2));
+        let diags_iter = a.diag_iter(DiagOffset::Above(2));
         assert_eq!(2.0, *diags_iter.last().unwrap());
 
-        let diags_iter = a.iter_diag(DiagOffset::Below(2));
-        assert_eq!(6.0, *diags_iter.last().unwrap());    
+        let diags_iter = a.diag_iter(DiagOffset::Below(2));
+        assert_eq!(6.0, *diags_iter.last().unwrap());
     }
 
     #[test]
@@ -437,20 +526,20 @@ mod tests {
         let a = matrix![0.0, 1.0, 2.0;
                         3.0, 4.0, 5.0;
                         6.0, 7.0, 8.0];
-        let b = MatrixSlice::from_matrix(&a, [0,0], 3, 2);
+        let b = MatrixSlice::from_matrix(&a, [0, 0], 3, 2);
 
         {
-            let diags_iter = b.iter_diag(DiagOffset::Main);
+            let diags_iter = b.diag_iter(DiagOffset::Main);
             assert_eq!(4.0, *diags_iter.last().unwrap());
         }
 
         {
-            let diags_iter = b.iter_diag(DiagOffset::Above(1));
+            let diags_iter = b.diag_iter(DiagOffset::Above(1));
             assert_eq!(1.0, *diags_iter.last().unwrap());
         }
 
         {
-            let diags_iter = b.iter_diag(DiagOffset::Below(2));
+            let diags_iter = b.diag_iter(DiagOffset::Below(2));
             assert_eq!(6.0, *diags_iter.last().unwrap());
         }
     }
@@ -461,13 +550,13 @@ mod tests {
                         3.0, 4.0, 5.0;
                         6.0, 7.0, 8.0];
 
-        assert_eq!(3, a.iter_diag(DiagOffset::Main).count());
-        assert_eq!(2, a.iter_diag(DiagOffset::Above(1)).count());
-        assert_eq!(1, a.iter_diag(DiagOffset::Above(2)).count());
-        assert_eq!(2, a.iter_diag(DiagOffset::Below(1)).count());
-        assert_eq!(1, a.iter_diag(DiagOffset::Below(2)).count());
+        assert_eq!(3, a.diag_iter(DiagOffset::Main).count());
+        assert_eq!(2, a.diag_iter(DiagOffset::Above(1)).count());
+        assert_eq!(1, a.diag_iter(DiagOffset::Above(2)).count());
+        assert_eq!(2, a.diag_iter(DiagOffset::Below(1)).count());
+        assert_eq!(1, a.diag_iter(DiagOffset::Below(2)).count());
 
-        let mut diags_iter = a.iter_diag(DiagOffset::Main);
+        let mut diags_iter = a.diag_iter(DiagOffset::Main);
         diags_iter.next();
         assert_eq!(2, diags_iter.count());
     }
@@ -478,7 +567,7 @@ mod tests {
                         3.0, 4.0, 5.0;
                         6.0, 7.0, 8.0];
 
-        let mut diags_iter = a.iter_diag(DiagOffset::Main);
+        let mut diags_iter = a.diag_iter(DiagOffset::Main);
         assert_eq!((3, Some(3)), diags_iter.size_hint());
         diags_iter.next();
 
@@ -499,16 +588,16 @@ mod tests {
                             6, 7, 8];
         let data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
 
-        for (i, row) in a.iter_rows().enumerate() {
-            assert_eq!(data[i], *row);
+        for (i, row) in a.row_iter().enumerate() {
+            assert_eq!(data[i], *row.raw_slice());
         }
 
-        for (i, row) in a.iter_rows_mut().enumerate() {
-            assert_eq!(data[i], *row);
+        for (i, row) in a.row_iter_mut().enumerate() {
+            assert_eq!(data[i], *row.raw_slice());
         }
 
-        for row in a.iter_rows_mut() {
-            for r in row {
+        for mut row in a.row_iter_mut() {
+            for r in row.raw_slice_mut() {
                 *r = 0;
             }
         }
@@ -520,14 +609,14 @@ mod tests {
     fn test_matrix_slice_rows() {
         let a = matrix![0, 1, 2;
                         3, 4, 5;
-                        6, 7, 8];;
+                        6, 7, 8];
 
         let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 2);
 
         let data = [[0, 1], [3, 4]];
 
-        for (i, row) in b.iter_rows().enumerate() {
-            assert_eq!(data[i], *row);
+        for (i, row) in b.row_iter().enumerate() {
+            assert_eq!(data[i], *row.raw_slice());
         }
     }
 
@@ -542,16 +631,16 @@ mod tests {
 
             let data = [[0, 1], [3, 4]];
 
-            for (i, row) in b.iter_rows().enumerate() {
-                assert_eq!(data[i], *row);
+            for (i, row) in b.row_iter().enumerate() {
+                assert_eq!(data[i], *row.raw_slice());
             }
 
-            for (i, row) in b.iter_rows_mut().enumerate() {
-                assert_eq!(data[i], *row);
+            for (i, row) in b.row_iter_mut().enumerate() {
+                assert_eq!(data[i], *row.raw_slice());
             }
 
-            for row in b.iter_rows_mut() {
-                for r in row {
+            for mut row in b.row_iter_mut() {
+                for r in row.raw_slice_mut() {
                     *r = 0;
                 }
             }
@@ -566,12 +655,12 @@ mod tests {
                         3, 4, 5;
                         6, 7, 8];
 
-        let mut row_iter = a.iter_rows();
+        let mut row_iter = a.row_iter();
 
-        assert_eq!([0, 1, 2], *row_iter.nth(0).unwrap());
-        assert_eq!([6, 7, 8], *row_iter.nth(1).unwrap());
+        assert_eq!([0, 1, 2], *row_iter.nth(0).unwrap().raw_slice());
+        assert_eq!([6, 7, 8], *row_iter.nth(1).unwrap().raw_slice());
 
-        assert_eq!(None, row_iter.next());
+        assert!(row_iter.next().is_none());
     }
 
     #[test]
@@ -580,23 +669,23 @@ mod tests {
                         3, 4, 5;
                         6, 7, 8];
 
-        let row_iter = a.iter_rows();
+        let row_iter = a.row_iter();
 
-        assert_eq!([6, 7, 8], *row_iter.last().unwrap());
+        assert_eq!([6, 7, 8], *row_iter.last().unwrap().raw_slice());
 
-        let mut row_iter = a.iter_rows();
-
-        row_iter.next();
-        assert_eq!([6, 7, 8], *row_iter.last().unwrap());
-
-        let mut row_iter = a.iter_rows();
+        let mut row_iter = a.row_iter();
 
         row_iter.next();
+        assert_eq!([6, 7, 8], *row_iter.last().unwrap().raw_slice());
+
+        let mut row_iter = a.row_iter();
+
+        row_iter.next();
         row_iter.next();
         row_iter.next();
         row_iter.next();
 
-        assert_eq!(None, row_iter.last());
+        assert!(row_iter.last().is_none());
     }
 
     #[test]
@@ -605,11 +694,11 @@ mod tests {
                         3, 4, 5;
                         6, 7, 8];
 
-        let row_iter = a.iter_rows();
+        let row_iter = a.row_iter();
 
         assert_eq!(3, row_iter.count());
 
-        let mut row_iter_2 = a.iter_rows();
+        let mut row_iter_2 = a.row_iter();
         row_iter_2.next();
         assert_eq!(2, row_iter_2.count());
     }
@@ -620,7 +709,7 @@ mod tests {
                         3, 4, 5;
                         6, 7, 8];
 
-        let mut row_iter = a.iter_rows();
+        let mut row_iter = a.row_iter();
 
         assert_eq!((3, Some(3)), row_iter.size_hint());
 
@@ -632,12 +721,12 @@ mod tests {
 
         assert_eq!((0, Some(0)), row_iter.size_hint());
 
-        assert_eq!(None, row_iter.next());
+        assert!(row_iter.next().is_none());
         assert_eq!((0, Some(0)), row_iter.size_hint());
     }
 
     #[test]
-    fn into_iter_compile() { 
+    fn into_iter_compile() {
         let a = Matrix::ones(3, 3) * 2.;
         let mut b = MatrixSlice::from_matrix(&a, [1, 1], 2, 2);
 
@@ -652,9 +741,9 @@ mod tests {
     }
 
     #[test]
-    fn into_iter_mut_compile() { 
+    fn into_iter_mut_compile() {
         let mut a = Matrix::<f32>::ones(3, 3) * 2.;
-        
+
         {
             let b = MatrixSliceMut::from_matrix(&mut a, [1, 1], 2, 2);
 

@@ -250,7 +250,7 @@ pub fn argmax<T>(u: &[T]) -> (usize, T)
     let mut max_index = 0;
     let mut max = u[max_index];
 
-    for (i, v) in (u.iter()).enumerate() {
+    for (i, v) in u.iter().enumerate().skip(1) {
         if max < *v {
             max_index = i;
             max = *v;
@@ -282,7 +282,7 @@ pub fn argmin<T>(u: &[T]) -> (usize, T)
     let mut min_index = 0;
     let mut min = u[min_index];
 
-    for (i, v) in (u.iter()).enumerate() {
+    for (i, v) in u.iter().enumerate().skip(1) {
         if min > *v {
             min_index = i;
             min = *v;
