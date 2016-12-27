@@ -146,6 +146,7 @@ impl<'a, T> MatrixSliceMut<'a, T> {
 
 #[cfg(test)]
 mod tests {
+
     use matrix::{Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix, Axes};
     use vector::Vector;
 
