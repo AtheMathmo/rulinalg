@@ -22,7 +22,7 @@ mod mat_mul;
 mod iter;
 mod deref;
 mod slice;
-pub mod base;
+mod base;
 
 pub use self::base::{BaseMatrix, BaseMatrixMut};
 
