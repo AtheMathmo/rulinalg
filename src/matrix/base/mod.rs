@@ -314,9 +314,7 @@ pub trait BaseMatrix<T>: Sized {
     {
         let mut sum_rows = vec![T::zero(); self.cols()];
         for row in self.row_iter() {
-            for (sum, &r) in sum_rows.iter_mut().zip(row.raw_slice()) {
-                *sum = *sum + r;
-            }
+            utils::in_place_vec_bin_op(&mut sum_rows, row.raw_slice(), |sum, &r| *sum = *sum + r);
         }
         Vector::new(sum_rows)
     }
