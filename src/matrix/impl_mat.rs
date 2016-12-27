@@ -1,10 +1,10 @@
 use std::any::Any;
 use std::fmt;
-use libnum::{One, Zero, Float, FromPrimitive};
+use libnum::{One, Zero, Float, FromPrimitive, Signed};
 
 use super::{Matrix, forward_substitution, back_substitution, parity};
 use super::{Axes};
-use super::base::BaseMatrix;
+use super::base::{BaseMatrix, BaseMatrixMut};
 use error::{Error, ErrorKind};
 use vector::Vector;
 
@@ -18,7 +18,8 @@ impl<T> Matrix<T> {
     /// ```
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let mat = Matrix::new(2,2, vec![1.0,2.0,3.0,4.0]);
+    /// let mat = Matrix::new(2,2, vec![1.0, 2.0,
+    ///                                 3.0, 4.0]);
     ///
     /// assert_eq!(mat.rows(), 2);
     /// assert_eq!(mat.cols(), 2);
@@ -314,7 +315,8 @@ impl<T: Any + Float> Matrix<T> {
     /// use rulinalg::matrix::Matrix;
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = Matrix::new(2,2, vec![2.0,3.0,1.0,2.0]);
+    /// let a = Matrix::new(2,2, vec![2.0, 3.0,
+    ///                               1.0, 2.0]);
     /// let y = Vector::new(vec![13.0,8.0]);
     ///
     /// let x = a.solve(y).unwrap();
@@ -343,14 +345,16 @@ impl<T: Any + Float> Matrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::Matrix;
     ///
-    /// let a = Matrix::new(2,2, vec![2.,3.,1.,2.]);
+    /// let a = Matrix::new(2, 2, vec![2.0, 3.0,
+    ///                                1.0, 2.0]);
     /// let inv = a.clone().inverse().expect("This matrix should have an inverse!");
-    ///
-    /// let I = a * inv;
-    ///
-    /// assert_eq!(*I.data(), vec![1.0,0.0,0.0,1.0]);
+    /// let expected = Matrix::new(2,2, vec![2.0, -3.0;
+    ///                                     -1.0,  2.0]);
+    /// assert_matrix_eq!(inv, expected);
+    /// # }
     /// ```
     ///
     /// # Panics
@@ -408,8 +412,8 @@ impl<T: Any + Float> Matrix<T> {
     /// ```
     /// use rulinalg::matrix::Matrix;
     ///
-    /// let a = Matrix::new(3,3, vec![1.0,2.0,0.0,
-    ///                               0.0,3.0,4.0,
+    /// let a = Matrix::new(3,3, vec![1.0, 2.0, 0.0,
+    ///                               0.0, 3.0, 4.0,
     ///                               5.0, 1.0, 2.0]);
     ///
     /// let det = a.det();
@@ -468,6 +472,35 @@ impl<T: Any + Float> Matrix<T> {
             sgn * d
         }
     }
+}
+
+impl<T: Any + Float + Signed + FromPrimitive> Matrix<T> {
+    /// Computes the pseudo-inverse of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::matrix::Matrix;
+    ///
+    /// let a: Matrix<f32> = Matrix::new(2, 2, vec![2.0, 3.0,
+    ///                                             1.0, 2.0]);
+    /// let pinv = a.pseudo_inverse().expect("This matrix should have a pseudo-inverse!");
+    /// let expected = Matrix::new(2, 2, vec![2.0, -3.0,
+    ///                                      -1.0,  2.0]);
+    /// assert_matrix_eq!(pinv, expected, comp = float);
+    /// # }
+    /// ```
+	pub fn pseudo_inverse(self) -> Result<Matrix<T>, Error> {
+		let max_side = ::std::cmp::max(self.cols(), self.rows());
+		self.svd().map(|(s, u, v)| {
+			let max = T::from_usize(max_side).unwrap();
+			let s_max = unsafe { s.get_unchecked([0, 0]).clone() };
+			let epsilon = max * T::epsilon() * s_max;
+			let z = s.apply(&|x| if x > epsilon { T::one() / x } else { T::zero() });
+			v * z * u.transpose()
+		})
+	}
 }
 
 impl<T: fmt::Display> fmt::Display for Matrix<T> {
@@ -737,6 +770,60 @@ mod tests {
 
         assert_eq!(x[0], 1.);
         assert_eq!(x[1], 2.);
+    }
+
+    #[test]
+    fn matrix_inverse() {
+    	let a = matrix![2.0, 3.0; 1.0, 2.0];
+    	let inv = a.inverse().expect("This matrix should have an inverse!");
+        let expected = matrix![2.0, -3.0; -1.0, 2.0];
+        assert_matrix_eq!(inv, expected, comp = abs, tol = 1e-5);
+    }
+
+    #[test]
+    fn matrix_pseudo_inverse_wide() {
+    	let a = matrix![
+    		1.0, 2.0, 3.0;
+    		4.0, 5.0, 6.0
+    	];
+    	let pinv = a.pseudo_inverse().expect("This matrix should have a pseudo-inverse!");
+        let expected = matrix![
+            -0.9444444,  0.4444444;
+            -0.1111111,  0.1111111;
+             0.7222222, -0.2222222
+        ];
+        assert_matrix_eq!(pinv, expected, comp = abs, tol = 1e-5);
+    }
+
+    #[test]
+    fn matrix_pseudo_inverse_tall() {
+    	let a = matrix![
+    		1.0, 2.0;
+            3.0, 4.0;
+            5.0, 6.0
+    	];
+    	let pinv = a.pseudo_inverse().expect("This matrix should have a pseudo-inverse!");
+        let expected = matrix![
+            -1.3333333, -0.3333333,  0.6666667;
+             1.0833333,  0.3333333, -0.4166667
+        ];
+        assert_matrix_eq!(pinv, expected, comp = abs, tol = 1e-5);
+    }
+
+    #[test]
+    fn matrix_pseudo_inverse_square() {
+    	let a = matrix![
+    		1.0, 2.0, 3.0;
+            4.0, 5.0, 6.0;
+            7.0, 8.0, 9.0
+    	];
+    	let pinv = a.pseudo_inverse().expect("This matrix should have a pseudo-inverse!");
+        let expected = matrix![
+            -0.6388889, -0.1666667,  0.3055556;
+            -0.0555556,  0.0000000,  0.0555556;
+             0.5277778,  0.1666667, -0.1944444
+        ];
+        assert_matrix_eq!(pinv, expected, comp = abs, tol = 1e-5);
     }
 
     #[test]
