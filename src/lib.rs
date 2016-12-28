@@ -110,3 +110,10 @@ extern crate itertools;
 
 pub use norm::{VectorNorm, MatrixNorm};
 pub use norm::{VectorMetric, MatrixMetric};
+
+#[cfg(feature = "io")]
+extern crate csv;
+
+#[cfg(feature = "io")]
+/// io module
+pub mod io;
