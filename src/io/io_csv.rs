@@ -12,24 +12,14 @@ impl<T> Matrix<T> where T: Decodable {
         -> Result<Matrix<T>, csv::Error> {
 
         // headers read 1st row regardless of has_headers property
-        let header: Vec<String> = match reader.headers() {
-            Ok(header) => header,
-            Err(error) => {
-                return Err(error);
-            }
-        };
+        let header: Vec<String> = try!(reader.headers());
 
         let mut nrows = 0;
         let ncols = header.len();
 
         let mut records: Vec<T> = vec![];
         for record in reader.decode() {
-            let values: Vec<T> = match record {
-                Ok(values) => values,
-                Err(error) => {
-                    return Err(error);
-                }
-            };
+            let values: Vec<T> = try!(record);
             records.extend(values);
             nrows += 1;
         }
@@ -44,12 +34,7 @@ impl<T> Matrix<T> where T: Encodable {
         -> Result<(), csv::Error> {
 
         for row in self.row_iter() {
-            match writer.encode(row.raw_slice()) {
-                Ok(_) => {},
-                Err(error) => {
-                    return Err(error);
-                }
-            }
+            try!(writer.encode(row.raw_slice()));
         }
         Ok(())
     }
@@ -60,7 +45,6 @@ impl<T> Matrix<T> where T: Encodable {
 mod tests {
 
     use csv;
-
     use super::super::super::matrix::Matrix;
 
     #[test]
