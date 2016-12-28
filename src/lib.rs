@@ -118,4 +118,4 @@ extern crate rustc_serialize;
 
 #[cfg(feature = "io")]
 /// io module
-pub mod io;
+mod io;
