@@ -428,17 +428,17 @@ mod tests {
 
     #[test]
     fn matrix_diag() {
-        let a = matrix!(1., 3., 5.;
+        let a = matrix![1., 3., 5.;
                         2., 4., 7.;
-                        1., 1., 0.);
+                        1., 1., 0.];
 
         let b = a.is_diag();
 
         assert!(!b);
 
-        let c = matrix!(1., 0., 0.;
+        let c = matrix![1., 0., 0.;
                         0., 2., 0.;
-                        0., 0., 3.);
+                        0., 0., 3.];
         let d = c.is_diag();
 
         assert!(d);
@@ -446,11 +446,11 @@ mod tests {
 
     #[test]
     fn transpose_mat() {
-        let a = matrix!(1., 2.;
+        let a = matrix![1., 2.;
                         3., 4.;
                         5., 6.;
                         7., 8.;
-                        9., 10.);
+                        9., 10.];
 
         let c = a.transpose();
 

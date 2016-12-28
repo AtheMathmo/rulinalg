@@ -292,11 +292,11 @@ mod tests {
 
     #[test]
     fn matrix_mul_f32() {
-        let a = matrix!(1f32, 2.;
+        let a = matrix![1f32, 2.;
                         3., 4.;
-                        5., 6.);
-        let b = matrix!(1f32, 2., 3.;
-                        4., 5., 6.);
+                        5., 6.];
+        let b = matrix![1f32, 2., 3.;
+                        4., 5., 6.];
 
         // Allocating new memory
         let c = &a * &b;
@@ -317,11 +317,11 @@ mod tests {
 
     #[test]
     fn matrix_mul_f64() {
-        let a = matrix!(1f64, 2.;
+        let a = matrix![1f64, 2.;
                         3., 4.;
-                        5., 6.);
-        let b = matrix!(1f64, 2., 3.;
-                        4., 5., 6.);
+                        5., 6.];
+        let b = matrix![1f64, 2., 3.;
+                        4., 5., 6.];
 
         // Allocating new memory
         let c = &a * &b;
@@ -342,11 +342,11 @@ mod tests {
 
     #[test]
     fn matrix_mul_usize() {
-        let a = matrix!(1usize, 2;
+        let a = matrix![1usize, 2;
                         3, 4;
-                        5, 6);
-        let b = matrix!(1usize, 2, 3;
-                        4, 5, 6);
+                        5, 6];
+        let b = matrix![1usize, 2, 3;
+                        4, 5, 6];
 
         // Allocating new memory
         let c = &a * &b;
@@ -397,10 +397,10 @@ mod tests {
 
     #[test]
     fn mul_slice_uneven_data() {
-        let a = matrix!(1.0, 2.0; 3.0, 4.0);
+        let a = matrix![1.0, 2.0; 3.0, 4.0];
 
-        let c = matrix!(1.0, 2.0, 3.0;
-                        4.0, 5.0, 6.0);
+        let c = matrix![1.0, 2.0, 3.0;
+                        4.0, 5.0, 6.0];
         let d = MatrixSlice::from_matrix(&c, [0, 0], 2, 2);
 
         let e = d * a;
@@ -413,9 +413,9 @@ mod tests {
 
     #[test]
     fn mul_slice_uneven_data_usize() {
-        let a = matrix!(1usize, 2; 3, 4);
+        let a = matrix![1usize, 2; 3, 4];
 
-        let c = matrix!(1usize, 2, 3; 4, 5, 6);
+        let c = matrix![1usize, 2, 3; 4, 5, 6];
         let d = MatrixSlice::from_matrix(&c, [0, 0], 2, 2);
 
         let e = d * a;
