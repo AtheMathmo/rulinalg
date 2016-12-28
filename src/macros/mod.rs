@@ -1,6 +1,9 @@
 //! Macros for the linear algebra modules.
 
 #[macro_use]
+mod vector;
+
+#[macro_use]
 mod matrix;
 
 #[macro_use]
