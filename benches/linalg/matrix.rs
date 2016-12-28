@@ -1,4 +1,4 @@
-use rulinalg::matrix::Matrix;
+use rulinalg::matrix::{Matrix, Axes};
 use rulinalg::matrix::{BaseMatrix, BaseMatrixMut};
 use test::Bencher;
 use test::black_box;
@@ -146,5 +146,65 @@ fn mat_swap_cols_0_99(b: &mut Bencher) {
 
     b.iter(|| {
         black_box(m.swap_cols(0, 99));
+    });
+}
+
+#[bench]
+fn mat_sum_cols(b: &mut Bencher) {
+    let v = (0..100).collect::<Vec<_>>();
+    let mut data = Vec::with_capacity(10000);
+
+    for _ in 0..100 {
+        data.extend_from_slice(&v);
+    }
+    let m = Matrix::new(100, 100, data);
+
+    b.iter(|| {
+        black_box(m.sum_cols());
+    });
+}
+
+#[bench]
+fn mat_sum_rows(b: &mut Bencher) {
+    let v = (0..100).collect::<Vec<_>>();
+    let mut data = Vec::with_capacity(10000);
+
+    for _ in 0..100 {
+        data.extend_from_slice(&v);
+    }
+    let m = Matrix::new(100, 100, data);
+
+    b.iter(|| {
+        black_box(m.sum_rows());
+    });
+}
+
+#[bench]
+fn mat_mean_cols(b: &mut Bencher) {
+    let v = (0..100).map(|x| x as f64).collect::<Vec<_>>();
+    let mut data = Vec::with_capacity(10000);
+
+    for _ in 0..100 {
+        data.extend_from_slice(&v);
+    }
+    let m = Matrix::new(100, 100, data);
+
+    b.iter(|| {
+        black_box(m.mean(Axes::Col));
+    });
+}
+
+#[bench]
+fn mat_mean_rows(b: &mut Bencher) {
+    let v = (0..100).map(|x| x as f64).collect::<Vec<_>>();
+    let mut data = Vec::with_capacity(10000);
+
+    for _ in 0..100 {
+        data.extend_from_slice(&v);
+    }
+    let m = Matrix::new(100, 100, data);
+
+    b.iter(|| {
+        black_box(m.mean(Axes::Row));
     });
 }
