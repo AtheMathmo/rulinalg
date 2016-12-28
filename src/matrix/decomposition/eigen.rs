@@ -361,7 +361,6 @@ impl<T: Any + Float + Signed> Matrix<T> {
 #[cfg(test)]
 mod tests {
     use matrix::Matrix;
-    use vector::Vector;
 
     #[test]
     fn test_1_by_1_matrix_eigenvalues() {
@@ -402,8 +401,8 @@ mod tests {
         let lambda_1 = eigenvals[0];
         let lambda_2 = eigenvals[1];
 
-        let v1 = Vector::new(vec![eigenvecs[[0, 0]], eigenvecs[[1, 0]]]);
-        let v2 = Vector::new(vec![eigenvecs[[0, 1]], eigenvecs[[1, 1]]]);
+        let v1 = vector![eigenvecs[[0, 0]], eigenvecs[[1, 0]]];
+        let v2 = vector![eigenvecs[[0, 1]], eigenvecs[[1, 1]]];
 
         let epsilon = 0.00001;
         assert!((&a * &v1 - &v1 * lambda_1).into_vec().iter().all(|&c| c < epsilon));

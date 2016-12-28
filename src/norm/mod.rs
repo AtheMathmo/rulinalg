@@ -226,7 +226,7 @@ mod tests {
 
     #[test]
     fn test_euclidean_vector_norm() {
-        let v = Vector::new(vec![3.0, 4.0]);
+        let v = vector![3.0, 4.0];
         assert!((VectorNorm::norm(&Euclidean, &v) - 5.0) < 1e-14);
     }
 
@@ -242,21 +242,21 @@ mod tests {
 
     #[test]
     fn test_euclidean_vector_metric() {
-        let v = Vector::new(vec![3.0, 4.0]);
+        let v = vector![3.0, 4.0];
         assert!((VectorMetric::metric(&Euclidean, &v, &v)) < 1e-14);
 
-        let v1 = Vector::new(vec![0.0, 0.0]);
+        let v1 = vector![0.0, 0.0];
         assert!((VectorMetric::metric(&Euclidean, &v, &v1) - 5.0) < 1e-14);
 
-        let v2 = Vector::new(vec![4.0, 3.0]);
+        let v2 = vector![4.0, 3.0];
         assert!((VectorMetric::metric(&Euclidean, &v, &v2) - 2.0.sqrt()) < 1e-14);
     }
 
     #[test]
     #[should_panic]
     fn test_euclidean_vector_metric_bad_dim() {
-        let v = Vector::new(vec![3.0, 4.0]);
-        let v2 = Vector::new(vec![1.0, 2.0, 3.0]);
+        let v = vector![3.0, 4.0];
+        let v2 = vector![1.0, 2.0, 3.0];
 
         VectorMetric::metric(&Euclidean, &v, &v2);
     }
@@ -286,7 +286,7 @@ mod tests {
 
     #[test]
     fn test_lp_vector_supremum() {
-        let v = Vector::new(vec![-5.0, 3.0]);
+        let v = vector![-5.0, 3.0];
 
         let sup = VectorNorm::norm(&Lp::Infinity, &v);
         assert_eq!(sup, 5.0);
@@ -303,7 +303,7 @@ mod tests {
 
     #[test]
     fn test_lp_vector_one() {
-        let v = Vector::new(vec![1.0, 2.0, -2.0]);
+        let v = vector![1.0, 2.0, -2.0];
         assert_eq!(VectorNorm::norm(&Lp::Integer(1), &v), 5.0);
     }
 
@@ -316,7 +316,7 @@ mod tests {
 
     #[test]
     fn test_lp_vector_float() {
-        let v = Vector::new(vec![1.0, 2.0, -2.0]);
+        let v = vector![1.0, 2.0, -2.0];
         assert_eq!(VectorNorm::norm(&Lp::Float(1.0), &v), 5.0);
     }
 

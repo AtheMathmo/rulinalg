@@ -312,9 +312,10 @@ pub trait BaseMatrix<T>: Sized {
     fn sum_rows(&self) -> Vector<T>
         where T: Copy + Zero + Add<T, Output = T>
     {
-        let sum_rows = self.row_iter().fold(vec![T::zero(); self.cols()], |row_sum, r| {
-            utils::vec_bin_op(&row_sum, r.raw_slice(), |sum, val| sum + val)
-        });
+        let mut sum_rows = vec![T::zero(); self.cols()];
+        for row in self.row_iter() {
+            utils::in_place_vec_bin_op(&mut sum_rows, row.raw_slice(), |sum, &r| *sum = *sum + r);
+        }
         Vector::new(sum_rows)
     }
 
@@ -388,7 +389,7 @@ pub trait BaseMatrix<T>: Sized {
     /// assert_eq!(c, 2.0);
     /// # }
     /// ```
-    fn metric<'a, 'b, B, M>(&'a self, mat: &'b B, metric: M) -> T 
+    fn metric<'a, 'b, B, M>(&'a self, mat: &'b B, metric: M) -> T
         where B: 'b + BaseMatrix<T>, M: MatrixMetric<'a, 'b, T, Self, B>
     {
         metric.metric(self, mat)

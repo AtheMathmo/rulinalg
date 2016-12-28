@@ -888,8 +888,7 @@ mod tests {
     use super::super::Matrix;
     use super::super::MatrixSlice;
     use super::super::MatrixSliceMut;
-    use super::super::super::vector::Vector;
-
+    
     #[test]
     fn indexing_mat() {
         let a = matrix![1., 2.;
@@ -909,7 +908,7 @@ mod tests {
         let a = matrix![1., 2.;
                         3., 4.;
                         5., 6.];
-        let b = Vector::new(vec![4., 7.]);
+        let b = vector![4., 7.];
 
         let c = a * b;
 

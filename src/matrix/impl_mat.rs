@@ -540,7 +540,6 @@ impl<T: fmt::Display> fmt::Display for Matrix<T> {
 
 #[cfg(test)]
 mod tests {
-    use vector::Vector;
     use matrix::{Axes, BaseMatrix, Matrix};
     use libnum::abs;
 
@@ -729,7 +728,7 @@ mod tests {
         let a = matrix![2., 3.;
                         1., 2.];
 
-        let y = Vector::new(vec![8., 5.]);
+        let y = vector![8., 5.];
 
         let x = a.solve(y).unwrap();
 

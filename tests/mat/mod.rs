@@ -1,4 +1,3 @@
-use rulinalg::vector::Vector;
 use rulinalg::matrix::{BaseMatrix, Matrix};
 
 #[test]
@@ -13,7 +12,7 @@ fn test_solve() {
                     0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, -4.0, 1.0;
                     0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, -4.0];
 
-    let b = Vector::new(vec![-100.0, 0.0, 0.0, -100.0, 0.0, 0.0, -100.0, 0.0, 0.0]);
+    let b = vector![-100.0, 0.0, 0.0, -100.0, 0.0, 0.0, -100.0, 0.0, 0.0];
 
     let c = a.solve(b).unwrap();
     let true_solution = vec![42.85714286, 18.75, 7.14285714, 52.67857143,
@@ -26,19 +25,18 @@ fn test_solve() {
 #[test]
 fn test_l_triangular_solve_errs() {
     let a: Matrix<f64> = matrix![];
-    assert!(a.solve_l_triangular(Vector::new(vec![])).is_err());
-
+    assert!(a.solve_l_triangular(vector![]).is_err());
     let a = matrix![0.0];
-    assert!(a.solve_l_triangular(Vector::new(vec![1.0])).is_err());
+    assert!(a.solve_l_triangular(vector![1.0]).is_err());
 }
 
 #[test]
 fn test_u_triangular_solve_errs() {
     let a: Matrix<f64> = matrix![];
-    assert!(a.solve_u_triangular(Vector::new(vec![])).is_err());
+    assert!(a.solve_u_triangular(vector![]).is_err());;
 
     let a = matrix![0.0];
-    assert!(a.solve_u_triangular(Vector::new(vec![1.0])).is_err());
+    assert!(a.solve_u_triangular(vector![1.0]).is_err());
 }
 
 #[test]
