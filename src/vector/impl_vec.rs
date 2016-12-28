@@ -592,14 +592,12 @@ mod tests {
         assert_eq!(v2, vector![1, 4, 3]);
     }
 
-
     #[test]
     fn vector_mul_f32_elemwise() {
-        // tested
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = Vector::new(vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let b = vector![2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
 
-        let exp = Vector::new(vec![2.0, 6.0, 12.0, 20.0, 30.0, 42.0]);
+        let exp = vector![2.0, 6.0, 12.0, 20.0, 30.0, 42.0];
 
         // Allocating new memory
         let c = &a.elemul(&b);
@@ -612,10 +610,10 @@ mod tests {
 
     #[test]
     fn vector_mul_int_elemwise() {
-        let a = Vector::new(vec![1, 2, 3, 4]);
-        let b = Vector::new(vec![2, 4, 6, 8]);
+        let a = vector![1, 2, 3, 4];
+        let b = vector![2, 4, 6, 8];
 
-        let exp = Vector::new(vec![2, 8, 18, 32]);
+        let exp = vector![2, 8, 18, 32];
 
         // Allocating new memory
         let c = &a.elemul(&b);
@@ -626,14 +624,12 @@ mod tests {
         assert_eq!(c, exp);
     }
 
-
-
     #[test]
     fn vector_div_f32_elemwise() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = Vector::new(vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let b = vector![2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
 
-        let exp = Vector::new(vec![1. / 2., 2. / 3., 3. / 4., 4. / 5., 5. / 6., 6. / 7.]);
+        let exp = vector![1. / 2., 2. / 3., 3. / 4., 4. / 5., 5. / 6., 6. / 7.];
 
         // Allocating new memory
         let c = &a.elediv(&b);
@@ -646,10 +642,10 @@ mod tests {
 
     #[test]
     fn vector_div_int_elemwise() {
-        let a = Vector::new(vec![2, 4, 6, 8]);
-        let b = Vector::new(vec![2, 2, 3, 3]);
+        let a = vector![2, 4, 6, 8];
+        let b = vector![2, 2, 3, 3];
 
-        let exp = Vector::new(vec![1, 2, 2, 2]);
+        let exp = vector![1, 2, 2, 2];
 
         // Allocating new memory
         let c = &a.elediv(&b);
