@@ -16,6 +16,7 @@ use utils;
 use vector::Vector;
 
 mod decomposition;
+mod impl_conv;
 mod impl_ops;
 mod impl_mat;
 mod mat_mul;
