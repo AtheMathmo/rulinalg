@@ -1,39 +1,67 @@
 //! csv read / write module
-use csv::{Reader, Writer};
+use csv;
+use rustc_serialize::{Decodable, Encodable};
 use std::io::{Read, Write};
 
 use super::super::matrix::{Matrix, BaseMatrix};
 
-/// Read csv file as Matrix<f64>
-pub fn read<'a, R: Read>(mut reader: Reader<R>) -> Matrix<f64> {
-    // headers read 1st row regardless of has_headers property
-    let header : Vec<String> = reader.headers().unwrap();
+impl<T> Matrix<T> where T: Decodable {
 
-    let mut nrows = 0;
-    let ncols = header.len();
+    /// Read csv file as Matrix
+    pub fn read_csv<'a, R: Read>(mut reader: csv::Reader<R>)
+        -> Result<Matrix<T>, csv::Error> {
 
-    let mut records: Vec<f64> = Vec::with_capacity(header.len() * 100);
-    for record in reader.decode() {
-        let values: Vec<f64> = record.unwrap();
-        records.extend(values);
-        nrows += 1;
+        // headers read 1st row regardless of has_headers property
+        let header: Vec<String> = match reader.headers() {
+            Ok(header) => header,
+            Err(error) => {
+                return Err(error);
+            }
+        };
+
+        let mut nrows = 0;
+        let ncols = header.len();
+
+        let mut records: Vec<T> = vec![];
+        for record in reader.decode() {
+            let values: Vec<T> = match record {
+                Ok(values) => values,
+                Err(error) => {
+                    return Err(error);
+                }
+            };
+            records.extend(values);
+            nrows += 1;
+        }
+        Ok(Matrix::new(nrows, ncols, records))
     }
-    records.shrink_to_fit();
-    Matrix::new(nrows, ncols, records)
 }
 
-/// Write Matrix<f64> as csv file
-pub fn write<'a, W: Write>(writer: &'a mut Writer<W>, inputs: &Matrix<f64>) {
-    for row in inputs.row_iter() {
-        writer.encode(row.raw_slice()).unwrap();
+impl<T> Matrix<T> where T: Encodable {
+
+    /// Write Matrix<f64> as csv file
+    pub fn write_csv<W: Write>(&self, writer: &mut csv::Writer<W>)
+        -> Result<(), csv::Error> {
+
+        for row in self.row_iter() {
+            match writer.encode(row.raw_slice()) {
+                Ok(_) => {},
+                Err(error) => {
+                    return Err(error);
+                }
+            }
+        }
+        Ok(())
     }
 }
+
 
 #[cfg(test)]
 mod tests {
 
     use csv;
-    use super::{read, write};
+
+    use super::super::super::matrix::Matrix;
 
     #[test]
     fn test_read_csv_with_header() {
@@ -42,7 +70,7 @@ mod tests {
 1,3,2.2
 1,1,4.5";
         let rdr = csv::Reader::from_string(data).has_headers(true);
-        let res = read(rdr);
+        let res = Matrix::<f64>::read_csv(rdr).unwrap();
 
         let exp = matrix![1., 7., 1.1;
                           1., 3., 2.2;
@@ -56,7 +84,7 @@ mod tests {
 1,3,2.2
 1,1,4.5";
         let rdr = csv::Reader::from_string(data).has_headers(false);
-        let res = read(rdr);
+        let res = Matrix::<f64>::read_csv(rdr).unwrap();
 
         let exp = matrix![1., 7., 1.1;
                           1., 3., 2.2;
@@ -70,7 +98,7 @@ mod tests {
 1,3,2
 1,1,4";
         let rdr = csv::Reader::from_string(data).has_headers(false);
-        let res = read(rdr);
+        let res = Matrix::<f64>::read_csv(rdr).unwrap();
 
         let exp = matrix![1., 7., 1.;
                           1., 3., 2.;
@@ -79,19 +107,38 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn test_read_csv_different_items() {
+    fn test_read_csv_with_header_int() {
+        let data = "A,B,C
+1,2,3
+4,5,6
+7,8,9";
+        let rdr = csv::Reader::from_string(data).has_headers(true);
+        let res = Matrix::<usize>::read_csv(rdr).unwrap();
+
+        let exp = matrix![1, 2, 3;
+                          4, 5, 6;
+                          7, 8, 9];
+        assert_matrix_eq!(res, exp);
+    }
+
+    #[test]
+    fn test_read_csv_empty() {
+        let data = "";
+        let rdr = csv::Reader::from_string(data).has_headers(true);
+        let res = Matrix::<f64>::read_csv(rdr).unwrap();
+        let exp: Matrix<f64> = Matrix::new(0, 0, vec![]);
+        assert_matrix_eq!(res, exp);
+    }
+
+    #[test]
+    fn test_read_csv_error_different_items() {
         let data = "A,B,C
 1,7,1.1
 1,3
 1,1,4.5";
-        let rdr = csv::Reader::from_string(data).has_headers(false);
-        let res = read(rdr);
-
-        let exp = matrix![1., 7., 1.1;
-                          1., 3., 2.2;
-                          1., 1., 4.5];
-        assert_matrix_eq!(res, exp);
+        let rdr = csv::Reader::from_string(data).has_headers(true);
+        let res = Matrix::<f64>::read_csv(rdr);
+        assert!(res.is_err())
     }
 
     #[test]
@@ -100,13 +147,13 @@ mod tests {
                           1., 3., 2.2;
                           1., 1., 4.5];
         let mut wtr = csv::Writer::from_memory();
-        write(&mut wtr, &mat);
+        mat.write_csv(&mut wtr).unwrap();
         let res = wtr.as_string();
         assert_eq!(res, "1.0,7.0,1.1\n1.0,3.0,2.2\n1.0,1.0,4.5\n");
 
         // test round-trip
         let rdr = csv::Reader::from_string(res).has_headers(false);
-        let res = read(rdr);
+        let res = Matrix::<f64>::read_csv(rdr).unwrap();
         assert_matrix_eq!(res, mat);
     }
 }

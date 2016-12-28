@@ -11,7 +11,7 @@ readme = "README.md"
 license = "MIT"
 
 [features]
-io = ["csv"]
+io = ["csv", "rustc-serialize"]
 
 [dependencies]
 num = {version = "0.1.36", default-features = false }
@@ -24,4 +24,8 @@ itertools = "0.5.9"
 
 [dependencies.csv]
 version = "0.14.7"
+optional = true
+
+[dependencies.rustc-serialize]
+version = "0.3"
 optional = true

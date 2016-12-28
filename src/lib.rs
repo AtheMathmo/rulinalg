@@ -113,6 +113,8 @@ pub use norm::{VectorMetric, MatrixMetric};
 
 #[cfg(feature = "io")]
 extern crate csv;
+#[cfg(feature = "io")]
+extern crate rustc_serialize;
 
 #[cfg(feature = "io")]
 /// io module
