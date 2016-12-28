@@ -1,10 +1,29 @@
 use std::ops::{Mul, Add, Div, Sub, Rem,
                MulAssign, AddAssign, DivAssign, SubAssign, RemAssign,
                Neg, Not,
-               BitAnd, BitOr, BitXor, BitAndAssign, BitOrAssign, BitXorAssign};
+               BitAnd, BitOr, BitXor, BitAndAssign, BitOrAssign, BitXorAssign,
+               Index, IndexMut};
 use utils;
 
 use super::Vector;
+
+/// Indexes vector.
+impl<T> Index<usize> for Vector<T> {
+    type Output = T;
+
+    fn index(&self, idx: usize) -> &T {
+        assert!(idx < self.size);
+        unsafe { self.data.get_unchecked(idx) }
+    }
+}
+
+/// Indexes mutable vector.
+impl<T> IndexMut<usize> for Vector<T> {
+    fn index_mut(&mut self, idx: usize) -> &mut T {
+        assert!(idx < self.size);
+        unsafe { self.data.get_unchecked_mut(idx) }
+    }
+}
 
 macro_rules! impl_bin_op_scalar_vector (
     ($trt:ident, $op:ident, $sym:tt, $doc:expr) => (
@@ -227,6 +246,22 @@ impl_op_assign_vec!(BitXorAssign, BitXor, bitxor, bitxor_assign, "bitwise-xor");
 #[cfg(test)]
 mod tests {
     use super::super::Vector;
+
+    // *****************************************************
+    // Index
+    // *****************************************************
+
+    #[test]
+    fn vector_index_mut() {
+        let our_vec = vec![1., 2., 3., 4.];
+        let mut our_vector = Vector::new(our_vec.clone());
+
+        for i in 0..4 {
+            our_vector[i] += 1.;
+        }
+
+        assert_eq!(our_vector.into_vec(), vec![2., 3., 4., 5.]);
+    }
 
     // *****************************************************
     // Arithmetic Ops

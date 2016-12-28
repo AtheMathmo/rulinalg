@@ -1,4 +1,3 @@
-<<<<<<< eeeef406ebe79372c03029f8cf4c0e259331edae
 use std::ops::{Mul, Add, Div};
 use libnum::{One, Zero, Float, FromPrimitive};
 use std::fmt;
@@ -575,18 +574,6 @@ mod tests {
         let v2: Vector<f64> = orig.iter().map(|x| x + 1.).collect();
         let exp2 = vector![3., 4., 5.];
         assert_eq!(v2, exp2);
-    }
-
-    #[test]
-    fn vector_index_mut() {
-        let our_vec = vec![1., 2., 3., 4.];
-        let mut our_vector = Vector::new(our_vec.clone());
-
-        for i in 0..4 {
-            our_vector[i] += 1.;
-        }
-
-        assert_eq!(our_vector.into_vec(), vec![2., 3., 4., 5.]);
     }
 
     #[test]
