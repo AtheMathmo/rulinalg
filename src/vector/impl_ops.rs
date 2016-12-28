@@ -260,7 +260,7 @@ mod tests {
             our_vector[i] += 1.;
         }
 
-        assert_eq!(our_vector.into_vec(), vec![2., 3., 4., 5.]);
+        assert_eq!(our_vector, vector![2., 3., 4., 5.]);
     }
 
     // *****************************************************
@@ -269,10 +269,10 @@ mod tests {
 
     #[test]
     fn vector_mul_f32_broadcast() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let b = 3.0;
 
-        let exp = Vector::new(vec![3.0, 6.0, 9.0, 12.0, 15.0, 18.0]);
+        let exp = vector![3.0, 6.0, 9.0, 12.0, 15.0, 18.0];
 
         // Allocating new memory
         let c = &a * &b;
@@ -293,10 +293,10 @@ mod tests {
 
     #[test]
     fn vector_mul_int_broadcast() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let a = vector![1, 2, 3, 4, 5];
         let b = 2;
 
-        let exp = Vector::new(vec![2, 4, 6, 8, 10]);
+        let exp = vector![2, 4, 6, 8, 10];
 
         // Allocating new memory
         let c = &a * &b;
@@ -319,10 +319,10 @@ mod tests {
 
     #[test]
     fn vector_div_f32_broadcast() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let b = 3.0;
 
-        let exp = Vector::new(vec![1. / 3., 2. / 3., 3. / 3., 4. / 3., 5. / 3., 6. / 3.]);
+        let exp = vector![1. / 3., 2. / 3., 3. / 3., 4. / 3., 5. / 3., 6. / 3.];
 
         // Allocating new memory
         let c = &a / &b;
@@ -343,10 +343,10 @@ mod tests {
 
     #[test]
     fn vector_div_int_broadcast() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let a = vector![1, 2, 3, 4, 5];
         let b = 2;
 
-        let exp = Vector::new(vec![0, 1, 1, 2, 2]);
+        let exp = vector![0, 1, 1, 2, 2];
 
         // Allocating new memory
         let c = &a / &b;
@@ -369,10 +369,10 @@ mod tests {
 
     #[test]
     fn vector_add_f32_broadcast() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let b = 2.0;
 
-        let exp = Vector::new(vec![3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+        let exp = vector![3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 
         // Allocating new memory
         let c = &a + &b;
@@ -393,10 +393,10 @@ mod tests {
 
     #[test]
     fn vector_add_int_broadcast() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let a = vector![1, 2, 3, 4, 5];
         let b = 2;
 
-        let exp = Vector::new(vec![3, 4, 5, 6, 7]);
+        let exp = vector![3, 4, 5, 6, 7];
 
         // Allocating new memory
         let c = &a + &b;
@@ -417,10 +417,10 @@ mod tests {
 
     #[test]
     fn vector_add_f32_elemwise() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = Vector::new(vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let b = vector![2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
 
-        let exp = Vector::new(vec![3.0, 5.0, 7.0, 9.0, 11.0, 13.0]);
+        let exp = vector![3.0, 5.0, 7.0, 9.0, 11.0, 13.0];
 
         // Allocating new memory
         let c = &a + &b;
@@ -441,10 +441,10 @@ mod tests {
 
     #[test]
     fn vector_add_int_elemwise() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5, 6]);
-        let b = Vector::new(vec![2, 3, 4, 5, 6, 7]);
+        let a = vector![1, 2, 3, 4, 5, 6];
+        let b = vector![2, 3, 4, 5, 6, 7];
 
-        let exp = Vector::new(vec![3, 5, 7, 9, 11, 13]);
+        let exp = vector![3, 5, 7, 9, 11, 13];
 
         // Allocating new memory
         let c = &a + &b;
@@ -465,10 +465,10 @@ mod tests {
 
     #[test]
     fn vector_sub_f32_broadcast() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let b = 2.0;
 
-        let exp = Vector::new(vec![-1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
+        let exp = vector![-1.0, 0.0, 1.0, 2.0, 3.0, 4.0];
 
         // Allocating new memory
         let c = &a - &b;
@@ -489,10 +489,10 @@ mod tests {
 
     #[test]
     fn vector_sub_int_broadcast() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let a = vector![1, 2, 3, 4, 5];
         let b = 2;
 
-        let exp = Vector::new(vec![-1, 0, 1, 2, 3]);
+        let exp = vector![-1, 0, 1, 2, 3];
 
         // Allocating new memory
         let c = &a - &b;
@@ -513,10 +513,10 @@ mod tests {
 
     #[test]
     fn vector_sub_f32_elemwise() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = Vector::new(vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let b = vector![2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
 
-        let exp = Vector::new(vec![-1.0, -1.0, -1.0, -1.0, -1.0, -1.0]);
+        let exp = vector![-1.0, -1.0, -1.0, -1.0, -1.0, -1.0];
 
         // Allocating new memory
         let c = &a - &b;
@@ -537,10 +537,10 @@ mod tests {
 
     #[test]
     fn vector_sub_int_elemwise() {
-        let a = Vector::new(vec![10, 11, 12, 13, 14]);
-        let b = Vector::new(vec![2, 4, 6, 8, 10]);
+        let a = vector![10, 11, 12, 13, 14];
+        let b = vector![2, 4, 6, 8, 10];
 
-        let exp = Vector::new(vec![8, 7, 6, 5, 4]);
+        let exp = vector![8, 7, 6, 5, 4];
 
         // Allocating new memory
         let c = &a - &b;
@@ -561,10 +561,10 @@ mod tests {
 
     #[test]
     fn vector_rem_f32_broadcast() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let b = 2.0;
 
-        let exp = Vector::new(vec![1.0, 0.0, 1.0, 0.0, 1.0, 0.0]);
+        let exp = vector![1.0, 0.0, 1.0, 0.0, 1.0, 0.0];
 
         // Allocating new memory
         let c = &a % &b;
@@ -585,10 +585,10 @@ mod tests {
 
     #[test]
     fn vector_rem_int_broadcast() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let a = vector![1, 2, 3, 4, 5];
         let b = 3;
 
-        let exp = Vector::new(vec![1, 2, 0, 1, 2]);
+        let exp = vector![1, 2, 0, 1, 2];
 
         // Allocating new memory
         let c = &a % &b;
@@ -609,10 +609,10 @@ mod tests {
 
     #[test]
     fn vector_rem_f32_elemwise() {
-        let a = Vector::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = Vector::new(vec![3.0, 3.0, 3.0, 4.0, 4.0, 4.0]);
+        let a = vector![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let b = vector![3.0, 3.0, 3.0, 4.0, 4.0, 4.0];
 
-        let exp = Vector::new(vec![1.0, 2.0, 0.0, 0.0, 1.0, 2.0]);
+        let exp = vector![1.0, 2.0, 0.0, 0.0, 1.0, 2.0];
 
         // Allocating new memory
         let c = &a % &b;
@@ -633,10 +633,10 @@ mod tests {
 
     #[test]
     fn vector_rem_int_elemwise() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5]);
-        let b = Vector::new(vec![2, 2, 2, 3, 3]);
+        let a = vector![1, 2, 3, 4, 5];
+        let b = vector![2, 2, 2, 3, 3];
 
-        let exp = Vector::new(vec![1, 0, 1, 1, 2]);
+        let exp = vector![1, 0, 1, 1, 2];
 
         // Allocating new memory
         let c = &a % &b;
@@ -706,15 +706,15 @@ mod tests {
 
     #[test]
     fn vector_sub_assign_int_elemwise() {
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
-        let b = Vector::new(vec![2, 2, 2, 3, 3]);
+        let mut a = vector![1, 2, 3, 4, 5];
+        let b = vector![2, 2, 2, 3, 3];
 
-        let exp = Vector::new(vec![-1, 0, 1, 1, 2]);
+        let exp = vector![-1, 0, 1, 1, 2];
 
         a -= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let mut a = vector![1, 2, 3, 4, 5];
 
         a -= b;
         assert_eq!(a, exp);
@@ -723,7 +723,7 @@ mod tests {
     #[test]
     fn vector_div_assign_f32_broadcast() {
         let a_data = vec![1f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
-        let exp = Vector::new(vec![0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5]);
+        let exp = vector![0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5];
 
         let mut a = Vector::new(a_data.clone());
 
@@ -738,7 +738,7 @@ mod tests {
     #[test]
     fn vector_mul_assign_f32_broadcast() {
         let a_data = vec![1f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
-        let exp = Vector::new(vec![2f32, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0]);
+        let exp = vector![2f32, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0];
         let mut a = Vector::new(a_data.clone());
 
         a *= &2f32;
@@ -751,29 +751,29 @@ mod tests {
 
     #[test]
     fn vector_rem_assign_int_broadcast() {
-        let mut a = Vector::new(vec![1, 2, 3]);
+        let mut a = vector![1, 2, 3];
 
-        let exp = Vector::new(vec![1, 2, 0]);
+        let exp = vector![1, 2, 0];
 
         a %= &3;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![1, 2, 3]);
+        let mut a = vector![1, 2, 3];
         a %= 3;
         assert_eq!(a, exp);
     }
 
     #[test]
     fn vector_rem_assign_int_elemwise() {
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
-        let b = Vector::new(vec![2, 2, 2, 3, 3]);
+        let mut a = vector![1, 2, 3, 4, 5];
+        let b = vector![2, 2, 2, 3, 3];
 
-        let exp = Vector::new(vec![1, 0, 1, 1, 2]);
+        let exp = vector![1, 0, 1, 1, 2];
 
         a %= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let mut a = vector![1, 2, 3, 4, 5];
 
         a %= b;
         assert_eq!(a, exp);
@@ -785,10 +785,10 @@ mod tests {
 
     #[test]
     fn vector_bitand_int_broadcast() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let a = vector![1, 2, 3, 4, 5];
         let b = 2;
 
-        let exp = Vector::new(vec![1 & 2, 2 & 2, 3 & 2, 4 & 2, 5 & 2]);
+        let exp = vector![1 & 2, 2 & 2, 3 & 2, 4 & 2, 5 & 2];
 
         // Allocating new memory
         let c = &a & &b;
@@ -809,10 +809,10 @@ mod tests {
 
     #[test]
     fn vector_bitand_bool_broadcast() {
-        let a = Vector::new(vec![true, false, true]);
+        let a = vector![true, false, true];
         let b = true;
 
-        let exp = Vector::new(vec![true, false, true]);
+        let exp = vector![true, false, true];
 
         // Allocating new memory
         let c = &a & &b;
@@ -833,10 +833,10 @@ mod tests {
 
     #[test]
     fn vector_bitand_int_elemwise() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5, 6]);
-        let b = Vector::new(vec![2, 3, 4, 5, 6, 7]);
+        let a = vector![1, 2, 3, 4, 5, 6];
+        let b = vector![2, 3, 4, 5, 6, 7];
 
-        let exp = Vector::new(vec![1 & 2, 2 & 3, 3 & 4, 4 & 5, 5 & 6, 6 & 7]);
+        let exp = vector![1 & 2, 2 & 3, 3 & 4, 4 & 5, 5 & 6, 6 & 7];
 
         // Allocating new memory
         let c = &a & &b;
@@ -857,10 +857,10 @@ mod tests {
 
     #[test]
     fn vector_bitand_bool_elemwise() {
-        let a = Vector::new(vec![true, true, false, false]);
-        let b = Vector::new(vec![true, false, true, false]);
+        let a = vector![true, true, false, false];
+        let b = vector![true, false, true, false];
 
-        let exp = Vector::new(vec![true, false, false, false]);
+        let exp = vector![true, false, false, false];
 
         // Allocating new memory
         let c = &a & &b;
@@ -881,10 +881,10 @@ mod tests {
 
     #[test]
     fn vector_bitor_int_broadcast() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let a = vector![1, 2, 3, 4, 5];
         let b = 2;
 
-        let exp = Vector::new(vec![1 | 2, 2 | 2, 3 | 2, 4 | 2, 5 | 2]);
+        let exp = vector![1 | 2, 2 | 2, 3 | 2, 4 | 2, 5 | 2];
 
         // Allocating new memory
         let c = &a | &b;
@@ -905,10 +905,10 @@ mod tests {
 
     #[test]
     fn vector_bitor_bool_broadcast() {
-        let a = Vector::new(vec![true, false, true]);
+        let a = vector![true, false, true];
         let b = true;
 
-        let exp = Vector::new(vec![true, true, true]);
+        let exp = vector![true, true, true];
 
         // Allocating new memory
         let c = &a | &b;
@@ -929,10 +929,10 @@ mod tests {
 
     #[test]
     fn vector_bitor_int_elemwise() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5, 6]);
-        let b = Vector::new(vec![2, 3, 4, 5, 6, 7]);
+        let a = vector![1, 2, 3, 4, 5, 6];
+        let b = vector![2, 3, 4, 5, 6, 7];
 
-        let exp = Vector::new(vec![1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7]);
+        let exp = vector![1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7];
 
         // Allocating new memory
         let c = &a | &b;
@@ -953,10 +953,10 @@ mod tests {
 
     #[test]
     fn vector_bitor_bool_elemwise() {
-        let a = Vector::new(vec![true, true, false, false]);
-        let b = Vector::new(vec![true, false, true, false]);
+        let a = vector![true, true, false, false];
+        let b = vector![true, false, true, false];
 
-        let exp = Vector::new(vec![true, true, true, false]);
+        let exp = vector![true, true, true, false];
 
         // Allocating new memory
         let c = &a | &b;
@@ -977,10 +977,10 @@ mod tests {
 
     #[test]
     fn vector_bitxor_int_broadcast() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let a = vector![1, 2, 3, 4, 5];
         let b = 2;
 
-        let exp = Vector::new(vec![1 ^ 2, 2 ^ 2, 3 ^ 2, 4 ^ 2, 5 ^ 2]);
+        let exp = vector![1 ^ 2, 2 ^ 2, 3 ^ 2, 4 ^ 2, 5 ^ 2];
 
         // Allocating new memory
         let c = &a ^ &b;
@@ -1001,10 +1001,10 @@ mod tests {
 
     #[test]
     fn vector_bitxor_bool_broadcast() {
-        let a = Vector::new(vec![true, false, true]);
+        let a = vector![true, false, true];
         let b = true;
 
-        let exp = Vector::new(vec![false, true, false]);
+        let exp = vector![false, true, false];
 
         // Allocating new memory
         let c = &a ^ &b;
@@ -1025,10 +1025,10 @@ mod tests {
 
     #[test]
     fn vector_bitxor_int_elemwise() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5, 6]);
-        let b = Vector::new(vec![2, 3, 4, 5, 6, 7]);
+        let a = vector![1, 2, 3, 4, 5, 6];
+        let b = vector![2, 3, 4, 5, 6, 7];
 
-        let exp = Vector::new(vec![1 ^ 2, 2 ^ 3, 3 ^ 4, 4 ^ 5, 5 ^ 6, 6 ^ 7]);
+        let exp = vector![1 ^ 2, 2 ^ 3, 3 ^ 4, 4 ^ 5, 5 ^ 6, 6 ^ 7];
 
         // Allocating new memory
         let c = &a ^ &b;
@@ -1049,10 +1049,10 @@ mod tests {
 
     #[test]
     fn vector_bitxor_bool_elemwise() {
-        let a = Vector::new(vec![true, true, false, false]);
-        let b = Vector::new(vec![true, false, true, false]);
+        let a = vector![true, true, false, false];
+        let b = vector![true, false, true, false];
 
-        let exp = Vector::new(vec![false, true, true, false]);
+        let exp = vector![false, true, true, false];
 
         // Allocating new memory
         let c = &a ^ &b;
@@ -1077,15 +1077,15 @@ mod tests {
 
     #[test]
     fn vector_bitand_assign_int_broadcast() {
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let mut a = vector![1, 2, 3, 4, 5];
         let b = 2;
 
-        let exp = Vector::new(vec![1 & 2, 2 & 2, 3 & 2, 4 & 2, 5 & 2]);
+        let exp = vector![1 & 2, 2 & 2, 3 & 2, 4 & 2, 5 & 2];
 
         a &= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let mut a = vector![1, 2, 3, 4, 5];
 
         a &= b;
         assert_eq!(a, exp);
@@ -1093,15 +1093,15 @@ mod tests {
 
     #[test]
     fn vector_bitand_assign_bool_broadcast() {
-        let mut a = Vector::new(vec![true, true, false, false]);
+        let mut a = vector![true, true, false, false];
         let b = true;
 
-        let exp = Vector::new(vec![true, true, false, false]);
+        let exp = vector![true, true, false, false];
 
         a &= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![true, true, false, false]);
+        let mut a = vector![true, true, false, false];
 
         a &= b;
         assert_eq!(a, exp);
@@ -1109,15 +1109,15 @@ mod tests {
 
     #[test]
     fn vector_bitand_assign_int_elemwise() {
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
-        let b = Vector::new(vec![2, 2, 2, 3, 3]);
+        let mut a = vector![1, 2, 3, 4, 5];
+        let b = vector![2, 2, 2, 3, 3];
 
-        let exp = Vector::new(vec![1 & 2, 2 & 2, 3 & 2, 4 & 3, 5 & 3]);
+        let exp = vector![1 & 2, 2 & 2, 3 & 2, 4 & 3, 5 & 3];
 
         a &= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let mut a = vector![1, 2, 3, 4, 5];
 
         a &= b;
         assert_eq!(a, exp);
@@ -1125,15 +1125,15 @@ mod tests {
 
     #[test]
     fn vector_bitand_assign_bool_elemwise() {
-        let mut a = Vector::new(vec![true, true, false, false]);
-        let b = Vector::new(vec![true, false, true, false]);
+        let mut a = vector![true, true, false, false];
+        let b = vector![true, false, true, false];
 
-        let exp = Vector::new(vec![true, false, false, false]);
+        let exp = vector![true, false, false, false];
 
         a &= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![true, true, false, false]);
+        let mut a = vector![true, true, false, false];
 
         a &= b;
         assert_eq!(a, exp);
@@ -1141,15 +1141,15 @@ mod tests {
 
     #[test]
     fn vector_bitor_assign_int_broadcast() {
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let mut a = vector![1, 2, 3, 4, 5];
         let b = 2;
 
-        let exp = Vector::new(vec![1 | 2, 2 | 2, 3 | 2, 4 | 2, 5 | 2]);
+        let exp = vector![1 | 2, 2 | 2, 3 | 2, 4 | 2, 5 | 2];
 
         a |= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let mut a = vector![1, 2, 3, 4, 5];
 
         a |= b;
         assert_eq!(a, exp);
@@ -1157,15 +1157,15 @@ mod tests {
 
     #[test]
     fn vector_bitor_assign_bool_broadcast() {
-        let mut a = Vector::new(vec![true, true, false, false]);
+        let mut a = vector![true, true, false, false];
         let b = true;
 
-        let exp = Vector::new(vec![true, true, true, true]);
+        let exp = vector![true, true, true, true];
 
         a |= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![true, true, false, false]);
+        let mut a = vector![true, true, false, false];
 
         a |= b;
         assert_eq!(a, exp);
@@ -1173,15 +1173,15 @@ mod tests {
 
     #[test]
     fn vector_bitor_assign_int_elemwise() {
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
-        let b = Vector::new(vec![2, 2, 2, 3, 3]);
+        let mut a = vector![1, 2, 3, 4, 5];
+        let b = vector![2, 2, 2, 3, 3];
 
-        let exp = Vector::new(vec![1 | 2, 2 | 2, 3 | 2, 4 | 3, 5 | 3]);
+        let exp = vector![1 | 2, 2 | 2, 3 | 2, 4 | 3, 5 | 3];
 
         a |= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let mut a = vector![1, 2, 3, 4, 5];
 
         a |= b;
         assert_eq!(a, exp);
@@ -1189,15 +1189,15 @@ mod tests {
 
     #[test]
     fn vector_bitor_assign_bool_elemwise() {
-        let mut a = Vector::new(vec![true, true, false, false]);
-        let b = Vector::new(vec![true, false, true, false]);
+        let mut a = vector![true, true, false, false];
+        let b = vector![true, false, true, false];
 
-        let exp = Vector::new(vec![true, true, true, false]);
+        let exp = vector![true, true, true, false];
 
         a |= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![true, true, false, false]);
+        let mut a = vector![true, true, false, false];
 
         a |= b;
         assert_eq!(a, exp);
@@ -1205,15 +1205,15 @@ mod tests {
 
     #[test]
     fn vector_bitxor_assign_int_broadcast() {
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let mut a = vector![1, 2, 3, 4, 5];
         let b = 2;
 
-        let exp = Vector::new(vec![1 ^ 2, 2 ^ 2, 3 ^ 2, 4 ^ 2, 5 ^ 2]);
+        let exp = vector![1 ^ 2, 2 ^ 2, 3 ^ 2, 4 ^ 2, 5 ^ 2];
 
         a ^= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let mut a = vector![1, 2, 3, 4, 5];
 
         a ^= b;
         assert_eq!(a, exp);
@@ -1221,15 +1221,15 @@ mod tests {
 
     #[test]
     fn vector_bitxor_assign_bool_broadcast() {
-        let mut a = Vector::new(vec![true, true, false, false]);
+        let mut a = vector![true, true, false, false];
         let b = true;
 
-        let exp = Vector::new(vec![false, false, true, true]);
+        let exp = vector![false, false, true, true];
 
         a ^= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![true, true, false, false]);
+        let mut a = vector![true, true, false, false];
 
         a ^= b;
         assert_eq!(a, exp);
@@ -1237,15 +1237,15 @@ mod tests {
 
     #[test]
     fn vector_bitxor_assign_int_elemwise() {
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
-        let b = Vector::new(vec![2, 2, 2, 3, 3]);
+        let mut a = vector![1, 2, 3, 4, 5];
+        let b = vector![2, 2, 2, 3, 3];
 
-        let exp = Vector::new(vec![1 ^ 2, 2 ^ 2, 3 ^ 2, 4 ^ 3, 5 ^ 3]);
+        let exp = vector![1 ^ 2, 2 ^ 2, 3 ^ 2, 4 ^ 3, 5 ^ 3];
 
         a ^= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![1, 2, 3, 4, 5]);
+        let mut a = vector![1, 2, 3, 4, 5];
 
         a ^= b;
         assert_eq!(a, exp);
@@ -1253,15 +1253,15 @@ mod tests {
 
     #[test]
     fn vector_bitxor_assign_bool_elemwise() {
-        let mut a = Vector::new(vec![true, true, false, false]);
-        let b = Vector::new(vec![true, false, true, false]);
+        let mut a = vector![true, true, false, false];
+        let b = vector![true, false, true, false];
 
-        let exp = Vector::new(vec![false, true, true, false]);
+        let exp = vector![false, true, true, false];
 
         a ^= &b;
         assert_eq!(a, exp);
 
-        let mut a = Vector::new(vec![true, true, false, false]);
+        let mut a = vector![true, true, false, false];
 
         a ^= b;
         assert_eq!(a, exp);
@@ -1273,8 +1273,8 @@ mod tests {
 
     #[test]
     fn vector_neg_f32() {
-        let a = Vector::new(vec![1., 2., 3., 4., 5., 6.]);
-        let exp = Vector::new(vec![-1., -2., -3., -4., -5., -6.]);
+        let a = vector![1., 2., 3., 4., 5., 6.];
+        let exp = vector![-1., -2., -3., -4., -5., -6.];
 
         assert_eq!(- &a, exp);
         assert_eq!(- a, exp);
@@ -1282,8 +1282,8 @@ mod tests {
 
     #[test]
     fn vector_neg_int() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5, 6]);
-        let exp = Vector::new(vec![-1, -2, -3, -4, -5, -6]);
+        let a = vector![1, 2, 3, 4, 5, 6];
+        let exp = vector![-1, -2, -3, -4, -5, -6];
 
         assert_eq!(- &a, exp);
         assert_eq!(- a, exp);
@@ -1291,8 +1291,8 @@ mod tests {
 
     #[test]
     fn vector_not_int() {
-        let a = Vector::new(vec![1, 2, 3, 4, 5, 6]);
-        let exp = Vector::new(vec![!1, !2, !3, !4, !5, !6]);
+        let a = vector![1, 2, 3, 4, 5, 6];
+        let exp = vector![!1, !2, !3, !4, !5, !6];
 
         assert_eq!(!&a, exp);
         assert_eq!(!a, exp);
@@ -1300,8 +1300,8 @@ mod tests {
 
     #[test]
     fn vector_not_bool() {
-        let a = Vector::new(vec![true, false, true]);
-        let exp = Vector::new(vec![false, true, false]);
+        let a = vector![true, false, true];
+        let exp = vector![false, true, false];
 
         assert_eq!(!&a, exp);
         assert_eq!(!a, exp);
