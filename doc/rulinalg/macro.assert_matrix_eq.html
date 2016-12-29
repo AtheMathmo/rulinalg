@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-5342' class='srclink' href='../src/rulinalg/src/macros/matrix_eq.rs.html#655-732' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-5821' class='srclink' href='../src/rulinalg/src/macros/matrix_eq.rs.html#655-732' title='goto source code'>[src]</a></span></h1>
 <pre class='rust macro'>
 <span class='macro'>macro_rules</span><span class='macro'>!</span> <span class='ident'>assert_matrix_eq</span> {
     (<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>x</span>:<span class='ident'>expr</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>y</span>:<span class='ident'>expr</span>) <span class='op'>=&gt;</span> { ... };
@@ -76,7 +76,7 @@ comparison of the two matrices.</p>
 
 <pre class='rust rust-example-rendered'>
 <span class='comment'>// Performs elementwise exact comparison</span>
-<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>);</pre>
 
 <p>An exact comparison is often not desirable. In particular, with floating point types,
 rounding errors or other sources of inaccuracies tend to complicate the matter.
@@ -87,7 +87,7 @@ For this purpose, <code>assert_matrix_eq!</code> provides several comparators.</
 <span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>exact</span>);
 <span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>);
 <span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>abs</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>1e-12</span>);
-<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>ulp</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>8</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>ulp</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>8</span>);</pre>
 
 <p><strong>Note</strong>: The <code>comp</code> argument <em>must</em> be specified after <code>x</code> and <code>y</code>, and cannot come
 after comparator-specific options. This is a deliberate design decision,
@@ -120,7 +120,7 @@ where <code>max_ulp</code> is a small positive integer constant.</li>
 <p>The <code>max_eps</code> and <code>max_ulp</code> parameters can be tweaked to your preference with the syntax:</p>
 
 <pre class='rust rust-example-rendered'>
-<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>, <span class='ident'>eps</span> <span class='op'>=</span> <span class='ident'>max_eps</span>, <span class='ident'>ulp</span> <span class='op'>=</span> <span class='ident'>max_ulp</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>, <span class='ident'>eps</span> <span class='op'>=</span> <span class='ident'>max_eps</span>, <span class='ident'>ulp</span> <span class='op'>=</span> <span class='ident'>max_ulp</span>);</pre>
 
 <p>These additional parameters can be specified in any order after the choice of comparator,
 and do not both need to be present.</p>
@@ -176,7 +176,7 @@ useful error messages which help pinpoint the problems. For example, consider th
     <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.01</span>, <span class='number'>2.00</span>;
                     <span class='number'>3.40</span>, <span class='number'>4.00</span>];
     <span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>a</span>, <span class='ident'>b</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>abs</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>1e-8</span>);
-}<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+}</pre>
 
 <p>which yields the output</p>
 
@@ -219,7 +219,7 @@ which provides the underlying comparison for the various macro invocations.</p>
 <span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>abs</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>0.01</span>);
 
 <span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>a</span> <span class='op'>*</span> <span class='number'>2</span>, <span class='ident'>a</span> <span class='op'>+</span> <span class='ident'>a</span>);
-<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span> <span class='op'>*</span> <span class='number'>2.0</span>, <span class='ident'>x</span> <span class='op'>+</span> <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+<span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>x</span> <span class='op'>*</span> <span class='number'>2.0</span>, <span class='ident'>x</span> <span class='op'>+</span> <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>);</pre>
 </div></section>
     <section id='search' class="content hidden"></section>
 
@@ -276,11 +276,9 @@ which provides the underlying comparison for the various macro invocations.</p>
     <script>
         window.rootPath = "../";
         window.currentCrate = "rulinalg";
-        window.playgroundUrl = "";
     </script>
     <script src="../jquery.js"></script>
     <script src="../main.js"></script>
-    
     <script defer src="../search-index.js"></script>
 </body>
 </html>

@@ -859,14 +859,14 @@
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>test_sort_svd</span>() {
-        <span class='kw'>let</span> <span class='ident'>u</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
-                        <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>);
-        <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>4.0</span>, <span class='number'>0.0</span>, <span class='number'>0.0</span>;
+        <span class='kw'>let</span> <span class='ident'>u</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
+                        <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>];
+        <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>4.0</span>, <span class='number'>0.0</span>, <span class='number'>0.0</span>;
                         <span class='number'>0.0</span>, <span class='number'>8.0</span>, <span class='number'>0.0</span>;
-                        <span class='number'>0.0</span>, <span class='number'>0.0</span>, <span class='number'>2.0</span>);
-        <span class='kw'>let</span> <span class='ident'>v</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>21.0</span>, <span class='number'>22.0</span>, <span class='number'>23.0</span>;
+                        <span class='number'>0.0</span>, <span class='number'>0.0</span>, <span class='number'>2.0</span>];
+        <span class='kw'>let</span> <span class='ident'>v</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>21.0</span>, <span class='number'>22.0</span>, <span class='number'>23.0</span>;
                         <span class='number'>24.0</span>, <span class='number'>25.0</span>, <span class='number'>26.0</span>;
-                        <span class='number'>27.0</span>, <span class='number'>28.0</span>, <span class='number'>29.0</span>);
+                        <span class='number'>27.0</span>, <span class='number'>28.0</span>, <span class='number'>29.0</span>];
 
         <span class='kw'>let</span> (<span class='ident'>b</span>, <span class='ident'>u</span>, <span class='ident'>v</span>) <span class='op'>=</span> <span class='ident'>sort_svd</span>(<span class='ident'>b</span>, <span class='ident'>u</span>, <span class='ident'>v</span>);
 
@@ -881,11 +881,11 @@
     <span class='kw'>fn</span> <span class='ident'>test_svd_tall_matrix</span>() {
         <span class='comment'>// Note: This matrix is not arbitrary. It has been constructed specifically so that</span>
         <span class='comment'>// the &quot;natural&quot; order of the singular values it not sorted by default.</span>
-        <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>3.61833700244349288</span>, <span class='op'>-</span><span class='number'>3.28382346228211697</span>,  <span class='number'>1.97968027781346501</span>, <span class='op'>-</span><span class='number'>0.41869628192662156</span>;
+        <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>3.61833700244349288</span>, <span class='op'>-</span><span class='number'>3.28382346228211697</span>,  <span class='number'>1.97968027781346501</span>, <span class='op'>-</span><span class='number'>0.41869628192662156</span>;
                           <span class='number'>3.96046289599926427</span>,  <span class='number'>0.70730060716580723</span>, <span class='op'>-</span><span class='number'>2.80552479438772817</span>, <span class='op'>-</span><span class='number'>1.45283286109873933</span>;
                           <span class='number'>1.44435028724617442</span>,  <span class='number'>1.27749196276785826</span>, <span class='op'>-</span><span class='number'>1.09858397535426366</span>, <span class='op'>-</span><span class='number'>0.03159619816434689</span>;
                           <span class='number'>1.13455445826500667</span>,  <span class='number'>0.81521390274755756</span>,  <span class='number'>3.99123446373437263</span>, <span class='op'>-</span><span class='number'>2.83025703359666192</span>;
-                          <span class='op'>-</span><span class='number'>3.30895752093770579</span>, <span class='op'>-</span><span class='number'>0.04979044289857298</span>,  <span class='number'>3.03248594516832792</span>,  <span class='number'>3.85962479743330977</span>);
+                          <span class='op'>-</span><span class='number'>3.30895752093770579</span>, <span class='op'>-</span><span class='number'>0.04979044289857298</span>,  <span class='number'>3.03248594516832792</span>,  <span class='number'>3.85962479743330977</span>];
         <span class='kw'>let</span> (<span class='ident'>b</span>, <span class='ident'>u</span>, <span class='ident'>v</span>) <span class='op'>=</span> <span class='ident'>mat</span>.<span class='ident'>clone</span>().<span class='ident'>svd</span>().<span class='ident'>unwrap</span>();
 
         <span class='kw'>let</span> <span class='ident'>expected_values</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>8.0</span>, <span class='number'>6.0</span>, <span class='number'>4.0</span>, <span class='number'>2.0</span>];
@@ -902,10 +902,10 @@
     <span class='kw'>fn</span> <span class='ident'>test_svd_short_matrix</span>() {
         <span class='comment'>// Note: This matrix is not arbitrary. It has been constructed specifically so that</span>
         <span class='comment'>// the &quot;natural&quot; order of the singular values it not sorted by default.</span>
-        <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>3.61833700244349288</span>,  <span class='number'>3.96046289599926427</span>,  <span class='number'>1.44435028724617442</span>,  <span class='number'>1.13455445826500645</span>, <span class='op'>-</span><span class='number'>3.30895752093770579</span>;
+        <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>3.61833700244349288</span>,  <span class='number'>3.96046289599926427</span>,  <span class='number'>1.44435028724617442</span>,  <span class='number'>1.13455445826500645</span>, <span class='op'>-</span><span class='number'>3.30895752093770579</span>;
                          <span class='op'>-</span><span class='number'>3.28382346228211697</span>,  <span class='number'>0.70730060716580723</span>,  <span class='number'>1.27749196276785826</span>,  <span class='number'>0.81521390274755756</span>, <span class='op'>-</span><span class='number'>0.04979044289857298</span>;
                           <span class='number'>1.97968027781346545</span>, <span class='op'>-</span><span class='number'>2.80552479438772817</span>, <span class='op'>-</span><span class='number'>1.09858397535426366</span>,  <span class='number'>3.99123446373437263</span>,  <span class='number'>3.03248594516832792</span>;
-                         <span class='op'>-</span><span class='number'>0.41869628192662156</span>, <span class='op'>-</span><span class='number'>1.45283286109873933</span>, <span class='op'>-</span><span class='number'>0.03159619816434689</span>, <span class='op'>-</span><span class='number'>2.83025703359666192</span>,  <span class='number'>3.85962479743330977</span>);
+                         <span class='op'>-</span><span class='number'>0.41869628192662156</span>, <span class='op'>-</span><span class='number'>1.45283286109873933</span>, <span class='op'>-</span><span class='number'>0.03159619816434689</span>, <span class='op'>-</span><span class='number'>2.83025703359666192</span>,  <span class='number'>3.85962479743330977</span>];
         <span class='kw'>let</span> (<span class='ident'>b</span>, <span class='ident'>u</span>, <span class='ident'>v</span>) <span class='op'>=</span> <span class='ident'>mat</span>.<span class='ident'>clone</span>().<span class='ident'>svd</span>().<span class='ident'>unwrap</span>();
 
         <span class='kw'>let</span> <span class='ident'>expected_values</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>8.0</span>, <span class='number'>6.0</span>, <span class='number'>4.0</span>, <span class='number'>2.0</span>];
@@ -920,11 +920,11 @@
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>test_svd_square_matrix</span>() {
-        <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.0</span>,  <span class='number'>2.0</span>,  <span class='number'>3.0</span>,  <span class='number'>4.0</span>,  <span class='number'>5.0</span>;
+        <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.0</span>,  <span class='number'>2.0</span>,  <span class='number'>3.0</span>,  <span class='number'>4.0</span>,  <span class='number'>5.0</span>;
                           <span class='number'>2.0</span>,  <span class='number'>4.0</span>,  <span class='number'>1.0</span>,  <span class='number'>2.0</span>,  <span class='number'>1.0</span>;
                           <span class='number'>3.0</span>,  <span class='number'>1.0</span>,  <span class='number'>7.0</span>,  <span class='number'>1.0</span>,  <span class='number'>1.0</span>;
                           <span class='number'>4.0</span>,  <span class='number'>2.0</span>,  <span class='number'>1.0</span>, <span class='op'>-</span><span class='number'>1.0</span>,  <span class='number'>3.0</span>;
-                          <span class='number'>5.0</span>,  <span class='number'>1.0</span>,  <span class='number'>1.0</span>,  <span class='number'>3.0</span>,  <span class='number'>2.0</span>);
+                          <span class='number'>5.0</span>,  <span class='number'>1.0</span>,  <span class='number'>1.0</span>,  <span class='number'>3.0</span>,  <span class='number'>2.0</span>];
 
         <span class='kw'>let</span> <span class='ident'>expected_values</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>12.1739747429271112</span>,
                                    <span class='number'>5.2681047320525831</span>,
@@ -998,11 +998,9 @@
     <script>
         window.rootPath = "../../../../../";
         window.currentCrate = "rulinalg";
-        window.playgroundUrl = "";
     </script>
     <script src="../../../../../jquery.js"></script>
     <script src="../../../../../main.js"></script>
-    
     <script defer src="../../../../../search-index.js"></script>
 </body>
 </html>

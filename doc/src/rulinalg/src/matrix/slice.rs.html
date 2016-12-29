@@ -226,9 +226,33 @@
 <span id="182">182</span>
 <span id="183">183</span>
 <span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>matrix</span>::{<span class='ident'>Matrix</span>, <span class='ident'>MatrixSlice</span>, <span class='ident'>MatrixSliceMut</span>};
-
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>marker</span>::<span class='ident'>PhantomData</span>;
 
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span> <span class='ident'>MatrixSlice</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span> {
@@ -376,8 +400,8 @@
 
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
 <span class='kw'>mod</span> <span class='ident'>tests</span> {
-    <span class='kw'>use</span> <span class='ident'>matrix</span>::{<span class='ident'>BaseMatrix</span>};
-    <span class='kw'>use</span> <span class='ident'>matrix</span>::{<span class='ident'>Matrix</span>, <span class='ident'>MatrixSlice</span>, <span class='ident'>MatrixSliceMut</span>};
+
+    <span class='kw'>use</span> <span class='ident'>matrix</span>::{<span class='ident'>Matrix</span>, <span class='ident'>MatrixSlice</span>, <span class='ident'>MatrixSliceMut</span>, <span class='ident'>BaseMatrix</span>, <span class='ident'>Axes</span>};
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='attribute'>#[<span class='ident'>should_panic</span>]</span>
@@ -409,6 +433,32 @@
                           <span class='number'>2.0</span>, <span class='number'>4.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_matrix_eq</span><span class='macro'>!</span>(<span class='ident'>a</span>, <span class='ident'>exp</span>);
 
+    }
+
+    <span class='attribute'>#[<span class='ident'>test</span>]</span>
+    <span class='kw'>fn</span> <span class='ident'>matrix_min_max</span>() {
+        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>3.</span>, <span class='number'>5.</span>, <span class='number'>4.</span>;
+                        <span class='number'>2.</span>, <span class='number'>4.</span>, <span class='number'>7.</span>, <span class='number'>1.</span>;
+                        <span class='number'>1.</span>, <span class='number'>1.</span>, <span class='number'>0.</span>, <span class='number'>0.</span>];
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>a</span>.<span class='ident'>min</span>(<span class='ident'>Axes</span>::<span class='ident'>Col</span>), <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>1.</span>, <span class='number'>0.</span>]);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>a</span>.<span class='ident'>min</span>(<span class='ident'>Axes</span>::<span class='ident'>Row</span>), <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>1.</span>, <span class='number'>0.</span>, <span class='number'>0.</span>]);
+
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>a</span>.<span class='ident'>max</span>(<span class='ident'>Axes</span>::<span class='ident'>Col</span>), <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>5.</span>, <span class='number'>7.</span>, <span class='number'>1.</span>]);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>a</span>.<span class='ident'>max</span>(<span class='ident'>Axes</span>::<span class='ident'>Row</span>), <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>2.</span>, <span class='number'>4.</span>, <span class='number'>7.</span>, <span class='number'>4.</span>]);
+
+        <span class='kw'>let</span> <span class='ident'>r</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>3.</span>, <span class='number'>5.</span>, <span class='number'>4.</span>];
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>min</span>(<span class='ident'>Axes</span>::<span class='ident'>Col</span>), <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.</span>]);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>min</span>(<span class='ident'>Axes</span>::<span class='ident'>Row</span>), <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>3.</span>, <span class='number'>5.</span>, <span class='number'>4.</span>]);
+
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>max</span>(<span class='ident'>Axes</span>::<span class='ident'>Col</span>), <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>5.</span>]);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>max</span>(<span class='ident'>Axes</span>::<span class='ident'>Row</span>), <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>3.</span>, <span class='number'>5.</span>, <span class='number'>4.</span>]);
+
+        <span class='kw'>let</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>; <span class='number'>2.</span>; <span class='number'>3.</span>];
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>c</span>.<span class='ident'>min</span>(<span class='ident'>Axes</span>::<span class='ident'>Col</span>), <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>2.</span>, <span class='number'>3.</span>]);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>c</span>.<span class='ident'>min</span>(<span class='ident'>Axes</span>::<span class='ident'>Row</span>), <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.</span>]);
+
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>c</span>.<span class='ident'>max</span>(<span class='ident'>Axes</span>::<span class='ident'>Col</span>), <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>2.</span>, <span class='number'>3.</span>]);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>c</span>.<span class='ident'>max</span>(<span class='ident'>Axes</span>::<span class='ident'>Row</span>), <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>3.</span>]);
     }
 }
 </pre>
@@ -468,11 +518,9 @@
     <script>
         window.rootPath = "../../../../";
         window.currentCrate = "rulinalg";
-        window.playgroundUrl = "";
     </script>
     <script src="../../../../jquery.js"></script>
     <script src="../../../../main.js"></script>
-    
     <script defer src="../../../../search-index.js"></script>
 </body>
 </html>

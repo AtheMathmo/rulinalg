@@ -181,9 +181,9 @@
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// # fn main() {</span>
 <span class='doccomment'>/// // Construct a 3x3 matrix of f64</span>
-<span class='doccomment'>/// let mat = matrix!(1.0, 2.0, 3.0;</span>
+<span class='doccomment'>/// let mat = matrix![1.0, 2.0, 3.0;</span>
 <span class='doccomment'>///                   4.0, 5.0, 6.0;</span>
-<span class='doccomment'>///                   7.0, 8.0, 9.0);</span>
+<span class='doccomment'>///                   7.0, 8.0, 9.0];</span>
 <span class='doccomment'>/// # }</span>
 <span class='doccomment'>/// ```</span>
 <span class='doccomment'>///</span>
@@ -197,11 +197,11 @@
 <span class='doccomment'>/// use rulinalg::matrix::Matrix;</span>
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// // Construct a 2x3 matrix of f32</span>
-<span class='doccomment'>/// let mat: Matrix&lt;f32&gt; = matrix!(1.0, 2.0, 3.0;</span>
-<span class='doccomment'>///                                4.0, 5.0, 6.0);</span>
+<span class='doccomment'>/// let mat: Matrix&lt;f32&gt; = matrix![1.0, 2.0, 3.0;</span>
+<span class='doccomment'>///                                4.0, 5.0, 6.0];</span>
 <span class='doccomment'>/// // Or</span>
-<span class='doccomment'>/// let mat = matrix!(1.0, 2.0, 3.0;</span>
-<span class='doccomment'>///                   4.0, 5.0, 6.0f32);</span>
+<span class='doccomment'>/// let mat = matrix![1.0, 2.0, 3.0;</span>
+<span class='doccomment'>///                   4.0, 5.0, 6.0f32];</span>
 <span class='doccomment'>/// # }</span>
 <span class='doccomment'>/// ```</span>
 <span class='doccomment'>///</span>
@@ -237,8 +237,8 @@
     <span class='kw'>fn</span> <span class='ident'>matrix_macro</span>() {
         {
             <span class='comment'>// An arbitrary rectangular matrix</span>
-            <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>;
-                              <span class='number'>4</span>, <span class='number'>5</span>, <span class='number'>6</span>);
+            <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>;
+                              <span class='number'>4</span>, <span class='number'>5</span>, <span class='number'>6</span>];
             <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='number'>2</span>, <span class='ident'>mat</span>.<span class='ident'>rows</span>());
             <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='number'>3</span>, <span class='ident'>mat</span>.<span class='ident'>cols</span>());
             <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='kw-2'>&amp;</span><span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>, <span class='number'>5</span>, <span class='number'>6</span>], <span class='ident'>mat</span>.<span class='ident'>data</span>());
@@ -246,7 +246,7 @@
 
         {
             <span class='comment'>// A single row</span>
-            <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>);
+            <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>];
             <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='number'>1</span>, <span class='ident'>mat</span>.<span class='ident'>rows</span>());
             <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='number'>3</span>, <span class='ident'>mat</span>.<span class='ident'>cols</span>());
             <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='kw-2'>&amp;</span><span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>], <span class='ident'>mat</span>.<span class='ident'>data</span>());
@@ -254,7 +254,7 @@
 
         {
             <span class='comment'>// A single element</span>
-            <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1</span>);
+            <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1</span>];
             <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='number'>1</span>, <span class='ident'>mat</span>.<span class='ident'>rows</span>());
             <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='number'>1</span>, <span class='ident'>mat</span>.<span class='ident'>cols</span>());
             <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='kw-2'>&amp;</span><span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>], <span class='ident'>mat</span>.<span class='ident'>data</span>());
@@ -262,9 +262,9 @@
 
         {
             <span class='comment'>// A floating point matrix</span>
-            <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
+            <span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
                               <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>;
-                              <span class='number'>7.0</span>, <span class='number'>8.0</span>, <span class='number'>9.0</span>);
+                              <span class='number'>7.0</span>, <span class='number'>8.0</span>, <span class='number'>9.0</span>];
             <span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>expected_data</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>, <span class='number'>7.0</span>, <span class='number'>8.0</span>, <span class='number'>9.0</span>];
             <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='number'>3</span>, <span class='ident'>mat</span>.<span class='ident'>rows</span>());
             <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='number'>3</span>, <span class='ident'>mat</span>.<span class='ident'>cols</span>());
@@ -338,11 +338,9 @@
     <script>
         window.rootPath = "../../../../";
         window.currentCrate = "rulinalg";
-        window.playgroundUrl = "";
     </script>
     <script src="../../../../jquery.js"></script>
     <script src="../../../../main.js"></script>
-    
     <script defer src="../../../../search-index.js"></script>
 </body>
 </html>

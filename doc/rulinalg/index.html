@@ -86,7 +86,7 @@ will highlight the basic usage.</p>
 <span class='kw'>use</span> <span class='ident'>rulinalg</span>::<span class='ident'>matrix</span>::<span class='ident'>Matrix</span>;
 
 <span class='comment'>// A new matrix with 3 rows and 2 columns.</span>
-<span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='ident'>Matrix</span>::<span class='ident'>new</span>(<span class='number'>3</span>, <span class='number'>2</span>, <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>]);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+<span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='ident'>Matrix</span>::<span class='ident'>new</span>(<span class='number'>3</span>, <span class='number'>2</span>, <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>]);</pre>
 
 <p>The matrices are stored in row-major order. This means in the example above the top
 row will be [1,2,3].</p>
@@ -101,7 +101,7 @@ row will be [1,2,3].</p>
 <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='ident'>Matrix</span>::<span class='ident'>new</span>(<span class='number'>3</span>, <span class='number'>2</span>, <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>6.0</span>, <span class='number'>5.0</span>, <span class='number'>4.0</span>, <span class='number'>3.0</span>, <span class='number'>2.0</span>, <span class='number'>1.0</span>]);
 
 <span class='comment'>// Produces a 3x2 matrix filled with sevens.</span>
-<span class='kw'>let</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='ident'>a</span> <span class='op'>+</span> <span class='ident'>b</span>;<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+<span class='kw'>let</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='ident'>a</span> <span class='op'>+</span> <span class='ident'>b</span>;</pre>
 
 <p>Sometimes we want to construct small matrices by hand, usually for writing unit tests
 or examples. For this purpose, <code>rulinalg</code> provides the <code>matrix!</code> macro:</p>
@@ -113,9 +113,9 @@ or examples. For this purpose, <code>rulinalg</code> provides the <code>matrix!<
 
 <span class='comment'>// Construct a 3x3 matrix of f64</span>
 <span class='comment'>// Commas separate columns and semi-colons separate rows</span>
-<span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
+<span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
                   <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>;
-                  <span class='number'>7.0</span>, <span class='number'>8.0</span>, <span class='number'>9.0</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+                  <span class='number'>7.0</span>, <span class='number'>8.0</span>, <span class='number'>9.0</span>];</pre>
 
 <p>Of course the library can support more complex operations but you should check the individual
 modules for more information.</p>
@@ -207,6 +207,13 @@ the <code>BaseMatrix</code>/<code>BaseMatrixMut</code> traits. This allows us to
                            <td class='docblock-short'>
                                 <p>The <code>matrix!</code> macro enables easy construction of small matrices.</p>
                            </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='macro' href='macro.vector.html'
+                                  title='rulinalg::vector'>vector</a></td>
+                           <td class='docblock-short'>
+                                <p>The <code>vector!</code> macro enables easy construction of small vectors.</p>
+                           </td>
                        </tr></table></section>
     <section id='search' class="content hidden"></section>
 
@@ -263,11 +270,9 @@ the <code>BaseMatrix</code>/<code>BaseMatrixMut</code> traits. This allows us to
     <script>
         window.rootPath = "../";
         window.currentCrate = "rulinalg";
-        window.playgroundUrl = "";
     </script>
     <script src="../jquery.js"></script>
     <script src="../main.js"></script>
-    
     <script defer src="../search-index.js"></script>
 </body>
 </html>

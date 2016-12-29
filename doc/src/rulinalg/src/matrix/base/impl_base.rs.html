@@ -944,17 +944,17 @@
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>matrix_diag</span>() {
-        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.</span>, <span class='number'>3.</span>, <span class='number'>5.</span>;
+        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>3.</span>, <span class='number'>5.</span>;
                         <span class='number'>2.</span>, <span class='number'>4.</span>, <span class='number'>7.</span>;
-                        <span class='number'>1.</span>, <span class='number'>1.</span>, <span class='number'>0.</span>);
+                        <span class='number'>1.</span>, <span class='number'>1.</span>, <span class='number'>0.</span>];
 
         <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='ident'>a</span>.<span class='ident'>is_diag</span>();
 
         <span class='macro'>assert</span><span class='macro'>!</span>(<span class='op'>!</span><span class='ident'>b</span>);
 
-        <span class='kw'>let</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.</span>, <span class='number'>0.</span>, <span class='number'>0.</span>;
+        <span class='kw'>let</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>0.</span>, <span class='number'>0.</span>;
                         <span class='number'>0.</span>, <span class='number'>2.</span>, <span class='number'>0.</span>;
-                        <span class='number'>0.</span>, <span class='number'>0.</span>, <span class='number'>3.</span>);
+                        <span class='number'>0.</span>, <span class='number'>0.</span>, <span class='number'>3.</span>];
         <span class='kw'>let</span> <span class='ident'>d</span> <span class='op'>=</span> <span class='ident'>c</span>.<span class='ident'>is_diag</span>();
 
         <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>d</span>);
@@ -962,11 +962,11 @@
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>transpose_mat</span>() {
-        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.</span>, <span class='number'>2.</span>;
+        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>2.</span>;
                         <span class='number'>3.</span>, <span class='number'>4.</span>;
                         <span class='number'>5.</span>, <span class='number'>6.</span>;
                         <span class='number'>7.</span>, <span class='number'>8.</span>;
-                        <span class='number'>9.</span>, <span class='number'>10.</span>);
+                        <span class='number'>9.</span>, <span class='number'>10.</span>];
 
         <span class='kw'>let</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='ident'>a</span>.<span class='ident'>transpose</span>();
 
@@ -1042,11 +1042,9 @@
     <script>
         window.rootPath = "../../../../../";
         window.currentCrate = "rulinalg";
-        window.playgroundUrl = "";
     </script>
     <script src="../../../../../jquery.js"></script>
     <script src="../../../../../main.js"></script>
-    
     <script defer src="../../../../../search-index.js"></script>
 </body>
 </html>

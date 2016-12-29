@@ -1691,7 +1691,6 @@
 <span id="1647">1647</span>
 <span id="1648">1648</span>
 <span id="1649">1649</span>
-<span id="1650">1650</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='kw'>super</span>::{<span class='ident'>Matrix</span>, <span class='ident'>MatrixSlice</span>, <span class='ident'>MatrixSliceMut</span>};
 <span class='kw'>use</span> <span class='kw'>super</span>::{<span class='ident'>Row</span>, <span class='ident'>RowMut</span>, <span class='ident'>Column</span>, <span class='ident'>ColumnMut</span>};
@@ -2583,13 +2582,12 @@
     <span class='kw'>use</span> <span class='kw'>super</span>::<span class='kw'>super</span>::<span class='ident'>Matrix</span>;
     <span class='kw'>use</span> <span class='kw'>super</span>::<span class='kw'>super</span>::<span class='ident'>MatrixSlice</span>;
     <span class='kw'>use</span> <span class='kw'>super</span>::<span class='kw'>super</span>::<span class='ident'>MatrixSliceMut</span>;
-    <span class='kw'>use</span> <span class='kw'>super</span>::<span class='kw'>super</span>::<span class='kw'>super</span>::<span class='ident'>vector</span>::<span class='ident'>Vector</span>;
-
+    
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>indexing_mat</span>() {
-        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.</span>, <span class='number'>2.</span>;
+        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>2.</span>;
                         <span class='number'>3.</span>, <span class='number'>4.</span>;
-                        <span class='number'>5.</span>, <span class='number'>6.</span>);
+                        <span class='number'>5.</span>, <span class='number'>6.</span>];
 
         <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>a</span>[[<span class='number'>0</span>, <span class='number'>0</span>]], <span class='number'>1.0</span>);
         <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>a</span>[[<span class='number'>0</span>, <span class='number'>1</span>]], <span class='number'>2.0</span>);
@@ -2601,10 +2599,10 @@
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>matrix_vec_mul</span>() {
-        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.</span>, <span class='number'>2.</span>;
+        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>2.</span>;
                         <span class='number'>3.</span>, <span class='number'>4.</span>;
-                        <span class='number'>5.</span>, <span class='number'>6.</span>);
-        <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>4.</span>, <span class='number'>7.</span>]);
+                        <span class='number'>5.</span>, <span class='number'>6.</span>];
+        <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>4.</span>, <span class='number'>7.</span>];
 
         <span class='kw'>let</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='ident'>a</span> <span class='op'>*</span> <span class='ident'>b</span>;
 
@@ -2617,9 +2615,9 @@
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>matrix_f32_mul</span>() {
-        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.</span>, <span class='number'>2.</span>;
+        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>2.</span>;
                         <span class='number'>3.</span>, <span class='number'>4.</span>;
-                        <span class='number'>5.</span>, <span class='number'>6.</span>);
+                        <span class='number'>5.</span>, <span class='number'>6.</span>];
 
         <span class='comment'>// Allocating new memory</span>
         <span class='kw'>let</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='ident'>a</span> <span class='op'>*</span> <span class='kw-2'>&amp;</span><span class='number'>2.0</span>;
@@ -2664,12 +2662,12 @@
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>matrix_add</span>() {
-        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.</span>, <span class='number'>2.</span>;
+        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>2.</span>;
                         <span class='number'>3.</span>, <span class='number'>4.</span>;
-                        <span class='number'>5.</span>, <span class='number'>6.</span>);
-        <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>2.</span>, <span class='number'>3.</span>;
+                        <span class='number'>5.</span>, <span class='number'>6.</span>];
+        <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>2.</span>, <span class='number'>3.</span>;
                         <span class='number'>4.</span>, <span class='number'>5.</span>;
-                        <span class='number'>6.</span>, <span class='number'>7.</span>);
+                        <span class='number'>6.</span>, <span class='number'>7.</span>];
 
         <span class='comment'>// Allocating new memory</span>
         <span class='kw'>let</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='ident'>a</span> <span class='op'>+</span> <span class='kw-2'>&amp;</span><span class='ident'>b</span>;
@@ -2714,9 +2712,9 @@
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>matrix_f32_add</span>() {
-        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.</span>, <span class='number'>2.</span>;
+        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>2.</span>;
                         <span class='number'>3.</span>, <span class='number'>4.</span>;
-                        <span class='number'>5.</span>, <span class='number'>6.</span>);
+                        <span class='number'>5.</span>, <span class='number'>6.</span>];
         <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='number'>3.0</span>;
 
         <span class='comment'>// Allocating new memory</span>
@@ -2762,12 +2760,12 @@
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>matrix_sub</span>() {
-        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.</span>, <span class='number'>2.</span>;
+        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>2.</span>;
                         <span class='number'>3.</span>, <span class='number'>4.</span>;
-                        <span class='number'>5.</span>, <span class='number'>6.</span>);
-        <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>2.</span>, <span class='number'>3.</span>;
+                        <span class='number'>5.</span>, <span class='number'>6.</span>];
+        <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>2.</span>, <span class='number'>3.</span>;
                         <span class='number'>4.</span>, <span class='number'>5.</span>;
-                        <span class='number'>6.</span>, <span class='number'>7.</span>);
+                        <span class='number'>6.</span>, <span class='number'>7.</span>];
 
         <span class='comment'>// Allocate new memory</span>
         <span class='kw'>let</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='ident'>a</span> <span class='op'>-</span> <span class='kw-2'>&amp;</span><span class='ident'>b</span>;
@@ -2812,9 +2810,9 @@
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>matrix_f32_sub</span>() {
-        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.</span>, <span class='number'>2.</span>;
+        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>2.</span>;
                         <span class='number'>3.</span>, <span class='number'>4.</span>;
-                        <span class='number'>5.</span>, <span class='number'>6.</span>);
+                        <span class='number'>5.</span>, <span class='number'>6.</span>];
         <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='number'>3.0</span>;
 
         <span class='comment'>// Allocating new memory</span>
@@ -2860,9 +2858,9 @@
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>matrix_f32_div</span>() {
-        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.</span>, <span class='number'>2.</span>;
+        <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.</span>, <span class='number'>2.</span>;
                         <span class='number'>3.</span>, <span class='number'>4.</span>;
-                        <span class='number'>5.</span>, <span class='number'>6.</span>);
+                        <span class='number'>5.</span>, <span class='number'>6.</span>];
         <span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='number'>3.0</span>;
 
         <span class='comment'>// Allocating new memory</span>
@@ -3400,11 +3398,9 @@
     <script>
         window.rootPath = "../../../../";
         window.currentCrate = "rulinalg";
-        window.playgroundUrl = "";
     </script>
     <script src="../../../../jquery.js"></script>
     <script src="../../../../main.js"></script>
-    
     <script defer src="../../../../search-index.js"></script>
 </body>
 </html>

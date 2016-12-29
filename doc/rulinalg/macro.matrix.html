@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-5341' class='srclink' href='../src/rulinalg/src/macros/matrix.rs.html#45-66' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-5820' class='srclink' href='../src/rulinalg/src/macros/matrix.rs.html#45-66' title='goto source code'>[src]</a></span></h1>
 <pre class='rust macro'>
 <span class='macro'>macro_rules</span><span class='macro'>!</span> <span class='ident'>matrix</span> {
     () <span class='op'>=&gt;</span> { ... };
@@ -70,9 +70,9 @@ don&#39;t match, the macro will fail to compile.</p>
 <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>rulinalg</span>;
 
 <span class='comment'>// Construct a 3x3 matrix of f64</span>
-<span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
+<span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
                   <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>;
-                  <span class='number'>7.0</span>, <span class='number'>8.0</span>, <span class='number'>9.0</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+                  <span class='number'>7.0</span>, <span class='number'>8.0</span>, <span class='number'>9.0</span>];</pre>
 
 <p>To construct matrices of other types, specify the type by
 the usual Rust syntax:</p>
@@ -81,11 +81,11 @@ the usual Rust syntax:</p>
 <span class='kw'>use</span> <span class='ident'>rulinalg</span>::<span class='ident'>matrix</span>::<span class='ident'>Matrix</span>;
 
 <span class='comment'>// Construct a 2x3 matrix of f32</span>
-<span class='kw'>let</span> <span class='ident'>mat</span>: <span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>f32</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
-                               <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>);
+<span class='kw'>let</span> <span class='ident'>mat</span>: <span class='ident'>Matrix</span><span class='op'>&lt;</span><span class='ident'>f32</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
+                               <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0</span>];
 <span class='comment'>// Or</span>
-<span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>(<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
-                  <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0f32</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+<span class='kw'>let</span> <span class='ident'>mat</span> <span class='op'>=</span> <span class='macro'>matrix</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>;
+                  <span class='number'>4.0</span>, <span class='number'>5.0</span>, <span class='number'>6.0f32</span>];</pre>
 </div></section>
     <section id='search' class="content hidden"></section>
 
@@ -142,11 +142,9 @@ the usual Rust syntax:</p>
     <script>
         window.rootPath = "../";
         window.currentCrate = "rulinalg";
-        window.playgroundUrl = "";
     </script>
     <script src="../jquery.js"></script>
     <script src="../main.js"></script>
-    
     <script defer src="../search-index.js"></script>
 </body>
 </html>

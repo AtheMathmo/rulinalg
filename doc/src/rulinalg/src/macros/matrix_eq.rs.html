@@ -1623,7 +1623,6 @@
 <span id="1579">1579</span>
 <span id="1580">1580</span>
 <span id="1581">1581</span>
-<span id="1582">1582</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>matrix</span>::<span class='ident'>BaseMatrix</span>;
 <span class='kw'>use</span> <span class='ident'>ulp</span>;
@@ -2448,7 +2447,6 @@ Please see the documentation for ways to compare vectors approximately.\n\n&quot
         <span class='ident'>MatrixComparisonResult</span>,
         <span class='ident'>VectorComparisonResult</span>};
     <span class='kw'>use</span> <span class='ident'>matrix</span>::<span class='ident'>Matrix</span>;
-    <span class='kw'>use</span> <span class='ident'>vector</span>::<span class='ident'>Vector</span>;
     <span class='kw'>use</span> <span class='ident'>ulp</span>::{<span class='ident'>Ulp</span>, <span class='ident'>UlpComparisonResult</span>};
     <span class='kw'>use</span> <span class='ident'>quickcheck</span>::<span class='ident'>TestResult</span>;
     <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>f64</span>;
@@ -2951,8 +2949,8 @@ Please see the documentation for ways to compare vectors approximately.\n\n&quot
 
             <span class='comment'>// It does not actually matter which comparator we use here, but we need to pick one</span>
             <span class='kw'>let</span> <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>ExactElementwiseComparator</span>;
-            <span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>0</span>; <span class='ident'>m</span>]);
-            <span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>0</span>; <span class='ident'>n</span>]);
+            <span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>0</span>; <span class='ident'>m</span>];
+            <span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>0</span>; <span class='ident'>n</span>];
 
             <span class='kw'>let</span> <span class='ident'>expected</span> <span class='op'>=</span> <span class='ident'>VectorComparisonResult</span>::<span class='ident'>MismatchedDimensions</span> { <span class='ident'>dim_x</span>: <span class='ident'>m</span>, <span class='ident'>dim_y</span>: <span class='ident'>n</span> };
 
@@ -2963,7 +2961,7 @@ Please see the documentation for ways to compare vectors approximately.\n\n&quot
     <span class='macro'>quickcheck</span><span class='macro'>!</span> {
         <span class='kw'>fn</span> <span class='ident'>property_elementwise_vector_comparison_vector_matches_self</span>(<span class='ident'>m</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
             <span class='kw'>let</span> <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>ExactElementwiseComparator</span>;
-            <span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>0</span>; <span class='ident'>m</span>]);
+            <span class='kw'>let</span> <span class='kw-2'>ref</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>0</span>; <span class='ident'>m</span>];
 
             <span class='ident'>elementwise_vector_comparison</span>(<span class='ident'>x</span>.<span class='ident'>data</span>(), <span class='ident'>x</span>.<span class='ident'>data</span>(), <span class='ident'>comp</span>) <span class='op'>==</span> <span class='ident'>VectorComparisonResult</span>::<span class='ident'>Match</span>
         }
@@ -2978,8 +2976,8 @@ Please see the documentation for ways to compare vectors approximately.\n\n&quot
 
         {
             <span class='comment'>// Single element vectors</span>
-            <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>]);
-            <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>2</span>]);
+            <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>];
+            <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>2</span>];
 
             <span class='kw'>let</span> <span class='ident'>expected</span> <span class='op'>=</span> <span class='ident'>MismatchedElements</span> {
                 <span class='ident'>comparator</span>: <span class='ident'>comp</span>,
@@ -2995,8 +2993,8 @@ Please see the documentation for ways to compare vectors approximately.\n\n&quot
 
         {
             <span class='comment'>// Mismatch for first and last elements of a vector</span>
-            <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>0</span>, <span class='number'>1</span>, <span class='number'>2</span>]);
-            <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>1</span>, <span class='number'>3</span>]);
+            <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>0</span>, <span class='number'>1</span>, <span class='number'>2</span>];
+            <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>1</span>, <span class='number'>3</span>];
             <span class='kw'>let</span> <span class='ident'>mismatches</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[
                 <span class='ident'>VectorElementComparisonFailure</span> {
                     <span class='ident'>x</span>: <span class='number'>0</span>, <span class='ident'>y</span>: <span class='number'>1</span>,
@@ -3020,8 +3018,8 @@ Please see the documentation for ways to compare vectors approximately.\n\n&quot
 
         {
             <span class='comment'>// Check some arbitrary elements</span>
-            <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>0</span>, <span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>, <span class='number'>5</span>]);
-            <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>0</span>, <span class='number'>2</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>5</span>, <span class='number'>5</span>]);
+            <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>0</span>, <span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>, <span class='number'>5</span>];
+            <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>0</span>, <span class='number'>2</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>5</span>, <span class='number'>5</span>];
 
             <span class='kw'>let</span> <span class='ident'>mismatches</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[
                 <span class='ident'>VectorElementComparisonFailure</span> {
@@ -3047,147 +3045,147 @@ Please see the documentation for ways to compare vectors approximately.\n\n&quot
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_default_compare_self_for_integer</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span> , <span class='number'>4</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span> , <span class='number'>4</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>x</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_default_compare_self_for_floating_point</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>x</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='attribute'>#[<span class='ident'>should_panic</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_default_mismatched_elements</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>]);
-        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>4</span>, <span class='number'>4</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>];
+        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>4</span>, <span class='number'>4</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='attribute'>#[<span class='ident'>should_panic</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_default_mismatched_dimensions</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>]);
-        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>];
+        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_exact_compare_self_for_integer</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>exact</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_exact_compare_self_for_floating_point</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>exact</span>);;
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='attribute'>#[<span class='ident'>should_panic</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_exact_mismatched_elements</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>]);
-        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>4</span>, <span class='number'>4</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>];
+        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>4</span>, <span class='number'>4</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>exact</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='attribute'>#[<span class='ident'>should_panic</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_exact_mismatched_dimensions</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>]);
-        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>];
+        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>exact</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_abs_compare_self_for_integer</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>abs</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>1</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_abs_compare_self_for_floating_point</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>abs</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>1e-8</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='attribute'>#[<span class='ident'>should_panic</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_abs_mismatched_elements</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
-        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
+        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>abs</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>1e-8</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='attribute'>#[<span class='ident'>should_panic</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_abs_mismatched_dimensions</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
-        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
+        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>abs</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>1e-8</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_ulp_compare_self</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>ulp</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>1</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='attribute'>#[<span class='ident'>should_panic</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_ulp_mismatched_elements</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
-        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
+        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>ulp</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>4</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='attribute'>#[<span class='ident'>should_panic</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_ulp_mismatched_dimensions</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
-        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
+        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>ulp</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>4</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_float_compare_self</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>ulp</span>, <span class='ident'>tol</span> <span class='op'>=</span> <span class='number'>1</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='attribute'>#[<span class='ident'>should_panic</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_float_mismatched_elements</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
-        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
+        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='attribute'>#[<span class='ident'>should_panic</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_float_mismatched_dimensions</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
-        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
+        <span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>y</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_float_compare_self_with_eps</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>, <span class='ident'>eps</span> <span class='op'>=</span> <span class='number'>1e-6</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_float_compare_self_with_ulp</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>, <span class='ident'>ulp</span> <span class='op'>=</span> <span class='number'>12</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_float_compare_self_with_eps_and_ulp</span>() {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>1.0</span>, <span class='number'>2.0</span>, <span class='number'>3.0</span>, <span class='number'>4.0</span>];
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>, <span class='ident'>eps</span> <span class='op'>=</span> <span class='number'>1e-6</span>, <span class='ident'>ulp</span> <span class='op'>=</span> <span class='number'>12</span>);
         <span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>x</span>, <span class='ident'>x</span>, <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>, <span class='ident'>ulp</span> <span class='op'>=</span> <span class='number'>12</span>, <span class='ident'>eps</span> <span class='op'>=</span> <span class='number'>1e-6</span>);
     }
@@ -3195,7 +3193,7 @@ Please see the documentation for ways to compare vectors approximately.\n\n&quot
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vector_eq_pass_by_ref</span>()
     {
-        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Vector</span>::<span class='ident'>new</span>(<span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>0.0</span>]);
+        <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>0.0</span>];
 
         <span class='comment'>// Exercise all the macro definitions and make sure that we are able to call it</span>
         <span class='comment'>// when the arguments are references.</span>
@@ -3264,11 +3262,9 @@ Please see the documentation for ways to compare vectors approximately.\n\n&quot
     <script>
         window.rootPath = "../../../../";
         window.currentCrate = "rulinalg";
-        window.playgroundUrl = "";
     </script>
     <script src="../../../../jquery.js"></script>
     <script src="../../../../main.js"></script>
-    
     <script defer src="../../../../search-index.js"></script>
 </body>
 </html>

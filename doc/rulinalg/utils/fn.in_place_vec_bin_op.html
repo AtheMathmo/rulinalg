@@ -47,8 +47,8 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-4554' class='srclink' href='../../src/rulinalg/src/utils.rs.html#105-118' title='goto source code'>[src]</a></span></h1>
-<pre class='rust fn'>pub fn in_place_vec_bin_op&lt;F,&nbsp;T&gt;(u: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;mut [</a>T<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>, v: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a>T<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>, f: F) <span class='where'>where F: <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.FnMut.html' title='core::ops::FnMut'>FnMut</a>(&amp;mut T, &amp;T), T: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Copy.html' title='core::marker::Copy'>Copy</a></span></pre><div class='docblock'><p>Vectorized binary operation applied to two slices.
+               </span><a id='src-1470' class='srclink' href='../../src/rulinalg/src/utils.rs.html#105-118' title='goto source code'>[src]</a></span></h1>
+<pre class='rust fn'>pub fn in_place_vec_bin_op&lt;F, T&gt;(u: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;mut [</a>T<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>, v: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a>T<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>, f: F) <span class='where'>where F: <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.FnMut.html' title='core::ops::FnMut'>FnMut</a>(&amp;mut T, &amp;T), T: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Copy.html' title='core::marker::Copy'>Copy</a></span></pre><div class='docblock'><p>Vectorized binary operation applied to two slices.
 The first argument should be a mutable slice which will
 be modified in place to prevent new memory allocation.</p>
 
@@ -62,7 +62,7 @@ be modified in place to prevent new memory allocation.</p>
 <span class='ident'>utils</span>::<span class='ident'>in_place_vec_bin_op</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>a</span>, <span class='kw-2'>&amp;</span><span class='ident'>b</span>, <span class='op'>|</span><span class='ident'>x</span>, <span class='kw-2'>&amp;</span><span class='ident'>y</span><span class='op'>|</span> { <span class='op'>*</span><span class='ident'>x</span> <span class='op'>=</span> <span class='number'>1f64</span> <span class='op'>+</span> <span class='op'>*</span><span class='ident'>x</span> <span class='op'>*</span> <span class='ident'>y</span> });
 
 <span class='comment'>// Will print a vector of `7`s.</span>
-<span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;{:?}&quot;</span>, <span class='ident'>a</span>);<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+<span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;{:?}&quot;</span>, <span class='ident'>a</span>);</pre>
 </div></section>
     <section id='search' class="content hidden"></section>
 
@@ -119,11 +119,9 @@ be modified in place to prevent new memory allocation.</p>
     <script>
         window.rootPath = "../../";
         window.currentCrate = "rulinalg";
-        window.playgroundUrl = "";
     </script>
     <script src="../../jquery.js"></script>
     <script src="../../main.js"></script>
-    
     <script defer src="../../search-index.js"></script>
 </body>
 </html>
