@@ -14,12 +14,17 @@ impl<T: Any + Float> Matrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::Matrix;
     ///
-    /// let a = Matrix::new(4,4,vec![2.,0.,1.,1.,2.,0.,1.,2.,1.,2.,0.,0.,2.,0.,1.,1.]);
+    /// let a = matrix![2., 0., 1., 1.;
+    ///                 2., 0., 1., 2.;
+    ///                 1., 2., 0., 0.;
+    ///                 2., 0., 1., 1.];
     /// let h = a.upper_hessenberg();
     ///
     /// println!("{:?}", h.expect("Could not get upper Hessenberg form.").data());
+    /// # }
     /// ```
     ///
     /// # Panics
@@ -85,15 +90,19 @@ impl<T: Any + Float> Matrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let a = Matrix::new(3,3,vec![1.,2.,3.,4.,5.,6.,7.,8.,9.]);
+    /// let a = matrix![1., 2., 3.;
+    ///                 4., 5., 6.;
+    ///                 7., 8., 9.];
     ///
     /// // u is the transform, h is the upper hessenberg form.
     /// let (u,h) = a.clone().upper_hess_decomp().expect("This matrix should decompose!");
     ///
     /// println!("The hess : {:?}", h.data());
     /// println!("Manual hess : {:?}", (u.transpose() * a * u).data());
+    /// # }
     /// ```
     ///
     /// # Panics

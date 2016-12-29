@@ -12,8 +12,8 @@ use std::ops::{Add, Mul, Sub, Div};
 ///
 /// ```
 /// use rulinalg::utils;
-/// let a = vec![1.0,2.0,3.0,4.0];
-/// let b = vec![1.0,2.0,3.0,4.0];
+/// let a = vec![1.0, 2.0, 3.0, 4.0];
+/// let b = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// let c = utils::dot(&a,&b);
 /// ```
@@ -164,12 +164,12 @@ pub fn vec_bin_op<F, T>(u: &[T], v: &[T], f: F) -> Vec<T>
 ///
 /// ```
 /// use rulinalg::utils;
-/// let a = vec![1.0,2.0,3.0,4.0];
-/// let b = vec![1.0,2.0,3.0,4.0];
+/// let a = vec![1.0, 2.0, 3.0, 4.0];
+/// let b = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// let c = utils::vec_sum(&a,&b);
 ///
-/// assert_eq!(c, vec![2.0,4.0, 6.0, 8.0]);
+/// assert_eq!(c, vec![2.0, 4.0, 6.0, 8.0]);
 /// ```
 pub fn vec_sum<T: Copy + Add<T, Output = T>>(u: &[T], v: &[T]) -> Vec<T> {
     vec_bin_op(u, v, |x, y| x + y)
@@ -182,8 +182,8 @@ pub fn vec_sum<T: Copy + Add<T, Output = T>>(u: &[T], v: &[T]) -> Vec<T> {
 ///
 /// ```
 /// use rulinalg::utils;
-/// let a = vec![1.0,2.0,3.0,4.0];
-/// let b = vec![1.0,2.0,3.0,4.0];
+/// let a = vec![1.0, 2.0, 3.0, 4.0];
+/// let b = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// let c = utils::vec_sub(&a,&b);
 ///
@@ -199,12 +199,12 @@ pub fn vec_sub<T: Copy + Sub<T, Output = T>>(u: &[T], v: &[T]) -> Vec<T> {
 ///
 /// ```
 /// use rulinalg::utils;
-/// let a = vec![1.0,2.0,3.0,4.0];
-/// let b = vec![1.0,2.0,3.0,4.0];
+/// let a = vec![1.0, 2.0, 3.0, 4.0];
+/// let b = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// let c = utils::ele_mul(&a,&b);
 ///
-/// assert_eq!(c, vec![1.0,4.0,9.0,16.0]);
+/// assert_eq!(c, vec![1.0, 4.0, 9.0, 16.0]);
 /// ```
 pub fn ele_mul<T: Copy + Mul<T, Output = T>>(u: &[T], v: &[T]) -> Vec<T> {
     vec_bin_op(u, v, |x, y| x * y)
@@ -216,8 +216,8 @@ pub fn ele_mul<T: Copy + Mul<T, Output = T>>(u: &[T], v: &[T]) -> Vec<T> {
 ///
 /// ```
 /// use rulinalg::utils;
-/// let a = vec![1.0,2.0,3.0,4.0];
-/// let b = vec![1.0,2.0,3.0,4.0];
+/// let a = vec![1.0, 2.0, 3.0, 4.0];
+/// let b = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// let c = utils::ele_div(&a,&b);
 ///
@@ -236,7 +236,7 @@ pub fn ele_div<T: Copy + Div<T, Output = T>>(u: &[T], v: &[T]) -> Vec<T> {
 ///
 /// ```
 /// use rulinalg::utils;
-/// let a = vec![1.0,2.0,3.0,4.0];
+/// let a = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// let c = utils::argmax(&a);
 /// assert_eq!(c.0, 3);
@@ -268,7 +268,7 @@ pub fn argmax<T>(u: &[T]) -> (usize, T)
 ///
 /// ```
 /// use rulinalg::utils;
-/// let a = vec![5.0,2.0,3.0,4.0];
+/// let a = vec![5.0, 2.0, 3.0, 4.0];
 ///
 /// let c = utils::argmin(&a);
 /// assert_eq!(c.0, 1);
@@ -300,7 +300,7 @@ pub fn argmin<T>(u: &[T]) -> (usize, T)
 ///
 /// ```
 /// use rulinalg::utils;
-/// let a = vec![1.0,2.0,3.0,4.0];
+/// let a = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// let c = utils::find(&a, 3.0);
 /// assert_eq!(c, 2);
