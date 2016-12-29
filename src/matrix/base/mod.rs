@@ -461,7 +461,7 @@ pub trait BaseMatrix<T>: Sized {
         }
     }
 
-    /// The min of the specified axis of the matrix.
+    /// The max of the specified axis of the matrix.
     ///
     /// # Examples
     ///
@@ -474,10 +474,10 @@ pub trait BaseMatrix<T>: Sized {
     ///                 3.0, 4.0];
     ///
     /// let cmax = a.max(Axes::Col);
-    /// assert_eq!(cmax, Vector::new(vec![2.0, 4.0]));
+    /// assert_eq!(cmax, vector![2.0, 4.0]);
     ///
     /// let rmax = a.max(Axes::Row);
-    /// assert_eq!(rmax, Vector::new(vec![3.0, 4.0]));
+    /// assert_eq!(rmax, vector![3.0, 4.0]);
     /// # }
     /// ```
     fn max(&self, axis: Axes) -> Vector<T> where T: Copy + PartialOrd
