@@ -205,5 +205,12 @@ mod tests {
 
         assert_eq!(c.max(Axes::Col), vector![1., 2., 3.]);
         assert_eq!(c.max(Axes::Row), vector![3.]);
+
+        let t = matrix![1., 2.; 0., 1.];
+        assert_eq!(t.min(Axes::Col), vector![1., 0.]);
+        assert_eq!(t.min(Axes::Row), vector![0., 1.]);
+
+        assert_eq!(t.max(Axes::Col), vector![2., 1.]);
+        assert_eq!(t.max(Axes::Row), vector![1., 2.]);
     }
 }

@@ -446,7 +446,7 @@ pub trait BaseMatrix<T>: Sized {
                 let mut mins: Vec<T> = Vec::with_capacity(self.rows());
                 for row in self.row_iter() {
                     let min = row.iter()
-                                 .skip(0)
+                                 .skip(1)
                                  .fold(row[0], |m, &v| if v < m { v } else { m } );
                     mins.push(min);
                 }
@@ -454,7 +454,7 @@ pub trait BaseMatrix<T>: Sized {
             },
             Axes::Row => {
                 let mut mins: Vec<T> = self.row(0).raw_slice().into();
-                for row in self.row_iter().skip(0) {
+                for row in self.row_iter().skip(1) {
                     utils::in_place_vec_bin_op(&mut mins, row.raw_slice(),
                                               |min, &r| if r < *min { *min = r; });
                 }
@@ -488,7 +488,7 @@ pub trait BaseMatrix<T>: Sized {
                 let mut maxs: Vec<T> = Vec::with_capacity(self.rows());
                 for row in self.row_iter() {
                     let max = row.iter()
-                                 .skip(0)
+                                 .skip(1)
                                  .fold(row[0], |m, &v| if v > m { v } else { m } );
                     maxs.push(max);
                 }
@@ -496,7 +496,7 @@ pub trait BaseMatrix<T>: Sized {
             },
             Axes::Row => {
                 let mut maxs: Vec<T> = self.row(0).raw_slice().into();
-                for row in self.row_iter().skip(0) {
+                for row in self.row_iter().skip(1) {
                     utils::in_place_vec_bin_op(&mut maxs, row.raw_slice(),
                                               |max, &r| if r > *max { *max = r; });
                 }
