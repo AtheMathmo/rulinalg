@@ -888,13 +888,12 @@ mod tests {
     use super::super::Matrix;
     use super::super::MatrixSlice;
     use super::super::MatrixSliceMut;
-    use super::super::super::vector::Vector;
-
+    
     #[test]
     fn indexing_mat() {
-        let a = matrix!(1., 2.;
+        let a = matrix![1., 2.;
                         3., 4.;
-                        5., 6.);
+                        5., 6.];
 
         assert_eq!(a[[0, 0]], 1.0);
         assert_eq!(a[[0, 1]], 2.0);
@@ -906,10 +905,10 @@ mod tests {
 
     #[test]
     fn matrix_vec_mul() {
-        let a = matrix!(1., 2.;
+        let a = matrix![1., 2.;
                         3., 4.;
-                        5., 6.);
-        let b = Vector::new(vec![4., 7.]);
+                        5., 6.];
+        let b = vector![4., 7.];
 
         let c = a * b;
 
@@ -922,9 +921,9 @@ mod tests {
 
     #[test]
     fn matrix_f32_mul() {
-        let a = matrix!(1., 2.;
+        let a = matrix![1., 2.;
                         3., 4.;
-                        5., 6.);
+                        5., 6.];
 
         // Allocating new memory
         let c = &a * &2.0;
@@ -969,12 +968,12 @@ mod tests {
 
     #[test]
     fn matrix_add() {
-        let a = matrix!(1., 2.;
+        let a = matrix![1., 2.;
                         3., 4.;
-                        5., 6.);
-        let b = matrix!(2., 3.;
+                        5., 6.];
+        let b = matrix![2., 3.;
                         4., 5.;
-                        6., 7.);
+                        6., 7.];
 
         // Allocating new memory
         let c = &a + &b;
@@ -1019,9 +1018,9 @@ mod tests {
 
     #[test]
     fn matrix_f32_add() {
-        let a = matrix!(1., 2.;
+        let a = matrix![1., 2.;
                         3., 4.;
-                        5., 6.);
+                        5., 6.];
         let b = 3.0;
 
         // Allocating new memory
@@ -1067,12 +1066,12 @@ mod tests {
 
     #[test]
     fn matrix_sub() {
-        let a = matrix!(1., 2.;
+        let a = matrix![1., 2.;
                         3., 4.;
-                        5., 6.);
-        let b = matrix!(2., 3.;
+                        5., 6.];
+        let b = matrix![2., 3.;
                         4., 5.;
-                        6., 7.);
+                        6., 7.];
 
         // Allocate new memory
         let c = &a - &b;
@@ -1117,9 +1116,9 @@ mod tests {
 
     #[test]
     fn matrix_f32_sub() {
-        let a = matrix!(1., 2.;
+        let a = matrix![1., 2.;
                         3., 4.;
-                        5., 6.);
+                        5., 6.];
         let b = 3.0;
 
         // Allocating new memory
@@ -1165,9 +1164,9 @@ mod tests {
 
     #[test]
     fn matrix_f32_div() {
-        let a = matrix!(1., 2.;
+        let a = matrix![1., 2.;
                         3., 4.;
-                        5., 6.);
+                        5., 6.];
         let b = 3.0;
 
         // Allocating new memory

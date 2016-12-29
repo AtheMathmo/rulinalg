@@ -312,9 +312,10 @@ pub trait BaseMatrix<T>: Sized {
     fn sum_rows(&self) -> Vector<T>
         where T: Copy + Zero + Add<T, Output = T>
     {
-        let sum_rows = self.row_iter().fold(vec![T::zero(); self.cols()], |row_sum, r| {
-            utils::vec_bin_op(&row_sum, r.raw_slice(), |sum, val| sum + val)
-        });
+        let mut sum_rows = vec![T::zero(); self.cols()];
+        for row in self.row_iter() {
+            utils::in_place_vec_bin_op(&mut sum_rows, row.raw_slice(), |sum, &r| *sum = *sum + r);
+        }
         Vector::new(sum_rows)
     }
 
@@ -388,7 +389,7 @@ pub trait BaseMatrix<T>: Sized {
     /// assert_eq!(c, 2.0);
     /// # }
     /// ```
-    fn metric<'a, 'b, B, M>(&'a self, mat: &'b B, metric: M) -> T 
+    fn metric<'a, 'b, B, M>(&'a self, mat: &'b B, metric: M) -> T
         where B: 'b + BaseMatrix<T>, M: MatrixMetric<'a, 'b, T, Self, B>
     {
         metric.metric(self, mat)
@@ -415,6 +416,92 @@ pub trait BaseMatrix<T>: Sized {
         self.row_iter()
             .fold(T::zero(),
                   |sum, row| sum + utils::unrolled_sum(row.raw_slice()))
+    }
+
+    /// The min of the specified axis of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::matrix::{Matrix, BaseMatrix, Axes};
+    /// use rulinalg::vector::Vector;
+    ///
+    /// let a = matrix![1.0, 2.0;
+    ///                 3.0, 4.0];
+    ///
+    /// let cmin = a.min(Axes::Col);
+    /// assert_eq!(cmin, Vector::new(vec![1.0, 3.0]));
+    ///
+    /// let rmin = a.min(Axes::Row);
+    /// assert_eq!(rmin, Vector::new(vec![1.0, 2.0]));
+    /// # }
+    /// ```
+    fn min(&self, axis: Axes) -> Vector<T> where T: Copy + PartialOrd
+    {
+        match axis {
+            Axes::Col => {
+                let mut mins: Vec<T> = Vec::with_capacity(self.rows());
+                for row in self.row_iter() {
+                    let min = row.iter()
+                                 .skip(0)
+                                 .fold(row[0], |m, &v| if v < m { v } else { m } );
+                    mins.push(min);
+                }
+                Vector::new(mins)
+            },
+            Axes::Row => {
+                let mut mins: Vec<T> = self.row(0).raw_slice().into();
+                for row in self.row_iter().skip(0) {
+                    utils::in_place_vec_bin_op(&mut mins, row.raw_slice(),
+                                              |min, &r| if r < *min { *min = r; });
+                }
+                Vector::new(mins)
+            }
+        }
+    }
+
+    /// The max of the specified axis of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::matrix::{Matrix, BaseMatrix, Axes};
+    /// use rulinalg::vector::Vector;
+    ///
+    /// let a = matrix![1.0, 2.0;
+    ///                 3.0, 4.0];
+    ///
+    /// let cmax = a.max(Axes::Col);
+    /// assert_eq!(cmax, vector![2.0, 4.0]);
+    ///
+    /// let rmax = a.max(Axes::Row);
+    /// assert_eq!(rmax, vector![3.0, 4.0]);
+    /// # }
+    /// ```
+    fn max(&self, axis: Axes) -> Vector<T> where T: Copy + PartialOrd
+    {
+        match axis {
+            Axes::Col => {
+                let mut maxs: Vec<T> = Vec::with_capacity(self.rows());
+                for row in self.row_iter() {
+                    let max = row.iter()
+                                 .skip(0)
+                                 .fold(row[0], |m, &v| if v > m { v } else { m } );
+                    maxs.push(max);
+                }
+                Vector::new(maxs)
+            },
+            Axes::Row => {
+                let mut maxs: Vec<T> = self.row(0).raw_slice().into();
+                for row in self.row_iter().skip(0) {
+                    utils::in_place_vec_bin_op(&mut maxs, row.raw_slice(),
+                                              |max, &r| if r > *max { *max = r; });
+                }
+                Vector::new(maxs)
+            }
+        }
     }
 
     /// Convert the matrix struct into a owned Matrix.

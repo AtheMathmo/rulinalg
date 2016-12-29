@@ -2,6 +2,29 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
+## 0.4.1
+
+### Breaking Changes
+
+- None
+
+### Features
+
+- Added new `vector!` macro for `Vector` construction.
+- Added new `min` and `max` functions to the `BaseMatrix` trait.
+- Implemented conversion traits to convert `Row`/`Column` types to `Vector`.
+
+### Bug Fixes
+
+- None
+
+### Minor Changes
+
+- Performance improvement to `BaseMatrix::sum_rows` function. also
+gives passive improvement to `mean` and `variance`.
+- Improving layout of the `vector` module.
+- Made `matrix!` macro use square brackets consistently.
+
 ## 0.4.0
 
 This release includes mostly quality of life changes for users of rulinalg. We do some work to conform more to community
