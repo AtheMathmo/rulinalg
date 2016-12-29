@@ -208,3 +208,33 @@ fn mat_mean_rows(b: &mut Bencher) {
         black_box(m.mean(Axes::Row));
     });
 }
+
+#[bench]
+fn mat_min_col(b: &mut Bencher) {
+    let v = (0..100).collect::<Vec<_>>();
+    let mut data = Vec::with_capacity(10000);
+
+    for _ in 0..100 {
+        data.extend_from_slice(&v);
+    }
+    let m = Matrix::new(100, 100, data);
+
+    b.iter(|| {
+        black_box(m.min(Axes::Col));
+    });
+}
+
+#[bench]
+fn mat_min_row(b: &mut Bencher) {
+    let v = (0..100).collect::<Vec<_>>();
+    let mut data = Vec::with_capacity(10000);
+
+    for _ in 0..100 {
+        data.extend_from_slice(&v);
+    }
+    let m = Matrix::new(100, 100, data);
+
+    b.iter(|| {
+        black_box(m.min(Axes::Row));
+    });
+}
