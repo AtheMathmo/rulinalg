@@ -112,10 +112,11 @@ pub use norm::{VectorNorm, MatrixNorm};
 pub use norm::{VectorMetric, MatrixMetric};
 
 #[cfg(feature = "io")]
-extern crate csv;
+extern crate csv as libcsv;
+
 #[cfg(feature = "io")]
 extern crate rustc_serialize;
 
 #[cfg(feature = "io")]
 /// io module
-mod io;
+pub mod io;
