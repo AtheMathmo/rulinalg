@@ -15,11 +15,15 @@ impl<T> Matrix<T>
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
     /// let m = Matrix::new(3,3, vec![1.0,0.5,0.5,0.5,1.0,0.5,0.5,0.5,1.0]);
-    ///
-    /// let l = m.cholesky();
+    /// let l: Matrix<f64> = m.cholesky().unwrap();
+    /// let exp: Matrix<f64> = Matrix::new(3, 3, vec![1.0, 0.0, 0.0, 0.5, 0.8660254, 0.0, 0.5, 0.28867513, 0.81649658]);
+    /// assert_eq!(l.cols(), exp.cols());
+    /// assert_eq!(l.rows(), exp.rows());
+    /// for (a, b) in l.iter().zip(exp.iter()) {
+    ///     assert!((a - b).abs() < 1.0e-6);
+    /// }
     /// ```
     ///
     /// # Panics
