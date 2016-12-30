@@ -211,6 +211,30 @@ pub trait BaseMatrix<T>: Sized {
         }
     }
 
+    /// Iterate over the columns of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    ///
+    /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
+    ///
+    /// // Prints "3" two times.
+    /// for row in a.cols_iter() {
+    ///     println!("{}", row.len());
+    /// }
+    /// ```
+    fn col_iter(&self) -> Cols<T> {
+        Cols {
+            _marker: PhantomData::<&T>,
+            col_pos: 0,
+            slice_cols: self.cols(),
+            slice_rows: self.rows(),
+            slice_start: self.as_ptr(),
+        }
+    }
+
     /// Iterate over the rows of the matrix.
     ///
     /// # Examples
@@ -1319,6 +1343,34 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
             }
         }
 
+    }
+
+    /// Iterate over the mutable columns of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
+    ///
+    /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
+    ///
+    /// for row in a.cols_iter_mut() {
+    ///     for r in row {
+    ///         *r = *r + 1;
+    ///     }
+    /// }
+    ///
+    /// // Now contains the range 1..7
+    /// println!("{}", a);
+    /// ```
+    fn col_iter_mut(&mut self) -> ColsMut<T> {
+        ColsMut {
+            _marker: PhantomData::<&mut T>,
+            col_pos: 0,
+            slice_cols: self.cols(),
+            slice_rows: self.rows(),
+            slice_start: self.as_mut_ptr(),
+        }
     }
 
     /// Iterate over the mutable rows of the matrix.

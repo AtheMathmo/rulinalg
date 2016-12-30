@@ -155,6 +155,26 @@ impl<'a, T: 'a> RowMut<'a, T> {
 
 /// Row iterator.
 #[derive(Debug)]
+pub struct Cols<'a, T: 'a> {
+    _marker: PhantomData<&'a T>,
+    col_pos: usize,
+    slice_cols: usize,
+    slice_rows: usize,
+    slice_start: *const T,
+}
+
+/// Mutable row iterator.
+#[derive(Debug)]
+pub struct ColsMut<'a, T: 'a> {
+    _marker: PhantomData<&'a mut T>,
+    col_pos: usize,
+    slice_cols: usize,
+    slice_rows: usize,
+    slice_start: *mut T,
+}
+
+/// Row iterator.
+#[derive(Debug)]
 pub struct Rows<'a, T: 'a> {
     slice_start: *const T,
     row_pos: usize,
