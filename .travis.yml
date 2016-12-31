@@ -1,11 +1,16 @@
 language: rust
+before_script: (cargo install rustfmt || true)
+cache: cargo
+matrix:
+  allow_failures:
+    - rust: nightly
 rust:
   - stable
   - beta
   - nightly
-matrix:
-  allow_failures:
-    - rust: nightly
 script:
-  - cargo build --verbose
-  - cargo test --verbose
+- |
+  export PATH=$PATH:~/.cargo/bin &&
+  cargo fmt -- --write-mode=diff &&
+  cargo build --verbose &&
+  cargo test --verbose
