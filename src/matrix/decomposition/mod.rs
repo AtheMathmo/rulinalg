@@ -26,7 +26,7 @@ use vector::Vector;
 use utils;
 use error::{Error, ErrorKind};
 
-use libnum::{Float};
+use libnum::Float;
 
 impl<T> Matrix<T>
     where T: Any + Float

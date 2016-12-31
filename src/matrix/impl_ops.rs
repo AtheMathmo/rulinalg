@@ -888,7 +888,7 @@ mod tests {
     use super::super::Matrix;
     use super::super::MatrixSlice;
     use super::super::MatrixSliceMut;
-    
+
     #[test]
     fn indexing_mat() {
         let a = matrix![1., 2.;

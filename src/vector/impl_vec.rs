@@ -45,7 +45,8 @@ impl<T> Vector<T> {
     /// assert_eq!(v, Vector::new(vec![0, 3, 6, 9]));
     /// ```
     pub fn from_fn<F>(size: usize, mut f: F) -> Vector<T>
-        where F: FnMut(usize) -> T {
+        where F: FnMut(usize) -> T
+    {
 
         let data: Vec<T> = (0..size).into_iter().map(|x| f(x)).collect();
 
@@ -96,7 +97,6 @@ impl<T> Vector<T> {
     pub unsafe fn get_unchecked_mut(&mut self, index: usize) -> &mut T {
         self.data.get_unchecked_mut(index)
     }
-
 }
 
 impl<T> Into<Vec<T>> for Vector<T> {
@@ -124,7 +124,9 @@ impl<'a, T> IntoIterator for &'a Vector<T> {
 }
 
 impl<T> FromIterator<T> for Vector<T> {
-    fn from_iter<I>(iter: I) -> Self where I: IntoIterator<Item=T> {
+    fn from_iter<I>(iter: I) -> Self
+        where I: IntoIterator<Item = T>
+    {
         let values: Vec<T> = iter.into_iter().collect();
         Vector::new(values)
     }
@@ -504,7 +506,10 @@ mod tests {
         assert_eq!(v2, vector![0., 1., 2.]);
 
         let mut z = 0;
-        let v3 = Vector::from_fn(3, |x| { z += 1; x + z });
+        let v3 = Vector::from_fn(3, |x| {
+            z += 1;
+            x + z
+        });
         assert_eq!(v3, vector![0 + 1, 1 + 2, 2 + 3]);
 
         let v4 = Vector::from_fn(3, move |x| x + 1);

@@ -1,8 +1,6 @@
-use std::ops::{Mul, Add, Div, Sub, Rem,
-               MulAssign, AddAssign, DivAssign, SubAssign, RemAssign,
-               Neg, Not,
-               BitAnd, BitOr, BitXor, BitAndAssign, BitOrAssign, BitXorAssign,
-               Index, IndexMut};
+use std::ops::{Mul, Add, Div, Sub, Rem, MulAssign, AddAssign, DivAssign, SubAssign, RemAssign,
+               Neg, Not, BitAnd, BitOr, BitXor, BitAndAssign, BitOrAssign, BitXorAssign, Index,
+               IndexMut};
 use utils;
 
 use super::Vector;

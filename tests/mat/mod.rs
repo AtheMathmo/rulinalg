@@ -15,10 +15,17 @@ fn test_solve() {
     let b = vector![-100.0, 0.0, 0.0, -100.0, 0.0, 0.0, -100.0, 0.0, 0.0];
 
     let c = a.solve(b).unwrap();
-    let true_solution = vec![42.85714286, 18.75, 7.14285714, 52.67857143,
-                             25.0, 9.82142857, 42.85714286, 18.75, 7.14285714];
+    let true_solution = vec![42.85714286,
+                             18.75,
+                             7.14285714,
+                             52.67857143,
+                             25.0,
+                             9.82142857,
+                             42.85714286,
+                             18.75,
+                             7.14285714];
 
-    assert!(c.into_iter().zip(true_solution.into_iter()).all(|(x, y)| (x-y) < 1e-5));
+    assert!(c.into_iter().zip(true_solution.into_iter()).all(|(x, y)| (x - y) < 1e-5));
 
 }
 
@@ -98,7 +105,8 @@ fn cholesky() {
 
     assert!(l.is_ok());
 
-    assert_eq!(*l.unwrap().data(), vec![5., 0., 0., 3., 3., 0., -1., 1., 3.]);
+    assert_eq!(*l.unwrap().data(),
+               vec![5., 0., 0., 3., 3., 0., -1., 1., 3.]);
 }
 
 #[test]
@@ -126,11 +134,13 @@ fn qr() {
     let r_diff = (r - &true_r).into_vec();
 
     for (val, expected) in q_diff.into_iter().zip(true_q.data().iter()) {
-        assert!(val < tol, format!("diff is {0}, expecting {1}", val, expected));
+        assert!(val < tol,
+                format!("diff is {0}, expecting {1}", val, expected));
     }
 
     for (val, expected) in r_diff.into_iter().zip(true_r.data().iter()) {
-        assert!(val < tol, format!("diff is {0}, expecting {1}", val, expected));
+        assert!(val < tol,
+                format!("diff is {0}, expecting {1}", val, expected));
     }
 
 }

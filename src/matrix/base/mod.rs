@@ -390,7 +390,8 @@ pub trait BaseMatrix<T>: Sized {
     /// # }
     /// ```
     fn metric<'a, 'b, B, M>(&'a self, mat: &'b B, metric: M) -> T
-        where B: 'b + BaseMatrix<T>, M: MatrixMetric<'a, 'b, T, Self, B>
+        where B: 'b + BaseMatrix<T>,
+              M: MatrixMetric<'a, 'b, T, Self, B>
     {
         metric.metric(self, mat)
     }
@@ -437,24 +438,26 @@ pub trait BaseMatrix<T>: Sized {
     /// assert_eq!(rmin, Vector::new(vec![1.0, 2.0]));
     /// # }
     /// ```
-    fn min(&self, axis: Axes) -> Vector<T> where T: Copy + PartialOrd
+    fn min(&self, axis: Axes) -> Vector<T>
+        where T: Copy + PartialOrd
     {
         match axis {
             Axes::Col => {
                 let mut mins: Vec<T> = Vec::with_capacity(self.rows());
                 for row in self.row_iter() {
                     let min = row.iter()
-                                 .skip(0)
-                                 .fold(row[0], |m, &v| if v < m { v } else { m } );
+                        .skip(0)
+                        .fold(row[0], |m, &v| if v < m { v } else { m });
                     mins.push(min);
                 }
                 Vector::new(mins)
-            },
+            }
             Axes::Row => {
                 let mut mins: Vec<T> = self.row(0).raw_slice().into();
                 for row in self.row_iter().skip(0) {
-                    utils::in_place_vec_bin_op(&mut mins, row.raw_slice(),
-                                              |min, &r| if r < *min { *min = r; });
+                    utils::in_place_vec_bin_op(&mut mins, row.raw_slice(), |min, &r| if r < *min {
+                        *min = r;
+                    });
                 }
                 Vector::new(mins)
             }
@@ -480,24 +483,26 @@ pub trait BaseMatrix<T>: Sized {
     /// assert_eq!(rmax, vector![3.0, 4.0]);
     /// # }
     /// ```
-    fn max(&self, axis: Axes) -> Vector<T> where T: Copy + PartialOrd
+    fn max(&self, axis: Axes) -> Vector<T>
+        where T: Copy + PartialOrd
     {
         match axis {
             Axes::Col => {
                 let mut maxs: Vec<T> = Vec::with_capacity(self.rows());
                 for row in self.row_iter() {
                     let max = row.iter()
-                                 .skip(0)
-                                 .fold(row[0], |m, &v| if v > m { v } else { m } );
+                        .skip(0)
+                        .fold(row[0], |m, &v| if v > m { v } else { m });
                     maxs.push(max);
                 }
                 Vector::new(maxs)
-            },
+            }
             Axes::Row => {
                 let mut maxs: Vec<T> = self.row(0).raw_slice().into();
                 for row in self.row_iter().skip(0) {
-                    utils::in_place_vec_bin_op(&mut maxs, row.raw_slice(),
-                                              |max, &r| if r > *max { *max = r; });
+                    utils::in_place_vec_bin_op(&mut maxs, row.raw_slice(), |max, &r| if r > *max {
+                        *max = r;
+                    });
                 }
                 Vector::new(maxs)
             }
@@ -1030,9 +1035,10 @@ pub trait BaseMatrix<T>: Sized {
         assert!(start[1] + cols <= self.cols(),
                 "View dimensions exceed matrix dimensions.");
 
+        let offset = (start[0] * self.row_stride() + start[1]) as isize;
+
         unsafe {
-            MatrixSlice::from_raw_parts(self.as_ptr().offset((start[0] * self.row_stride() + start[1]) as isize),
-                                        rows, cols, self.row_stride())
+            MatrixSlice::from_raw_parts(self.as_ptr().offset(offset), rows, cols, self.row_stride())
         }
     }
 }
@@ -1538,9 +1544,13 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         assert!(start[1] + cols <= self.cols(),
                 "View dimensions exceed matrix dimensions.");
 
+        let count = (start[0] * self.row_stride() + start[1]) as isize;
+
         unsafe {
-            MatrixSliceMut::from_raw_parts(self.as_mut_ptr().offset((start[0] * self.row_stride() + start[1]) as isize),
-                                           rows, cols, self.row_stride())
+            MatrixSliceMut::from_raw_parts(self.as_mut_ptr().offset(count),
+                                           rows,
+                                           cols,
+                                           self.row_stride())
         }
     }
 }
