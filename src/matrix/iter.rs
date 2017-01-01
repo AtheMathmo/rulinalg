@@ -1,9 +1,8 @@
 use std::iter::{ExactSizeIterator, FromIterator};
 use std::mem;
-// use std::slice;
 
 use super::{Matrix, MatrixSlice, MatrixSliceMut};
-use super::{Cols, ColsMut, Row, RowMut, Rows, RowsMut, Diagonal, DiagonalMut};
+use super::{Column, ColumnMut, Cols, ColsMut, Row, RowMut, Rows, RowsMut, Diagonal, DiagonalMut};
 use super::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
 
 macro_rules! impl_slice_iter (
@@ -107,24 +106,24 @@ impl<'a, T, M: $diag_base<T>> ExactSizeIterator for $diag<'a, T, M> {}
 impl_diag_iter!(Diagonal, BaseMatrix, &'a T, as_ptr);
 impl_diag_iter!(DiagonalMut, BaseMatrixMut, &'a mut T, as_mut_ptr);
 
-macro_rules! impl_iter_columns (
-    ($columns:ident, $data_type:ty, $get:ident) => (
+macro_rules! impl_col_iter (
+    ($cols:ident, $col_type:ty, $col_base:ident, $slice_base:ident) => (
 
 /// Iterates over the columns in the matrix.
-impl<'a, T> Iterator for $columns<'a, T> {
-    type Item = $data_type;
+impl<'a, T> Iterator for $cols<'a, T> {
+    type Item = $col_type;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.col_pos >= self.slice_cols {
             return None;
         }
 
-        let mut column: $data_type = Vec::with_capacity(self.slice_rows);
+        let column: $col_type;
         unsafe {
-            for row_idx in 0..self.slice_rows {
-            	let ptr_idx = (self.col_pos + self.slice_rows * row_idx) as isize;
-                column.push(self.slice_start.offset(ptr_idx).$get().unwrap());
-            }
+            let ptr = self.slice_start.offset(self.col_pos as isize);
+            column  = $col_base {
+                col: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.slice_rows)
+            };
         }
         self.col_pos += 1;
         Some(column)
@@ -135,15 +134,12 @@ impl<'a, T> Iterator for $columns<'a, T> {
             return None;
         }
 
-		let last_col = self.slice_cols - 1;
-        let mut column: $data_type = Vec::with_capacity(self.slice_rows);
         unsafe {
-            for row_idx in 0..self.slice_rows {
-            	let ptr_idx = (last_col + self.slice_rows * row_idx) as isize;
-                column.push(self.slice_start.offset(ptr_idx).$get().unwrap());
-            }
+            let ptr = self.slice_start.offset((self.slice_cols - 1) as isize);
+            Some($col_base {
+                col: $slice_base::from_raw_parts(ptr, 1, self.slice_rows, self.slice_cols)
+            })
         }
-        Some(column)
     }
 
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
@@ -151,11 +147,11 @@ impl<'a, T> Iterator for $columns<'a, T> {
             return None;
         }
 
-        let mut column: $data_type = Vec::with_capacity(self.slice_rows);
+        let column: $col_type;
         unsafe {
-           for row_idx in 0..self.slice_rows {
-            	let ptr_idx = ((self.col_pos + n) + self.slice_rows  * row_idx) as isize;
-                column.push(self.slice_start.offset(ptr_idx).$get().unwrap());
+            let ptr = self.slice_start.offset((self.col_pos + n) as isize);
+            column = $col_base {
+                col: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.slice_rows)
             }
         }
         self.col_pos += n + 1;
@@ -173,8 +169,8 @@ impl<'a, T> Iterator for $columns<'a, T> {
     );
 );
 
-impl_iter_columns!(Cols, Vec<&'a T>, as_ref);
-impl_iter_columns!(ColsMut, Vec<&'a mut T>, as_mut);
+impl_col_iter!(Cols, Column<'a, T>, Column, MatrixSlice);
+impl_col_iter!(ColsMut, ColumnMut<'a, T>, ColumnMut, MatrixSliceMut);
 
 impl<'a, T> ExactSizeIterator for Cols<'a, T> {}
 impl<'a, T> ExactSizeIterator for ColsMut<'a, T> {}
@@ -652,23 +648,23 @@ mod tests {
         assert_eq!((0, Some(0)), diags_iter.size_hint());
     }
 
-     #[test]
+    #[test]
     fn test_matrix_cols() {
         let mut a = matrix![0, 1, 2;
                             3, 4, 5;
                             6, 7, 8];
-        let data = [[&0, &3, &6], [&1, &4, &7], [&2, &5, &8]];
+        let data = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
 
-        for (i, col) in a.cols_iter().enumerate() {
-            assert_eq!(data[i], col.as_slice());
+        for (i, col) in a.col_iter().enumerate() {
+            assert_eq!(data[i], *col.raw_slice());
         }
 
-        for (i, col) in a.cols_iter_mut().enumerate() {
-            assert_eq!(data[i], col.as_slice());
+        for (i, col) in a.col_iter_mut().enumerate() {
+            assert_eq!(data[i], *col.raw_slice());
         }
 
-        for col in a.cols_iter_mut() {
-            for r in col {
+        for mut col in a.col_iter_mut() {
+            for r in col.raw_slice_mut() {
                 *r = 0;
             }
         }
@@ -682,12 +678,12 @@ mod tests {
                         3, 4, 5;
                         6, 7, 8];
 
-        let mut cols_iter = a.cols_iter();
+        let mut col_iter = a.col_iter();
 
-        assert_eq!([&0, &3, &6], cols_iter.nth(0).unwrap().as_slice());
-        assert_eq!([&2, &5, &8], cols_iter.nth(1).unwrap().as_slice());
+        assert_eq!([0, 3, 6], *col_iter.nth(0).unwrap().raw_slice());
+        assert_eq!([2, 5, 8], *col_iter.nth(1).unwrap().raw_slice());
 
-        assert_eq!(None, cols_iter.next());
+        assert!(col_iter.next().is_none());
     }
 
     #[test]
@@ -696,23 +692,23 @@ mod tests {
                         3, 4, 5;
                         6, 7, 8];
 
-        let cols_iter = a.cols_iter();
+        let col_iter = a.col_iter();
 
-        assert_eq!([&2, &5, &8], cols_iter.last().unwrap().as_slice());
+        assert_eq!([2, 5, 8], *col_iter.last().unwrap().raw_slice());
 
-        let mut cols_iter = a.cols_iter();
+        let mut col_iter = a.col_iter();
 
-        cols_iter.next();
-        assert_eq!([&2, &5, &8], cols_iter.last().unwrap().as_slice());
+        col_iter.next();
+        assert_eq!([2, 5, 8], col_iter.last().unwrap().raw_slice());
 
-        let mut cols_iter = a.cols_iter();
+        let mut col_iter = a.col_iter();
 
-        cols_iter.next();
-        cols_iter.next();
-        cols_iter.next();
-        cols_iter.next();
+        col_iter.next();
+        col_iter.next();
+        col_iter.next();
+        col_iter.next();
 
-        assert_eq!(None, cols_iter.last());
+        assert!(col_iter.last().is_none());
     }
 
     #[test]
@@ -721,13 +717,13 @@ mod tests {
                         3, 4, 5;
                         6, 7, 8];
 
-        let cols_iter = a.cols_iter();
+        let col_iter = a.col_iter();
 
-        assert_eq!(3, cols_iter.count());
+        assert_eq!(3, col_iter.count());
 
-        let mut cols_iter_2 = a.cols_iter();
-        cols_iter_2.next();
-        assert_eq!(2, cols_iter_2.count());
+        let mut col_iter_2 = a.col_iter();
+        col_iter_2.next();
+        assert_eq!(2, col_iter_2.count());
     }
 
     #[test]
@@ -736,20 +732,20 @@ mod tests {
                         3, 4, 5;
                         6, 7, 8];
 
-        let mut cols_iter = a.cols_iter();
+        let mut col_iter = a.col_iter();
 
-        assert_eq!((3, Some(3)), cols_iter.size_hint());
+        assert_eq!((3, Some(3)), col_iter.size_hint());
 
-        cols_iter.next();
+        col_iter.next();
 
-        assert_eq!((2, Some(2)), cols_iter.size_hint());
-        cols_iter.next();
-        cols_iter.next();
+        assert_eq!((2, Some(2)), col_iter.size_hint());
+        col_iter.next();
+        col_iter.next();
 
-        assert_eq!((0, Some(0)), cols_iter.size_hint());
+        assert_eq!((0, Some(0)), col_iter.size_hint());
 
-        assert_eq!(None, cols_iter.next());
-        assert_eq!((0, Some(0)), cols_iter.size_hint());
+        assert!(col_iter.next().is_none());
+        assert_eq!((0, Some(0)), col_iter.size_hint());
     }
 
     #[test]

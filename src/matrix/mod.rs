@@ -6,7 +6,6 @@
 //! Most of the logic for manipulating matrices is generically implemented
 //! via `BaseMatrix` and `BaseMatrixMut` trait.
 
-use std;
 use std::any::Any;
 use std::marker::PhantomData;
 use libnum::Float;
@@ -15,14 +14,15 @@ use error::{Error, ErrorKind};
 use utils;
 use vector::Vector;
 
-mod decomposition;
-mod impl_ops;
-mod impl_mat;
-mod mat_mul;
-mod iter;
-mod deref;
-mod slice;
 mod base;
+mod decomposition;
+mod deref;
+mod impl_col_row;
+mod impl_mat;
+mod impl_ops;
+mod iter;
+mod mat_mul;
+mod slice;
 
 pub use self::base::{BaseMatrix, BaseMatrixMut};
 
@@ -130,49 +130,6 @@ pub struct RowMut<'a, T: 'a> {
     row: MatrixSliceMut<'a, T>,
 }
 
-
-// MAYBE WE SHOULD MOVE SOME OF THIS STUFF OUT
-//
-
-impl<'a, T: 'a> Row<'a, T> {
-    /// Returns the row as a slice.
-    pub fn raw_slice(&self) -> &'a [T] {
-        unsafe { std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols()) }
-    }
-}
-
-impl<'a, T: 'a> RowMut<'a, T> {
-    /// Returns the row as a slice.
-    pub fn raw_slice(&self) -> &'a [T] {
-        unsafe { std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols()) }
-    }
-
-    /// Returns the row as a slice.
-    pub fn raw_slice_mut(&mut self) -> &'a mut [T] {
-        unsafe { std::slice::from_raw_parts_mut(self.row.as_mut_ptr(), self.row.cols()) }
-    }
-}
-
-/// Row iterator.
-#[derive(Debug)]
-pub struct Cols<'a, T: 'a> {
-    _marker: PhantomData<&'a T>,
-    col_pos: usize,
-    slice_cols: usize,
-    slice_rows: usize,
-    slice_start: *const T,
-}
-
-/// Mutable row iterator.
-#[derive(Debug)]
-pub struct ColsMut<'a, T: 'a> {
-    _marker: PhantomData<&'a mut T>,
-    col_pos: usize,
-    slice_cols: usize,
-    slice_rows: usize,
-    slice_start: *mut T,
-}
-
 /// Row iterator.
 #[derive(Debug)]
 pub struct Rows<'a, T: 'a> {
@@ -247,6 +204,26 @@ pub struct Column<'a, T: 'a> {
 #[derive(Debug)]
 pub struct ColumnMut<'a, T: 'a> {
     col: MatrixSliceMut<'a, T>,
+}
+
+/// Row iterator.
+#[derive(Debug)]
+pub struct Cols<'a, T: 'a> {
+    _marker: PhantomData<&'a T>,
+    col_pos: usize,
+    slice_cols: usize,
+    slice_rows: usize,
+    slice_start: *const T,
+}
+
+/// Mutable row iterator.
+#[derive(Debug)]
+pub struct ColsMut<'a, T: 'a> {
+    _marker: PhantomData<&'a mut T>,
+    col_pos: usize,
+    slice_cols: usize,
+    slice_rows: usize,
+    slice_start: *mut T,
 }
 
 /// Diagonal offset (used by Diagonal iterator).
