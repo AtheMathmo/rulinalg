@@ -122,7 +122,7 @@ impl<'a, T> Iterator for $cols<'a, T> {
         unsafe {
             let ptr = self.slice_start.offset(self.col_pos as isize);
             column  = $col_base {
-                col: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.slice_rows)
+                col: $slice_base::from_raw_parts(ptr, self.slice_rows, 1, self.slice_cols)
             };
         }
         self.col_pos += 1;
@@ -137,7 +137,7 @@ impl<'a, T> Iterator for $cols<'a, T> {
         unsafe {
             let ptr = self.slice_start.offset((self.slice_cols - 1) as isize);
             Some($col_base {
-                col: $slice_base::from_raw_parts(ptr, 1, self.slice_rows, self.slice_cols)
+                col: $slice_base::from_raw_parts(ptr, self.slice_rows, 1, self.slice_cols)
             })
         }
     }
@@ -151,7 +151,7 @@ impl<'a, T> Iterator for $cols<'a, T> {
         unsafe {
             let ptr = self.slice_start.offset((self.col_pos + n) as isize);
             column = $col_base {
-                col: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.slice_rows)
+                col: $slice_base::from_raw_parts(ptr, self.slice_rows, 1, self.slice_cols)
             }
         }
         self.col_pos += n + 1;
@@ -650,56 +650,77 @@ mod tests {
 
     #[test]
     fn test_matrix_cols() {
-        let mut a = matrix![0, 1, 2;
-                            3, 4, 5;
-                            6, 7, 8];
-        let data = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
+        let mut a = matrix![0, 1, 2, 3;
+                            4, 5, 6, 7;
+                            8, 9, 10, 11];
+        let data = [[0, 4, 8], [1, 5, 9], [2, 6, 10], [3, 7, 11]];
 
         for (i, col) in a.col_iter().enumerate() {
-            assert_eq!(data[i], *col.raw_slice());
+            for (ii, value) in col.iter().enumerate() {
+                println!("{} {}", i, ii);
+                assert_eq!(data[i][ii], *value);
+            }
         }
 
-        for (i, col) in a.col_iter_mut().enumerate() {
-            assert_eq!(data[i], *col.raw_slice());
+        for (i, mut col) in a.col_iter_mut().enumerate() {
+            for (ii, value) in col.iter_mut().enumerate() {
+                assert_eq!(data[i][ii], *value);
+            }
         }
 
         for mut col in a.col_iter_mut() {
-            for r in col.raw_slice_mut() {
+            for r in col.iter_mut() {
                 *r = 0;
             }
         }
 
-        assert_eq!(a.into_vec(), vec![0; 9]);
+        assert_eq!(a.into_vec(), vec![0; 12]);
     }
 
     #[test]
     fn test_matrix_cols_nth() {
-        let a = matrix![0, 1, 2;
-                        3, 4, 5;
-                        6, 7, 8];
+        let a = matrix![0, 1, 2, 3;
+                            4, 5, 6, 7;
+                            8, 9, 10, 11];
 
         let mut col_iter = a.col_iter();
 
-        assert_eq!([0, 3, 6], *col_iter.nth(0).unwrap().raw_slice());
-        assert_eq!([2, 5, 8], *col_iter.nth(1).unwrap().raw_slice());
+        let mut nth0 = col_iter.nth(0).unwrap().into_iter();
+
+        assert_eq!(0, *nth0.next().unwrap());
+        assert_eq!(4, *nth0.next().unwrap());
+        assert_eq!(8, *nth0.next().unwrap());
+
+        let mut nth1 = col_iter.nth(2).unwrap().into_iter();
+
+        assert_eq!(3, *nth1.next().unwrap());
+        assert_eq!(7, *nth1.next().unwrap());
+        assert_eq!(11, *nth1.next().unwrap());
 
         assert!(col_iter.next().is_none());
     }
 
     #[test]
     fn test_matrix_cols_last() {
-        let a = matrix![0, 1, 2;
-                        3, 4, 5;
-                        6, 7, 8];
+        let a = matrix![0, 1, 2, 3;
+                        4, 5, 6, 7;
+                        8, 9, 10, 11];
 
-        let col_iter = a.col_iter();
+        let mut col_iter = a.col_iter().last().unwrap().into_iter();
 
-        assert_eq!([2, 5, 8], *col_iter.last().unwrap().raw_slice());
+        assert_eq!(3, *col_iter.next().unwrap());
+        assert_eq!(7, *col_iter.next().unwrap());
+        assert_eq!(11, *col_iter.next().unwrap());
 
         let mut col_iter = a.col_iter();
 
         col_iter.next();
-        assert_eq!([2, 5, 8], col_iter.last().unwrap().raw_slice());
+
+        let mut last_col_iter = col_iter.last().unwrap().into_iter();
+
+        assert_eq!(3, *last_col_iter.next().unwrap());
+        assert_eq!(7, *last_col_iter.next().unwrap());
+        assert_eq!(11, *last_col_iter.next().unwrap());
 
         let mut col_iter = a.col_iter();
 
