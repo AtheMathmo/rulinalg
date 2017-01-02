@@ -221,8 +221,8 @@ pub trait BaseMatrix<T>: Sized {
     /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
     ///
     /// // Prints "3" two times.
-    /// for row in a.cols_iter() {
-    ///     println!("{}", row.len());
+    /// for col in a.col_iter() {
+    ///     println!("{}", col.rows());
     /// }
     /// ```
     fn col_iter(&self) -> Cols<T> {
@@ -1359,10 +1359,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
     ///
-    /// for row in a.cols_iter_mut() {
-    ///     for r in row {
-    ///         *r = *r + 1;
-    ///     }
+    /// for mut col in a.col_iter_mut() {
+    ///     *col += 1;
     /// }
     ///
     /// // Now contains the range 1..7
