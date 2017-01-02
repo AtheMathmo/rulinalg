@@ -6,6 +6,7 @@
 //! Most of the logic for manipulating matrices is generically implemented
 //! via `BaseMatrix` and `BaseMatrixMut` trait.
 
+use std;
 use std::any::Any;
 use std::marker::PhantomData;
 use libnum::Float;
@@ -17,7 +18,6 @@ use vector::Vector;
 mod base;
 mod decomposition;
 mod deref;
-mod impl_col_row;
 mod impl_mat;
 mod impl_ops;
 mod iter;
@@ -150,6 +150,27 @@ pub struct RowsMut<'a, T: 'a> {
     slice_cols: usize,
     row_stride: isize,
     _marker: PhantomData<&'a mut T>,
+}
+
+// MAYBE WE SHOULD MOVE SOME OF THIS STUFF OUT
+
+impl<'a, T: 'a> Row<'a, T> {
+    /// Returns the row as a slice.
+    pub fn raw_slice(&self) -> &'a [T] {
+        unsafe { std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols()) }
+    }
+}
+
+impl<'a, T: 'a> RowMut<'a, T> {
+    /// Returns the row as a slice.
+    pub fn raw_slice(&self) -> &'a [T] {
+        unsafe { std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols()) }
+    }
+
+    /// Returns the row as a slice.
+    pub fn raw_slice_mut(&mut self) -> &'a mut [T] {
+        unsafe { std::slice::from_raw_parts_mut(self.row.as_mut_ptr(), self.row.cols()) }
+    }
 }
 
 /// Column of a matrix.
