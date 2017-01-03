@@ -216,14 +216,18 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
+    /// let a = matrix![0, 1;
+    ///                 2, 3;
+    ///                 4, 5];
     ///
     /// // Prints "3" two times.
     /// for col in a.col_iter() {
     ///     println!("{}", col.rows());
     /// }
+    /// # }
     /// ```
     fn col_iter(&self) -> Cols<T> {
         Cols {
@@ -240,14 +244,17 @@ pub trait BaseMatrix<T>: Sized {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
-    ///
-    /// let a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
+    /// let a = matrix![0, 1;
+    ///                 2, 3;
+    ///                 4, 5];
     ///
     /// // Prints "2" three times.
     /// for row in a.row_iter() {
     ///     println!("{}", row.cols());
     /// }
+    /// # }
     /// ```
     fn row_iter(&self) -> Rows<T> {
         Rows {
@@ -1355,9 +1362,12 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
-    /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
+    /// let mut a = matrix![0, 1;
+    ///                 2, 3;
+    ///                 4, 5];
     ///
     /// for mut col in a.col_iter_mut() {
     ///     *col += 1;
@@ -1365,6 +1375,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// // Now contains the range 1..7
     /// println!("{}", a);
+    /// # }
     /// ```
     fn col_iter_mut(&mut self) -> ColsMut<T> {
         ColsMut {
@@ -1381,9 +1392,12 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
-    /// let mut a = Matrix::new(3, 2, (0..6).collect::<Vec<usize>>());
+    /// let mut a = matrix![0, 1;
+    ///                 2, 3;
+    ///                 4, 5];
     ///
     /// for mut row in a.row_iter_mut() {
     ///     *row += 1;
@@ -1391,6 +1405,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// // Now contains the range 1..7
     /// println!("{}", a);
+    /// # }
     /// ```
     fn row_iter_mut(&mut self) -> RowsMut<T> {
         RowsMut {
