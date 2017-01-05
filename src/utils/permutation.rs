@@ -140,6 +140,37 @@ impl Permutation {
         }
     }
 
+    /// Applies the permutation by copying elements from one abstract
+    /// container to another.
+    ///
+    /// The permutation is applied by calls to `copy(i, j)` for indices
+    /// `i` and `j`, where `i` is the index of an element in the original
+    /// unpermuted container, and `j` is the index of an element in the
+    /// container to be permuted.
+    ///
+    /// # Complexity
+    /// When applying a Permutation of cardinality *n*:
+    ///
+    /// - Exactly *n* number of calls to `copy`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rulinalg::utils::Permutation;
+    ///
+    /// let p = Permutation::from_array(vec![1, 0, 2]).unwrap();
+    /// let x = vec![0, 1, 2];
+    /// let mut y = vec![0; 3];
+    /// p.permute_by_copy(|i, j| y[j] = x[i]);
+    ///
+    /// assert_eq!(y, vec![1, 0, 2]);
+    /// ```
+    pub fn permute_by_copy<C>(&self, mut copy: C) where C: FnMut(usize, usize) -> () {
+        for (source, target) in self.perm.iter().cloned().enumerate() {
+            copy(source, target);
+        }
+    }
+
     /// The inverse of this permutation.
     ///
     /// More precisely, if the current permutation `perm` sends index i to j, then
@@ -223,6 +254,33 @@ mod tests {
         let p = Permutation::from_array(vec![0, 1, 2, 3]).unwrap();
         p.clone().permute_by_swap(|i, j| x.swap(i, j));
         assert_eq!(x, vec!['a', 'b', 'c', 'd']);
+    }
+
+    #[test]
+    fn permutation_permute_by_copy_on_empty_array() {
+        let x = Vec::<char>::new();
+        let mut y = Vec::<char>::new();
+        let p = Permutation::from_array(Vec::new()).unwrap();
+        p.clone().permute_by_copy(|i, j| y[j] = x[i]);
+    }
+
+    #[test]
+    fn permutation_permute_by_copy_on_arbitrary_array() {
+        let x = vec!['a', 'b', 'c', 'd'];
+        let mut y = vec!['a'; 4];
+        let p = Permutation::from_array(vec![0, 2, 3, 1]).unwrap();
+
+        p.clone().permute_by_copy(|i, j| y[j] = x[i]);
+        assert_eq!(y, vec!['a', 'd', 'b', 'c']);
+    }
+
+    #[test]
+    fn permutation_permute_by_copy_identity_on_arbitrary_array() {
+        let x = vec!['a', 'b', 'c', 'd'];
+        let mut y = vec!['a'; 4];
+        let p = Permutation::from_array(vec![0, 1, 2, 3]).unwrap();
+        p.clone().permute_by_copy(|i, j| y[j] = x[i]);
+        assert_eq!(y, vec!['a', 'b', 'c', 'd']);
     }
 
     #[test]
