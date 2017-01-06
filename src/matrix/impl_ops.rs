@@ -9,6 +9,9 @@ use std::ops::{Mul, Add, Div, Sub, Index, IndexMut, Neg};
 use std::ops::{MulAssign, AddAssign, SubAssign, DivAssign};
 use libnum::Zero;
 
+use matrix::PermutationMatrix;
+use utils::Permutation;
+
 /// Indexes matrix.
 ///
 /// Takes row index first then column.
@@ -882,13 +885,92 @@ impl<'a, T> Neg for &'a Matrix<T>
     }
 }
 
+/// Multiplication of a permutation matrix and a vector.
+///
+/// # Complexity
+/// Given a vector of size *n* and a permutation matrix of
+/// dimensions *n* x *n*:
+///
+/// - O(1) memory usage
+/// - O(*n*) memory accesses
+impl<T> Mul<Vector<T>> for PermutationMatrix<T> {
+    type Output = Vector<T>;
+
+    fn mul(self, mut rhs: Vector<T>) -> Vector<T> {
+        assert!(rhs.size() == self.dim(),
+            "Permutation matrix and Vector dimensions are not compatible.");
+        let permutation: Permutation = self.into();
+        permutation.permute_by_swap(|i, j| rhs.mut_data().swap(i, j));
+        rhs
+    }
+}
+
+/// Multiplication of a permutation matrix and a vector.
+///
+/// # Complexity
+/// Given a vector of size *n* and a permutation matrix of
+/// dimensions *n* x *n*:
+///
+/// - O(*n*) memory usage
+/// - O(*n*) memory accesses
+impl<'a, T> Mul<Vector<T>> for &'a PermutationMatrix<T> where T: Clone + Zero {
+    type Output = Vector<T>;
+
+    fn mul(self, rhs: Vector<T>) -> Vector<T> {
+        // Here we have the choice of using `permute_by_copy`
+        // `permute_by_swap`, as we can reuse one of the existing
+        // implementations.
+        self * &rhs
+    }
+}
+
+/// Multiplication of a permutation matrix and a vector.
+///
+/// # Complexity
+/// Given a vector of size *n* and a permutation matrix of
+/// dimensions *n* x *n*:
+///
+/// - O(*n*) memory usage
+/// - O(*n*) memory accesses
+impl<'a, 'b, T> Mul<&'a Vector<T>> for &'b PermutationMatrix<T> where T: Clone + Zero {
+    type Output = Vector<T>;
+
+    fn mul(self, rhs: &'a Vector<T>) -> Vector<T> {
+        assert!(rhs.size() == self.dim(),
+            "Permutation matrix and Vector dimensions are not compatible.");
+
+        let permutation: &Permutation = self.into();
+        let mut permuted_rhs = Vector::zeros(rhs.size());
+        permutation.permute_by_copy(|i, j| permuted_rhs[j] = rhs[i].to_owned());
+        permuted_rhs
+    }
+}
+
+/// Multiplication of a permutation matrix and a vector.
+///
+/// # Complexity
+/// Given a vector of size *n* and a permutation matrix of
+/// dimensions *n* x *n*:
+///
+/// - O(*n*) memory usage
+/// - O(*n*) memory accesses
+impl<'a, T> Mul<&'a Vector<T>> for PermutationMatrix<T> where T: Clone + Zero {
+    type Output = Vector<T>;
+
+    fn mul(self, rhs: &'a Vector<T>) -> Vector<T> {
+        &self * rhs
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
     use super::super::Matrix;
     use super::super::MatrixSlice;
     use super::super::MatrixSliceMut;
-    
+
+    use matrix::PermutationMatrix;
+
     #[test]
     fn indexing_mat() {
         let a = matrix![1., 2.;
@@ -1645,5 +1727,32 @@ mod tests {
             a_slice *= 2f32;
         }
         assert_eq!(a.into_vec(), res_data.clone());
+    }
+
+    #[test]
+    fn permutation_vector_mul() {
+        let p = PermutationMatrix::from_array(vec![1, 2, 0]).unwrap();
+        let x = vector![1, 2, 3];
+        let expected = vector![3, 1, 2];
+
+        {
+            let y = p.clone() * x.clone();
+            assert_eq!(y, expected);
+        }
+
+        {
+            let y = p.clone() * &x;
+            assert_eq!(y, expected);
+        }
+
+        {
+            let y = &p * x.clone();
+            assert_eq!(y, expected);
+        }
+
+        {
+            let y = &p * &x;
+            assert_eq!(y, expected);
+        }
     }
 }
