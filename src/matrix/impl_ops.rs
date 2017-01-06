@@ -962,6 +962,79 @@ impl<'a, T> Mul<&'a Vector<T>> for PermutationMatrix<T> where T: Clone + Zero {
     }
 }
 
+fn validate_permutation_left_mul_dimensions<T, M>(p: &PermutationMatrix<T>, rhs: &M)
+    where M: BaseMatrix<T> {
+     assert!(p.dim() == rhs.rows(),
+            "Permutation matrix and right-hand side matrix dimensions
+             are not compatible.");
+}
+
+impl<'a, T> Mul<Matrix<T>> for PermutationMatrix<T> {
+    type Output = Matrix<T>;
+
+    fn mul(self, mut rhs: Matrix<T>) -> Matrix<T> {
+        validate_permutation_left_mul_dimensions(&self, &rhs);
+        let permutation: Permutation = self.into();
+        permutation.permute_by_swap(|i, j| rhs.swap_rows(i, j));
+        rhs
+    }
+}
+
+impl<'a, 'b, T> Mul<Matrix<T>> for &'b PermutationMatrix<T> {
+    type Output = Matrix<T>;
+
+    fn mul(self, mut rhs: Matrix<T>) -> Matrix<T> {
+        validate_permutation_left_mul_dimensions(self, &rhs);
+        let permutation: &Permutation = self.into();
+        permutation.clone().permute_by_swap(|i, j| rhs.swap_rows(i, j));
+        rhs
+    }
+}
+
+macro_rules! impl_permutation_matrix_left_multiply_reference_type {
+    ($MatrixType:ty) => (
+
+impl<'a, T> Mul<&'a $MatrixType> for PermutationMatrix<T> where T: Zero + Clone {
+    type Output = Matrix<T>;
+
+    fn mul(self, rhs: &'a $MatrixType) -> Matrix<T> {
+        validate_permutation_left_mul_dimensions(&self, rhs);
+        let permutation: Permutation = self.into();
+        let mut permuted_matrix = Matrix::zeros(rhs.rows(), rhs.cols());
+        {
+            let copy_row = |i, j| permuted_matrix.row_mut(j)
+                                             .raw_slice_mut()
+                                             .clone_from_slice(rhs.row(i).raw_slice());
+            permutation.permute_by_copy(copy_row);
+        }
+        permuted_matrix
+    }
+}
+
+impl<'a, 'b, T> Mul<&'a $MatrixType> for &'b PermutationMatrix<T> where T: Zero + Clone {
+    type Output = Matrix<T>;
+
+    fn mul(self, rhs: &'a $MatrixType) -> Matrix<T> {
+        validate_permutation_left_mul_dimensions(self, rhs);
+        let permutation: &Permutation = self.into();
+        let mut permuted_matrix = Matrix::zeros(rhs.rows(), rhs.cols());
+        {
+            let copy_row = |i, j| permuted_matrix.row_mut(j)
+                                             .raw_slice_mut()
+                                             .clone_from_slice(rhs.row(i).raw_slice());
+            permutation.permute_by_copy(copy_row);
+        }
+        permuted_matrix
+    }
+}
+
+    )
+}
+
+impl_permutation_matrix_left_multiply_reference_type!(Matrix<T>);
+impl_permutation_matrix_left_multiply_reference_type!(MatrixSlice<'a, T>);
+impl_permutation_matrix_left_multiply_reference_type!(MatrixSliceMut<'a, T>);
+
 #[cfg(test)]
 mod tests {
 
@@ -969,6 +1042,7 @@ mod tests {
     use super::super::MatrixSlice;
     use super::super::MatrixSliceMut;
 
+    use matrix::{BaseMatrix, BaseMatrixMut};
     use matrix::PermutationMatrix;
 
     #[test]
@@ -1751,6 +1825,80 @@ mod tests {
         }
 
         {
+            let y = &p * &x;
+            assert_eq!(y, expected);
+        }
+    }
+
+    #[test]
+    fn permutation_matrix_left_mul_for_matrix() {
+        let p = PermutationMatrix::from_array(vec![1, 2, 0]).unwrap();
+        let x = matrix![1, 2, 3;
+                        4, 5, 6;
+                        7, 8, 9];
+        let expected = matrix![7, 8, 9;
+                               1, 2, 3;
+                               4, 5, 6];
+
+        {
+            // Consume p, consume rhs
+            let y = p.clone() * x.clone();
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Consume p, borrow rhs
+            let y = p.clone() * &x;
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Borrow p, consume rhs
+            let y = &p * x.clone();
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Borrow p, borrow rhs
+            let y = &p * &x;
+            assert_eq!(y, expected);
+        }
+    }
+
+    #[test]
+    fn permutation_matrix_left_mul_for_matrix_slice() {
+        let p = PermutationMatrix::from_array(vec![1, 2, 0]).unwrap();
+        let mut x_source = matrix![1, 2, 3;
+                                   4, 5, 6;
+                                   7, 8, 9];
+        let expected = matrix![7, 8, 9;
+                               1, 2, 3;
+                               4, 5, 6];
+
+        {
+            // Immutable, consume p
+            let x = x_source.sub_slice([0, 0], 3, 3);
+            let y = p.clone() * &x;
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Immutable, borrow p
+            let x = x_source.sub_slice([0, 0], 3, 3);
+            let y = &p * &x;
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Mutable, consume p
+            let x = x_source.sub_slice_mut([0, 0], 3, 3);
+            let y = p.clone() * &x;
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Mutable, borrow p
+            let x = x_source.sub_slice_mut([0, 0], 3, 3);
             let y = &p * &x;
             assert_eq!(y, expected);
         }
