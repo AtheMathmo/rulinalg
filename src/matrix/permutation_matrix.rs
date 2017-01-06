@@ -1,6 +1,7 @@
 use std;
 
 use matrix::{Matrix};
+use error::Error;
 use utils::Permutation;
 
 use libnum::Num;
@@ -47,6 +48,34 @@ impl<T> PermutationMatrix<T> {
         self.perm.cardinality()
     }
 
+    /// Constructs a `PermutationMatrix` from an array.
+    ///
+    /// # Errors
+    /// The supplied N-length array must satisfy the following:
+    ///
+    /// - Each element must be in the half-open range [0, N).
+    /// - Each element must be unique.
+    pub fn from_array<A: Into<Vec<usize>>>(array: A) -> Result<PermutationMatrix<T>, Error> {
+        let perm = Permutation::from_array(array)?;
+        Ok(PermutationMatrix {
+            perm: perm,
+            marker: std::marker::PhantomData
+        })
+    }
+
+    /// Constructs a `PermutationMatrix` from an array, without checking the validity of
+    /// the supplied permutation.
+    ///
+    /// However, to ease development, a `debug_assert` with regards to the validity
+    /// is still performed.
+    pub fn from_array_unchecked<A: Into<Vec<usize>>>(array: A) -> PermutationMatrix<T> {
+        let perm = Permutation::from_array_unchecked(array);
+        PermutationMatrix {
+            perm: perm,
+            marker: std::marker::PhantomData
+        }
+    }
+
 }
 
 impl<T: Num> PermutationMatrix<T> {
@@ -65,6 +94,12 @@ impl<T: Num> PermutationMatrix<T> {
 impl<T> Into<Permutation> for PermutationMatrix<T> {
     fn into(self) -> Permutation {
         self.perm
+    }
+}
+
+impl<'a, T> Into<&'a Permutation> for &'a PermutationMatrix<T> {
+    fn into(self) -> &'a Permutation {
+        &self.perm
     }
 }
 
@@ -115,5 +150,30 @@ mod tests {
                                                    0, 0, 0, 1];
 
         assert_eq!(expected_matrix, p.as_matrix());
+    }
+
+    #[test]
+    fn from_array() {
+        let array = vec![1, 0, 3, 2];
+        let p = PermutationMatrix::<u32>::from_array(array.clone()).unwrap();
+        let p_as_permutation: Permutation = p.into();
+        let permutation = Permutation::from_array(array.clone()).unwrap();
+        assert_eq!(p_as_permutation, permutation);
+    }
+
+    #[test]
+    fn from_array_unchecked() {
+        let array = vec![1, 0, 3, 2];
+        let p = PermutationMatrix::<u32>::from_array_unchecked(array.clone());
+        let p_as_permutation: Permutation = p.into();
+        let permutation = Permutation::from_array_unchecked(array.clone());
+        assert_eq!(p_as_permutation, permutation);
+    }
+
+    #[test]
+    fn from_array_invalid() {
+        assert!(PermutationMatrix::<u32>::from_array(vec![0, 1, 3]).is_err());
+        assert!(PermutationMatrix::<u32>::from_array(vec![0, 0]).is_err());
+        assert!(PermutationMatrix::<u32>::from_array(vec![3, 0, 1]).is_err());
     }
 }
