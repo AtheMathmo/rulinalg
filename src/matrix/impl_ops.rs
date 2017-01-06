@@ -1943,7 +1943,7 @@ mod tests {
     #[test]
     fn permutation_matrix_left_mul_for_matrix_slice() {
         let p = PermutationMatrix::from_array(vec![1, 2, 0]).unwrap();
-        let mut x_source = matrix![1, 2, 3;
+        let x_source = matrix![1, 2, 3;
                                    4, 5, 6;
                                    7, 8, 9];
         let expected = matrix![7, 8, 9;
@@ -1966,6 +1966,7 @@ mod tests {
 
         {
             // Mutable, consume p
+            let mut x_source = x_source.clone();
             let x = x_source.sub_slice_mut([0, 0], 3, 3);
             let y = p.clone() * &x;
             assert_eq!(y, expected);
@@ -1973,6 +1974,7 @@ mod tests {
 
         {
             // Mutable, borrow p
+            let mut x_source = x_source.clone();
             let x = x_source.sub_slice_mut([0, 0], 3, 3);
             let y = &p * &x;
             assert_eq!(y, expected);
@@ -2017,7 +2019,7 @@ mod tests {
      #[test]
     fn permutation_matrix_right_mul_for_matrix_slice() {
         let p = PermutationMatrix::from_array(vec![1, 2, 0]).unwrap();
-        let mut x_source = matrix![1, 2, 3;
+        let x_source = matrix![1, 2, 3;
                         4, 5, 6;
                         7, 8, 9];
         let expected = matrix![3, 1, 2;
@@ -2040,6 +2042,7 @@ mod tests {
 
         {
             // Mutable lhs, consume p
+            let mut x_source = x_source.clone();
             let x = x_source.sub_slice_mut([0, 0], 3, 3);
             let y = &x * p.clone();
             assert_eq!(y, expected);
@@ -2047,6 +2050,7 @@ mod tests {
 
         {
             // Mutable lhs, borrow p
+            let mut x_source = x_source.clone();
             let x = x_source.sub_slice_mut([0, 0], 3, 3);
             let y = &x * &p;
             assert_eq!(y, expected);
