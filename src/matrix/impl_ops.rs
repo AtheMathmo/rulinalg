@@ -969,7 +969,7 @@ fn validate_permutation_left_mul_dimensions<T, M>(p: &PermutationMatrix<T>, rhs:
              are not compatible.");
 }
 
-impl<'a, T> Mul<Matrix<T>> for PermutationMatrix<T> {
+impl<T> Mul<Matrix<T>> for PermutationMatrix<T> {
     type Output = Matrix<T>;
 
     fn mul(self, mut rhs: Matrix<T>) -> Matrix<T> {
@@ -980,7 +980,7 @@ impl<'a, T> Mul<Matrix<T>> for PermutationMatrix<T> {
     }
 }
 
-impl<'a, 'b, T> Mul<Matrix<T>> for &'b PermutationMatrix<T> {
+impl<'b, T> Mul<Matrix<T>> for &'b PermutationMatrix<T> {
     type Output = Matrix<T>;
 
     fn mul(self, mut rhs: Matrix<T>) -> Matrix<T> {
@@ -994,7 +994,7 @@ impl<'a, 'b, T> Mul<Matrix<T>> for &'b PermutationMatrix<T> {
 macro_rules! impl_permutation_matrix_left_multiply_reference_type {
     ($MatrixType:ty) => (
 
-impl<'a, T> Mul<&'a $MatrixType> for PermutationMatrix<T> where T: Zero + Clone {
+impl<'a, 'm, T> Mul<&'a $MatrixType> for PermutationMatrix<T> where T: Zero + Clone {
     type Output = Matrix<T>;
 
     fn mul(self, rhs: &'a $MatrixType) -> Matrix<T> {
@@ -1011,7 +1011,7 @@ impl<'a, T> Mul<&'a $MatrixType> for PermutationMatrix<T> where T: Zero + Clone 
     }
 }
 
-impl<'a, 'b, T> Mul<&'a $MatrixType> for &'b PermutationMatrix<T> where T: Zero + Clone {
+impl<'a, 'b, 'm, T> Mul<&'a $MatrixType> for &'b PermutationMatrix<T> where T: Zero + Clone {
     type Output = Matrix<T>;
 
     fn mul(self, rhs: &'a $MatrixType) -> Matrix<T> {
@@ -1032,8 +1032,8 @@ impl<'a, 'b, T> Mul<&'a $MatrixType> for &'b PermutationMatrix<T> where T: Zero 
 }
 
 impl_permutation_matrix_left_multiply_reference_type!(Matrix<T>);
-impl_permutation_matrix_left_multiply_reference_type!(MatrixSlice<'a, T>);
-impl_permutation_matrix_left_multiply_reference_type!(MatrixSliceMut<'a, T>);
+impl_permutation_matrix_left_multiply_reference_type!(MatrixSlice<'m, T>);
+impl_permutation_matrix_left_multiply_reference_type!(MatrixSliceMut<'m, T>);
 
 fn validate_permutation_right_mul_dimensions<T, M>(lhs: &M, p: &PermutationMatrix<T>)
     where M: BaseMatrix<T> {
