@@ -195,36 +195,33 @@ impl From<Permutation> for Vec<usize> {
 }
 
 fn validate_permutation(perm: &[usize]) -> Result<(), Error> {
-    use std::collections::HashSet;
+    // Recall that a permutation array of size n is valid if:
+    // 1. All elements are in the range [0, n)
+    // 2. All elements are unique
 
-    let ref n = perm.len();
-    let all_in_bounds = perm.iter().all(|x| x < n);
+    let n = perm.len();
 
-    // Note: If we ever use itertools, this could be replaced with a one-liner.
-    let all_unique = {
-        let mut visited = HashSet::new();
-        let mut unique = true;
-        for i in perm {
-            if visited.contains(&i) {
-                unique = false;
-                break;
-            }
-            visited.insert(i);
+    // Here we use a vector of boolean. If memory usage or performance
+    // is ever an issue, we could replace the vector with a bit vector
+    // (from e.g. the bit-vec crate), which would cut memory usage
+    // to 1/8, and likely improve performance due to more data
+    // fitting in cache.
+    let mut visited = vec![false; n];
+    for p in perm.iter().cloned() {
+        if p < n {
+            visited[p] = true;
         }
-        unique
-    };
-
-    if !all_in_bounds && !all_unique {
-        Err(Error::new(ErrorKind::InvalidPermutation,
-            "Supplied permutation array has both elements out of bounds and duplicate elements."))
-    } else if !all_in_bounds {
-        Err(Error::new(ErrorKind::InvalidPermutation,
-            "Supplied permutation array has elements out of bounds."))
-    } else if !all_unique {
-        Err(Error::new(ErrorKind::InvalidPermutation,
-            "Supplied permutation array duplicate elements."))
-    } else {
+        else {
+            return Err(Error::new(ErrorKind::InvalidPermutation,
+                "Supplied permutation array contains elements out of bounds."));
+        }
+    }
+    let all_unique = visited.iter().all(|x| x.clone());
+    if all_unique {
         Ok(())
+    } else {
+        Err(Error::new(ErrorKind::InvalidPermutation,
+            "Supplied permutation array contains duplicate elements."))
     }
 }
 
