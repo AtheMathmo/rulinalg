@@ -233,6 +233,63 @@ impl_permutation_matrix_right_multiply_reference_type!(Matrix<T>);
 impl_permutation_matrix_right_multiply_reference_type!(MatrixSlice<'m, T>);
 impl_permutation_matrix_right_multiply_reference_type!(MatrixSliceMut<'m, T>);
 
+fn validate_permutation_matrix_product_dimensions<T>(
+                    lhs: &PermutationMatrix<T>,
+                    rhs: &PermutationMatrix<T>) {
+    assert!(lhs.dim() == rhs.dim(),
+        "Permutation matrices do not have compatible dimensions for multiplication.");
+}
+
+impl<T> Mul<PermutationMatrix<T>> for PermutationMatrix<T> {
+    type Output = PermutationMatrix<T>;
+
+    fn mul(self, mut rhs: PermutationMatrix<T>) -> PermutationMatrix<T> {
+        validate_permutation_matrix_product_dimensions(&self, &rhs);
+        let permutation: Permutation = self.into();
+        permutation.permute_by_swap(|i, j| rhs.swap(i, j));
+        rhs
+    }
+}
+
+impl<'a, T> Mul<&'a PermutationMatrix<T>> for PermutationMatrix<T>
+    where T: Clone {
+    type Output = PermutationMatrix<T>;
+
+    fn mul(self, rhs: &PermutationMatrix<T>) -> PermutationMatrix<T> {
+        validate_permutation_matrix_product_dimensions(&self, rhs);
+        let permutation: Permutation = self.into();
+        let mut permuted_rhs = rhs.clone();
+        permutation.permute_by_swap(|i, j| permuted_rhs.swap(i, j));
+        permuted_rhs
+    }
+}
+
+impl<'a, T> Mul<PermutationMatrix<T>> for &'a PermutationMatrix<T>
+    where T: Clone {
+    type Output = PermutationMatrix<T>;
+
+    fn mul(self, mut rhs: PermutationMatrix<T>) -> PermutationMatrix<T> {
+        validate_permutation_matrix_product_dimensions(&self, &rhs);
+        let permutation: Permutation = self.clone().into();
+        permutation.permute_by_swap(|i, j| rhs.swap(i, j));
+        rhs
+    }
+}
+
+impl<'a, 'b, T> Mul<&'a PermutationMatrix<T>> for &'b PermutationMatrix<T>
+    where T: Clone {
+    type Output = PermutationMatrix<T>;
+
+    fn mul(self, rhs: &'a PermutationMatrix<T>) -> PermutationMatrix<T> {
+        validate_permutation_matrix_product_dimensions(&self, rhs);
+        let permutation: &Permutation = self.into();
+        let rhs_permutation: &Permutation = rhs.into();
+        let mut permuted_rhs = vec![0; rhs.dim()];
+        permutation.permute_by_copy(|i, j| permuted_rhs[j] = rhs_permutation.map_index(i));
+        PermutationMatrix::from_array_unchecked(permuted_rhs)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use matrix::{BaseMatrix, BaseMatrixMut};
@@ -414,6 +471,39 @@ mod tests {
             let x = x_source.sub_slice_mut([0, 0], 3, 3);
             let y = &x * &p;
             assert_eq!(y, expected);
+        }
+    }
+
+    #[test]
+    fn permutation_matrix_self_multiply() {
+        let p1 = PermutationMatrix::<u32>::from_array(vec![2, 0, 1, 3]).unwrap();
+        let p2 = PermutationMatrix::<u32>::from_array(vec![0, 3, 2, 1]).unwrap();
+
+        let p1p2 = PermutationMatrix::from_array(vec![3, 2, 0, 1]).unwrap();
+        let p2p1 = PermutationMatrix::from_array(vec![2, 3, 1, 0]).unwrap();
+
+        {
+            // Consume p1, consume p2
+            assert_eq!(p1p2, p1.clone() * p2.clone());
+            assert_eq!(p2p1, p2.clone() * p1.clone());
+        }
+
+        {
+            // Consume p1, borrow p2
+            assert_eq!(p1p2, p1.clone() * &p2);
+            assert_eq!(p2p1, &p2 * p1.clone());
+        }
+
+        {
+            // Borrow p1, consume p2
+            assert_eq!(p1p2, &p1 * p2.clone());
+            assert_eq!(p2p1, p2.clone() * &p1);
+        }
+
+        {
+            // Borrow p1, borrow p2
+            assert_eq!(p1p2, &p1 * &p2);
+            assert_eq!(p2p1, &p2 * &p1);
         }
     }
 }
