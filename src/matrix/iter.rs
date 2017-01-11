@@ -70,7 +70,7 @@ impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
             None
         }
     }
-    
+
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
         self.diag_pos += n * (self.matrix.row_stride() + 1);
         if self.diag_pos < self.diag_end {
@@ -657,7 +657,6 @@ mod tests {
 
         for (i, col) in a.col_iter().enumerate() {
             for (ii, value) in col.iter().enumerate() {
-                println!("{} {}", i, ii);
                 assert_eq!(data[i][ii], *value);
             }
         }
@@ -675,6 +674,56 @@ mod tests {
         }
 
         assert_eq!(a.into_vec(), vec![0; 12]);
+    }
+
+    #[test]
+    fn test_matrix_slice_cols() {
+        let a = matrix![0, 1, 2;
+                        3, 4, 5;
+                        6, 7, 8];
+
+        let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 2);
+
+        let data = [[0, 1], [3, 4]];
+
+        for (i, col) in b.col_iter().enumerate() {
+            for (ii, value) in col.iter().enumerate() {
+                assert_eq!(data[i][ii], *value);
+            }
+        }
+    }
+
+    #[test]
+    fn test_matrix_slice_mut_cols() {
+        let mut a = matrix![0, 1, 2;
+                            3, 4, 5;
+                            6, 7, 8];
+
+        {
+            let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 2, 2);
+
+            let data = [[0, 1], [3, 4]];
+
+            for (i, col) in b.col_iter().enumerate() {
+                for (ii, value) in col.iter().enumerate() {
+                    assert_eq!(data[i][ii], *value);
+                }
+            }
+
+            for (i, mut col) in b.col_iter_mut().enumerate() {
+                for (ii, value) in col.iter_mut().enumerate() {
+                    assert_eq!(data[i][ii], *value);
+                }
+            }
+
+            for mut col in b.col_iter_mut() {
+                for r in col.iter_mut() {
+                    *r = 0;
+                }
+            }
+        }
+
+        assert_eq!(a.into_vec(), vec![0, 0, 2, 0, 0, 5, 6, 7, 8]);
     }
 
     #[test]
