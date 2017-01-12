@@ -1,8 +1,7 @@
 use matrix::{PermutationMatrix, Matrix,
              MatrixSlice, MatrixSliceMut,
-             BaseMatrix, BaseMatrixMut};
+             BaseMatrix};
 use vector::Vector;
-use utils::Permutation;
 
 use libnum::Zero;
 
@@ -20,10 +19,7 @@ impl<T> Mul<Vector<T>> for PermutationMatrix<T> {
     type Output = Vector<T>;
 
     fn mul(self, mut rhs: Vector<T>) -> Vector<T> {
-        assert!(rhs.size() == self.dim(),
-            "Permutation matrix and Vector dimensions are not compatible.");
-        let permutation: Permutation = self.into();
-        permutation.permute_by_swap(|i, j| rhs.mut_data().swap(i, j));
+        self.permute_vector_in_place(&mut rhs);
         rhs
     }
 }
@@ -59,13 +55,9 @@ impl<'a, 'b, T> Mul<&'a Vector<T>> for &'b PermutationMatrix<T> where T: Clone +
     type Output = Vector<T>;
 
     fn mul(self, rhs: &'a Vector<T>) -> Vector<T> {
-        assert!(rhs.size() == self.dim(),
-            "Permutation matrix and Vector dimensions are not compatible.");
-
-        let permutation: &Permutation = self.into();
-        let mut permuted_rhs = Vector::zeros(rhs.size());
-        permutation.permute_by_copy(|i, j| permuted_rhs[j] = rhs[i].to_owned());
-        permuted_rhs
+        let mut target_vec = Vector::zeros(rhs.size());
+        self.permute_vector(rhs, &mut target_vec);
+        target_vec
     }
 }
 
@@ -85,31 +77,20 @@ impl<'a, T> Mul<&'a Vector<T>> for PermutationMatrix<T> where T: Clone + Zero {
     }
 }
 
-fn validate_permutation_left_mul_dimensions<T, M>(p: &PermutationMatrix<T>, rhs: &M)
-    where M: BaseMatrix<T> {
-     assert!(p.dim() == rhs.rows(),
-            "Permutation matrix and right-hand side matrix dimensions
-             are not compatible.");
-}
-
 impl<T> Mul<Matrix<T>> for PermutationMatrix<T> {
     type Output = Matrix<T>;
 
     fn mul(self, mut rhs: Matrix<T>) -> Matrix<T> {
-        validate_permutation_left_mul_dimensions(&self, &rhs);
-        let permutation: Permutation = self.into();
-        permutation.permute_by_swap(|i, j| rhs.swap_rows(i, j));
+        self.permute_rows_in_place(&mut rhs);
         rhs
     }
 }
 
-impl<'b, T> Mul<Matrix<T>> for &'b PermutationMatrix<T> {
+impl<'b, T> Mul<Matrix<T>> for &'b PermutationMatrix<T> where T: Clone {
     type Output = Matrix<T>;
 
     fn mul(self, mut rhs: Matrix<T>) -> Matrix<T> {
-        validate_permutation_left_mul_dimensions(self, &rhs);
-        let permutation: &Permutation = self.into();
-        permutation.clone().permute_by_swap(|i, j| rhs.swap_rows(i, j));
+        self.clone().permute_rows_in_place(&mut rhs);
         rhs
     }
 }
@@ -121,16 +102,9 @@ impl<'a, 'm, T> Mul<&'a $MatrixType> for PermutationMatrix<T> where T: Zero + Cl
     type Output = Matrix<T>;
 
     fn mul(self, rhs: &'a $MatrixType) -> Matrix<T> {
-        validate_permutation_left_mul_dimensions(&self, rhs);
-        let permutation: Permutation = self.into();
-        let mut permuted_matrix = Matrix::zeros(rhs.rows(), rhs.cols());
-        {
-            let copy_row = |i, j| permuted_matrix.row_mut(j)
-                                             .raw_slice_mut()
-                                             .clone_from_slice(rhs.row(i).raw_slice());
-            permutation.permute_by_copy(copy_row);
-        }
-        permuted_matrix
+        let mut output = Matrix::zeros(rhs.rows(), rhs.cols());
+        self.permute_rows(rhs, &mut output);
+        output
     }
 }
 
@@ -138,16 +112,9 @@ impl<'a, 'b, 'm, T> Mul<&'a $MatrixType> for &'b PermutationMatrix<T> where T: Z
     type Output = Matrix<T>;
 
     fn mul(self, rhs: &'a $MatrixType) -> Matrix<T> {
-        validate_permutation_left_mul_dimensions(self, rhs);
-        let permutation: &Permutation = self.into();
-        let mut permuted_matrix = Matrix::zeros(rhs.rows(), rhs.cols());
-        {
-            let copy_row = |i, j| permuted_matrix.row_mut(j)
-                                             .raw_slice_mut()
-                                             .clone_from_slice(rhs.row(i).raw_slice());
-            permutation.permute_by_copy(copy_row);
-        }
-        permuted_matrix
+        let mut output = Matrix::zeros(rhs.rows(), rhs.cols());
+        self.permute_rows(rhs, &mut output);
+        output
     }
 }
 
@@ -158,20 +125,11 @@ impl_permutation_matrix_left_multiply_reference_type!(Matrix<T>);
 impl_permutation_matrix_left_multiply_reference_type!(MatrixSlice<'m, T>);
 impl_permutation_matrix_left_multiply_reference_type!(MatrixSliceMut<'m, T>);
 
-fn validate_permutation_right_mul_dimensions<T, M>(lhs: &M, p: &PermutationMatrix<T>)
-    where M: BaseMatrix<T> {
-     assert!(lhs.cols() == p.dim(),
-            "Left-hand side matrix and permutation matrix dimensions
-             are not compatible.");
-}
-
 impl<T> Mul<PermutationMatrix<T>> for Matrix<T> {
     type Output = Matrix<T>;
 
     fn mul(mut self, rhs: PermutationMatrix<T>) -> Matrix<T> {
-        validate_permutation_right_mul_dimensions(&self, &rhs);
-        let permutation: Permutation = rhs.into();
-        permutation.permute_by_swap(|i, j| self.swap_cols(i, j));
+        rhs.permute_cols_in_place(&mut self);
         self
     }
 }
@@ -180,9 +138,7 @@ impl<'a, T> Mul<&'a PermutationMatrix<T>> for Matrix<T> where T: Clone {
     type Output = Matrix<T>;
 
     fn mul(mut self, rhs: &'a PermutationMatrix<T>) -> Matrix<T> {
-        validate_permutation_right_mul_dimensions(&self, &rhs);
-        let permutation: Permutation = rhs.clone().into();
-        permutation.permute_by_swap(|i, j| self.swap_cols(i, j));
+        rhs.clone().permute_cols_in_place(&mut self);
         self
     }
 }
@@ -194,17 +150,9 @@ impl<'a, 'm, T> Mul<PermutationMatrix<T>> for &'a $MatrixType where T: Zero + Cl
     type Output = Matrix<T>;
 
     fn mul(self, rhs: PermutationMatrix<T>) -> Matrix<T> {
-        validate_permutation_right_mul_dimensions(self, &rhs);
-        let permutation: Permutation = rhs.into();
-        let mut permuted_matrix = Matrix::zeros(self.rows(), self.cols());
-        // Permute columns in one row at a time for (presumably) better cache performance
-        for (index, source_row) in self.row_iter()
-                                       .map(|r| r.raw_slice())
-                                       .enumerate() {
-            let target_row = permuted_matrix.row_mut(index).raw_slice_mut();
-            permutation.permute_by_copy(|i, j| target_row[j] = source_row[i].clone());
-        }
-        permuted_matrix
+        let mut output = Matrix::zeros(self.rows(), self.cols());
+        rhs.permute_cols(self, &mut output);
+        output
     }
 }
 
@@ -212,17 +160,9 @@ impl<'a, 'b, 'm, T> Mul<&'b PermutationMatrix<T>> for &'a $MatrixType where T: Z
     type Output = Matrix<T>;
 
     fn mul(self, rhs: &'b PermutationMatrix<T>) -> Matrix<T> {
-        validate_permutation_right_mul_dimensions(self, &rhs);
-        let permutation: &Permutation = rhs.into();
-        let mut permuted_matrix = Matrix::zeros(self.rows(), self.cols());
-        // Permute columns in one row at a time for (presumably) better cache performance
-        for (index, source_row) in self.row_iter()
-                                       .map(|r| r.raw_slice())
-                                       .enumerate() {
-            let target_row = permuted_matrix.row_mut(index).raw_slice_mut();
-            permutation.permute_by_copy(|i, j| target_row[j] = source_row[i].clone());
-        }
-        permuted_matrix
+        let mut output = Matrix::zeros(self.rows(), self.cols());
+        rhs.permute_cols(self, &mut output);
+        output
     }
 }
 
@@ -244,9 +184,7 @@ impl<T> Mul<PermutationMatrix<T>> for PermutationMatrix<T> {
     type Output = PermutationMatrix<T>;
 
     fn mul(self, mut rhs: PermutationMatrix<T>) -> PermutationMatrix<T> {
-        validate_permutation_matrix_product_dimensions(&self, &rhs);
-        let permutation: Permutation = self.into();
-        permutation.permute_by_swap(|i, j| rhs.swap(i, j));
+        self.compose_in_place(&mut rhs);
         rhs
     }
 }
@@ -256,11 +194,9 @@ impl<'a, T> Mul<&'a PermutationMatrix<T>> for PermutationMatrix<T>
     type Output = PermutationMatrix<T>;
 
     fn mul(self, rhs: &PermutationMatrix<T>) -> PermutationMatrix<T> {
-        validate_permutation_matrix_product_dimensions(&self, rhs);
-        let permutation: Permutation = self.into();
-        let mut permuted_rhs = rhs.clone();
-        permutation.permute_by_swap(|i, j| permuted_rhs.swap(i, j));
-        permuted_rhs
+        let mut output = rhs.clone();
+        self.compose_in_place(&mut output);
+        output
     }
 }
 
@@ -269,9 +205,7 @@ impl<'a, T> Mul<PermutationMatrix<T>> for &'a PermutationMatrix<T>
     type Output = PermutationMatrix<T>;
 
     fn mul(self, mut rhs: PermutationMatrix<T>) -> PermutationMatrix<T> {
-        validate_permutation_matrix_product_dimensions(&self, &rhs);
-        let permutation: Permutation = self.clone().into();
-        permutation.permute_by_swap(|i, j| rhs.swap(i, j));
+        self.clone().compose_in_place(&mut rhs);
         rhs
     }
 }
@@ -281,12 +215,9 @@ impl<'a, 'b, T> Mul<&'a PermutationMatrix<T>> for &'b PermutationMatrix<T>
     type Output = PermutationMatrix<T>;
 
     fn mul(self, rhs: &'a PermutationMatrix<T>) -> PermutationMatrix<T> {
-        validate_permutation_matrix_product_dimensions(&self, rhs);
-        let permutation: &Permutation = self.into();
-        let rhs_permutation: &Permutation = rhs.into();
-        let mut permuted_rhs = vec![0; rhs.dim()];
-        permutation.permute_by_copy(|i, j| permuted_rhs[j] = rhs_permutation.map_index(i));
-        PermutationMatrix::from_array_unchecked(permuted_rhs)
+        let mut output = rhs.clone();
+        self.clone().compose_in_place(&mut output);
+        output
     }
 }
 

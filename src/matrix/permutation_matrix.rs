@@ -1,6 +1,7 @@
 use std;
 
-use matrix::{Matrix};
+use matrix::{Matrix, BaseMatrix, BaseMatrixMut};
+use vector::Vector;
 use error::Error;
 use utils::Permutation;
 
@@ -153,6 +154,108 @@ impl<T> PermutationMatrix<T> {
         }
     }
 
+}
+
+impl<T> PermutationMatrix<T> {
+    /// TODO
+    pub fn permute_rows_in_place<M>(self, matrix: &mut M) where M: BaseMatrixMut<T> {
+        validate_permutation_left_mul_dimensions(&self, matrix);
+        self.perm.permute_by_swap(|i, j| matrix.swap_rows(i, j));
+    }
+
+    /// TODO
+    pub fn permute_cols_in_place<M>(self, matrix: &mut M) where M: BaseMatrixMut<T> {
+        validate_permutation_right_mul_dimensions(matrix, &self);
+        self.perm.permute_by_swap(|i, j| matrix.swap_cols(i, j));
+    }
+
+    /// TODO
+    pub fn permute_vector_in_place(self, vector: &mut Vector<T>) {
+        validate_permutation_vector_dimensions(&self, vector);
+        self.perm.permute_by_swap(|i, j| vector.mut_data().swap(i, j));
+    }
+
+    /// TODO
+    pub fn compose_in_place(self, rhs: &mut PermutationMatrix<T>) {
+        validate_permutation_matrix_product_dimensions(&self, &rhs);
+        let permutation: Permutation = self.into();
+        permutation.permute_by_swap(|i, j| rhs.swap(i, j));
+    }
+}
+
+impl<T: Clone> PermutationMatrix<T> {
+    /// TODO
+    pub fn permute_rows<X, Y>(&self, source_matrix: &X, target_matrix: &mut Y)
+        where X: BaseMatrix<T>, Y: BaseMatrixMut<T> {
+        assert!(source_matrix.rows() == target_matrix.rows()
+                && source_matrix.cols() == target_matrix.cols(),
+                "Source and target matrix must have equal dimensions.");
+        validate_permutation_left_mul_dimensions(self, source_matrix);
+        let permutation: &Permutation = self.into();
+        let copy_row = |i, j| target_matrix.row_mut(j)
+                                           .raw_slice_mut()
+                                           .clone_from_slice(source_matrix.row(i).raw_slice());
+        permutation.permute_by_copy(copy_row);
+    }
+
+    /// TODO
+    pub fn permute_cols<X, Y>(&self, source_matrix: &X, target_matrix: &mut Y)
+        where X: BaseMatrix<T>, Y: BaseMatrixMut<T> {
+        assert!(source_matrix.rows() == target_matrix.rows()
+                && source_matrix.cols() == target_matrix.cols(),
+                "Source and target matrix must have equal dimensions.");
+        validate_permutation_right_mul_dimensions(source_matrix, self);
+        let permutation: &Permutation = self.into();
+        // Permute columns in one row at a time for (presumably) better cache performance
+        for (index, source_row) in source_matrix.row_iter()
+                                       .map(|r| r.raw_slice())
+                                       .enumerate() {
+            let target_row = target_matrix.row_mut(index).raw_slice_mut();
+            permutation.permute_by_copy(|i, j| target_row[j] = source_row[i].clone());
+        }
+    }
+
+    /// TODO
+    pub fn permute_vector(
+        &self,
+        source_vector: &Vector<T>,
+        target_vector: &mut Vector<T>
+    ) {
+        assert!(source_vector.size() == target_vector.size(),
+               "Source and target vector must have equal dimensions.");
+        validate_permutation_vector_dimensions(self, source_vector);
+        self.perm.permute_by_copy(|i, j| target_vector[j] = source_vector[i].clone());
+    }
+
+    // TODO
+    // pub fn compose(...)
+}
+
+fn validate_permutation_vector_dimensions<T>(p: &PermutationMatrix<T>, v: &Vector<T>) {
+    assert!(p.dim() == v.size(),
+            "Permutation matrix and Vector dimensions are not compatible.");
+}
+
+
+fn validate_permutation_left_mul_dimensions<T, M>(p: &PermutationMatrix<T>, rhs: &M)
+    where M: BaseMatrix<T> {
+     assert!(p.dim() == rhs.rows(),
+            "Permutation matrix and right-hand side matrix dimensions
+             are not compatible.");
+}
+
+fn validate_permutation_right_mul_dimensions<T, M>(lhs: &M, p: &PermutationMatrix<T>)
+    where M: BaseMatrix<T> {
+     assert!(lhs.cols() == p.dim(),
+            "Left-hand side matrix and permutation matrix dimensions
+             are not compatible.");
+}
+
+fn validate_permutation_matrix_product_dimensions<T>(
+                    lhs: &PermutationMatrix<T>,
+                    rhs: &PermutationMatrix<T>) {
+    assert!(lhs.dim() == rhs.dim(),
+        "Permutation matrices do not have compatible dimensions for multiplication.");
 }
 
 impl<T: Num> PermutationMatrix<T> {
