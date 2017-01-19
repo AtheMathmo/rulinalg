@@ -233,6 +233,7 @@ pub trait BaseMatrix<T>: Sized {
         Cols {
             _marker: PhantomData::<&T>,
             col_pos: 0,
+            row_stride: self.row_stride() as isize,
             slice_cols: self.cols(),
             slice_rows: self.rows(),
             slice_start: self.as_ptr(),
@@ -1381,6 +1382,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         ColsMut {
             _marker: PhantomData::<&mut T>,
             col_pos: 0,
+            row_stride: self.row_stride() as isize,
             slice_cols: self.cols(),
             slice_rows: self.rows(),
             slice_start: self.as_mut_ptr(),

@@ -122,7 +122,7 @@ impl<'a, T> Iterator for $cols<'a, T> {
         unsafe {
             let ptr = self.slice_start.offset(self.col_pos as isize);
             column  = $col_base {
-                col: $slice_base::from_raw_parts(ptr, self.slice_rows, 1, self.slice_cols)
+                col: $slice_base::from_raw_parts(ptr, self.slice_rows, 1, self.row_stride as usize)
             };
         }
         self.col_pos += 1;
@@ -137,7 +137,7 @@ impl<'a, T> Iterator for $cols<'a, T> {
         unsafe {
             let ptr = self.slice_start.offset((self.slice_cols - 1) as isize);
             Some($col_base {
-                col: $slice_base::from_raw_parts(ptr, self.slice_rows, 1, self.slice_cols)
+                col: $slice_base::from_raw_parts(ptr, self.slice_rows, 1, self.row_stride as usize)
             })
         }
     }
@@ -151,7 +151,7 @@ impl<'a, T> Iterator for $cols<'a, T> {
         unsafe {
             let ptr = self.slice_start.offset((self.col_pos + n) as isize);
             column = $col_base {
-                col: $slice_base::from_raw_parts(ptr, self.slice_rows, 1, self.slice_cols)
+                col: $slice_base::from_raw_parts(ptr, self.slice_rows, 1, self.row_stride as usize)
             }
         }
         self.col_pos += n + 1;
@@ -684,7 +684,7 @@ mod tests {
 
         let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 2);
 
-        let data = [[0, 1], [3, 4]];
+        let data = [[0, 3], [1, 4]];
 
         for (i, col) in b.col_iter().enumerate() {
             for (ii, value) in col.iter().enumerate() {
@@ -702,7 +702,7 @@ mod tests {
         {
             let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 2, 2);
 
-            let data = [[0, 1], [3, 4]];
+            let data = [[0, 3], [1, 4]];
 
             for (i, col) in b.col_iter().enumerate() {
                 for (ii, value) in col.iter().enumerate() {

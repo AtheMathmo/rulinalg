@@ -232,6 +232,7 @@ pub struct ColumnMut<'a, T: 'a> {
 pub struct Cols<'a, T: 'a> {
     _marker: PhantomData<&'a T>,
     col_pos: usize,
+    row_stride: isize,
     slice_cols: usize,
     slice_rows: usize,
     slice_start: *const T,
@@ -242,6 +243,7 @@ pub struct Cols<'a, T: 'a> {
 pub struct ColsMut<'a, T: 'a> {
     _marker: PhantomData<&'a mut T>,
     col_pos: usize,
+    row_stride: isize,
     slice_cols: usize,
     slice_rows: usize,
     slice_start: *mut T,
