@@ -7,14 +7,7 @@ use libnum::Zero;
 
 use std::ops::Mul;
 
-/// Multiplication of a permutation matrix and a vector.
-///
-/// # Complexity
-/// Given a vector of size *n* and a permutation matrix of
-/// dimensions *n* x *n*:
-///
-/// - O(1) memory usage
-/// - O(*n*) memory accesses
+/// Left-multiply a vector by a permutation matrix.
 impl<T> Mul<Vector<T>> for PermutationMatrix<T> {
     type Output = Vector<T>;
 
@@ -24,14 +17,7 @@ impl<T> Mul<Vector<T>> for PermutationMatrix<T> {
     }
 }
 
-/// Multiplication of a permutation matrix and a vector.
-///
-/// # Complexity
-/// Given a vector of size *n* and a permutation matrix of
-/// dimensions *n* x *n*:
-///
-/// - O(*n*) memory usage
-/// - O(*n*) memory accesses
+/// Left-multiply a vector by a permutation matrix.
 impl<'a, T> Mul<Vector<T>> for &'a PermutationMatrix<T> where T: Clone + Zero {
     type Output = Vector<T>;
 
@@ -43,14 +29,7 @@ impl<'a, T> Mul<Vector<T>> for &'a PermutationMatrix<T> where T: Clone + Zero {
     }
 }
 
-/// Multiplication of a permutation matrix and a vector.
-///
-/// # Complexity
-/// Given a vector of size *n* and a permutation matrix of
-/// dimensions *n* x *n*:
-///
-/// - O(*n*) memory usage
-/// - O(*n*) memory accesses
+/// Left-multiply a vector by a permutation matrix.
 impl<'a, 'b, T> Mul<&'a Vector<T>> for &'b PermutationMatrix<T> where T: Clone + Zero {
     type Output = Vector<T>;
 
@@ -61,14 +40,7 @@ impl<'a, 'b, T> Mul<&'a Vector<T>> for &'b PermutationMatrix<T> where T: Clone +
     }
 }
 
-/// Multiplication of a permutation matrix and a vector.
-///
-/// # Complexity
-/// Given a vector of size *n* and a permutation matrix of
-/// dimensions *n* x *n*:
-///
-/// - O(*n*) memory usage
-/// - O(*n*) memory accesses
+/// Left-multiply a vector by a permutation matrix.
 impl<'a, T> Mul<&'a Vector<T>> for PermutationMatrix<T> where T: Clone + Zero {
     type Output = Vector<T>;
 
@@ -77,6 +49,7 @@ impl<'a, T> Mul<&'a Vector<T>> for PermutationMatrix<T> where T: Clone + Zero {
     }
 }
 
+/// Left-multiply a matrix by a permutation matrix.
 impl<T> Mul<Matrix<T>> for PermutationMatrix<T> {
     type Output = Matrix<T>;
 
@@ -86,6 +59,7 @@ impl<T> Mul<Matrix<T>> for PermutationMatrix<T> {
     }
 }
 
+/// Left-multiply a matrix by a permutation matrix.
 impl<'b, T> Mul<Matrix<T>> for &'b PermutationMatrix<T> where T: Clone {
     type Output = Matrix<T>;
 
@@ -98,6 +72,7 @@ impl<'b, T> Mul<Matrix<T>> for &'b PermutationMatrix<T> where T: Clone {
 macro_rules! impl_permutation_matrix_left_multiply_reference_type {
     ($MatrixType:ty) => (
 
+/// Left-multiply a matrix by a permutation matrix.
 impl<'a, 'm, T> Mul<&'a $MatrixType> for PermutationMatrix<T> where T: Zero + Clone {
     type Output = Matrix<T>;
 
@@ -108,6 +83,7 @@ impl<'a, 'm, T> Mul<&'a $MatrixType> for PermutationMatrix<T> where T: Zero + Cl
     }
 }
 
+/// Left-multiply a matrix by a permutation matrix.
 impl<'a, 'b, 'm, T> Mul<&'a $MatrixType> for &'b PermutationMatrix<T> where T: Zero + Clone {
     type Output = Matrix<T>;
 
@@ -125,6 +101,7 @@ impl_permutation_matrix_left_multiply_reference_type!(Matrix<T>);
 impl_permutation_matrix_left_multiply_reference_type!(MatrixSlice<'m, T>);
 impl_permutation_matrix_left_multiply_reference_type!(MatrixSliceMut<'m, T>);
 
+/// Right-multiply a matrix by a permutation matrix.
 impl<T> Mul<PermutationMatrix<T>> for Matrix<T> {
     type Output = Matrix<T>;
 
@@ -134,6 +111,7 @@ impl<T> Mul<PermutationMatrix<T>> for Matrix<T> {
     }
 }
 
+/// Right-multiply a matrix by a permutation matrix.
 impl<'a, T> Mul<&'a PermutationMatrix<T>> for Matrix<T> where T: Clone {
     type Output = Matrix<T>;
 
@@ -146,6 +124,7 @@ impl<'a, T> Mul<&'a PermutationMatrix<T>> for Matrix<T> where T: Clone {
 macro_rules! impl_permutation_matrix_right_multiply_reference_type {
     ($MatrixType:ty) => (
 
+/// Right-multiply a matrix by a permutation matrix.
 impl<'a, 'm, T> Mul<PermutationMatrix<T>> for &'a $MatrixType where T: Zero + Clone {
     type Output = Matrix<T>;
 
@@ -156,6 +135,7 @@ impl<'a, 'm, T> Mul<PermutationMatrix<T>> for &'a $MatrixType where T: Zero + Cl
     }
 }
 
+/// Right-multiply a matrix by a permutation matrix.
 impl<'a, 'b, 'm, T> Mul<&'b PermutationMatrix<T>> for &'a $MatrixType where T: Zero + Clone {
     type Output = Matrix<T>;
 
@@ -173,6 +153,7 @@ impl_permutation_matrix_right_multiply_reference_type!(Matrix<T>);
 impl_permutation_matrix_right_multiply_reference_type!(MatrixSlice<'m, T>);
 impl_permutation_matrix_right_multiply_reference_type!(MatrixSliceMut<'m, T>);
 
+/// Multiply a permutation matrix by a permutation matrix.
 impl<T: Clone> Mul<PermutationMatrix<T>> for PermutationMatrix<T> {
     type Output = PermutationMatrix<T>;
 
@@ -183,6 +164,7 @@ impl<T: Clone> Mul<PermutationMatrix<T>> for PermutationMatrix<T> {
     }
 }
 
+/// Multiply a permutation matrix by a permutation matrix.
 impl<'a, T: Clone> Mul<&'a PermutationMatrix<T>> for PermutationMatrix<T> {
     type Output = PermutationMatrix<T>;
 
@@ -193,6 +175,7 @@ impl<'a, T: Clone> Mul<&'a PermutationMatrix<T>> for PermutationMatrix<T> {
     }
 }
 
+/// Multiply a permutation matrix by a permutation matrix.
 impl<'a, T: Clone> Mul<PermutationMatrix<T>> for &'a PermutationMatrix<T> {
     type Output = PermutationMatrix<T>;
 
@@ -203,6 +186,7 @@ impl<'a, T: Clone> Mul<PermutationMatrix<T>> for &'a PermutationMatrix<T> {
     }
 }
 
+/// Multiply a permutation matrix by a permutation matrix.
 impl<'a, 'b, T: Clone> Mul<&'a PermutationMatrix<T>> for &'b PermutationMatrix<T> {
     type Output = PermutationMatrix<T>;
 
