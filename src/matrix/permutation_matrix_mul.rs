@@ -35,7 +35,7 @@ impl<'a, 'b, T> Mul<&'a Vector<T>> for &'b PermutationMatrix<T> where T: Clone +
 
     fn mul(self, rhs: &'a Vector<T>) -> Vector<T> {
         let mut target_vec = Vector::zeros(rhs.size());
-        self.permute_vector(rhs, &mut target_vec);
+        self.permute_vector_into_buffer(rhs, &mut target_vec);
         target_vec
     }
 }
@@ -78,7 +78,7 @@ impl<'a, 'm, T> Mul<&'a $MatrixType> for PermutationMatrix<T> where T: Zero + Cl
 
     fn mul(self, rhs: &'a $MatrixType) -> Matrix<T> {
         let mut output = Matrix::zeros(rhs.rows(), rhs.cols());
-        self.permute_rows(rhs, &mut output);
+        self.permute_rows_into_buffer(rhs, &mut output);
         output
     }
 }
@@ -89,7 +89,7 @@ impl<'a, 'b, 'm, T> Mul<&'a $MatrixType> for &'b PermutationMatrix<T> where T: Z
 
     fn mul(self, rhs: &'a $MatrixType) -> Matrix<T> {
         let mut output = Matrix::zeros(rhs.rows(), rhs.cols());
-        self.permute_rows(rhs, &mut output);
+        self.permute_rows_into_buffer(rhs, &mut output);
         output
     }
 }
@@ -130,7 +130,7 @@ impl<'a, 'm, T> Mul<PermutationMatrix<T>> for &'a $MatrixType where T: Zero + Cl
 
     fn mul(self, rhs: PermutationMatrix<T>) -> Matrix<T> {
         let mut output = Matrix::zeros(self.rows(), self.cols());
-        rhs.permute_cols(self, &mut output);
+        rhs.permute_cols_into_buffer(self, &mut output);
         output
     }
 }
@@ -141,7 +141,7 @@ impl<'a, 'b, 'm, T> Mul<&'b PermutationMatrix<T>> for &'a $MatrixType where T: Z
 
     fn mul(self, rhs: &'b PermutationMatrix<T>) -> Matrix<T> {
         let mut output = Matrix::zeros(self.rows(), self.cols());
-        rhs.permute_cols(self, &mut output);
+        rhs.permute_cols_into_buffer(self, &mut output);
         output
     }
 }

@@ -201,23 +201,23 @@ impl<T> PermutationMatrix<T> {
 
 impl<T: Clone> PermutationMatrix<T> {
     /// TODO
-    pub fn permute_rows<X, Y>(&self, source_matrix: &X, target_matrix: &mut Y)
+    pub fn permute_rows_into_buffer<X, Y>(&self, source_matrix: &X, buffer: &mut Y)
         where X: BaseMatrix<T>, Y: BaseMatrixMut<T> {
-        assert!(source_matrix.rows() == target_matrix.rows()
-                && source_matrix.cols() == target_matrix.cols(),
+        assert!(source_matrix.rows() == buffer.rows()
+                && source_matrix.cols() == buffer.cols(),
                 "Source and target matrix must have equal dimensions.");
         validate_permutation_left_mul_dimensions(self, source_matrix);
         for (source_row, target_row_index) in source_matrix.row_iter()
                                                            .zip(self.perm.iter()
                                                                          .cloned()) {
-            target_matrix.row_mut(target_row_index)
-                         .raw_slice_mut()
-                         .clone_from_slice(source_row.raw_slice());
+            buffer.row_mut(target_row_index)
+                  .raw_slice_mut()
+                  .clone_from_slice(source_row.raw_slice());
         }
     }
 
     /// TODO
-    pub fn permute_cols<X, Y>(&self, source_matrix: &X, target_matrix: &mut Y)
+    pub fn permute_cols_into_buffer<X, Y>(&self, source_matrix: &X, target_matrix: &mut Y)
         where X: BaseMatrix<T>, Y: BaseMatrixMut<T> {
         assert!(source_matrix.rows() == target_matrix.rows()
                 && source_matrix.cols() == target_matrix.cols(),
@@ -236,18 +236,18 @@ impl<T: Clone> PermutationMatrix<T> {
     }
 
     /// TODO
-    pub fn permute_vector(
+    pub fn permute_vector_into_buffer(
         &self,
         source_vector: &Vector<T>,
-        target_vector: &mut Vector<T>
+        buffer: &mut Vector<T>
     ) {
-        assert!(source_vector.size() == target_vector.size(),
+        assert!(source_vector.size() == buffer.size(),
                "Source and target vector must have equal dimensions.");
-        validate_permutation_vector_dimensions(self, source_vector);
+        validate_permutation_vector_dimensions(self, buffer);
         for (source_element, target_index) in source_vector.data()
                                                            .iter()
                                                            .zip(self.perm.iter().cloned()) {
-            target_vector[target_index] = source_element.clone();
+            buffer[target_index] = source_element.clone();
         }
     }
 
@@ -520,14 +520,14 @@ mod tests {
     }
 
     #[test]
-    fn permute_rows() {
+    fn permute_rows_into_buffer() {
         let x = matrix![ 0;
                          1;
                          2;
                          3];
         let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
         let mut output = Matrix::zeros(4, 1);
-        p.permute_rows(&x, &mut output);
+        p.permute_rows_into_buffer(&x, &mut output);
         assert_matrix_eq!(output, matrix![ 3; 1; 0; 2]);
     }
 
@@ -543,11 +543,11 @@ mod tests {
     }
 
     #[test]
-    fn permute_cols() {
+    fn permute_cols_into_buffer() {
         let x = matrix![ 0, 1, 2, 3];
         let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
         let mut output = Matrix::zeros(1, 4);
-        p.permute_cols(&x, &mut output);
+        p.permute_cols_into_buffer(&x, &mut output);
         assert_matrix_eq!(output, matrix![ 3, 1, 0, 2]);
     }
 
@@ -560,11 +560,11 @@ mod tests {
     }
 
     #[test]
-    fn permute_vector() {
+    fn permute_vector_into_buffer() {
         let x = vector![ 0, 1, 2, 3];
         let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
         let mut output = Vector::zeros(4);
-        p.permute_vector(&x, &mut output);
+        p.permute_vector_into_buffer(&x, &mut output);
         assert_vector_eq!(output, vector![ 3, 1, 0, 2]);
     }
 
