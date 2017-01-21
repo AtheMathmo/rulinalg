@@ -290,19 +290,24 @@ impl<T: Clone> PermutationMatrix<T> {
         }
     }
 
-    /// TODO
-    pub fn compose(
+    /// Computes the composition of `self` with the given `source_perm`
+    /// and stores the result in `buffer`.
+    ///
+    /// # Panics
+    ///
+    /// - The size of the permutation matrix (self) is not equal to the
+    ///   size of the source permutation matrix.
+    pub fn compose_into_buffer(
         &self,
         source_perm: &PermutationMatrix<T>,
-        target_perm: &mut PermutationMatrix<T>
+        buffer: &mut PermutationMatrix<T>
     ) {
-        assert!(source_perm.size() == target_perm.size(),
+        assert!(source_perm.size() == buffer.size(),
             "Source and target permutation matrix must have equal dimensions.");
-        validate_permutation_matrix_product_dimensions(source_perm, target_perm);
         let left = self;
         let right = source_perm;
         for i in 0 .. self.perm.len() {
-            target_perm.perm[i] = left.perm[right.perm[i]];
+            buffer.perm[i] = left.perm[right.perm[i]];
         }
     }
 }
@@ -337,13 +342,6 @@ fn validate_permutation_right_mul_dimensions<T, M>(lhs: &M, p: &PermutationMatri
      assert!(lhs.cols() == p.size(),
             "Left-hand side matrix and permutation matrix dimensions
              are not compatible.");
-}
-
-fn validate_permutation_matrix_product_dimensions<T>(
-                    lhs: &PermutationMatrix<T>,
-                    rhs: &PermutationMatrix<T>) {
-    assert!(lhs.size() == rhs.size(),
-        "Permutation matrices do not have compatible dimensions for multiplication.");
 }
 
 fn validate_permutation(perm: &[usize]) -> Result<(), Error> {
@@ -526,7 +524,7 @@ mod tests {
     }
 
     #[test]
-    fn compose() {
+    fn compose_into_buffer() {
         let p = PermutationMatrix::<u32>::from_array(vec![2, 1, 0]).unwrap();
         let q = PermutationMatrix::<u32>::from_array(vec![1, 0, 2]).unwrap();
         let pq_expected = PermutationMatrix::<u32>::from_array(vec![1, 2, 0]).unwrap();
@@ -534,13 +532,13 @@ mod tests {
 
         {
             let mut pq = PermutationMatrix::identity(3);
-            p.compose(&q, &mut pq);
+            p.compose_into_buffer(&q, &mut pq);
             assert_eq!(pq, pq_expected);
         }
 
         {
             let mut qp = PermutationMatrix::identity(3);
-            q.compose(&p, &mut qp);
+            q.compose_into_buffer(&p, &mut qp);
             assert_eq!(qp, qp_expected);
         }
     }
@@ -554,7 +552,7 @@ mod tests {
         let pq_expected = PermutationMatrix::<u32>::from_array(vec![0, 1, 2]).unwrap();
 
         let mut pq = PermutationMatrix::identity(3);
-        p.compose(&q, &mut pq);
+        p.compose_into_buffer(&q, &mut pq);
         assert_eq!(pq, pq_expected);
     }
 
@@ -729,8 +727,8 @@ mod tests {
             let pinv = p.inverse();
             let mut p_pinv_composition = PermutationMatrix::identity(n);
             let mut pinv_p_composition = PermutationMatrix::identity(n);
-            p.compose(&pinv, &mut p_pinv_composition);
-            pinv.compose(&p, &mut pinv_p_composition);
+            p.compose_into_buffer(&pinv, &mut p_pinv_composition);
+            pinv.compose_into_buffer(&p, &mut pinv_p_composition);
             assert_eq!(p_pinv_composition, PermutationMatrix::identity(n));
             assert_eq!(pinv_p_composition, PermutationMatrix::identity(n));
             true

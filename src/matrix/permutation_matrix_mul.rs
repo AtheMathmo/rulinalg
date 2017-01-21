@@ -159,7 +159,7 @@ impl<T: Clone> Mul<PermutationMatrix<T>> for PermutationMatrix<T> {
 
     fn mul(self, rhs: PermutationMatrix<T>) -> PermutationMatrix<T> {
         let mut output = PermutationMatrix::identity(rhs.size());
-        self.compose(&rhs, &mut output);
+        self.compose_into_buffer(&rhs, &mut output);
         output
     }
 }
@@ -170,7 +170,7 @@ impl<'a, T: Clone> Mul<&'a PermutationMatrix<T>> for PermutationMatrix<T> {
 
     fn mul(self, rhs: &PermutationMatrix<T>) -> PermutationMatrix<T> {
         let mut output = PermutationMatrix::identity(rhs.size());
-        self.compose(rhs, &mut output);
+        self.compose_into_buffer(rhs, &mut output);
         output
     }
 }
@@ -181,7 +181,7 @@ impl<'a, T: Clone> Mul<PermutationMatrix<T>> for &'a PermutationMatrix<T> {
 
     fn mul(self, rhs: PermutationMatrix<T>) -> PermutationMatrix<T> {
         let mut output = PermutationMatrix::identity(rhs.size());
-        self.compose(&rhs, &mut output);
+        self.compose_into_buffer(&rhs, &mut output);
         output
     }
 }
@@ -192,7 +192,7 @@ impl<'a, 'b, T: Clone> Mul<&'a PermutationMatrix<T>> for &'b PermutationMatrix<T
 
     fn mul(self, rhs: &'a PermutationMatrix<T>) -> PermutationMatrix<T> {
         let mut output = PermutationMatrix::identity(rhs.size());
-        self.compose(rhs, &mut output);
+        self.compose_into_buffer(rhs, &mut output);
         output
     }
 }
