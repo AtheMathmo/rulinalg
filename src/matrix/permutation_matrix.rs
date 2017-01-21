@@ -180,19 +180,34 @@ impl<T: Num> PermutationMatrix<T> {
 }
 
 impl<T> PermutationMatrix<T> {
-    /// TODO
+    /// Permutes the rows of the given matrix in-place.
+    ///
+    /// # Panics
+    ///
+    /// - The number of rows in the matrix is not equal to
+    ///   the size of the permutation matrix.
     pub fn permute_rows_in_place<M>(mut self, matrix: &mut M) where M: BaseMatrixMut<T> {
         validate_permutation_left_mul_dimensions(&self, matrix);
         permute_by_swap(&mut self.perm, |i, j| matrix.swap_rows(i, j));
     }
 
-    /// TODO
+    /// Permutes the columns of the given matrix in-place.
+    ///
+    /// # Panics
+    ///
+    /// - The number of columns in the matrix is not equal to
+    ///   the size of the permutation matrix.
     pub fn permute_cols_in_place<M>(mut self, matrix: &mut M) where M: BaseMatrixMut<T> {
         validate_permutation_right_mul_dimensions(matrix, &self);
         permute_by_swap(&mut self.perm, |i, j| matrix.swap_cols(i, j));
     }
 
-    /// TODO
+    /// Permutes the elements of the given vector in-place.
+    ///
+    /// # Panics
+    ///
+    /// - The size of the vector not equal to the size of
+    ///   the permutation matrix.
     pub fn permute_vector_in_place(mut self, vector: &mut Vector<T>) {
         validate_permutation_vector_dimensions(&self, vector);
         permute_by_swap(&mut self.perm, |i, j| vector.mut_data().swap(i, j));
@@ -200,7 +215,15 @@ impl<T> PermutationMatrix<T> {
 }
 
 impl<T: Clone> PermutationMatrix<T> {
-    /// TODO
+    /// Permutes the rows of the given `source_matrix` and stores the
+    /// result in `buffer`.
+    ///
+    /// # Panics
+    ///
+    /// - The number of rows in the source matrix is not equal to
+    ///   the size of the permutation matrix.
+    /// - The dimensions of the source matrix and the buffer
+    ///   are not identical.
     pub fn permute_rows_into_buffer<X, Y>(&self, source_matrix: &X, buffer: &mut Y)
         where X: BaseMatrix<T>, Y: BaseMatrixMut<T> {
         assert!(source_matrix.rows() == buffer.rows()
@@ -216,7 +239,15 @@ impl<T: Clone> PermutationMatrix<T> {
         }
     }
 
-    /// TODO
+    /// Permutes the columns of the given `source_matrix` and stores the
+    /// result in `buffer`.
+    ///
+    /// # Panics
+    ///
+    /// - The number of columns in the source matrix is not equal to
+    ///   the size of the permutation matrix.
+    /// - The dimensions of the source matrix and the buffer
+    ///   are not identical.
     pub fn permute_cols_into_buffer<X, Y>(&self, source_matrix: &X, target_matrix: &mut Y)
         where X: BaseMatrix<T>, Y: BaseMatrixMut<T> {
         assert!(source_matrix.rows() == target_matrix.rows()
@@ -235,7 +266,15 @@ impl<T: Clone> PermutationMatrix<T> {
         }
     }
 
-    /// TODO
+    /// Permutes the elements of the given `source_vector` and stores the
+    /// result in `buffer`.
+    ///
+    /// # Panics
+    ///
+    /// - The size of the source vector is not equal to the
+    ///   size of the permutation matrix.
+    /// - The dimensions of the source vector and the buffer
+    ///   are not identical.
     pub fn permute_vector_into_buffer(
         &self,
         source_vector: &Vector<T>,
