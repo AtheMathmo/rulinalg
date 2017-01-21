@@ -428,16 +428,15 @@ pub trait BaseMatrix<T>: Sized {
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix, Axes};
-    /// use rulinalg::vector::Vector;
     ///
     /// let a = matrix![1.0, 2.0;
     ///                 3.0, 4.0];
     ///
     /// let cmin = a.min(Axes::Col);
-    /// assert_eq!(cmin, Vector::new(vec![1.0, 3.0]));
+    /// assert_eq!(cmin, vector![1.0, 3.0]);
     ///
     /// let rmin = a.min(Axes::Row);
-    /// assert_eq!(rmin, Vector::new(vec![1.0, 2.0]));
+    /// assert_eq!(rmin, vector![1.0, 2.0]);
     /// # }
     /// ```
     fn min(&self, axis: Axes) -> Vector<T> where T: Copy + PartialOrd
@@ -470,8 +469,7 @@ pub trait BaseMatrix<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::matrix::{Matrix, BaseMatrix, Axes};
-    /// use rulinalg::vector::Vector;
+    /// use rulinalg::matrix::{BaseMatrix, Axes};
     ///
     /// let a = matrix![1.0, 2.0;
     ///                 3.0, 4.0];
@@ -624,7 +622,7 @@ pub trait BaseMatrix<T>: Sized {
     ///                 3.0, 4.0];
     ///
     /// let c = &a.elemul(&b);
-    /// assert_eq!(c, &matrix![1.0, 4.0; 9.0, 16.0]);
+    /// assert_matrix_eq!(c, &matrix![1.0, 4.0; 9.0, 16.0]);
     /// }
     /// ```
     ///
@@ -659,7 +657,7 @@ pub trait BaseMatrix<T>: Sized {
     ///                 3.0, 4.0];
     ///
     /// let c = &a.elediv(&b);
-    /// assert_eq!(c, &matrix![1.0, 1.0; 1.0, 1.0]);
+    /// assert_matrix_eq!(c, &matrix![1.0, 1.0; 1.0, 1.0]);
     /// # }
     /// ```
     ///
@@ -694,7 +692,7 @@ pub trait BaseMatrix<T>: Sized {
     /// assert_eq!(b.rows(), 2);
     /// assert_eq!(b.cols(), 2);
     ///
-    /// // Prints [0,0,1,0]
+    /// // Prints [0,0, 1,0]
     /// println!("{:?}", b.data());
     /// ```
     ///
@@ -825,8 +823,7 @@ pub trait BaseMatrix<T>: Sized {
     /// # #[macro_use]
     /// # extern crate rulinalg;
     ///
-    /// use rulinalg::vector::Vector;
-    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    /// use rulinalg::matrix::BaseMatrix;
     ///
     /// # fn main() {
     /// let a = matrix![1, 2, 3;
@@ -855,7 +852,10 @@ pub trait BaseMatrix<T>: Sized {
     /// let mat = matrix![1.0, 2.0, 3.0;
     ///                   4.0, 5.0, 6.0];
     ///
-    /// let mt = mat.transpose();
+    /// let expected = matrix![1.0, 4.0;
+    ///                        2.0, 5.0;
+    ///                        3.0, 6.0];
+    /// assert_matrix_eq!(mat.transpose(), expected);
     /// # }
     /// ```
     fn transpose(&self) -> Matrix<T>
@@ -922,8 +922,7 @@ pub trait BaseMatrix<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::matrix::{Matrix, BaseMatrix};
-    /// use rulinalg::vector::Vector;
+    /// use rulinalg::matrix::BaseMatrix;
     /// use std::f32;
     ///
     /// let u = matrix![1.0, 2.0;
@@ -965,8 +964,7 @@ pub trait BaseMatrix<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::matrix::{Matrix, BaseMatrix};
-    /// use rulinalg::vector::Vector;
+    /// use rulinalg::matrix::BaseMatrix;
     /// use std::f32;
     ///
     /// let l = matrix![1.0, 0.0;
@@ -1104,6 +1102,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
     /// let mut a = Matrix::new(3,3, (0..9).collect::<Vec<usize>>());
@@ -1117,7 +1116,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// }
     ///
     /// // Only the matrix slice is updated.
-    /// assert_eq!(a.into_vec(), vec![0, 1, 2, 3, 6, 7, 6, 9, 10]);
+    /// assert_matrix_eq!(a, matrix![0, 1, 2; 3, 6, 7; 6, 9, 10]);
+    /// # }
     /// ```
     fn iter_mut<'a>(&mut self) -> SliceIterMut<'a, T>
         where T: 'a
@@ -1480,6 +1480,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
     /// fn add_two(a: f64) -> f64 {
@@ -1490,7 +1491,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     ///
     /// let b = a.apply(&add_two);
     ///
-    /// assert_eq!(*b.data(), vec![2.0; 4]);
+    /// assert_eq!(b, matrix![2.0, 2.0; 2.0, 2.0]);
+    /// # }
     /// ```
     fn apply(mut self, f: &Fn(T) -> T) -> Self
         where T: Copy

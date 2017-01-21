@@ -361,7 +361,7 @@ impl<T: Any + Float> Matrix<T> {
     ///
     /// let I = a * inv;
     ///
-    /// assert_eq!(I, matrix![1.0, 0.0; 0.0, 1.0]);
+    /// assert_matrix_eq!(I, matrix![1.0, 0.0; 0.0, 1.0]);
     /// # }
     /// ```
     ///

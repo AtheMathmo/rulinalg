@@ -307,7 +307,7 @@ impl<T: Copy + Zero + Mul<T, Output = T> + Add<T, Output = T>> Vector<T> {
     /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = vector![1.0,2.0,3.0,4.0];
+    /// let a = vector![1.0, 2.0, 3.0, 4.0];
     /// let b = vector![2.0; 4];
     ///
     /// let c = a.dot(&b);
@@ -330,7 +330,7 @@ impl<T: Copy + Zero + Add<T, Output = T>> Vector<T> {
     /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = vector![1.0,2.0,3.0,4.0];
+    /// let a = vector![1.0, 2.0, 3.0, 4.0];
     ///
     /// let c = a.sum();
     /// assert_eq!(c, 10.0);
@@ -372,8 +372,8 @@ impl<T: Copy + Div<T, Output = T>> Vector<T> {
     /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = vector![1.0,2.0,3.0,4.0];
-    /// let b = vector![1.0,2.0,3.0,4.0];
+    /// let a = vector![1.0, 2.0, 3.0, 4.0];
+    /// let b = vector![1.0, 2.0, 3.0, 4.0];
     ///
     /// let c = &a.elediv(&b);
     /// assert_eq!(c, &vector![1.0; 4]);

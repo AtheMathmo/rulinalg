@@ -23,7 +23,7 @@ impl<T: Any + Float> Matrix<T> {
     ///                 2., 0., 1., 1.];
     /// let h = a.upper_hessenberg();
     ///
-    /// println!("{:?}", h.expect("Could not get upper Hessenberg form.").data());
+    /// println!("{:}", h.expect("Could not get upper Hessenberg form."));
     /// # }
     /// ```
     ///
@@ -91,17 +91,16 @@ impl<T: Any + Float> Matrix<T> {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    /// use rulinalg::matrix::BaseMatrix;
     ///
     /// let a = matrix![1., 2., 3.;
     ///                 4., 5., 6.;
     ///                 7., 8., 9.];
     ///
     /// // u is the transform, h is the upper hessenberg form.
-    /// let (u,h) = a.clone().upper_hess_decomp().expect("This matrix should decompose!");
+    /// let (u, h) = a.clone().upper_hess_decomp().expect("This matrix should decompose!");
     ///
-    /// println!("The hess : {:?}", h.data());
-    /// println!("Manual hess : {:?}", (u.transpose() * a * u).data());
+    /// assert_matrix_eq!(h, u.transpose() * a * u, comp = abs, tol = 1e-12);
     /// # }
     /// ```
     ///
