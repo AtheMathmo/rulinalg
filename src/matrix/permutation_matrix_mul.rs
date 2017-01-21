@@ -173,50 +173,42 @@ impl_permutation_matrix_right_multiply_reference_type!(Matrix<T>);
 impl_permutation_matrix_right_multiply_reference_type!(MatrixSlice<'m, T>);
 impl_permutation_matrix_right_multiply_reference_type!(MatrixSliceMut<'m, T>);
 
-fn validate_permutation_matrix_product_dimensions<T>(
-                    lhs: &PermutationMatrix<T>,
-                    rhs: &PermutationMatrix<T>) {
-    assert!(lhs.dim() == rhs.dim(),
-        "Permutation matrices do not have compatible dimensions for multiplication.");
-}
-
-impl<T> Mul<PermutationMatrix<T>> for PermutationMatrix<T> {
+impl<T: Clone> Mul<PermutationMatrix<T>> for PermutationMatrix<T> {
     type Output = PermutationMatrix<T>;
 
-    fn mul(self, mut rhs: PermutationMatrix<T>) -> PermutationMatrix<T> {
-        self.compose_in_place(&mut rhs);
-        rhs
-    }
-}
-
-impl<'a, T> Mul<&'a PermutationMatrix<T>> for PermutationMatrix<T>
-    where T: Clone {
-    type Output = PermutationMatrix<T>;
-
-    fn mul(self, rhs: &PermutationMatrix<T>) -> PermutationMatrix<T> {
-        let mut output = rhs.clone();
-        self.compose_in_place(&mut output);
+    fn mul(self, rhs: PermutationMatrix<T>) -> PermutationMatrix<T> {
+        let mut output = PermutationMatrix::identity(rhs.dim());
+        self.compose(&rhs, &mut output);
         output
     }
 }
 
-impl<'a, T> Mul<PermutationMatrix<T>> for &'a PermutationMatrix<T>
-    where T: Clone {
+impl<'a, T: Clone> Mul<&'a PermutationMatrix<T>> for PermutationMatrix<T> {
     type Output = PermutationMatrix<T>;
 
-    fn mul(self, mut rhs: PermutationMatrix<T>) -> PermutationMatrix<T> {
-        self.clone().compose_in_place(&mut rhs);
-        rhs
+    fn mul(self, rhs: &PermutationMatrix<T>) -> PermutationMatrix<T> {
+        let mut output = PermutationMatrix::identity(rhs.dim());
+        self.compose(rhs, &mut output);
+        output
     }
 }
 
-impl<'a, 'b, T> Mul<&'a PermutationMatrix<T>> for &'b PermutationMatrix<T>
-    where T: Clone {
+impl<'a, T: Clone> Mul<PermutationMatrix<T>> for &'a PermutationMatrix<T> {
+    type Output = PermutationMatrix<T>;
+
+    fn mul(self, rhs: PermutationMatrix<T>) -> PermutationMatrix<T> {
+        let mut output = PermutationMatrix::identity(rhs.dim());
+        self.compose(&rhs, &mut output);
+        output
+    }
+}
+
+impl<'a, 'b, T: Clone> Mul<&'a PermutationMatrix<T>> for &'b PermutationMatrix<T> {
     type Output = PermutationMatrix<T>;
 
     fn mul(self, rhs: &'a PermutationMatrix<T>) -> PermutationMatrix<T> {
-        let mut output = rhs.clone();
-        self.clone().compose_in_place(&mut output);
+        let mut output = PermutationMatrix::identity(rhs.dim());
+        self.compose(rhs, &mut output);
         output
     }
 }
@@ -410,8 +402,8 @@ mod tests {
         let p1 = PermutationMatrix::<u32>::from_array(vec![2, 0, 1, 3]).unwrap();
         let p2 = PermutationMatrix::<u32>::from_array(vec![0, 3, 2, 1]).unwrap();
 
-        let p1p2 = PermutationMatrix::from_array(vec![3, 2, 0, 1]).unwrap();
-        let p2p1 = PermutationMatrix::from_array(vec![2, 3, 1, 0]).unwrap();
+        let p1p2 = PermutationMatrix::from_array(vec![2, 3, 1, 0]).unwrap();
+        let p2p1 = PermutationMatrix::from_array(vec![2, 0, 3, 1]).unwrap();
 
         {
             // Consume p1, consume p2
