@@ -57,7 +57,7 @@ use libnum::Num;
 ///                        1, 2, 3;
 ///                        7, 8, 9];
 /// let mut p = PermutationMatrix::identity(3);
-/// p.swap(0, 1);
+/// p.swap_rows(0, 1);
 /// assert_eq!(expected, p * x);
 ///
 /// // Swap the two last columns of x by right-multiplying a permutation matrix
@@ -65,7 +65,7 @@ use libnum::Num;
 ///                        4, 6, 5;
 ///                        7, 9, 8];
 /// let mut p = PermutationMatrix::identity(3);
-/// p.swap(1, 2);
+/// p.swap_rows(1, 2);
 /// assert_eq!(expected, x * p);
 ///
 /// // One can also construct the same permutation matrix directly
@@ -104,8 +104,8 @@ impl<T> PermutationMatrix<T> {
         }
     }
 
-    /// Swaps indices i and j
-    pub fn swap(&mut self, i: usize, j: usize) {
+    /// Swaps rows i and j in the permutation matrix.
+    pub fn swap_rows(&mut self, i: usize, j: usize) {
         self.perm.swap(i, j);
     }
 
@@ -388,10 +388,10 @@ mod tests {
     use super::{permute_by_swap, validate_permutation};
 
     #[test]
-    fn swap() {
+    fn swap_rows() {
         let mut p = PermutationMatrix::<u64>::identity(4);
-        p.swap(0, 3);
-        p.swap(1, 3);
+        p.swap_rows(0, 3);
+        p.swap_rows(1, 3);
 
         let expected_permutation = PermutationMatrix::from_array(vec![3, 0, 2, 1]).unwrap();
         assert_eq!(p, expected_permutation);
