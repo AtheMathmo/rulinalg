@@ -387,107 +387,6 @@ mod tests {
     use super::PermutationMatrix;
     use super::{permute_by_swap, validate_permutation};
 
-    use quickcheck::{Arbitrary, Gen};
-
-    // In order to write property tests for the validation of a permutation,
-    // we need to be able to generate arbitrary (valid) permutations.
-    #[derive(Debug, Clone, PartialEq, Eq)]
-    struct ValidPermutationArray(pub Vec<usize>);
-
-    impl Arbitrary for ValidPermutationArray {
-        fn arbitrary<G: Gen>(g: &mut G) -> Self {
-            let upper_bound = g.size();
-            let mut array = (0 .. upper_bound).collect::<Vec<usize>>();
-            g.shuffle(&mut array);
-            ValidPermutationArray(array)
-        }
-    }
-
-    // We also want to be able to generate invalid permutations for
-    // the same reasons
-    #[derive(Debug, Clone, PartialEq, Eq)]
-    struct InvalidPermutationArray(pub Vec<usize>);
-
-    impl Arbitrary for InvalidPermutationArray {
-        fn arbitrary<G: Gen>(g: &mut G) -> Self {
-            // Take an arbitrary valid permutation and mutate it so that
-            // it is invalid
-            let mut permutation_array = ValidPermutationArray::arbitrary(g).0;
-            let n = permutation_array.len();
-
-            // There are two essential sources of invalidity:
-            // 1. Duplicate elements
-            // 2. Indices out of bounds
-            // We want to have either or both
-
-            let should_have_duplicates = g.gen::<bool>();
-            let should_have_out_of_bounds = !should_have_duplicates || g.gen::<bool>();
-            assert!(should_have_duplicates || should_have_out_of_bounds);
-
-            if should_have_out_of_bounds {
-                let num_out_of_bounds_rounds = g.gen_range::<usize>(1, n);
-                for _ in 0 .. num_out_of_bounds_rounds {
-                    let interior_index = g.gen_range::<usize>(0, n);
-                    let exterior_index = n + g.gen::<usize>();
-                    permutation_array[interior_index] = exterior_index;
-                }
-            }
-
-            if should_have_duplicates {
-                let num_duplicates = g.gen_range::<usize>(1, n);
-                for _ in 0 .. num_duplicates {
-                    let interior_index = g.gen_range::<usize>(0, n);
-                    let duplicate_value = permutation_array[interior_index];
-                    permutation_array.push(duplicate_value);
-                }
-            }
-
-            // The duplicates are placed at the end, so we perform
-            // an additional shuffle to end up with a more or less
-            // arbitrary invalid permutation
-            g.shuffle(&mut permutation_array);
-            InvalidPermutationArray(permutation_array)
-        }
-    }
-
-    impl<T: Send + Clone + 'static> Arbitrary for PermutationMatrix<T> {
-        fn arbitrary<G: Gen>(g: &mut G) -> Self {
-            let ValidPermutationArray(array) = ValidPermutationArray::arbitrary(g);
-            PermutationMatrix::from_array(array)
-                .expect("The generated permutation array should always be valid.")
-        }
-    }
-
-    quickcheck! {
-        fn property_validate_permutation_is_ok_for_valid_input(array: ValidPermutationArray) -> bool {
-            validate_permutation(&array.0).is_ok()
-        }
-    }
-
-    quickcheck! {
-        fn property_validate_permutation_is_err_for_invalid_input(array: InvalidPermutationArray) -> bool {
-            validate_permutation(&array.0).is_err()
-        }
-    }
-
-    quickcheck! {
-        fn property_identity_has_identity_array(size: usize) -> bool {
-            let p = PermutationMatrix::<u64>::identity(size);
-            let p_as_array: Vec<usize> = p.into();
-            let expected = (0 .. size).collect::<Vec<usize>>();
-            p_as_array == expected
-        }
-    }
-
-    quickcheck! {
-        fn property_dim_is_equal_to_array_dimensions(array: ValidPermutationArray) -> bool {
-            let ValidPermutationArray(array) = array;
-            let n = array.len();
-            let p = PermutationMatrix::<u32>::from_array(array).unwrap();
-            p.dim() == n
-        }
-    }
-
     #[test]
     fn swap() {
         let mut p = PermutationMatrix::<u64>::identity(4);
@@ -561,28 +460,6 @@ mod tests {
         let p = PermutationMatrix::<u32>::from_array(vec![1, 2, 0]).unwrap();
         let expected_inverse = PermutationMatrix::<u32>::from_array(vec![2, 0, 1]).unwrap();
         assert_eq!(p.inverse(), expected_inverse);
-    }
-
-    quickcheck! {
-        fn property_inverse_of_inverse_is_original(p: PermutationMatrix<u32>) -> bool {
-            p == p.inverse().inverse()
-        }
-    }
-
-    #[test]
-    quickcheck! {
-        fn property_inverse_composes_to_identity(p: PermutationMatrix<u32>) -> bool {
-            // Recall that P * P_inv = I and P_inv * P = I
-            let n = p.dim();
-            let pinv = p.inverse();
-            let mut p_pinv_composition = PermutationMatrix::identity(n);
-            let mut pinv_p_composition = PermutationMatrix::identity(n);
-            p.compose(&pinv, &mut p_pinv_composition);
-            pinv.compose(&p, &mut pinv_p_composition);
-            assert_eq!(p_pinv_composition, PermutationMatrix::identity(n));
-            assert_eq!(pinv_p_composition, PermutationMatrix::identity(n));
-            true
-        }
     }
 
     #[test]
@@ -697,5 +574,127 @@ mod tests {
         let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
         p.permute_vector_in_place(&mut x);
         assert_vector_eq!(x, vector![ 3, 1, 0, 2]);
+    }
+
+    use quickcheck::{Arbitrary, Gen};
+
+    // In order to write property tests for the validation of a permutation,
+    // we need to be able to generate arbitrary (valid) permutations.
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    struct ValidPermutationArray(pub Vec<usize>);
+
+    impl Arbitrary for ValidPermutationArray {
+        fn arbitrary<G: Gen>(g: &mut G) -> Self {
+            let upper_bound = g.size();
+            let mut array = (0 .. upper_bound).collect::<Vec<usize>>();
+            g.shuffle(&mut array);
+            ValidPermutationArray(array)
+        }
+    }
+
+    // We also want to be able to generate invalid permutations for
+    // the same reasons
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    struct InvalidPermutationArray(pub Vec<usize>);
+
+    impl Arbitrary for InvalidPermutationArray {
+        fn arbitrary<G: Gen>(g: &mut G) -> Self {
+            // Take an arbitrary valid permutation and mutate it so that
+            // it is invalid
+            let mut permutation_array = ValidPermutationArray::arbitrary(g).0;
+            let n = permutation_array.len();
+
+            // There are two essential sources of invalidity:
+            // 1. Duplicate elements
+            // 2. Indices out of bounds
+            // We want to have either or both
+
+            let should_have_duplicates = g.gen::<bool>();
+            let should_have_out_of_bounds = !should_have_duplicates || g.gen::<bool>();
+            assert!(should_have_duplicates || should_have_out_of_bounds);
+
+            if should_have_out_of_bounds {
+                let num_out_of_bounds_rounds = g.gen_range::<usize>(1, n);
+                for _ in 0 .. num_out_of_bounds_rounds {
+                    let interior_index = g.gen_range::<usize>(0, n);
+                    let exterior_index = n + g.gen::<usize>();
+                    permutation_array[interior_index] = exterior_index;
+                }
+            }
+
+            if should_have_duplicates {
+                let num_duplicates = g.gen_range::<usize>(1, n);
+                for _ in 0 .. num_duplicates {
+                    let interior_index = g.gen_range::<usize>(0, n);
+                    let duplicate_value = permutation_array[interior_index];
+                    permutation_array.push(duplicate_value);
+                }
+            }
+
+            // The duplicates are placed at the end, so we perform
+            // an additional shuffle to end up with a more or less
+            // arbitrary invalid permutation
+            g.shuffle(&mut permutation_array);
+            InvalidPermutationArray(permutation_array)
+        }
+    }
+
+    impl<T: Send + Clone + 'static> Arbitrary for PermutationMatrix<T> {
+        fn arbitrary<G: Gen>(g: &mut G) -> Self {
+            let ValidPermutationArray(array) = ValidPermutationArray::arbitrary(g);
+            PermutationMatrix::from_array(array)
+                .expect("The generated permutation array should always be valid.")
+        }
+    }
+
+    quickcheck! {
+        fn property_validate_permutation_is_ok_for_valid_input(array: ValidPermutationArray) -> bool {
+            validate_permutation(&array.0).is_ok()
+        }
+    }
+
+    quickcheck! {
+        fn property_validate_permutation_is_err_for_invalid_input(array: InvalidPermutationArray) -> bool {
+            validate_permutation(&array.0).is_err()
+        }
+    }
+
+    quickcheck! {
+        fn property_identity_has_identity_array(size: usize) -> bool {
+            let p = PermutationMatrix::<u64>::identity(size);
+            let p_as_array: Vec<usize> = p.into();
+            let expected = (0 .. size).collect::<Vec<usize>>();
+            p_as_array == expected
+        }
+    }
+
+    quickcheck! {
+        fn property_dim_is_equal_to_array_dimensions(array: ValidPermutationArray) -> bool {
+            let ValidPermutationArray(array) = array;
+            let n = array.len();
+            let p = PermutationMatrix::<u32>::from_array(array).unwrap();
+            p.dim() == n
+        }
+    }
+
+    quickcheck! {
+        fn property_inverse_of_inverse_is_original(p: PermutationMatrix<u32>) -> bool {
+            p == p.inverse().inverse()
+        }
+    }
+
+    quickcheck! {
+        fn property_inverse_composes_to_identity(p: PermutationMatrix<u32>) -> bool {
+            // Recall that P * P_inv = I and P_inv * P = I
+            let n = p.dim();
+            let pinv = p.inverse();
+            let mut p_pinv_composition = PermutationMatrix::identity(n);
+            let mut pinv_p_composition = PermutationMatrix::identity(n);
+            p.compose(&pinv, &mut p_pinv_composition);
+            pinv.compose(&p, &mut pinv_p_composition);
+            assert_eq!(p_pinv_composition, PermutationMatrix::identity(n));
+            assert_eq!(pinv_p_composition, PermutationMatrix::identity(n));
+            true
+        }
     }
 }
