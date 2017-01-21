@@ -2,10 +2,6 @@
 //!
 //! Contains support methods for linear algebra structs.
 
-mod permutation;
-pub use self::permutation::Permutation;
-
-
 use std::cmp;
 use libnum::Zero;
 use std::ops::{Add, Mul, Sub, Div};
