@@ -383,6 +383,7 @@ fn permute_by_swap<S>(perm: &mut [usize], mut swap: S) where S: FnMut(usize, usi
 #[cfg(test)]
 mod tests {
     use matrix::Matrix;
+    use vector::Vector;
     use super::PermutationMatrix;
     use super::{permute_by_swap, validate_permutation};
 
@@ -639,5 +640,62 @@ mod tests {
         let mut pq = PermutationMatrix::identity(3);
         p.compose(&q, &mut pq);
         assert_eq!(pq, pq_expected);
+    }
+
+    #[test]
+    fn permute_rows() {
+        let x = matrix![ 0;
+                         1;
+                         2;
+                         3];
+        let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
+        let mut output = Matrix::zeros(4, 1);
+        p.permute_rows(&x, &mut output);
+        assert_matrix_eq!(output, matrix![ 3; 1; 0; 2]);
+    }
+
+    #[test]
+    fn permute_rows_in_place() {
+        let mut x = matrix![ 0;
+                         1;
+                         2;
+                         3];
+        let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
+        p.permute_rows_in_place(&mut x);
+        assert_matrix_eq!(x, matrix![ 3; 1; 0; 2]);
+    }
+
+    #[test]
+    fn permute_cols() {
+        let x = matrix![ 0, 1, 2, 3];
+        let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
+        let mut output = Matrix::zeros(1, 4);
+        p.permute_cols(&x, &mut output);
+        assert_matrix_eq!(output, matrix![ 3, 1, 0, 2]);
+    }
+
+    #[test]
+    fn permute_cols_in_place() {
+        let mut x = matrix![ 0, 1, 2, 3];
+        let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
+        p.permute_cols_in_place(&mut x);
+        assert_matrix_eq!(x, matrix![ 3, 1, 0, 2]);
+    }
+
+    #[test]
+    fn permute_vector() {
+        let x = vector![ 0, 1, 2, 3];
+        let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
+        let mut output = Vector::zeros(4);
+        p.permute_vector(&x, &mut output);
+        assert_vector_eq!(output, vector![ 3, 1, 0, 2]);
+    }
+
+    #[test]
+    fn permute_vector_in_place() {
+        let mut x = vector![ 0, 1, 2, 3];
+        let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
+        p.permute_vector_in_place(&mut x);
+        assert_vector_eq!(x, vector![ 3, 1, 0, 2]);
     }
 }
