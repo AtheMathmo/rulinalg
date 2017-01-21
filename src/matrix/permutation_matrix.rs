@@ -111,7 +111,7 @@ impl<T> PermutationMatrix<T> {
 
     /// The inverse of the permutation matrix.
     pub fn inverse(&self) -> PermutationMatrix<T> {
-        let mut inv: Vec<usize> = vec![0; self.dim()];
+        let mut inv: Vec<usize> = vec![0; self.size()];
 
         for (source, target) in self.perm.iter().cloned().enumerate() {
             inv[target] = source;
@@ -123,11 +123,11 @@ impl<T> PermutationMatrix<T> {
         }
     }
 
-    /// The dimensions of the permutation matrix.
+    /// The size of the permutation matrix.
     ///
-    /// A permutation matrix is a square matrix, so `dim()` is equal
+    /// A permutation matrix is a square matrix, so `size()` is equal
     /// to both the number of rows, as well as the number of columns.
-    pub fn dim(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.perm.len()
     }
 
@@ -169,7 +169,7 @@ impl<T> PermutationMatrix<T> {
 impl<T: Num> PermutationMatrix<T> {
     /// The permutation matrix in an equivalent full matrix representation.
     pub fn as_matrix(&self) -> Matrix<T> {
-        Matrix::from_fn(self.dim(), self.dim(), |i, j|
+        Matrix::from_fn(self.size(), self.size(), |i, j|
             if self.perm[i] == j {
                 T::one()
             } else {
@@ -257,7 +257,7 @@ impl<T: Clone> PermutationMatrix<T> {
         source_perm: &PermutationMatrix<T>,
         target_perm: &mut PermutationMatrix<T>
     ) {
-        assert!(source_perm.dim() == target_perm.dim(),
+        assert!(source_perm.size() == target_perm.size(),
             "Source and target permutation matrix must have equal dimensions.");
         validate_permutation_matrix_product_dimensions(source_perm, target_perm);
         let left = self;
@@ -281,21 +281,21 @@ impl<'a, T> Into<&'a [usize]> for &'a PermutationMatrix<T> {
 }
 
 fn validate_permutation_vector_dimensions<T>(p: &PermutationMatrix<T>, v: &Vector<T>) {
-    assert!(p.dim() == v.size(),
+    assert!(p.size() == v.size(),
             "Permutation matrix and Vector dimensions are not compatible.");
 }
 
 
 fn validate_permutation_left_mul_dimensions<T, M>(p: &PermutationMatrix<T>, rhs: &M)
     where M: BaseMatrix<T> {
-     assert!(p.dim() == rhs.rows(),
+     assert!(p.size() == rhs.rows(),
             "Permutation matrix and right-hand side matrix dimensions
              are not compatible.");
 }
 
 fn validate_permutation_right_mul_dimensions<T, M>(lhs: &M, p: &PermutationMatrix<T>)
     where M: BaseMatrix<T> {
-     assert!(lhs.cols() == p.dim(),
+     assert!(lhs.cols() == p.size(),
             "Left-hand side matrix and permutation matrix dimensions
              are not compatible.");
 }
@@ -303,7 +303,7 @@ fn validate_permutation_right_mul_dimensions<T, M>(lhs: &M, p: &PermutationMatri
 fn validate_permutation_matrix_product_dimensions<T>(
                     lhs: &PermutationMatrix<T>,
                     rhs: &PermutationMatrix<T>) {
-    assert!(lhs.dim() == rhs.dim(),
+    assert!(lhs.size() == rhs.size(),
         "Permutation matrices do not have compatible dimensions for multiplication.");
 }
 
@@ -673,7 +673,7 @@ mod tests {
             let ValidPermutationArray(array) = array;
             let n = array.len();
             let p = PermutationMatrix::<u32>::from_array(array).unwrap();
-            p.dim() == n
+            p.size() == n
         }
     }
 
@@ -686,7 +686,7 @@ mod tests {
     quickcheck! {
         fn property_inverse_composes_to_identity(p: PermutationMatrix<u32>) -> bool {
             // Recall that P * P_inv = I and P_inv * P = I
-            let n = p.dim();
+            let n = p.size();
             let pinv = p.inverse();
             let mut p_pinv_composition = PermutationMatrix::identity(n);
             let mut pinv_p_composition = PermutationMatrix::identity(n);
