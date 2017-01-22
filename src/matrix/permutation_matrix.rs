@@ -12,12 +12,12 @@ use libnum::Num;
 /// is a very special kind of matrix. It is essentially a matrix representation
 /// of the more general concept of a permutation. That is, an `n` x `n` permutation
 /// matrix corresponds to a permutation of ordered sets whose cardinality is `n`.
-/// In particular, given an `m` x `n` matrix `A` and an `n` x `n` permutation
+/// In particular, given an `m` x `n` matrix `A` and an `m` x `m` permutation
 /// matrix `P`, the action of left-multiplying `A` by `P`, `PA`, corresponds
 /// to permuting the rows of `A` by the given permutation represented by `P`.
 /// Conversely, right-multiplication corresponds to column permutation.
-/// More precisely, given another permutation matrix `K` of size `m` x `m`,
-/// then `AK` is the corresponding permutation of the columns of `A`.
+/// More precisely, given another permutation matrix `Q` of size `n` x `n`,
+/// then `AQ` is the corresponding permutation of the columns of `A`.
 ///
 /// Due to their unique structure, permutation matrices can be much more
 /// efficiently represented and applied than general matrices. Recall that
@@ -28,7 +28,7 @@ use libnum::Num;
 /// the multiplication `XA` requires O(`m`<sup>2</sup>`n`) operations, and
 /// the multiplication `AY` requires O(`m``n`<sup>2</sup>) operations.
 ///
-/// By constrast, the storage of `P` requires only O(`m`) memory, and
+/// By contrast, the storage of `P` requires only O(`m`) memory, and
 /// the storage of `K` requires O(`n`) memory. Moreover, the products
 /// `PA` and `AK` both require merely O(`mn`) operations.
 ///
