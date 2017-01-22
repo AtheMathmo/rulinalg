@@ -207,6 +207,19 @@ impl<T: Num> PermutationMatrix<T> {
             }
         )
     }
+
+    /// Computes the determinant of the permutation matrix.
+    ///
+    /// The determinant of a permutation matrix is always
+    /// +1 (if the permutation is even) or
+    /// -1 (if the permutation is odd).
+    pub fn det(self) -> T {
+        let parity = self.parity();
+        match parity {
+            Parity::Even => T::one(),
+            Parity::Odd  => T::zero() - T::one()
+        }
+    }
 }
 
 impl<T> PermutationMatrix<T> {
@@ -541,6 +554,19 @@ mod tests {
         {
             let p = PermutationMatrix::<u32>::from_array(vec![4, 2, 3, 1, 0, 5]).unwrap();
             assert_eq!(p.parity(), Parity::Odd);
+        }
+    }
+
+    #[test]
+    fn det() {
+        {
+            let p = PermutationMatrix::<i32>::from_array(vec![1, 0, 3, 2]).unwrap();
+            assert_eq!(p.det(), 1);
+        }
+
+        {
+            let p = PermutationMatrix::<i32>::from_array(vec![4, 2, 3, 1, 0, 5]).unwrap();
+            assert_eq!(p.det(), -1);
         }
     }
 
