@@ -95,6 +95,15 @@ pub struct PermutationMatrix<T> {
     marker: std::marker::PhantomData<T>
 }
 
+/// Parity is the fact of being even or odd.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum Parity {
+    /// Even parity.
+    Even,
+    /// Odd parity.
+    Odd
+}
+
 impl<T> PermutationMatrix<T> {
     /// The identity permutation.
     pub fn identity(n: usize) -> Self {
@@ -163,6 +172,27 @@ impl<T> PermutationMatrix<T> {
     /// Maps the given row index into the resulting row index in the permuted matrix.
     pub fn map_row(&self, row_index: usize) -> usize {
         self.perm[row_index]
+    }
+
+    /// Computes the parity of the permutation (even- or oddness).
+    pub fn parity(mut self) -> Parity {
+        // As it happens, permute_by_swap effectively decomposes
+        // each disjoint cycle in the permutation into a series
+        // of transpositions. The result is that the whole permutation
+        // is effectively decomposed into a series of
+        // transpositions.
+        // Hence, if we start out by assuming that the permutation
+        // is even and simply flip this variable every time a swap
+        // (transposition) is performed, we'll have the result by
+        // the end of the procedure.
+        let mut is_even = true;
+        permute_by_swap(&mut self.perm, |_, _| is_even = !is_even);
+
+        if is_even {
+            Parity::Even
+        } else {
+            Parity::Odd
+        }
     }
 }
 
@@ -421,8 +451,10 @@ fn permute_by_swap<S>(perm: &mut [usize], mut swap: S) where S: FnMut(usize, usi
 mod tests {
     use matrix::Matrix;
     use vector::Vector;
-    use super::PermutationMatrix;
+    use super::{PermutationMatrix, Parity};
     use super::{permute_by_swap, validate_permutation};
+
+    use itertools::Itertools;
 
     #[test]
     fn swap_rows() {
@@ -497,6 +529,19 @@ mod tests {
         let p = PermutationMatrix::<u32>::from_array(vec![1, 2, 0]).unwrap();
         let expected_inverse = PermutationMatrix::<u32>::from_array(vec![2, 0, 1]).unwrap();
         assert_eq!(p.inverse(), expected_inverse);
+    }
+
+    #[test]
+    fn parity() {
+        {
+            let p = PermutationMatrix::<u32>::from_array(vec![1, 0, 3, 2]).unwrap();
+            assert_eq!(p.parity(), Parity::Even);
+        }
+
+        {
+            let p = PermutationMatrix::<u32>::from_array(vec![4, 2, 3, 1, 0, 5]).unwrap();
+            assert_eq!(p.parity(), Parity::Odd);
+        }
     }
 
     #[test]
@@ -732,6 +777,35 @@ mod tests {
             assert_eq!(p_pinv_composition, PermutationMatrix::identity(n));
             assert_eq!(pinv_p_composition, PermutationMatrix::identity(n));
             true
+        }
+    }
+
+    quickcheck! {
+        fn property_identity_parity_is_even(n: usize) -> bool {
+            let p = PermutationMatrix::<u32>::identity(n);
+            p.parity() ==  Parity::Even
+        }
+    }
+
+    quickcheck! {
+        fn property_parity_agrees_with_parity_of_inversions(p: PermutationMatrix<u32>) -> bool {
+            let array: &[usize] = (&p).into();
+            let num_inversions = array.iter().cloned().enumerate()
+                                      .cartesian_product(array.iter().cloned().enumerate())
+                                      .filter(|&((i, permuted_i), (j, permuted_j))|
+                                        // This is simply the definition of an inversion
+                                        i < j && permuted_i > permuted_j
+                                      )
+                                      .count();
+            // Recall that the parity of the number of inversions in the
+            // permutation is equal to the parity of the permutation
+            let parity = if num_inversions % 2 == 0 {
+                Parity::Even
+            } else {
+                Parity::Odd
+            };
+
+            parity == p.clone().parity()
         }
     }
 }
