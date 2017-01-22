@@ -80,8 +80,9 @@ use libnum::Num;
 ///
 /// // The inverse of a permutation matrix can efficiently be obtained
 /// let p_inv = p.inverse();
-/// // TODO: Implement product of permutation matrices to show that
-/// // the p * p_inv is the identity
+///
+/// // And permutations can be composed through multiplication
+/// assert_eq!(p * p_inv, PermutationMatrix::identity(3));
 /// # }
 /// ```
 #[derive(Debug, PartialEq, Eq, Clone)]
