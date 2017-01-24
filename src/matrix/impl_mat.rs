@@ -3,7 +3,7 @@ use std::fmt;
 use libnum::{One, Zero, Float, FromPrimitive};
 
 use super::{Matrix, forward_substitution, back_substitution, parity};
-use super::{Axes};
+use super::Axes;
 use super::base::BaseMatrix;
 use error::{Error, ErrorKind};
 use vector::Vector;

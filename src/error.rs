@@ -28,7 +28,7 @@ pub enum ErrorKind {
     /// Tried to divide by zero
     DivByZero,
     /// Failure due to inability to convert between scalar types
-    ScalarConversionFailure
+    ScalarConversionFailure,
 }
 
 impl Error {

@@ -6,8 +6,8 @@ extern crate test;
 extern crate rand;
 
 mod linalg {
-	mod iter;
-	mod matrix;
-	mod svd;
-	mod norm;
+    mod iter;
+    mod matrix;
+    mod svd;
+    mod norm;
 }

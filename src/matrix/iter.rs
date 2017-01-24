@@ -71,7 +71,7 @@ impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
             None
         }
     }
-    
+
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
         self.diag_pos += n * (self.matrix.row_stride() + 1);
         if self.diag_pos < self.diag_end {
@@ -121,8 +121,9 @@ impl<'a, T> Iterator for $rows<'a, T> {
             unsafe {
 // Get pointer and create a slice from raw parts
                 let ptr = self.slice_start.offset(self.row_pos as isize * self.row_stride);
+                let row_stride = self.row_stride as usize;
                 row = $row_base {
-                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
+                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, row_stride)
                 };
             }
 
@@ -139,8 +140,9 @@ impl<'a, T> Iterator for $rows<'a, T> {
             unsafe {
 // Get pointer to last row and create a slice from raw parts
                 let ptr = self.slice_start.offset((self.slice_rows - 1) as isize * self.row_stride);
+                let row_stride = self.row_stride as usize;
                 Some($row_base {
-                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
+                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, row_stride)
                 })
             }
         } else {
@@ -153,8 +155,9 @@ impl<'a, T> Iterator for $rows<'a, T> {
             let row: $row_type;
             unsafe {
                 let ptr = self.slice_start.offset((self.row_pos + n) as isize * self.row_stride);
+                let row_stride = self.row_stride as usize;
                 row = $row_base {
-                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
+                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, row_stride)
                 }
             }
 

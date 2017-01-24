@@ -211,7 +211,8 @@ mod tests {
         let mut a = Matrix::new(4, 4, (0..16).collect::<Vec<_>>());
         {
             let slice = a.sub_slice([1, 1], 3, 2);
-            assert_eq!(&slice.iter().cloned().collect::<Vec<_>>(), &vec![5, 6, 9, 10, 13, 14]);
+            assert_eq!(&slice.iter().cloned().collect::<Vec<_>>(),
+                       &vec![5, 6, 9, 10, 13, 14]);
 
             let slice = slice.sub_slice([1, 1], 2, 1);
             assert_eq!(&slice.iter().cloned().collect::<Vec<_>>(), &vec![10, 14]);

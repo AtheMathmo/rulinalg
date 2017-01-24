@@ -1,7 +1,7 @@
 //! The norm module
 //!
 //! This module contains implementations of various linear algebra norms.
-//! The implementations are contained within the `VectorNorm` and 
+//! The implementations are contained within the `VectorNorm` and
 //! `MatrixNorm` traits. This module also contains `VectorMetric` and
 //! `MatrixMetric` traits which are used to compute the metric distance.
 //!
@@ -12,7 +12,7 @@
 //!
 //! In general you should use the least generic norm that fits your purpose.
 //! For example you would choose to use a `Euclidean` norm instead of an
-//! `Lp(2.0)` norm - despite them being mathematically equivalent. 
+//! `Lp(2.0)` norm - despite them being mathematically equivalent.
 //!
 //! # Defining your own norm
 //!
@@ -53,7 +53,8 @@ pub trait MatrixNorm<T, M: BaseMatrix<T>> {
 }
 
 /// Trait for matrix metrics.
-pub trait MatrixMetric<'a, 'b, T, M1: 'a + BaseMatrix<T>, M2: 'b + BaseMatrix<T>> {
+pub trait MatrixMetric<'a, 'b, T, M1: 'a + BaseMatrix<T>, M2: 'b + BaseMatrix<T>>
+     {
     /// Computes the metric distance between two matrices.
     fn metric(&self, m1: &'a M1, m2: &'b M2) -> T;
 }
@@ -66,7 +67,9 @@ pub trait MatrixMetric<'a, 'b, T, M1: 'a + BaseMatrix<T>, M2: 'b + BaseMatrix<T>
 ///
 /// `d = M(v1, v2) = N(v1 - v2)`
 impl<U, T> VectorMetric<T> for U
-    where U: VectorNorm<T>, T: Copy + Sub<T, Output=T> {
+    where U: VectorNorm<T>,
+          T: Copy + Sub<T, Output = T>
+{
     fn metric(&self, v1: &Vector<T>, v2: &Vector<T>) -> T {
         self.norm(&(v1 - v2))
     }
@@ -81,10 +84,10 @@ impl<U, T> VectorMetric<T> for U
 /// `d = M(m1, m2) = N(m1 - m2)`
 impl<'a, 'b, U, T, M1, M2> MatrixMetric<'a, 'b, T, M1, M2> for U
     where U: MatrixNorm<T, M1>,
-    M1: 'a + BaseMatrix<T>,
-    M2: 'b + BaseMatrix<T>,
-    &'a M1: Sub<&'b M2, Output=M1> {
-
+          M1: 'a + BaseMatrix<T>,
+          M2: 'b + BaseMatrix<T>,
+          &'a M1: Sub<&'b M2, Output = M1>
+{
     fn metric(&self, m1: &'a M1, m2: &'b M2) -> T {
         self.norm(&(m1 - m2))
     }
@@ -142,7 +145,7 @@ pub enum Lp<T: Float> {
     /// The Lp norm where p is an integer
     Integer(i32),
     /// The Lp norm where p is a float
-    Float(T)
+    Float(T),
 }
 
 impl<T: Float> VectorNorm<T> for Lp<T> {
@@ -157,7 +160,7 @@ impl<T: Float> VectorNorm<T> for Lp<T> {
                     }
                 }
                 abs_sup
-            },
+            }
             Lp::Integer(p) => {
                 assert!(p >= 1, "p value in Lp norm must be >= 1");
                 // Compute standard lp norm
@@ -166,7 +169,7 @@ impl<T: Float> VectorNorm<T> for Lp<T> {
                     s = s + x.abs().powi(p);
                 }
                 s.powf(T::from(p).expect("Could not cast i32 to float").recip())
-            },
+            }
             Lp::Float(p) => {
                 assert!(p >= T::one(), "p value in Lp norm must be >= 1");
                 // Compute standard lp norm
@@ -192,7 +195,7 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Lp<T> {
                     }
                 }
                 abs_sup
-            },
+            }
             Lp::Integer(p) => {
                 assert!(p >= 1, "p value in Lp norm must be >= 1");
                 // Compute standard lp norm
@@ -201,7 +204,7 @@ impl<T: Float, M: BaseMatrix<T>> MatrixNorm<T, M> for Lp<T> {
                     s = s + x.abs().powi(p);
                 }
                 s.powf(T::from(p).expect("Could not cast i32 to float").recip())
-            },
+            }
             Lp::Float(p) => {
                 assert!(p >= T::one(), "p value in Lp norm must be >= 1");
                 // Compute standard lp norm
@@ -236,7 +239,7 @@ mod tests {
                         1.0, 3.0];
         assert!((MatrixNorm::norm(&Euclidean, &m) - 35.0.sqrt()) < 1e-14);
 
-        let slice = MatrixSlice::from_matrix(&m, [0,0], 1, 2);
+        let slice = MatrixSlice::from_matrix(&m, [0, 0], 1, 2);
         assert!((MatrixNorm::norm(&Euclidean, &slice) - 5.0) < 1e-14);
     }
 

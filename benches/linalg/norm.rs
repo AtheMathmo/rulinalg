@@ -10,7 +10,7 @@ fn lp_1_mat_10_50(b: &mut Bencher) {
     let lp = Lp::Integer(1);
 
     b.iter(|| {
-    	let _ = black_box(MatrixNorm::norm(&lp, &a));
+        let _ = black_box(MatrixNorm::norm(&lp, &a));
     });
 }
 
@@ -20,7 +20,7 @@ fn lp_1_mat_100_50(b: &mut Bencher) {
     let lp = Lp::Integer(1);
 
     b.iter(|| {
-    	let _ = black_box(MatrixNorm::norm(&lp, &a));
+        let _ = black_box(MatrixNorm::norm(&lp, &a));
     });
 }
 
@@ -54,7 +54,7 @@ fn lp_2_mat_10_50(b: &mut Bencher) {
     let lp = Lp::Integer(2);
 
     b.iter(|| {
-    	let _ = black_box(MatrixNorm::norm(&lp, &a));
+        let _ = black_box(MatrixNorm::norm(&lp, &a));
     });
 }
 
@@ -64,7 +64,7 @@ fn lp_2_mat_100_50(b: &mut Bencher) {
     let lp = Lp::Integer(2);
 
     b.iter(|| {
-    	let _ = black_box(MatrixNorm::norm(&lp, &a));
+        let _ = black_box(MatrixNorm::norm(&lp, &a));
     });
 }
 
@@ -74,7 +74,7 @@ fn lp_3_mat_10_50(b: &mut Bencher) {
     let lp = Lp::Integer(3);
 
     b.iter(|| {
-    	let _ = black_box(MatrixNorm::norm(&lp, &a));
+        let _ = black_box(MatrixNorm::norm(&lp, &a));
     });
 }
 
@@ -84,7 +84,7 @@ fn lp_3_mat_100_50(b: &mut Bencher) {
     let lp = Lp::Integer(3);
 
     b.iter(|| {
-    	let _ = black_box(MatrixNorm::norm(&lp, &a));
+        let _ = black_box(MatrixNorm::norm(&lp, &a));
     });
 }
 
@@ -94,7 +94,7 @@ fn lp_float_2_mat_10_50(b: &mut Bencher) {
     let lp = Lp::Float(2.0);
 
     b.iter(|| {
-    	let _ = black_box(MatrixNorm::norm(&lp, &a));
+        let _ = black_box(MatrixNorm::norm(&lp, &a));
     });
 }
 
@@ -104,7 +104,7 @@ fn lp_float_2_mat_100_50(b: &mut Bencher) {
     let lp = Lp::Float(2.0);
 
     b.iter(|| {
-    	let _ = black_box(MatrixNorm::norm(&lp, &a));
+        let _ = black_box(MatrixNorm::norm(&lp, &a));
     });
 }
 
@@ -114,7 +114,7 @@ fn lp_float_3_mat_10_50(b: &mut Bencher) {
     let lp = Lp::Float(3.0);
 
     b.iter(|| {
-    	let _ = black_box(MatrixNorm::norm(&lp, &a));
+        let _ = black_box(MatrixNorm::norm(&lp, &a));
     });
 }
 
@@ -124,7 +124,7 @@ fn lp_float_3_mat_100_50(b: &mut Bencher) {
     let lp = Lp::Float(3.0);
 
     b.iter(|| {
-    	let _ = black_box(MatrixNorm::norm(&lp, &a));
+        let _ = black_box(MatrixNorm::norm(&lp, &a));
     });
 }
 
@@ -133,7 +133,7 @@ fn euclidean_mat_10_50(b: &mut Bencher) {
     let a = Matrix::new(10, 50, vec![2.0;500]);
 
     b.iter(|| {
-    	let _ = black_box(MatrixNorm::norm(&Euclidean, &a));
+        let _ = black_box(MatrixNorm::norm(&Euclidean, &a));
     });
 }
 
@@ -142,6 +142,6 @@ fn euclidean_mat_100_50(b: &mut Bencher) {
     let a = Matrix::new(100, 50, vec![2.0;5000]);
 
     b.iter(|| {
-    	let _ = black_box(MatrixNorm::norm(&Euclidean, &a));
+        let _ = black_box(MatrixNorm::norm(&Euclidean, &a));
     });
 }
