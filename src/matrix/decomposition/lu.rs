@@ -14,13 +14,15 @@ impl<T> Matrix<T> where T: Any + Float
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::Matrix;
     ///
-    /// let a = Matrix::new(3,3, vec![1.0,2.0,0.0,
-    ///                               0.0,3.0,4.0,
-    ///                               5.0, 1.0, 2.0]);
+    /// let a = matrix![1.0, 2.0, 0.0;
+    ///                 0.0, 3.0, 4.0;
+    ///                 5.0, 1.0, 2.0];
     ///
-    /// let (l,u,p) = a.lup_decomp().expect("This matrix should decompose!");
+    /// let (l, u, p) = a.lup_decomp().expect("This matrix should decompose!");
+    /// # }
     /// ```
     ///
     /// # Panics

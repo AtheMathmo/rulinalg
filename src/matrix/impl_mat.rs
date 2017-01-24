@@ -18,7 +18,7 @@ impl<T> Matrix<T> {
     /// ```
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
-    /// let mat = Matrix::new(2,2, vec![1.0,2.0,3.0,4.0]);
+    /// let mat = Matrix::new(2,2, vec![1.0, 2.0, 3.0, 4.0]);
     ///
     /// assert_eq!(mat.rows(), 2);
     /// assert_eq!(mat.cols(), 2);
@@ -200,15 +200,18 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, Axes};
     ///
-    /// let a = Matrix::<f64>::new(2,2, vec![1.0,2.0,3.0,4.0]);
+    /// let a = matrix![1.0, 2.0;
+    ///                 3.0, 4.0];
     ///
     /// let c = a.mean(Axes::Row);
-    /// assert_eq!(*c.data(), vec![2.0, 3.0]);
+    /// assert_eq!(c, vector![2.0, 3.0]);
     ///
     /// let d = a.mean(Axes::Col);
-    /// assert_eq!(*d.data(), vec![1.5, 3.5]);
+    /// assert_eq!(d, vector![1.5, 3.5]);
+    /// # }
     /// ```
     pub fn mean(&self, axis: Axes) -> Vector<T> {
         if self.data.len() == 0 {
@@ -239,15 +242,18 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, Axes};
     ///
-    /// let a = Matrix::<f32>::new(2,2,vec![1.0,2.0,3.0,4.0]);
+    /// let a = matrix![1.0, 2.0;
+    ///                 3.0, 4.0];
     ///
     /// let c = a.variance(Axes::Row).unwrap();
-    /// assert_eq!(*c.data(), vec![2.0, 2.0]);
+    /// assert_eq!(c, vector![2.0, 2.0]);
     ///
     /// let d = a.variance(Axes::Col).unwrap();
-    /// assert_eq!(*d.data(), vec![0.5, 0.5]);
+    /// assert_eq!(d, vector![0.5, 0.5]);
+    /// # }
     /// ```
     ///
     /// # Failures
@@ -311,15 +317,18 @@ impl<T: Any + Float> Matrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::Matrix;
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = Matrix::new(2,2, vec![2.0,3.0,1.0,2.0]);
-    /// let y = Vector::new(vec![13.0,8.0]);
+    /// let a = matrix![2.0, 3.0;
+    ///                 1.0, 2.0];
+    /// let y = vector![13.0, 8.0];
     ///
     /// let x = a.solve(y).unwrap();
     ///
-    /// assert_eq!(*x.data(), vec![2.0, 3.0]);
+    /// assert_eq!(x, vector![2.0, 3.0]);
+    /// # }
     /// ```
     ///
     /// # Panics
@@ -343,14 +352,17 @@ impl<T: Any + Float> Matrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::Matrix;
     ///
-    /// let a = Matrix::new(2,2, vec![2.,3.,1.,2.]);
+    /// let a = matrix![2., 3.;
+    ///                 1., 2.];
     /// let inv = a.clone().inverse().expect("This matrix should have an inverse!");
     ///
     /// let I = a * inv;
     ///
-    /// assert_eq!(*I.data(), vec![1.0,0.0,0.0,1.0]);
+    /// assert_matrix_eq!(I, matrix![1.0, 0.0; 0.0, 1.0]);
+    /// # }
     /// ```
     ///
     /// # Panics
@@ -406,14 +418,13 @@ impl<T: Any + Float> Matrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use rulinalg::matrix::Matrix;
-    ///
-    /// let a = Matrix::new(3,3, vec![1.0,2.0,0.0,
-    ///                               0.0,3.0,4.0,
-    ///                               5.0, 1.0, 2.0]);
+    /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// let a = matrix![1.0, 2.0, 0.0;
+    ///                 0.0, 3.0, 4.0;
+    ///                 5.0, 1.0, 2.0];
     ///
     /// let det = a.det();
-    ///
+    /// # }
     /// ```
     ///
     /// # Panics

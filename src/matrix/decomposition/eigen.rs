@@ -330,13 +330,17 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::Matrix;
     ///
-    /// let a = Matrix::new(3,3,vec![3.,2.,4.,2.,0.,2.,4.,2.,3.]);
+    /// let a = matrix![3., 2., 4.;
+    ///                 2., 0., 2.;
+    ///                 4., 2., 3.];
     ///
     /// let (e, m) = a.eigendecomp().expect("We should be able to compute this eigendecomp!");
     /// println!("{:?}", e);
     /// println!("{:?}", m.data());
+    /// # }
     /// ```
     ///
     /// # Panics
