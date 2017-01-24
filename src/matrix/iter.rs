@@ -656,14 +656,14 @@ mod tests {
         let data = [[0, 4, 8], [1, 5, 9], [2, 6, 10], [3, 7, 11]];
 
         for (i, col) in a.col_iter().enumerate() {
-            for (ii, value) in col.iter().enumerate() {
-                assert_eq!(data[i][ii], *value);
+            for (j, value) in col.iter().enumerate() {
+                assert_eq!(data[i][j], *value);
             }
         }
 
         for (i, mut col) in a.col_iter_mut().enumerate() {
-            for (ii, value) in col.iter_mut().enumerate() {
-                assert_eq!(data[i][ii], *value);
+            for (j, value) in col.iter_mut().enumerate() {
+                assert_eq!(data[i][j], *value);
             }
         }
 
@@ -687,8 +687,8 @@ mod tests {
         let data = [[0, 3], [1, 4]];
 
         for (i, col) in b.col_iter().enumerate() {
-            for (ii, value) in col.iter().enumerate() {
-                assert_eq!(data[i][ii], *value);
+            for (j, value) in col.iter().enumerate() {
+                assert_eq!(data[i][j], *value);
             }
         }
     }
@@ -705,14 +705,14 @@ mod tests {
             let data = [[0, 3], [1, 4]];
 
             for (i, col) in b.col_iter().enumerate() {
-                for (ii, value) in col.iter().enumerate() {
-                    assert_eq!(data[i][ii], *value);
+                for (j, value) in col.iter().enumerate() {
+                    assert_eq!(data[i][j], *value);
                 }
             }
 
             for (i, mut col) in b.col_iter_mut().enumerate() {
-                for (ii, value) in col.iter_mut().enumerate() {
-                    assert_eq!(data[i][ii], *value);
+                for (j, value) in col.iter_mut().enumerate() {
+                    assert_eq!(data[i][j], *value);
                 }
             }
 
@@ -729,8 +729,8 @@ mod tests {
     #[test]
     fn test_matrix_cols_nth() {
         let a = matrix![0, 1, 2, 3;
-                            4, 5, 6, 7;
-                            8, 9, 10, 11];
+                        4, 5, 6, 7;
+                        8, 9, 10, 11];
 
         let mut col_iter = a.col_iter();
 
@@ -823,6 +823,7 @@ mod tests {
         let mut a = matrix![0, 1, 2;
                             3, 4, 5;
                             6, 7, 8];
+        
         let data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
 
         for (i, row) in a.row_iter().enumerate() {
