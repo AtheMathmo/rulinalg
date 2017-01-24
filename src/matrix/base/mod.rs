@@ -1367,8 +1367,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
     /// let mut a = matrix![0, 1;
-    ///                 2, 3;
-    ///                 4, 5];
+    ///                     2, 3;
+    ///                     4, 5];
     ///
     /// for mut col in a.col_iter_mut() {
     ///     *col += 1;
@@ -1398,8 +1398,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// use rulinalg::matrix::{Matrix, BaseMatrixMut};
     ///
     /// let mut a = matrix![0, 1;
-    ///                 2, 3;
-    ///                 4, 5];
+    ///                     2, 3;
+    ///                     4, 5];
     ///
     /// for mut row in a.row_iter_mut() {
     ///     *row += 1;
