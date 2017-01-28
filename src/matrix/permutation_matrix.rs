@@ -196,6 +196,18 @@ impl<T> PermutationMatrix<T> {
     }
 
     /// Maps the given row index into the resulting row index in the permuted matrix.
+    ///
+    /// More specifically, if the permutation sends row `i` to `j`, then
+    /// `map_row(i)` returns `j`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rulinalg::matrix::PermutationMatrix;
+    /// let mut p = PermutationMatrix::<u32>::identity(3);
+    /// p.swap_rows(1, 2);
+    /// assert_eq!(p.map_row(1), 2);
+    /// ```
     pub fn map_row(&self, row_index: usize) -> usize {
         self.perm[row_index]
     }
