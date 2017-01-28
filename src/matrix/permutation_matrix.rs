@@ -159,14 +159,25 @@ impl<T> PermutationMatrix<T> {
     /// Constructs a `PermutationMatrix` from an array, without checking the validity of
     /// the supplied permutation.
     ///
-    /// However, to ease development, a `debug_assert` with regards to the validity
-    /// is still performed.
-    pub fn from_array_unchecked<A: Into<Vec<usize>>>(array: A) -> PermutationMatrix<T> {
+    /// # Safety
+    /// The supplied N-length array must satisfy the following:
+    ///
+    /// - Each element must be in the half-open range [0, N).
+    /// - Each element must be unique.
+    ///
+    /// Note that while this function *itself* is technically safe
+    /// regardless of the input array, passing an incorrect permutation matrix
+    /// may cause undefined behavior in other methods of `PermutationMatrix`.
+    /// As such, it may be difficult to debug. The user is strongly
+    /// encouraged to use the safe function `from_array`, which for
+    /// most real world applications only incurs a minor
+    /// or even insignificant performance hit as a result of the
+    /// extra validation.
+    pub unsafe fn from_array_unchecked<A: Into<Vec<usize>>>(array: A) -> PermutationMatrix<T> {
         let p = PermutationMatrix {
             perm: array.into(),
             marker: std::marker::PhantomData
         };
-        debug_assert!(validate_permutation(&p.perm).is_ok(), "Permutation is not valid");
         p
     }
 
@@ -502,7 +513,7 @@ mod tests {
     #[test]
     fn from_array_unchecked() {
         let array = vec![1, 0, 3, 2];
-        let p = PermutationMatrix::<u32>::from_array_unchecked(array.clone());
+        let p = unsafe { PermutationMatrix::<u32>::from_array_unchecked(array.clone()) };
         let p_as_array: Vec<usize> = p.into();
         assert_eq!(p_as_array, array);
     }
