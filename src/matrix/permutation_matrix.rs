@@ -280,6 +280,16 @@ impl<T> PermutationMatrix<T> {
     ///   the size of the permutation matrix.
     pub fn permute_cols_in_place<M>(mut self, matrix: &mut M) where M: BaseMatrixMut<T> {
         validate_permutation_right_mul_dimensions(matrix, &self);
+        // Note: it _may_ be possible to increase cache efficiency
+        // of this routine by swapping elements in each row individually
+        // (since matrices are row major), but this would mean augmenting
+        // permute_by_swap in such a way that the original permutation can
+        // be recovered, which includes a little bit of additional work.
+        // Moreover, it would mean having to work with signed indices
+        // instead of unsigned (although temporarily casting would be sufficient),
+        // which may or may not complicate matters.
+        // For now, it was deemed significantly simpler and probably good enough
+        // to just swap whole columns instead.
         permute_by_swap(&mut self.perm, |i, j| matrix.swap_cols(i, j));
     }
 
