@@ -23,8 +23,11 @@ mod iter;
 mod deref;
 mod slice;
 mod base;
+mod permutation_matrix;
+mod impl_permutation_mul;
 
 pub use self::base::{BaseMatrix, BaseMatrixMut};
+pub use self::permutation_matrix::{PermutationMatrix, Parity};
 
 /// Matrix dimensions
 #[derive(Debug, Clone, Copy)]

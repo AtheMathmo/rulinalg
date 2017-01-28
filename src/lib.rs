@@ -104,5 +104,9 @@ pub mod norm;
 #[macro_use]
 extern crate quickcheck;
 
+#[cfg(test)]
+#[macro_use]
+extern crate itertools;
+
 pub use norm::{VectorNorm, MatrixNorm};
 pub use norm::{VectorMetric, MatrixMetric};

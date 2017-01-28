@@ -28,7 +28,9 @@ pub enum ErrorKind {
     /// Tried to divide by zero
     DivByZero,
     /// Failure due to inability to convert between scalar types
-    ScalarConversionFailure
+    ScalarConversionFailure,
+    /// A user-supplied permutation is not a valid permutation.
+    InvalidPermutation
 }
 
 impl Error {
