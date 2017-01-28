@@ -8,41 +8,6 @@ use libnum::Num;
 
 /// An efficient implementation of a permutation matrix.
 ///
-/// A [permutation matrix](https://en.wikipedia.org/wiki/Permutation_matrix)
-/// is a very special kind of matrix. It is essentially a matrix representation
-/// of the more general concept of a permutation. That is, an `n` x `n` permutation
-/// matrix corresponds to a permutation of ordered sets whose cardinality is `n`.
-/// In particular, given an `m` x `n` matrix `A` and an `m` x `m` permutation
-/// matrix `P`, the action of left-multiplying `A` by `P`, `PA`, corresponds
-/// to permuting the rows of `A` by the given permutation represented by `P`.
-/// Conversely, right-multiplication corresponds to column permutation.
-/// More precisely, given another permutation matrix `Q` of size `n` x `n`,
-/// then `AQ` is the corresponding permutation of the columns of `A`.
-///
-/// Due to their unique structure, permutation matrices can be much more
-/// efficiently represented and applied than general matrices. Recall that
-/// for general matrices `X` and `Y` of size `m` x `m` and `n` x `n` respectively,
-/// the storage of `X` requires O(`m`<sup>2</sup>) memory and the storage of
-/// `Y` requires O(`n`<sup>2</sup>) memory. Ignoring for the moment the existence
-/// of Strassen's matrix multiplication algorithm and more theoretical alternatives,
-/// the multiplication `XA` requires O(`m`<sup>2</sup>`n`) operations, and
-/// the multiplication `AY` requires O(`m``n`<sup>2</sup>) operations.
-///
-/// By contrast, the storage of `P` requires only O(`m`) memory, and
-/// the storage of `K` requires O(`n`) memory. Moreover, the products
-/// `PA` and `AK` both require merely O(`mn`) operations.
-///
-/// # Representation
-/// A permutation of an ordered set of cardinality *n* is a map of the form
-///
-/// ```text
-/// p: { 1, ..., n } -> { 1, ..., n }.
-/// ```
-///
-/// That is, for any index `i`, the permutation `p` sends `i` to some
-/// index `j = p(i)`, and hence the map may be represented as an array of integers
-/// of length *n*.
-///
 /// # Examples
 /// ```
 /// # #[macro_use] extern crate rulinalg; fn main() {
@@ -85,6 +50,55 @@ use libnum::Num;
 /// assert_eq!(p * p_inv, PermutationMatrix::identity(3));
 /// # }
 /// ```
+///
+/// # Rationale and complexity
+///
+/// A [permutation matrix](https://en.wikipedia.org/wiki/Permutation_matrix)
+/// is a very special kind of matrix. It is essentially a matrix representation
+/// of the more general concept of a permutation. That is, an `n` x `n` permutation
+/// matrix corresponds to a permutation of ordered sets whose cardinality is `n`.
+/// In particular, given an `m` x `n` matrix `A` and an `m` x `m` permutation
+/// matrix `P`, the action of left-multiplying `A` by `P`, `PA`, corresponds
+/// to permuting the rows of `A` by the given permutation represented by `P`.
+/// Conversely, right-multiplication corresponds to column permutation.
+/// More precisely, given another permutation matrix `Q` of size `n` x `n`,
+/// then `AQ` is the corresponding permutation of the columns of `A`.
+///
+/// Due to their unique structure, permutation matrices can be much more
+/// efficiently represented and applied than general matrices. Recall that
+/// for general matrices `X` and `Y` of size `m` x `m` and `n` x `n` respectively,
+/// the storage of `X` requires O(`m`<sup>2</sup>) memory and the storage of
+/// `Y` requires O(`n`<sup>2</sup>) memory. Ignoring for the moment the existence
+/// of Strassen's matrix multiplication algorithm and more theoretical alternatives,
+/// the multiplication `XA` requires O(`m`<sup>2</sup>`n`) operations, and
+/// the multiplication `AY` requires O(`m``n`<sup>2</sup>) operations.
+///
+/// By contrast, the storage of `P` requires only O(`m`) memory, and
+/// the storage of `K` requires O(`n`) memory. Moreover, the products
+/// `PA` and `AK` both require merely O(`mn`) operations.
+///
+/// # Representation
+/// A permutation of an ordered set of cardinality *n* is a map of the form
+///
+/// ```text
+/// p: { 1, ..., n } -> { 1, ..., n }.
+/// ```
+///
+/// That is, for any index `i`, the permutation `p` sends `i` to some
+/// index `j = p(i)`, and hence the map may be represented as an array of integers
+/// of length *n*.
+///
+/// By convention, an instance of `PermutationMatrix` represents row permutations.
+/// That is, the indices referred to above correspond to *row indices*,
+/// and the internal representation of a `PermutationMatrix` is an array
+/// describing how the permutation sends a row index `i` to a new row index
+/// `j` in the permuted matrix. Because of this internal representation, one can only
+/// efficiently swap *rows* of a `PermutationMatrix`.
+/// However, keep in mind that while this API only lets one swap individual rows
+/// of the permutation matrix itself, the right-multiplication of a general
+/// matrix with a permutation matrix will permute the columns of the general matrix,
+/// and so in practice this restriction is insignificant.
+///
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PermutationMatrix<T> {
     // A permutation matrix of dimensions NxN is represented as a permutation of the rows
