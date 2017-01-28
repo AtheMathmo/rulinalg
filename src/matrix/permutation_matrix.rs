@@ -287,7 +287,7 @@ impl<T> PermutationMatrix<T> {
     ///
     /// # Panics
     ///
-    /// - The size of the vector not equal to the size of
+    /// - The size of the vector is not equal to the size of
     ///   the permutation matrix.
     pub fn permute_vector_in_place(mut self, vector: &mut Vector<T>) {
         validate_permutation_vector_dimensions(&self, vector);
