@@ -97,9 +97,34 @@ impl<'a, 'b, 'm, T> Mul<&'a $MatrixType> for &'b PermutationMatrix<T> where T: Z
     )
 }
 
+macro_rules! impl_permutation_matrix_slice_left_multiply_value_type {
+    ($MatrixType:ty) => (
+/// Left-multiply a matrix by a permutation matrix.
+impl<'a, 'm, T> Mul<$MatrixType> for PermutationMatrix<T> where T: Zero + Clone {
+    type Output = Matrix<T>;
+
+    fn mul(self, rhs: $MatrixType) -> Matrix<T> {
+        self * &rhs
+    }
+}
+
+/// Left-multiply a matrix by a permutation matrix.
+impl<'a, 'b, 'm, T> Mul<$MatrixType> for &'b PermutationMatrix<T> where T: Zero + Clone {
+    type Output = Matrix<T>;
+
+    fn mul(self, rhs: $MatrixType) -> Matrix<T> {
+        self * &rhs
+    }
+}
+    )
+}
+
 impl_permutation_matrix_left_multiply_reference_type!(Matrix<T>);
 impl_permutation_matrix_left_multiply_reference_type!(MatrixSlice<'m, T>);
 impl_permutation_matrix_left_multiply_reference_type!(MatrixSliceMut<'m, T>);
+
+impl_permutation_matrix_slice_left_multiply_value_type!(MatrixSlice<'m, T>);
+impl_permutation_matrix_slice_left_multiply_value_type!(MatrixSliceMut<'m, T>);
 
 /// Right-multiply a matrix by a permutation matrix.
 impl<T> Mul<PermutationMatrix<T>> for Matrix<T> {
@@ -149,9 +174,34 @@ impl<'a, 'b, 'm, T> Mul<&'b PermutationMatrix<T>> for &'a $MatrixType where T: Z
     )
 }
 
+macro_rules! impl_permutation_matrix_slice_right_multiply_value_type {
+    ($MatrixType:ty) => (
+/// Right-multiply a matrix by a permutation matrix.
+impl<'a, 'm, T> Mul<PermutationMatrix<T>> for $MatrixType where T: Zero + Clone {
+    type Output = Matrix<T>;
+
+    fn mul(self, rhs: PermutationMatrix<T>) -> Matrix<T> {
+        &self * rhs
+    }
+}
+
+/// Right-multiply a matrix by a permutation matrix.
+impl<'a, 'b, 'm, T> Mul<&'b PermutationMatrix<T>> for $MatrixType where T: Zero + Clone {
+    type Output = Matrix<T>;
+
+    fn mul(self, rhs: &'b PermutationMatrix<T>) -> Matrix<T> {
+        &self * rhs
+    }
+}
+    )
+}
+
 impl_permutation_matrix_right_multiply_reference_type!(Matrix<T>);
 impl_permutation_matrix_right_multiply_reference_type!(MatrixSlice<'m, T>);
 impl_permutation_matrix_right_multiply_reference_type!(MatrixSliceMut<'m, T>);
+
+impl_permutation_matrix_slice_right_multiply_value_type!(MatrixSlice<'m, T>);
+impl_permutation_matrix_slice_right_multiply_value_type!(MatrixSliceMut<'m, T>);
 
 /// Multiply a permutation matrix by a permutation matrix.
 impl<T: Clone> Mul<PermutationMatrix<T>> for PermutationMatrix<T> {
@@ -275,21 +325,43 @@ mod tests {
                                4, 5, 6];
 
         {
-            // Immutable, consume p
+            // Consume immutable, consume p
+            let x = x_source.sub_slice([0, 0], 3, 3);
+            let y = p.clone() * x;
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Borrow immutable, consume p
             let x = x_source.sub_slice([0, 0], 3, 3);
             let y = p.clone() * &x;
             assert_eq!(y, expected);
         }
 
         {
-            // Immutable, borrow p
+            // Consume immutable, borrow p
+            let x = x_source.sub_slice([0, 0], 3, 3);
+            let y = &p * x;
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Borrow immutable, borrow p
             let x = x_source.sub_slice([0, 0], 3, 3);
             let y = &p * &x;
             assert_eq!(y, expected);
         }
 
         {
-            // Mutable, consume p
+            // Consume mutable, consume p
+            let mut x_source = x_source.clone();
+            let x = x_source.sub_slice_mut([0, 0], 3, 3);
+            let y = p.clone() * x;
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Borrow mutable, consume p
             let mut x_source = x_source.clone();
             let x = x_source.sub_slice_mut([0, 0], 3, 3);
             let y = p.clone() * &x;
@@ -297,7 +369,15 @@ mod tests {
         }
 
         {
-            // Mutable, borrow p
+            // Consume mutable, borrow p
+            let mut x_source = x_source.clone();
+            let x = x_source.sub_slice_mut([0, 0], 3, 3);
+            let y = &p * x;
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Borrow mutable, borrow p
             let mut x_source = x_source.clone();
             let x = x_source.sub_slice_mut([0, 0], 3, 3);
             let y = &p * &x;
@@ -351,21 +431,43 @@ mod tests {
                                9, 7, 8];
 
         {
-            // Immutable lhs, consume p
+            // Consume immutable lhs, consume p
+            let x = x_source.sub_slice([0, 0], 3, 3);
+            let y = x * p.clone();
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Borrow immutable lhs, consume p
             let x = x_source.sub_slice([0, 0], 3, 3);
             let y = &x * p.clone();
             assert_eq!(y, expected);
         }
 
         {
-            // Immutable lhs, borrow p
+            // Consume immutable lhs, consume p
+            let x = x_source.sub_slice([0, 0], 3, 3);
+            let y = x * &p;
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Borrow immutable lhs, borrow p
             let x = x_source.sub_slice([0, 0], 3, 3);
             let y = &x * &p;
             assert_eq!(y, expected);
         }
 
         {
-            // Mutable lhs, consume p
+            // Consume mutable lhs, consume p
+            let mut x_source = x_source.clone();
+            let x = x_source.sub_slice_mut([0, 0], 3, 3);
+            let y = x * p.clone();
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Borrow mutable lhs, consume p
             let mut x_source = x_source.clone();
             let x = x_source.sub_slice_mut([0, 0], 3, 3);
             let y = &x * p.clone();
@@ -373,7 +475,15 @@ mod tests {
         }
 
         {
-            // Mutable lhs, borrow p
+            // Consume mutable lhs, borrow p
+            let mut x_source = x_source.clone();
+            let x = x_source.sub_slice_mut([0, 0], 3, 3);
+            let y = x * &p;
+            assert_eq!(y, expected);
+        }
+
+        {
+            // Borrow mutable lhs, borrow p
             let mut x_source = x_source.clone();
             let x = x_source.sub_slice_mut([0, 0], 3, 3);
             let y = &x * &p;
