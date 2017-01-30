@@ -10,4 +10,5 @@ mod linalg {
 	mod matrix;
 	mod svd;
 	mod norm;
+	mod permutation;
 }
