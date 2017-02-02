@@ -767,4 +767,22 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn iter_empty_matrix() {
+        {
+            let x = Matrix::<u32>::zeros(0, 0);
+            assert!(x.iter().next().is_none());
+        }
+
+        {
+            let x = Matrix::<u32>::zeros(1, 0);
+            assert!(x.iter().next().is_none());
+        }
+
+        {
+            let x = Matrix::<u32>::zeros(0, 1);
+            assert!(x.iter().next().is_none());
+        }
+    }
 }
