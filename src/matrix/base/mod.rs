@@ -220,13 +220,14 @@ pub trait BaseMatrix<T>: Sized {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
     ///
     /// let a = matrix![0, 1;
-    ///                 2, 3;
-    ///                 4, 5];
+    ///                     2, 3;
+    ///                     4, 5];
     ///
-    /// // Prints "3" two times.
-    /// for col in a.col_iter() {
-    ///     println!("{}", col.rows());
-    /// }
+    /// let mut iter = a.col_iter();
+    ///
+    /// assert_matrix_eq!(*iter.next().unwrap(), matrix![ 0; 2; 4 ]);
+    /// assert_matrix_eq!(*iter.next().unwrap(), matrix![ 1; 3; 5 ]);
+    /// assert!(iter.next().is_none());
     /// # }
     /// ```
     fn col_iter(&self) -> Cols<T> {
@@ -247,14 +248,16 @@ pub trait BaseMatrix<T>: Sized {
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
-    /// let a = matrix![0, 1;
-    ///                 2, 3;
-    ///                 4, 5];
+    /// let a = matrix![0, 1, 2;
+    ///                 3, 4, 5;
+    ///                 6, 7, 8];
     ///
-    /// // Prints "2" three times.
-    /// for row in a.row_iter() {
-    ///     println!("{}", row.cols());
-    /// }
+    /// let mut iter = a.row_iter();
+    ///
+    /// assert_matrix_eq!(*iter.next().unwrap(), matrix![ 0, 1, 2 ]);
+    /// assert_matrix_eq!(*iter.next().unwrap(), matrix![ 3, 4, 5 ]);
+    /// assert_matrix_eq!(*iter.next().unwrap(), matrix![ 6, 7, 8 ]);
+    /// assert!(iter.next().is_none());
     /// # }
     /// ```
     fn row_iter(&self) -> Rows<T> {
@@ -1025,9 +1028,12 @@ pub trait BaseMatrix<T>: Sized {
                                                           mid,
                                                           self.cols(),
                                                           self.row_stride());
-                    slice_2 = MatrixSlice::from_raw_parts(
-                        self.as_ptr().offset((mid * self.row_stride()) as isize),
-                        self.rows() - mid, self.cols(), self.row_stride());
+                    slice_2 = MatrixSlice::from_raw_parts(self.as_ptr()
+                                                              .offset((mid * self.row_stride()) as
+                                                                      isize),
+                                                          self.rows() - mid,
+                                                          self.cols(),
+                                                          self.row_stride());
                 }
             }
             Axes::Col => {
@@ -1068,8 +1074,12 @@ pub trait BaseMatrix<T>: Sized {
                 "View dimensions exceed matrix dimensions.");
 
         unsafe {
-            MatrixSlice::from_raw_parts(self.as_ptr().offset((start[0] * self.row_stride() + start[1]) as isize),
-                                        rows, cols, self.row_stride())
+            MatrixSlice::from_raw_parts(self.as_ptr()
+                                            .offset((start[0] * self.row_stride() + start[1]) as
+                                                    isize),
+                                        rows,
+                                        cols,
+                                        self.row_stride())
         }
     }
 }
@@ -1296,14 +1306,14 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
 
         if a != b {
             unsafe {
-                let row_a =
-                    slice::from_raw_parts_mut(self.as_mut_ptr()
-                                                  .offset((self.row_stride() * a) as isize),
-                                              self.cols());
-                let row_b =
-                    slice::from_raw_parts_mut(self.as_mut_ptr()
-                                                  .offset((self.row_stride() * b) as isize),
-                                              self.cols());
+                let row_a = slice::from_raw_parts_mut(self.as_mut_ptr()
+                                                          .offset((self.row_stride() * a) as
+                                                                  isize),
+                                                      self.cols());
+                let row_b = slice::from_raw_parts_mut(self.as_mut_ptr()
+                                                          .offset((self.row_stride() * b) as
+                                                                  isize),
+                                                      self.cols());
 
                 for (x, y) in row_a.into_iter().zip(row_b.into_iter()) {
                     mem::swap(x, y);
@@ -1563,9 +1573,13 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
                                                              mid,
                                                              self.cols(),
                                                              self.row_stride());
-                    slice_2 = MatrixSliceMut::from_raw_parts(
-                        self.as_mut_ptr().offset((mid * self.row_stride()) as isize),
-                        self.rows() - mid, self.cols(), self.row_stride());
+                    slice_2 = MatrixSliceMut::from_raw_parts(self.as_mut_ptr()
+                                                                 .offset((mid *
+                                                                          self.row_stride()) as
+                                                                         isize),
+                                                             self.rows() - mid,
+                                                             self.cols(),
+                                                             self.row_stride());
                 }
             }
             Axes::Col => {
@@ -1611,8 +1625,12 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
                 "View dimensions exceed matrix dimensions.");
 
         unsafe {
-            MatrixSliceMut::from_raw_parts(self.as_mut_ptr().offset((start[0] * self.row_stride() + start[1]) as isize),
-                                           rows, cols, self.row_stride())
+            MatrixSliceMut::from_raw_parts(self.as_mut_ptr()
+                                               .offset((start[0] * self.row_stride() + start[1]) as
+                                                       isize),
+                                           rows,
+                                           cols,
+                                           self.row_stride())
         }
     }
 }
