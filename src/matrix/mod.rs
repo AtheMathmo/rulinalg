@@ -23,7 +23,6 @@ mod impl_ops;
 mod iter;
 mod mat_mul;
 mod slice;
-mod base;
 mod permutation_matrix;
 mod impl_permutation_mul;
 
