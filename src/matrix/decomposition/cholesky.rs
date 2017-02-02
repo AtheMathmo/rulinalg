@@ -15,11 +15,15 @@ impl<T> Matrix<T>
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::Matrix;
     ///
-    /// let m = Matrix::new(3,3, vec![1.0,0.5,0.5,0.5,1.0,0.5,0.5,0.5,1.0]);
+    /// let m = matrix![1.0, 0.5, 0.5;
+    ///                 0.5, 1.0, 0.5;
+    ///                 0.5, 0.5, 1.0];
     ///
     /// let l = m.cholesky();
+    /// # }
     /// ```
     ///
     /// # Panics
