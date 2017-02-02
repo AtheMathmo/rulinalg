@@ -227,7 +227,7 @@ pub struct ColumnMut<'a, T: 'a> {
     col: MatrixSliceMut<'a, T>,
 }
 
-/// Row iterator.
+/// Column iterator.
 #[derive(Debug)]
 pub struct Cols<'a, T: 'a> {
     _marker: PhantomData<&'a T>,
@@ -238,7 +238,7 @@ pub struct Cols<'a, T: 'a> {
     slice_start: *const T,
 }
 
-/// Mutable row iterator.
+/// Mutable column iterator.
 #[derive(Debug)]
 pub struct ColsMut<'a, T: 'a> {
     _marker: PhantomData<&'a mut T>,
