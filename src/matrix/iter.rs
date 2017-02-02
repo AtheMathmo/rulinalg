@@ -678,7 +678,7 @@ mod tests {
 
     #[test]
     fn test_matrix_slice_cols() {
-        let mut a = matrix![0, 1, 2, 3;
+        let a = matrix![0, 1, 2, 3;
                             4, 5, 6, 7;
                             8, 9, 10, 11];
 
