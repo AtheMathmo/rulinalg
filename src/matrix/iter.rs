@@ -159,11 +159,11 @@ impl<'a, T> Iterator for $cols<'a, T> {
     }
 
     fn count(self) -> usize {
-        self.slice_rows - self.col_pos
+        self.slice_cols - self.col_pos
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.slice_rows - self.col_pos, Some(self.slice_rows - self.col_pos))
+        (self.slice_cols - self.col_pos, Some(self.slice_cols - self.col_pos))
     }
 }
     );
@@ -678,13 +678,13 @@ mod tests {
 
     #[test]
     fn test_matrix_slice_cols() {
-        let a = matrix![0, 1, 2;
-                        3, 4, 5;
-                        6, 7, 8];
+        let mut a = matrix![0, 1, 2, 3;
+                            4, 5, 6, 7;
+                            8, 9, 10, 11];
 
-        let b = MatrixSlice::from_matrix(&a, [0, 0], 2, 2);
+        let b = MatrixSlice::from_matrix(&a, [0, 0], 3, 2);
 
-        let data = [[0, 3], [1, 4]];
+        let data = [[0, 4, 8], [1, 5, 9]];
 
         for (i, col) in b.col_iter().enumerate() {
             for (j, value) in col.iter().enumerate() {
@@ -695,14 +695,14 @@ mod tests {
 
     #[test]
     fn test_matrix_slice_mut_cols() {
-        let mut a = matrix![0, 1, 2;
-                            3, 4, 5;
-                            6, 7, 8];
+        let mut a = matrix![0, 1, 2, 3;
+                            4, 5, 6, 7;
+                            8, 9, 10, 11];
 
         {
-            let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 2, 2);
+            let mut b = MatrixSliceMut::from_matrix(&mut a, [0, 0], 3, 2);
 
-            let data = [[0, 3], [1, 4]];
+            let data = [[0, 4, 8], [1, 5, 9]];
 
             for (i, col) in b.col_iter().enumerate() {
                 for (j, value) in col.iter().enumerate() {
@@ -723,7 +723,7 @@ mod tests {
             }
         }
 
-        assert_eq!(a.into_vec(), vec![0, 0, 2, 0, 0, 5, 6, 7, 8]);
+        assert_eq!(a.into_vec(), vec![0, 0, 2, 3, 0, 0, 6, 7, 0, 0, 10, 11]);
     }
 
     #[test]
@@ -823,7 +823,7 @@ mod tests {
         let mut a = matrix![0, 1, 2;
                             3, 4, 5;
                             6, 7, 8];
-        
+
         let data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
 
         for (i, row) in a.row_iter().enumerate() {
