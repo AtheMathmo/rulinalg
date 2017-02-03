@@ -110,3 +110,13 @@ extern crate itertools;
 
 pub use norm::{VectorNorm, MatrixNorm};
 pub use norm::{VectorMetric, MatrixMetric};
+
+#[cfg(feature = "io")]
+extern crate csv as libcsv;
+
+#[cfg(feature = "io")]
+extern crate rustc_serialize;
+
+#[cfg(feature = "io")]
+/// io module
+pub mod io;
