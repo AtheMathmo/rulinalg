@@ -5,6 +5,48 @@ use std::any::Any;
 
 use libnum::Float;
 
+use matrix::decomposition::Decomposition;
+
+/// TODO: docs
+pub struct LUP<T> {
+    pub l: Matrix<T>,
+    pub u: Matrix<T>,
+    pub p: Matrix<T>
+}
+
+/// TODO: Docs
+pub struct PartialPivLu<T> {
+    // For now, we store the full matrices, but
+    // we can improve this by storing the decomposition
+    // in the input matrix such that L and U can be stored
+    // in the space of a single matrix
+    lup: LUP<T>
+}
+
+impl<T> Decomposition for PartialPivLu<T> {
+    type Factors = LUP<T>;
+
+    fn unpack(self) -> LUP<T> {
+        self.lup
+    }
+}
+
+impl<T: 'static + Float> PartialPivLu<T> {
+    /// TODO
+    fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
+        matrix.lup_decomp().map(|(l, u, p)|
+            PartialPivLu {
+                lup: LUP {
+                    l: l,
+                    u: u,
+                    p: p
+                }
+            }
+        )
+    }
+}
+
+
 impl<T> Matrix<T> where T: Any + Float
 {
     /// Computes L, U, and P for LUP decomposition.
@@ -76,7 +118,12 @@ impl<T> Matrix<T> where T: Any + Float
 
 #[cfg(test)]
 mod tests {
-    use matrix::Matrix;
+    use matrix::{Matrix, BaseMatrix};
+    use matrix::PermutationMatrix;
+    use testsupport::{is_lower_triangular, is_upper_triangular};
+
+    use super::{PartialPivLu, LUP};
+    use matrix::decomposition::Decomposition;
 
     #[test]
     #[should_panic]
@@ -100,5 +147,26 @@ mod tests {
             Err(e) => assert!(*e.kind() == ErrorKind::DivByZero),
             Ok(_) => panic!()
         }
+    }
+
+    #[test]
+    fn lup_decompose_arbitrary() {
+        // Since the LUP decomposition is not in general unique,
+        // we can not test against factors directly, but
+        // instead we must rely on the fact that the
+        // matrices P, L and U together construct the
+        // original matrix
+        let x = matrix![ -3.0,   0.0,   4.0,   1.0;
+                        -12.0,   5.0,  17.0,   1.0;
+                         15.0,   0.0, -18.0,  -5.0;
+                          6.0,  20.0, -10.0, -15.0 ];
+
+        let LUP { l, u, p } = PartialPivLu::decompose(x.clone())
+                                           .unwrap()
+                                           .unpack();
+        let y = p.transpose() * &l * &u;
+        assert_matrix_eq!(x, y, comp = float);
+        assert!(is_lower_triangular(&l));
+        assert!(is_upper_triangular(&u));
     }
 }

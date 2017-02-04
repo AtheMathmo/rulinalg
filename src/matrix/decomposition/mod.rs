@@ -28,6 +28,19 @@ use error::{Error, ErrorKind};
 
 use libnum::{Float};
 
+/// Base trait for decompositions.
+///
+/// A matrix decomposition, or factorization,
+/// is a procedure which takes a matrix `X` and returns
+/// a set of `k` factors `X_1, X_2, ..., X_k` such that
+/// `X = X_1 * X_2 * ... * X_k`.
+pub trait Decomposition {
+    type Factors;
+
+    /// Extract the individual factors from this decomposition.
+    fn unpack(self) -> Self::Factors;
+}
+
 impl<T> Matrix<T>
     where T: Any + Float
 {
