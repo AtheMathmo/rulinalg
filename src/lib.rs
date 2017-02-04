@@ -100,6 +100,8 @@ pub mod vector;
 pub mod ulp;
 pub mod norm;
 
+mod testsupport;
+
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
