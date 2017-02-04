@@ -10,13 +10,18 @@ use libnum::Float;
 use matrix::decomposition::Decomposition;
 
 /// TODO: docs
+#[derive(Debug, Clone)]
 pub struct LUP<T> {
+    /// The lower triangular matrix in the decomposition.
     pub l: Matrix<T>,
+    /// The upper triangular matrix in the decomposition.
     pub u: Matrix<T>,
+    /// The permutation matrix in the decomposition.
     pub p: Matrix<T>
 }
 
 /// TODO: Docs
+#[derive(Debug, Clone)]
 pub struct PartialPivLu<T> {
     // For now, we store the full matrices, but
     // we can improve this by storing the decomposition
@@ -35,7 +40,7 @@ impl<T> Decomposition for PartialPivLu<T> {
 
 impl<T: 'static + Float> PartialPivLu<T> {
     /// TODO
-    fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
+    pub fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
         matrix.lup_decomp().map(|(l, u, p)|
             PartialPivLu {
                 lup: LUP {
