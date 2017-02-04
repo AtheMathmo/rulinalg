@@ -9,6 +9,7 @@ pub mod linalg {
 	mod iter;
 	mod matrix;
 	mod svd;
+	mod lu;
 	mod norm;
 	mod permutation;
 	pub mod util;
