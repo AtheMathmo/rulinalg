@@ -13,15 +13,15 @@ impl<'a, T> Iterator for $slice_iter<'a, T> {
     type Item = $data_type;
 
     fn next(&mut self) -> Option<$data_type> {
-// Set the position of the next element
-        if self.row_pos < self.slice_rows {
+        let offset = self.row_pos * self.row_stride + self.col_pos;
+        let end = self.slice_rows * self.row_stride;
+        // Set the position of the next element
+        if offset < end {
             unsafe {
-                let iter_ptr = self.slice_start.offset((
-                                self.row_pos * self.row_stride + self.col_pos)
-                                as isize);
+                let iter_ptr = self.slice_start.offset(offset as isize);
 
-// If end of row, set to start of next row
-                if self.col_pos == self.slice_cols - 1 {
+                // If end of row, set to start of next row
+                if self.col_pos + 1 == self.slice_cols {
                     self.row_pos += 1usize;
                     self.col_pos = 0usize;
                 } else {
@@ -71,7 +71,7 @@ impl<'a, T, M: $diag_base<T>> Iterator for $diag<'a, T, M> {
             None
         }
     }
-    
+
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
         self.diag_pos += n * (self.matrix.row_stride() + 1);
         if self.diag_pos < self.diag_end {
@@ -765,6 +765,128 @@ mod tests {
             for v in &mut b {
                 *v = 1.0;
             }
+        }
+    }
+
+    #[test]
+    fn iter_matrix_small_matrices() {
+        {
+            let x = matrix![ 1 ];
+            let mut i = x.iter();
+            assert_eq!(i.next(), Some(&1));
+            assert_eq!(i.next(), None);
+        }
+
+        {
+            let x = matrix![ 1, 2 ];
+            let mut i = x.iter();
+            assert_eq!(i.next(), Some(&1));
+            assert_eq!(i.next(), Some(&2));
+            assert_eq!(i.next(), None);
+        }
+
+        {
+            let x = matrix![ 1; 2 ];
+            let mut i = x.iter();
+            assert_eq!(i.next(), Some(&1));
+            assert_eq!(i.next(), Some(&2));
+            assert_eq!(i.next(), None);
+        }
+
+        {
+            let x = matrix![ 1, 2;
+                             3, 4 ];
+            let mut i = x.iter();
+            assert_eq!(i.next(), Some(&1));
+            assert_eq!(i.next(), Some(&2));
+            assert_eq!(i.next(), Some(&3));
+            assert_eq!(i.next(), Some(&4));
+            assert_eq!(i.next(), None);
+        }
+    }
+
+    #[test]
+    fn iter_matrix_slice() {
+        let x = matrix![1, 2, 3;
+                        4, 5, 6;
+                        7, 8, 9];
+
+        // Helper to simplify writing the below tests.
+        // Note that .collect() is an implicit test of .next(),
+        // including checking that None is returned when there
+        // are no more elements.
+        let collect_slice = |(i, j), rows, cols| {
+            x.sub_slice([i, j], rows, cols)
+             .iter()
+             .cloned()
+             .collect::<Vec<_>>()
+        };
+
+        {
+            // Zero elements
+            for i in 0 .. 2 {
+                for j in 0 .. 2 {
+                    let y = x.sub_slice([i, j], 0, 0);
+                    assert!(y.iter().next().is_none());
+                }
+            }
+
+        }
+
+        {
+            // One element
+            for i in 0 .. 2 {
+                for j in 0 .. 2 {
+                    let y = x.sub_slice([i, j], 1, 1);
+                    assert_eq!(y.iter().next(), Some(&x[[i, j]]));
+                }
+            }
+        }
+
+        {
+            // 1x2 sub slices
+            assert_eq!(collect_slice((0, 0), 1, 2), vec![1, 2]);
+            assert_eq!(collect_slice((0, 1), 1, 2), vec![2, 3]);
+            assert_eq!(collect_slice((1, 0), 1, 2), vec![4, 5]);
+            assert_eq!(collect_slice((1, 1), 1, 2), vec![5, 6]);
+            assert_eq!(collect_slice((2, 0), 1, 2), vec![7, 8]);
+            assert_eq!(collect_slice((2, 1), 1, 2), vec![8, 9]);
+        }
+
+        {
+            // 2x1 sub slices
+            assert_eq!(collect_slice((0, 0), 2, 1), vec![1, 4]);
+            assert_eq!(collect_slice((1, 0), 2, 1), vec![4, 7]);
+            assert_eq!(collect_slice((0, 1), 2, 1), vec![2, 5]);
+            assert_eq!(collect_slice((1, 1), 2, 1), vec![5, 8]);
+            assert_eq!(collect_slice((0, 2), 2, 1), vec![3, 6]);
+            assert_eq!(collect_slice((1, 2), 2, 1), vec![6, 9]);
+        }
+
+        {
+            // 2x2 sub slices
+            assert_eq!(collect_slice((0, 0), 2, 2), vec![1, 2, 4, 5]);
+            assert_eq!(collect_slice((0, 1), 2, 2), vec![2, 3, 5, 6]);
+            assert_eq!(collect_slice((1, 0), 2, 2), vec![4, 5, 7, 8]);
+            assert_eq!(collect_slice((1, 1), 2, 2), vec![5, 6, 8, 9]);
+        }
+    }
+
+    #[test]
+    fn iter_empty_matrix() {
+        {
+            let x = Matrix::<u32>::zeros(0, 0);
+            assert!(x.iter().next().is_none());
+        }
+
+        {
+            let x = Matrix::<u32>::zeros(1, 0);
+            assert!(x.iter().next().is_none());
+        }
+
+        {
+            let x = Matrix::<u32>::zeros(0, 1);
+            assert!(x.iter().next().is_none());
         }
     }
 }
