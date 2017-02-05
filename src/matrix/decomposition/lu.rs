@@ -175,8 +175,8 @@ impl<T: 'static + Float> PartialPivLu<T> {
             }
             if curr_max.abs() < T::epsilon() {
                 return Err(Error::new(ErrorKind::DivByZero,
-                    "Singular matrix found in LUP decomposition. \
-                    A value in the diagonal of U == 0.0."));
+                    "The matrix is too ill-conditioned for
+                     LU decomposition with partial pivoting."));
             }
 
             lu.swap_rows(index, curr_max_idx);
