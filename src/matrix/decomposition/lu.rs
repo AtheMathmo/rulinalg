@@ -10,7 +10,8 @@ use libnum::{Float, Zero, One};
 
 use matrix::decomposition::Decomposition;
 
-/// TODO: docs
+/// Result of unpacking an instance of
+/// [PartialPivLu](struct.PartialPivLu.html).
 #[derive(Debug, Clone)]
 pub struct LUP<T> {
     /// The lower triangular matrix in the decomposition.
@@ -21,7 +22,109 @@ pub struct LUP<T> {
     pub p: PermutationMatrix<T>
 }
 
-/// TODO: Docs
+/// LU decomposition with partial pivoting.
+///
+/// For any square matrix A, there exist a permutation matrix
+/// `P`, a lower triangular matrix `L` and an upper triangular
+/// matrix `U` such that
+///
+/// ```text
+/// PA = LU.
+/// ```
+///
+/// However, due to the way partial pivoting algorithms work,
+/// LU decomposition with partial pivoting is in general
+/// *only numerically stable for well-conditioned invertible matrices*.
+///
+/// That said, partial pivoting is sufficient in the vast majority
+/// of practical applications, and it is also the fastest of the
+/// pivoting schemes in existence.
+///
+///
+/// # Applications
+///
+/// Given a matrix `x`, computing the LU(P) decomposition is simple:
+///
+/// ```
+/// use rulinalg::matrix::decomposition::{PartialPivLu, LUP, Decomposition};
+/// use rulinalg::matrix::Matrix;
+///
+/// let x = Matrix::<f64>::identity(4);
+///
+/// // The matrix is consumed and its memory
+/// // re-purposed for the decomposition
+/// let lu = PartialPivLu::decompose(x).expect("Matrix is invertible.");
+///
+/// // See below for applications
+/// // ...
+///
+/// // The factors L, U and P can be obtained by unpacking the
+/// // decomposition, for example by destructuring as seen here
+/// let LUP { l, u, p } = lu.unpack();
+///
+/// ```
+///
+/// ## Solving linear systems
+///
+/// Arguably the most common use case of LU decomposition
+/// is the computation of solutions to (multiple) linear systems
+/// that share the same coefficient matrix.
+///
+/// ```
+/// # #[macro_use] extern crate rulinalg;
+/// # use rulinalg::matrix::decomposition::PartialPivLu;
+/// # use rulinalg::matrix::Matrix;
+/// # fn main() {
+/// # let x = Matrix::identity(4);
+/// # let lu = PartialPivLu::decompose(x).unwrap();
+/// let b = vector![3.0, 4.0, 2.0, 1.0];
+/// let y = lu.solve(b)
+///           .expect("Matrix is invertible.");
+/// assert_vector_eq!(y, vector![3.0, 4.0, 2.0, 1.0], comp = float);
+///
+/// // We can efficiently solve multiple such systems
+/// let c = vector![0.0, 0.0, 0.0, 0.0];
+/// let z = lu.solve(c).unwrap();
+/// assert_vector_eq!(z, vector![0.0, 0.0, 0.0, 0.0], comp = float);
+/// # }
+/// ```
+///
+/// ## Computing the inverse of a matrix
+///
+/// The LU decomposition provides a convenient way to obtain
+/// the inverse of the decomposed matrix. However, please keep
+/// in mind that explicitly computing the inverse of a matrix
+/// is *usually* a bad idea. In many cases, one might instead simply
+/// solve multiple systems using `solve`.
+///
+/// For example, a common misconception is that when one needs
+/// to solve multiple linear systems `Ax = b` for different `b`,
+/// one should pre-compute the inverse of the matrix for efficiency.
+/// In fact, this is practically never a good idea! A far more efficient
+/// and accurate method is to perform the LU decomposition once, and
+/// then solve each system as shown in the examples of the previous
+/// subsection.
+///
+/// That said, there are definitely cases where an explicit inverse is
+/// needed. In these cases, the inverse can easily be obtained
+/// through the `inverse()` method.
+///
+/// # Computing the determinant of a matrix
+///
+/// Once the LU decomposition has been obtained, computing
+/// the determinant of the decomposed matrix is a very cheap
+/// operation.
+///
+/// ```
+/// # #[macro_use] extern crate rulinalg;
+/// # use rulinalg::matrix::decomposition::PartialPivLu;
+/// # use rulinalg::matrix::Matrix;
+/// # fn main() {
+/// # let x = Matrix::<f64>::identity(4);
+/// # let lu = PartialPivLu::decompose(x).unwrap();
+/// assert_eq!(lu.det(), 1.0);
+/// # }
+/// ```
 #[derive(Debug, Clone)]
 pub struct PartialPivLu<T> {
     lu: Matrix<T>,
@@ -44,10 +147,19 @@ impl<T: Clone + One + Zero> Decomposition for PartialPivLu<T> {
 }
 
 impl<T: 'static + Float> PartialPivLu<T> {
-    /// TODO
+    /// Performs the decomposition.
+    ///
+    /// ### Panics
+    ///
+    /// The matrix must be square.
+    ///
+    /// ### Errors
+    ///
+    /// An error will be returned if the matrix
+    /// is singular to working precision (badly conditioned).
     pub fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
         let n = matrix.cols;
-        assert!(matrix.rows == n, "Matrix must be square for LUP decomposition.");
+        assert!(matrix.rows == n, "Matrix must be square for LU decomposition.");
         let mut lu = matrix;
         let mut p = PermutationMatrix::identity(n);
 
@@ -85,8 +197,40 @@ impl<T: 'static + Float> PartialPivLu<T> {
 }
 
 impl<T> PartialPivLu<T> where T: Any + Float {
-    /// TODO
+    /// Solves the linear system `Ax = b`.
+    ///
+    /// Here, `A` is the decomposed matrix satisfying
+    /// `PA = LU`. Note that this method is particularly
+    /// well suited to solving multiple such linear systems
+    /// involving the same `A` but different `b`.
+    ///
+    /// #### Errors
+    ///
+    /// If the matrix is very ill-conditioned, the function
+    /// might fail to obtain the solution to the system.
+    ///
+    /// ### Panics
+    ///
+    /// The right-hand side vector `b` must have compatible size.
+    ///
+    /// ### Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg;
+    /// # use rulinalg::matrix::decomposition::PartialPivLu;
+    /// # use rulinalg::matrix::Matrix;
+    /// # fn main() {
+    /// let x = Matrix::identity(4);
+    /// let lu = PartialPivLu::decompose(x).unwrap();
+    /// let b = vector![3.0, 4.0, 2.0, 1.0];
+    /// let y = lu.solve(b)
+    ///           .expect("Matrix is invertible.");
+    /// assert_vector_eq!(y, vector![3.0, 4.0, 2.0, 1.0], comp = float);
+    /// # }
+    /// ```
     pub fn solve(&self, b: Vector<T>) -> Result<Vector<T>, Error> {
+        assert!(b.size() == self.lu.rows(),
+            "Right-hand side vector must have compatible size.");
         // Note that applying p here implicitly incurs a clone.
         // TODO: Is it possible to avoid the clone somehow?
         // To my knowledge, applying a permutation matrix
@@ -101,6 +245,9 @@ impl<T> PartialPivLu<T> where T: Any + Float {
 
     /// Computes the inverse of the matrix which this LUP decomposition
     /// represents.
+    ///
+    /// ### Errors
+    /// The inversion might fail if the matrix is very ill-conditioned.
     pub fn inverse(&self) -> Result<Matrix<T>, Error> {
         let n = self.lu.rows();
         let mut inv = Matrix::zeros(n, n);
