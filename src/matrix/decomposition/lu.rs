@@ -196,6 +196,8 @@ impl<T: 'static + Float> PartialPivLu<T> {
     }
 }
 
+// TODO: Remove Any bound (cannot for the time being, since
+// back substitution uses Any bound)
 impl<T> PartialPivLu<T> where T: Any + Float {
     /// Solves the linear system `Ax = b`.
     ///
