@@ -120,9 +120,8 @@ use libnum::{Float};
 /// a set of `k` factors `X_1, X_2, ..., X_k` such that
 /// `X = X_1 * X_2 * ... * X_k`.
 pub trait Decomposition {
-    /// The type representing the collection of factors
-    /// of which the product is equivalent to the
-    /// decomposed matrix.
+    /// The type representing the ordered set of factors
+    /// that when multiplied yields the decomposed matrix.
     type Factors;
 
     /// Extract the individual factors from this decomposition.
