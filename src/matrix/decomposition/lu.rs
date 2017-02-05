@@ -1,5 +1,6 @@
 use matrix::{Matrix, BaseMatrix, BaseMatrixMut};
 use matrix::{forward_substitution, back_substitution};
+use matrix::PermutationMatrix;
 use vector::Vector;
 use error::{Error, ErrorKind};
 
@@ -17,7 +18,7 @@ pub struct LUP<T> {
     /// The upper triangular matrix in the decomposition.
     pub u: Matrix<T>,
     /// The permutation matrix in the decomposition.
-    pub p: Matrix<T>
+    pub p: PermutationMatrix<T>
 }
 
 /// TODO: Docs
@@ -41,21 +42,64 @@ impl<T> Decomposition for PartialPivLu<T> {
 impl<T: 'static + Float> PartialPivLu<T> {
     /// TODO
     pub fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
-        matrix.lup_decomp().map(|(l, u, p)|
-            PartialPivLu {
-                lup: LUP {
-                    l: l,
-                    u: u,
-                    p: p
+        let n = matrix.cols;
+        assert!(matrix.rows == n, "Matrix must be square for LUP decomposition.");
+        let mut l = Matrix::<T>::zeros(n, n);
+        let mut u = matrix;
+        let mut p = PermutationMatrix::identity(n);
+
+        for index in 0..n {
+            let mut curr_max_idx = index;
+            let mut curr_max = u[[curr_max_idx, curr_max_idx]];
+
+            for i in (curr_max_idx+1)..n {
+                if u[[i, index]].abs() > curr_max.abs() {
+                    curr_max = u[[i, index]];
+                    curr_max_idx = i;
                 }
             }
-        )
+            if curr_max.abs() < T::epsilon() {
+                return Err(Error::new(ErrorKind::DivByZero,
+                    "Singular matrix found in LUP decomposition. \
+                    A value in the diagonal of U == 0.0."));
+            }
+
+            if curr_max_idx != index {
+                l.swap_rows(index, curr_max_idx);
+                u.swap_rows(index, curr_max_idx);
+                p.swap_rows(index, curr_max_idx);
+            }
+            l[[index, index]] = T::one();
+            for i in (index+1)..n {
+                let mult = u[[i, index]]/curr_max;
+                l[[i, index]] = mult;
+                u[[i, index]] = T::zero();
+                for j in (index+1)..n {
+                    u[[i, j]] = u[[i,j]] - mult*u[[index, j]];
+                }
+            }
+        }
+        Ok(PartialPivLu {
+            lup: LUP {
+                l: l,
+                u: u,
+                p: p.inverse()
+            }
+        })
     }
 }
 
 impl<T> PartialPivLu<T> where T: Any + Float {
     /// TODO
     pub fn solve(&self, b: Vector<T>) -> Result<Vector<T>, Error> {
+        // Note that applying p here implicitly incurs a clone.
+        // TODO: Is it possible to avoid the clone somehow?
+        // To my knowledge, applying a permutation matrix
+        // in-place in O(n) time requires O(n) storage for bookkeeping.
+        // However, we might be able to get by with something like
+        // O(n log n) for the permutation as the forward/backward
+        // substitution algorithms are O(n^2), if this helps us
+        // avoid the memory overhead.
         let b = try!(forward_substitution(&self.lup.l, &self.lup.p * b));
         back_substitution(&self.lup.u, b)
     }
@@ -91,14 +135,13 @@ impl<T> PartialPivLu<T> where T: Any + Float {
 
     /// Computes the determinant of the decomposed matrix.
     pub fn det(&self) -> T {
-        use matrix::parity;
-
         // Recall that the determinant of a triangular matrix
         // is the product of its diagonal entries
         let u_det = self.lup.u.diag().fold(T::one(), |x, &y| x * y);
         let l_det = self.lup.l.diag().fold(T::one(), |x, &y| x * y);
-        // The determinant of a permutation matrix is simply its parity
-        let p_det = parity(&self.lup.p);
+        // Note that the determinant of P is equal to the
+        // determinant of P^T, so we don't have to invert it
+        let p_det = self.lup.p.clone().det();
         p_det * u_det * l_det
     }
 }
@@ -175,7 +218,7 @@ impl<T> Matrix<T> where T: Any + Float
 
 #[cfg(test)]
 mod tests {
-    use matrix::{Matrix, BaseMatrix};
+    use matrix::{Matrix, BaseMatrix, PermutationMatrix};
     use testsupport::{is_lower_triangular, is_upper_triangular};
 
     use super::{PartialPivLu, LUP};
@@ -208,7 +251,7 @@ mod tests {
     }
 
     #[test]
-    fn lup_decompose_arbitrary() {
+    fn partial_piv_lu_decompose_arbitrary() {
         // Since the LUP decomposition is not in general unique,
         // we can not test against factors directly, but
         // instead we must rely on the fact that the
@@ -222,7 +265,7 @@ mod tests {
         let LUP { l, u, p } = PartialPivLu::decompose(x.clone())
                                            .unwrap()
                                            .unpack();
-        let y = p.transpose() * &l * &u;
+        let y = p.inverse() * &l * &u;
         assert_matrix_eq!(x, y, comp = float);
         assert!(is_lower_triangular(&l));
         assert!(is_upper_triangular(&u));
@@ -234,7 +277,7 @@ mod tests {
             lup: LUP {
                 l: Matrix::identity(3),
                 u: Matrix::identity(3),
-                p: Matrix::identity(3)
+                p: PermutationMatrix::identity(3)
             }
         };
 
@@ -266,7 +309,7 @@ mod tests {
             lup: LUP {
                 l: Matrix::identity(3),
                 u: Matrix::identity(3),
-                p: Matrix::identity(3)
+                p: PermutationMatrix::identity(3)
             }
         };
 
@@ -285,6 +328,23 @@ mod tests {
         let expected_det = 149.99999999999997;
         let diff = lu.det() - expected_det;
         assert!(diff.abs() < 1e-12);
+    }
+
+    #[test]
+    pub fn partial_piv_lu_solve_arbitrary_matrix() {
+        let x = matrix![ 5.0, 0.0, 0.0, 1.0;
+                         2.0, 2.0, 2.0, 1.0;
+                         4.0, 5.0, 5.0, 5.0;
+                         1.0, 6.0, 4.0, 5.0 ];
+        let b = vector![9.0, 16.0, 49.0, 45.0];
+        let expected = vector![1.0, 2.0, 3.0, 4.0];
+
+        let lu = PartialPivLu::decompose(x).unwrap();
+        let y = lu.solve(b).unwrap();
+        // Need to up the tolerance to take into account
+        // numerical error. Ideally there'd be a more systematic
+        // way to test this.
+        assert_vector_eq!(y, expected, comp = ulp, tol = 100);
     }
 
 }
