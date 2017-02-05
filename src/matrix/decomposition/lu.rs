@@ -162,12 +162,15 @@ fn lu_forward_substitution<T: Float>(lu: &Matrix<T>, b: Vector<T>) -> Vector<T> 
     let mut x = b;
 
     for (i, row) in lu.row_iter().enumerate().skip(1) {
-        let adjustment = row.iter()
+        // Note that at time of writing we need raw_slice here for
+        // auto-vectorization to kick in
+        let adjustment = row.raw_slice()
+                            .iter()
                             .take(i)
                             .cloned()
                             .zip(x.iter().cloned())
-                            .map(|(l_coeff, x_coeff)| l_coeff * x_coeff)
-                            .fold(T::zero(), |a, b| a + b);
+                            .fold(T::zero(), |sum, (l, x)| sum + l * x);
+
         x[i] = x[i] - adjustment;
     }
     x
