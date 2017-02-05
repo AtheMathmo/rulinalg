@@ -116,18 +116,27 @@ impl<T> PartialPivLu<T> where T: Any + Float {
         // AX = I,
         // where X is the inverse of A, and I is the identity
         // matrix of appropriate dimension.
+        //
+        // Note that this is not optimal in terms of performance,
+        // and there is likely significant potential for improvement.
+        //
+        // A more performant technique is usually to compute the
+        // triangular inverse of each of the L and U triangular matrices,
+        // but this again requires efficient algorithms (blocked/recursive)
+        // to invert triangular matrices, which at this point
+        // we do not have available.
 
         // Solve for each column of the inverse matrix
         for i in 0 .. n {
             e[i] = T::one();
 
-            let y = try!(self.solve(e));
+            let col = try!(self.solve(e));
 
             for j in 0 .. n {
-                inv[[j, i]] = y[j];
+                inv[[j, i]] = col[j];
             }
 
-            e = Vector::zeros(n);
+            e = col.apply(&|_| T::zero());
         }
 
         Ok(inv)
