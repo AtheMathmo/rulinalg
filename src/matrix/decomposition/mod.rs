@@ -41,7 +41,7 @@
 //! Since the right-hand side `b` has no bearing on the LU decomposition,
 //! it follows that one can efficiently solve any such system for any `b`.
 //!
-//! It turns out that the matrices `L` and `U` can be stored compact
+//! It turns out that the matrices `L` and `U` can be stored compactly
 //! in the space of a single matrix. Indeed, this is how `PartialPivLu`
 //! stores the LU decomposition internally. This allows `rulinalg` to
 //! provide the user with efficient implementations of common applications
