@@ -39,6 +39,7 @@ fn test_u_triangular_solve_errs() {
     assert!(a.solve_u_triangular(vector![1.0]).is_err());
 }
 
+#[allow(deprecated)]
 #[test]
 fn matrix_lup_decomp() {
     let a = matrix![1., 3., 5.;

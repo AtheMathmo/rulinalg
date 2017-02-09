@@ -363,6 +363,10 @@ impl<T> Matrix<T> where T: Any + Float
     ///
     /// Returns L,U, and P respectively.
     ///
+    /// This function is deprecated.
+    /// Please see [PartialPivLu](decomposition/struct.PartialPivLu.html)
+    /// for a replacement.
+    ///
     /// # Examples
     ///
     /// ```
@@ -384,6 +388,7 @@ impl<T> Matrix<T> where T: Any + Float
     /// # Failures
     ///
     /// - Matrix cannot be LUP decomposed.
+    #[deprecated]
     pub fn lup_decomp(self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
         let n = self.cols;
         assert!(self.rows == n, "Matrix must be square for LUP decomposition.");
