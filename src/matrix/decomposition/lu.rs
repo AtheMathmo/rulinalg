@@ -149,11 +149,11 @@ impl<T: Clone + One + Zero> Decomposition for PartialPivLu<T> {
 impl<T: 'static + Float> PartialPivLu<T> {
     /// Performs the decomposition.
     ///
-    /// ### Panics
+    /// # Panics
     ///
     /// The matrix must be square.
     ///
-    /// ### Errors
+    /// # Errors
     ///
     /// An error will be returned if the matrix
     /// is singular to working precision (badly conditioned).
@@ -206,16 +206,16 @@ impl<T> PartialPivLu<T> where T: Any + Float {
     /// well suited to solving multiple such linear systems
     /// involving the same `A` but different `b`.
     ///
-    /// #### Errors
+    /// # Errors
     ///
     /// If the matrix is very ill-conditioned, the function
     /// might fail to obtain the solution to the system.
     ///
-    /// ### Panics
+    /// # Panics
     ///
     /// The right-hand side vector `b` must have compatible size.
     ///
-    /// ### Examples
+    /// # Examples
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg;
@@ -248,7 +248,7 @@ impl<T> PartialPivLu<T> where T: Any + Float {
     /// Computes the inverse of the matrix which this LUP decomposition
     /// represents.
     ///
-    /// ### Errors
+    /// # Errors
     /// The inversion might fail if the matrix is very ill-conditioned.
     pub fn inverse(&self) -> Result<Matrix<T>, Error> {
         let n = self.lu.rows();
