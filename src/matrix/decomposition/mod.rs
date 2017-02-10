@@ -39,7 +39,7 @@
 //! the system `Ax = b` can be computed in O(n<sup>2</sup>) floating
 //! point operations if the LU decomposition has already been obtained.
 //! Since the right-hand side `b` has no bearing on the LU decomposition,
-//! it follows that one can efficiently solve any such system for any `b`.
+//! it follows that one can efficiently solve this system for any `b`.
 //!
 //! It turns out that the matrices `L` and `U` can be stored compactly
 //! in the space of a single matrix. Indeed, this is how `PartialPivLu`
