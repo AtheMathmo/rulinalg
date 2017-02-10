@@ -433,7 +433,7 @@ impl<T> Matrix<T> where T: Any + Float
 
 #[cfg(test)]
 mod tests {
-    use matrix::{Matrix, BaseMatrix, PermutationMatrix};
+    use matrix::{Matrix, PermutationMatrix};
     use testsupport::{is_lower_triangular, is_upper_triangular};
 
     use super::{PartialPivLu, LUP};
@@ -441,6 +441,7 @@ mod tests {
 
     use libnum::Float;
 
+    #[allow(deprecated)]
     #[test]
     #[should_panic]
     fn test_non_square_lup_decomp() {
@@ -449,6 +450,7 @@ mod tests {
         let _ = a.lup_decomp();
     }
 
+    #[allow(deprecated)]
     #[test]
     fn test_lup_decomp() {
         use error::ErrorKind;
