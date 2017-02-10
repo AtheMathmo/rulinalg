@@ -7,7 +7,6 @@ use std::iter::Iterator;
 /// Returns true if the matrix is lower triangular, otherwise false.
 /// This generalizes to rectangular matrices, in which case
 /// it returns true if the matrix is lower trapezoidal.
-#[allow(dead_code)]
 pub fn is_lower_triangular<T, M>(m: &M) -> bool
     where T: Zero + PartialEq<T>, M: BaseMatrix<T> {
 
@@ -21,7 +20,6 @@ pub fn is_lower_triangular<T, M>(m: &M) -> bool
 /// Returns true if the matrix is upper triangular, otherwise false.
 /// This generalizes to rectangular matrices, in which case
 /// it returns true if the matrix is upper trapezoidal.
-#[allow(dead_code)]
 pub fn is_upper_triangular<T, M>(m: &M) -> bool
     where T: Zero + PartialEq<T>, M: BaseMatrix<T> {
 
