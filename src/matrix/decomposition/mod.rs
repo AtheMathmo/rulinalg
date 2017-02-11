@@ -110,6 +110,7 @@ use utils;
 use error::{Error, ErrorKind};
 
 pub use self::lu::{PartialPivLu, LUP};
+pub use self::cholesky::Cholesky;
 
 use libnum::{Float};
 
