@@ -100,6 +100,8 @@ pub mod vector;
 pub mod ulp;
 pub mod norm;
 
+mod internal_utils;
+
 #[cfg(test)]
 mod testsupport;
 
