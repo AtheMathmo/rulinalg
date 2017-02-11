@@ -1,6 +1,7 @@
 use matrix::{Matrix, BaseMatrix};
 use error::{Error, ErrorKind};
 use matrix::decomposition::Decomposition;
+use utils::dot;
 
 use std::any::Any;
 
@@ -14,7 +15,7 @@ pub struct Cholesky<T> {
 
 impl<T> Cholesky<T> where T: Float {
     /// TODO
-    fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
+    pub fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
         assert!(matrix.rows() == matrix.cols(),
             "Matrix must be square for Cholesky decomposition.");
         let n = matrix.rows();
@@ -36,10 +37,17 @@ impl<T> Cholesky<T> where T: Float {
         // Resolve each submatrix (j .. n, j .. n)
         for j in 0 .. n {
             if j > 0 {
+                // This is essentially a GAXPY operation y = y - Bx
+                // where B is the [j .. n, 0 .. j] submatrix of A,
+                // x is the [ j, 0 .. j ] submatrix of A,
+                // and y is the [ j .. n, j ] submatrix of A
                 for k in j .. n {
-                    for l in 0 .. j {
-                        a[[k, j]] = a[[k, j]] - a[[k, l]] * a[[j, l]];
-                    }
+                    let kj_dot = {
+                        let j_row = a.row(j).raw_slice();
+                        let k_row = a.row(k).raw_slice();
+                        dot(&k_row[0 .. j], &j_row[0 .. j])
+                    };
+                    a[[k, j]] = a[[k, j]] - kj_dot;
                 }
             }
 
