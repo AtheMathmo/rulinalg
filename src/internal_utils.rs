@@ -4,7 +4,7 @@ use libnum::Zero;
 pub fn nullify_lower_triangular_part<T, M>(matrix: &mut M)
     where T: Zero, M: BaseMatrixMut<T> {
     for (i, mut row) in matrix.row_iter_mut().enumerate() {
-        for element in row.iter_mut().take(i) {
+        for element in row.raw_slice_mut().iter_mut().take(i) {
             *element = T::zero();
         }
     }
@@ -13,7 +13,7 @@ pub fn nullify_lower_triangular_part<T, M>(matrix: &mut M)
 pub fn nullify_upper_triangular_part<T, M>(matrix: &mut M)
     where T: Zero, M: BaseMatrixMut<T> {
     for (i, mut row) in matrix.row_iter_mut().enumerate() {
-        for element in row.iter_mut().skip(i + 1) {
+        for element in row.raw_slice_mut().iter_mut().skip(i + 1) {
             *element = T::zero();
         }
     }
