@@ -11,6 +11,7 @@ pub mod linalg {
 	mod matrix;
 	mod svd;
 	mod lu;
+	mod cholesky;
 	mod norm;
 	mod triangular;
 	mod permutation;
