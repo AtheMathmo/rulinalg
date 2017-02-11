@@ -135,8 +135,10 @@ impl<T: Clone + One + Zero> Decomposition for PartialPivLu<T> {
     type Factors = LUP<T>;
 
     fn unpack(self) -> LUP<T> {
+        use internal_utils::nullify_lower_triangular_part;
         let l = unit_lower_triangular_part(&self.lu);
-        let u = nullify_lower_triangular_part(self.lu);
+        let mut u = self.lu;
+        nullify_lower_triangular_part(&mut u);
 
         LUP {
             l: l,
@@ -345,15 +347,6 @@ fn unit_lower_triangular_part<T, M>(matrix: &M) -> Matrix<T>
     }
 
     Matrix::new(m, n, data)
-}
-
-fn nullify_lower_triangular_part<T: Zero>(mut matrix: Matrix<T>) -> Matrix<T> {
-    for (i, mut row) in matrix.row_iter_mut().enumerate() {
-        for element in row.iter_mut().take(i) {
-            *element = T::zero();
-        }
-    }
-    matrix
 }
 
 
