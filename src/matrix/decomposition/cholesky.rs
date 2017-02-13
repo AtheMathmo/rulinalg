@@ -70,6 +70,14 @@ impl<T> Cholesky<T> where T: Float {
             l: a
         })
     }
+
+    /// TODO
+    pub fn det(&self) -> T {
+        let l_det = self.l.diag()
+                          .cloned()
+                          .fold(T::one(), |a, b| a * b);
+        l_det * l_det
+    }
 }
 
 impl<T: Zero> Decomposition for Cholesky<T> {
@@ -162,6 +170,7 @@ mod tests {
     use matrix::decomposition::Decomposition;
     use super::Cholesky;
 
+    use libnum::Float;
     use quickcheck::TestResult;
 
     #[test]
@@ -230,6 +239,32 @@ mod tests {
                             3.0,   9.0,  15.0;
                             5.0,  15.0,  65.0];
             assert!(Cholesky::decompose(x).is_err());
+        }
+    }
+
+    #[test]
+    fn cholesky_det_empty() {
+        let x: Matrix<f64> = matrix![];
+        let cholesky = Cholesky::decompose(x).unwrap();
+        assert_eq!(cholesky.det(), 1.0);
+    }
+
+    #[test]
+    fn cholesky_det() {
+        {
+            let x = matrix![1.0];
+            let cholesky = Cholesky::decompose(x).unwrap();
+            let diff = cholesky.det() - 1.0;
+            assert!(diff.abs() < 1e-14);
+        }
+
+        {
+            let x = matrix![1.0,   3.0,   5.0;
+                            3.0,  18.0,  33.0;
+                            5.0,  33.0,  65.0];
+            let cholesky = Cholesky::decompose(x).unwrap();
+            let diff = cholesky.det() - 36.0;
+            assert!(diff.abs() < 1e-14);
         }
     }
 
