@@ -51,8 +51,16 @@ impl<T> Cholesky<T> where T: Float {
                 }
             }
 
-            // TODO: Check for zero divisor
-            let divisor = a[[j, j]].sqrt();
+            let diagonal = a[[j, j]];
+            if diagonal.abs() < T::epsilon() {
+                return Err(Error::new(ErrorKind::DecompFailure,
+                    "Matrix is singular to working precision."));
+            } else if diagonal < T::zero() {
+                return Err(Error::new(ErrorKind::DecompFailure,
+                    "Diagonal entries of matrix are not all positive."));
+            }
+
+            let divisor = diagonal.sqrt();
             for k in j .. n {
                 a[[k, j]] = a[[k, j]] / divisor;
             }
@@ -195,6 +203,33 @@ mod tests {
                         .unwrap()
                         .unpack();
             assert_matrix_eq!(l, expected, comp = float);
+        }
+    }
+
+    #[test]
+    fn cholesky_singular_fails() {
+        {
+            let x = matrix![0.0];
+            assert!(Cholesky::decompose(x).is_err());
+        }
+
+        {
+            let x = matrix![0.0, 0.0;
+                            0.0, 1.0];
+            assert!(Cholesky::decompose(x).is_err());
+        }
+
+        {
+            let x = matrix![1.0, 0.0;
+                            0.0, 0.0];
+            assert!(Cholesky::decompose(x).is_err());
+        }
+
+        {
+            let x = matrix![1.0,   3.0,   5.0;
+                            3.0,   9.0,  15.0;
+                            5.0,  15.0,  65.0];
+            assert!(Cholesky::decompose(x).is_err());
         }
     }
 
