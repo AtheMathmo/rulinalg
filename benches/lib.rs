@@ -1,5 +1,6 @@
 #![feature(test)]
 
+#[macro_use]
 extern crate rulinalg;
 extern crate num as libnum;
 extern crate test;
@@ -10,4 +11,5 @@ mod linalg {
 	mod matrix;
 	mod svd;
 	mod norm;
+	mod triangular;
 }
