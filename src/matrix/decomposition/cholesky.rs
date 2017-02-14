@@ -1,6 +1,7 @@
 use matrix::{Matrix, BaseMatrix};
 use error::{Error, ErrorKind};
 use matrix::decomposition::Decomposition;
+use matrix::forward_substitution;
 use vector::Vector;
 use utils::dot;
 
@@ -14,7 +15,7 @@ pub struct Cholesky<T> {
     l: Matrix<T>
 }
 
-impl<T> Cholesky<T> where T: Float {
+impl<T> Cholesky<T> where T: 'static + Float {
     /// TODO
     pub fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
         assert!(matrix.rows() == matrix.cols(),
@@ -78,6 +79,19 @@ impl<T> Cholesky<T> where T: Float {
                           .cloned()
                           .fold(T::one(), |a, b| a * b);
         l_det * l_det
+    }
+
+    /// TODO
+    pub fn solve(&self, b: Vector<T>) -> Vector<T> {
+        assert!(self.l.rows() == b.size(),
+            "RHS vector and coefficient matrix must be
+             dimensionally compatible.");
+        // Solve Ly = b
+        let y = forward_substitution(&self.l, b)
+                    .expect("Internal error: L should be invertible.");
+        // Solve L^T x = y
+        transpose_back_substitution(&self.l, y)
+            .expect("Internal error: L^T should be invertible.")
     }
 }
 
@@ -299,6 +313,42 @@ mod tests {
             let cholesky = Cholesky::decompose(x).unwrap();
             let diff = cholesky.det() - 36.0;
             assert!(diff.abs() < 1e-14);
+        }
+    }
+
+    #[test]
+    fn cholesky_solve_examples() {
+        {
+            // TODO: Enable this test
+            // It is currently commented out because
+            // backward/forward substitution don't handle
+            // empty matrices. See PR #152 for more details.
+
+            // let a: Matrix<f64> = matrix![];
+            // let b: Vector<f64> = vector![];
+            // let expected: Vector<f64> = vector![];
+            // let cholesky = Cholesky::decompose(a).unwrap();
+            // let x = cholesky.solve(b);
+            // assert_eq!(x, expected);
+        }
+
+        {
+            let a = matrix![ 1.0 ];
+            let b = vector![ 4.0 ];
+            let expected = vector![ 4.0 ];
+            let cholesky = Cholesky::decompose(a).unwrap();
+            let x = cholesky.solve(b);
+            assert_vector_eq!(x, expected, comp = float);
+        }
+
+        {
+            let a = matrix![ 4.0,  6.0;
+                             6.0, 25.0];
+            let b = vector![ 2.0,  4.0];
+            let expected = vector![ 0.40625,  0.0625 ];
+            let cholesky = Cholesky::decompose(a).unwrap();
+            let x = cholesky.solve(b);
+            assert_vector_eq!(x, expected, comp = float);
         }
     }
 
