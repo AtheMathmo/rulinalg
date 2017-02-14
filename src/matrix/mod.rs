@@ -291,34 +291,49 @@ pub struct SliceIterMut<'a, T: 'a> {
     _marker: PhantomData<&'a mut T>,
 }
 
-/// Back substitution
-fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
+/// Solves the system Ux = y by back substitution.
+///
+/// Here U is an upper triangular matrix and y a vector
+/// which is dimensionally compatible with U.
+fn back_substitution<T, M>(u: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     where T: Any + Float,
           M: BaseMatrix<T>
 {
-    if m.is_empty() {
-        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."));
-    }
+    assert!(u.rows() == u.cols(), "Matrix U must be square.");
+    assert!(y.size() == u.rows(),
+        "Matrix and RHS vector must be dimensionally compatible.");
+    let mut x = y;
 
-    let mut x = vec![T::zero(); y.size()];
+    let n = u.rows();
+    for i in (0 .. n).rev() {
+        let row = u.row(i);
 
-    unsafe {
-        for i in (0..y.size()).rev() {
-            let mut holding_u_sum = T::zero();
-            for j in (i + 1..y.size()).rev() {
-                holding_u_sum = holding_u_sum + *m.get_unchecked([i, j]) * x[j];
-            }
-
-            let diag = *m.get_unchecked([i, i]);
-            if diag.abs() < T::min_positive_value() + T::min_positive_value() {
-                return Err(Error::new(ErrorKind::AlgebraFailure,
-                                      "Linear system cannot be solved (matrix is singular)."));
-            }
-            x[i] = (y[i] - holding_u_sum) / diag;
+        // TODO: Remove unsafe once `get` is available in `BaseMatrix`
+        let divisor = unsafe { u.get_unchecked([i, i]).clone() };
+        if divisor.abs() < T::epsilon() {
+            return Err(Error::new(ErrorKind::DivByZero,
+                "Lower triangular matrix is singular to working precision."));
         }
+
+        // We have
+        // l[i, i] x[i] = b[i] - sum_j { l[i, j] * x[j] }
+        // where j = i + 1, ..., (n - 1)
+        //
+        // Note that the right-hand side sum term can be rewritten as
+        // l[i, (i + 1) .. n] * x[(i + 1) .. n]
+        // where * denotes the dot product.
+        // This is handy, because we have a very efficient
+        // dot(., .) implementation!
+        let dot = {
+            let row_part = &row.raw_slice()[(i + 1) .. n];
+            let x_part = &x.data()[(i + 1) .. n];
+            utils::dot(row_part, x_part)
+        };
+
+        x[i] = (x[i] - dot) / divisor;
     }
 
-    Ok(Vector::new(x))
+    Ok(x)
 }
 
 /// Solves the system Lx = y by forward substitution.

@@ -1,4 +1,4 @@
-use rulinalg::matrix::{BaseMatrix, Matrix};
+use rulinalg::matrix::{BaseMatrix};
 
 #[test]
 fn test_solve() {
@@ -33,9 +33,6 @@ fn test_l_triangular_solve_errs() {
 
 #[test]
 fn test_u_triangular_solve_errs() {
-    let a: Matrix<f64> = matrix![];
-    assert!(a.solve_u_triangular(vector![]).is_err());;
-
     let a = matrix![0.0];
     assert!(a.solve_u_triangular(vector![1.0]).is_err());
 }
