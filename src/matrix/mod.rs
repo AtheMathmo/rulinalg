@@ -321,35 +321,45 @@ fn back_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     Ok(Vector::new(x))
 }
 
-/// forward substitution
-fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
+/// Solves the system Lx = y by forward substitution.
+///
+/// Here, L is a square, lower triangular matrix and y
+/// is a vector which is dimensionally compatible with L.
+fn forward_substitution<T, M>(l: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     where T: Any + Float,
           M: BaseMatrix<T>
 {
-    if m.is_empty() {
-        return Err(Error::new(ErrorKind::InvalidArg, "Matrix is empty."));
-    }
+    assert!(l.rows() == l.cols(), "Matrix L must be square.");
+    assert!(y.size() == l.rows(),
+        "Matrix and RHS vector must be dimensionally compatible.");
+    let mut x = y;
 
-    let mut x = Vec::with_capacity(y.size());
-
-    unsafe {
-        for (i, y_item) in y.data().iter().enumerate().take(y.size()) {
-            let mut holding_l_sum = T::zero();
-            for (j, x_item) in x.iter().enumerate().take(i) {
-                holding_l_sum = holding_l_sum + *m.get_unchecked([i, j]) * *x_item;
-            }
-
-            let diag = *m.get_unchecked([i, i]);
-
-            if diag.abs() < T::min_positive_value() + T::min_positive_value() {
-                return Err(Error::new(ErrorKind::AlgebraFailure,
-                                      "Linear system cannot be solved (matrix is singular)."));
-            }
-            x.push((*y_item - holding_l_sum) / diag);
+    for (i, row) in l.row_iter().enumerate() {
+        // TODO: Remove unsafe once `get` is available in `BaseMatrix`
+        let divisor = unsafe { l.get_unchecked([i, i]).clone() };
+        if divisor.abs() < T::epsilon() {
+            return Err(Error::new(ErrorKind::DivByZero,
+                "Lower triangular matrix is singular to working precision."));
         }
-    }
 
-    Ok(Vector::new(x))
+        // We have
+        // l[i, i] x[i] = b[i] - sum_j { l[i, j] * x[j] }
+        // where j = 0, ..., i - 1
+        //
+        // Note that the right-hand side sum term can be rewritten as
+        // l[i, 0 .. i] * x[0 .. i]
+        // where * denotes the dot product.
+        // This is handy, because we have a very efficient
+        // dot(., .) implementation!
+        let dot = {
+            let row_part = &row.raw_slice()[0 .. i];
+            let x_part = &x.data()[0 .. i];
+            utils::dot(row_part, x_part)
+        };
+
+        x[i] = (x[i] - dot) / divisor;
+    }
+    Ok(x)
 }
 
 /// Computes the parity of a permutation matrix.

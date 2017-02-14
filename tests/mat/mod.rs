@@ -15,17 +15,18 @@ fn test_solve() {
     let b = vector![-100.0, 0.0, 0.0, -100.0, 0.0, 0.0, -100.0, 0.0, 0.0];
 
     let c = a.solve(b).unwrap();
-    let true_solution = vec![42.85714286, 18.75, 7.14285714, 52.67857143,
-                             25.0, 9.82142857, 42.85714286, 18.75, 7.14285714];
+    let true_solution = vector![42.85714286, 18.75, 7.14285714, 52.67857143,
+                                25.0, 9.82142857, 42.85714286, 18.75, 7.14285714];
 
-    assert!(c.into_iter().zip(true_solution.into_iter()).all(|(x, y)| (x-y) < 1e-5));
-
+    // Note: the "true_solution" given here has way too few
+    // significant digits, and since I can't be bothered to enter
+    // it all into e.g. NumPy, I'm leaving a lower absolute
+    // tolerance in place.
+    assert_vector_eq!(c, true_solution, comp = abs, tol = 1e-8);
 }
 
 #[test]
 fn test_l_triangular_solve_errs() {
-    let a: Matrix<f64> = matrix![];
-    assert!(a.solve_l_triangular(vector![]).is_err());
     let a = matrix![0.0];
     assert!(a.solve_l_triangular(vector![1.0]).is_err());
 }
