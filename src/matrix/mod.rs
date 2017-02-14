@@ -316,11 +316,11 @@ fn back_substitution<T, M>(u: &M, y: Vector<T>) -> Result<Vector<T>, Error>
         }
 
         // We have
-        // l[i, i] x[i] = b[i] - sum_j { l[i, j] * x[j] }
+        // u[i, i] x[i] = b[i] - sum_j { u[i, j] * x[j] }
         // where j = i + 1, ..., (n - 1)
         //
         // Note that the right-hand side sum term can be rewritten as
-        // l[i, (i + 1) .. n] * x[(i + 1) .. n]
+        // u[i, (i + 1) .. n] * x[(i + 1) .. n]
         // where * denotes the dot product.
         // This is handy, because we have a very efficient
         // dot(., .) implementation!
