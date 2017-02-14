@@ -296,7 +296,7 @@ pub struct SliceIterMut<'a, T: 'a> {
 /// Here U is an upper triangular matrix and y a vector
 /// which is dimensionally compatible with U.
 fn back_substitution<T, M>(u: &M, y: Vector<T>) -> Result<Vector<T>, Error>
-    where T: Any + Float,
+    where T: Float,
           M: BaseMatrix<T>
 {
     assert!(u.rows() == u.cols(), "Matrix U must be square.");
@@ -341,7 +341,7 @@ fn back_substitution<T, M>(u: &M, y: Vector<T>) -> Result<Vector<T>, Error>
 /// Here, L is a square, lower triangular matrix and y
 /// is a vector which is dimensionally compatible with L.
 fn forward_substitution<T, M>(l: &M, y: Vector<T>) -> Result<Vector<T>, Error>
-    where T: Any + Float,
+    where T: Float,
           M: BaseMatrix<T>
 {
     assert!(l.rows() == l.cols(), "Matrix L must be square.");
