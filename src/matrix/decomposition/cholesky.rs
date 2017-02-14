@@ -1,6 +1,7 @@
 use matrix::{Matrix, BaseMatrix};
 use error::{Error, ErrorKind};
 use matrix::decomposition::Decomposition;
+use vector::Vector;
 use utils::dot;
 
 use std::any::Any;
@@ -164,11 +165,44 @@ impl<T> Matrix<T>
     }
 }
 
+/// Solves the square system L^T x = b,
+/// where L is lower triangular
+fn transpose_back_substitution<T>(l: &Matrix<T>, b: Vector<T>)
+    -> Result<Vector<T>, Error> where T: Float {
+    assert!(l.rows() == l.cols(), "Matrix L must be square.");
+    assert!(l.rows() == b.size(), "L and b must be dimensionally compatible.");
+    let n = l.rows();
+    let mut x = b;
+
+    // TODO: Make this implementation more cache efficient
+    // At the moment it is a simple naive (very cache inefficient)
+    // implementation for the sake of correctness.
+    for i in (0 .. n).rev() {
+        let mut inner_product = T::zero();
+        for j in (i + 1) .. n {
+            inner_product = inner_product + l[[j, i]] * x[j];
+        }
+
+        let diagonal = l[[i, i]];
+        if diagonal.abs() < T::epsilon() {
+            return Err(Error::new(ErrorKind::DivByZero,
+                "Matrix L is singular to working precision."));
+        }
+
+        x[i] = (x[i] - inner_product) / diagonal;
+    }
+
+    Ok(x)
+}
+
 #[cfg(test)]
 mod tests {
     use matrix::Matrix;
     use matrix::decomposition::Decomposition;
+    use vector::Vector;
+
     use super::Cholesky;
+    use super::transpose_back_substitution;
 
     use libnum::Float;
     use quickcheck::TestResult;
@@ -283,6 +317,44 @@ mod tests {
                 },
                 _ => TestResult::failed()
             }
+        }
+    }
+
+    #[test]
+    fn transpose_back_substitution_examples() {
+        {
+            let l: Matrix<f64> = matrix![];
+            let b: Vector<f64> = vector![];
+            let expected: Vector<f64> = vector![];
+            let x = transpose_back_substitution(&l, b).unwrap();
+            assert_vector_eq!(x, expected);
+        }
+
+        {
+            let l = matrix![2.0];
+            let b = vector![2.0];
+            let expected = vector![1.0];
+            let x = transpose_back_substitution(&l, b).unwrap();
+            assert_vector_eq!(x, expected, comp = float);
+        }
+
+        {
+            let l = matrix![2.0, 0.0;
+                            3.0, 4.0];
+            let b = vector![2.0, 1.0];
+            let expected = vector![0.625, 0.25 ];
+            let x = transpose_back_substitution(&l, b).unwrap();
+            assert_vector_eq!(x, expected, comp = float);
+        }
+
+        {
+            let l = matrix![ 2.0,  0.0,  0.0;
+                             5.0, -1.0,  0.0;
+                            -2.0,  0.0,  1.0];
+            let b = vector![-1.0, 2.0, 3.0];
+            let expected = vector![ 7.5, -2.0, 3.0 ];
+            let x = transpose_back_substitution(&l, b).unwrap();
+            assert_vector_eq!(x, expected, comp = float);
         }
     }
 }
