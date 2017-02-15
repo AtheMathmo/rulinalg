@@ -1113,6 +1113,23 @@ pub trait BaseMatrix<T>: Sized {
                                         self.row_stride())
         }
     }
+    
+    /// Returns whether the matrix elements are stored contiguously in memory.
+    ///
+    /// # Examples
+    /// ```
+    /// use rulinalg::matrix::{Matrix, BaseMatrix, MatrixSlice};
+    ///
+    /// let a = Matrix::new(3, 3, vec![2.0; 9]);
+    /// assert!(a.is_data_contiguous());
+    ///
+    /// let slice = MatrixSlice::from_matrix(&a, [1,1], 2, 2);
+    /// assert!(!slice.is_data_contiguous());
+    /// ```
+    fn is_data_contiguous(&self) -> bool
+    {
+        self.cols() == self.row_stride()
+    }
 }
 
 /// Trait for mutable matrices.
