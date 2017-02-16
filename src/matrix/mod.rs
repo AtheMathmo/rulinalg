@@ -281,6 +281,27 @@ pub struct DiagonalMut<'a, T: 'a, M: 'a + BaseMatrixMut<T>> {
     _marker: PhantomData<&'a mut T>,
 }
 
+/// An enum that holds the indices required for the SliceIter and SliceIterMut
+/// structs. These sets depends on whether the underlying data is contiguous 
+/// in memory or not. In the former case, the iter can ignore the matrix 
+/// structure of the data, and simply iterate to the end. In the latter case,
+/// the iter must take into account the row stride.
+#[derive(Debug)]
+enum SliceIterIndices {
+    Contiguous { 
+        index: usize, 
+        slice_size: usize
+     },
+
+    NonContiguous { 
+        row_pos: usize,
+        col_pos: usize,
+        slice_rows: usize,
+        slice_cols: usize,
+        row_stride: usize,
+    }
+}
+
 /// Iterator for matrix.
 ///
 /// Iterates over the underlying slice data
@@ -288,11 +309,7 @@ pub struct DiagonalMut<'a, T: 'a, M: 'a + BaseMatrixMut<T>> {
 #[derive(Debug)]
 pub struct SliceIter<'a, T: 'a> {
     slice_start: *const T,
-    row_pos: usize,
-    col_pos: usize,
-    slice_rows: usize,
-    slice_cols: usize,
-    row_stride: usize,
+    indices: SliceIterIndices,
     _marker: PhantomData<&'a T>,
 }
 
@@ -303,11 +320,7 @@ pub struct SliceIter<'a, T: 'a> {
 #[derive(Debug)]
 pub struct SliceIterMut<'a, T: 'a> {
     slice_start: *mut T,
-    row_pos: usize,
-    col_pos: usize,
-    slice_rows: usize,
-    slice_cols: usize,
-    row_stride: usize,
+    indices: SliceIterIndices,
     _marker: PhantomData<&'a mut T>,
 }
 

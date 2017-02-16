@@ -23,7 +23,7 @@ use matrix::{Matrix, MatrixSlice, MatrixSliceMut};
 use matrix::{Cols, ColsMut, Row, RowMut, Column, ColumnMut, Rows, RowsMut, Axes};
 use matrix::{DiagOffset, Diagonal, DiagonalMut};
 use matrix::{back_substitution, forward_substitution};
-use matrix::{SliceIter, SliceIterMut};
+use matrix::{SliceIter, SliceIterMut, SliceIterIndices};
 use norm::{MatrixNorm, MatrixMetric};
 use vector::Vector;
 use utils;
@@ -200,13 +200,28 @@ pub trait BaseMatrix<T>: Sized {
     fn iter<'a>(&self) -> SliceIter<'a, T>
         where T: 'a
     {
+        let indices =
+            if self.is_data_contiguous()
+            {
+                SliceIterIndices::Contiguous {
+                    index: 0,
+                    slice_size: self.rows() * self.cols(),
+                }
+            }
+            else
+            {
+                SliceIterIndices::NonContiguous {
+                    row_pos: 0,
+                    col_pos: 0,
+                    slice_rows: self.rows(),
+                    slice_cols: self.cols(),
+                    row_stride: self.row_stride(),
+                }
+            };
+
         SliceIter {
             slice_start: self.as_ptr(),
-            row_pos: 0,
-            col_pos: 0,
-            slice_rows: self.rows(),
-            slice_cols: self.cols(),
-            row_stride: self.row_stride(),
+            indices: indices,
             _marker: PhantomData::<&T>,
         }
     }
@@ -1186,13 +1201,28 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     fn iter_mut<'a>(&mut self) -> SliceIterMut<'a, T>
         where T: 'a
     {
+        let indices =
+            if self.is_data_contiguous()
+            {
+                SliceIterIndices::Contiguous {
+                    index: 0,
+                    slice_size: self.rows() * self.cols(),
+                }
+            }
+            else
+            {
+                SliceIterIndices::NonContiguous {
+                    row_pos: 0,
+                    col_pos: 0,
+                    slice_rows: self.rows(),
+                    slice_cols: self.cols(),
+                    row_stride: self.row_stride(),
+                }
+            };
+
         SliceIterMut {
             slice_start: self.as_mut_ptr(),
-            row_pos: 0,
-            col_pos: 0,
-            slice_rows: self.rows(),
-            slice_cols: self.cols(),
-            row_stride: self.row_stride(),
+            indices: indices,
             _marker: PhantomData::<&mut T>,
         }
     }
