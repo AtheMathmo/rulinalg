@@ -7,12 +7,13 @@
 //! via `BaseMatrix` and `BaseMatrixMut` trait.
 
 use std;
-use std::any::Any;
 use std::marker::PhantomData;
 use libnum::Float;
 
 use error::{Error, ErrorKind};
 use vector::Vector;
+
+use utils;
 
 pub mod decomposition;
 mod base;
