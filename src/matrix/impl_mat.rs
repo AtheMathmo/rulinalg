@@ -2,11 +2,12 @@ use std::any::Any;
 use std::fmt;
 use libnum::{One, Zero, Float, FromPrimitive};
 
-use super::{Matrix, forward_substitution, back_substitution, parity};
+use super::{Matrix};
 use super::{Axes};
 use super::base::BaseMatrix;
 use error::{Error, ErrorKind};
 use vector::Vector;
+use matrix::decomposition::PartialPivLu;
 
 impl<T> Matrix<T> {
     /// Constructor for Matrix struct.
@@ -314,6 +315,12 @@ impl<T: Any + Float> Matrix<T> {
     ///
     /// Requires a Vector `y` as input.
     ///
+    /// The method performs an LU decomposition internally,
+    /// consuming the matrix in the process. If solving
+    /// the same system for multiple right-hand sides
+    /// is desired, see
+    /// [PartialPivLu](decomposition/struct.PartialPivLu.html).
+    ///
     /// # Examples
     ///
     /// ```
@@ -341,13 +348,12 @@ impl<T: Any + Float> Matrix<T> {
     /// - The matrix cannot be decomposed into an LUP form to solve.
     /// - There is no valid solution as the matrix is singular.
     pub fn solve(self, y: Vector<T>) -> Result<Vector<T>, Error> {
-        let (l, u, p) = try!(self.lup_decomp());
-
-        let b = try!(forward_substitution(&l, p * y));
-        back_substitution(&u, b)
+        PartialPivLu::decompose(self)?.solve(y)
     }
 
     /// Computes the inverse of the matrix.
+    ///
+    /// Internally performs an LU decomposition.
     ///
     /// # Examples
     ///
@@ -374,43 +380,7 @@ impl<T: Any + Float> Matrix<T> {
     /// - The matrix could not be LUP decomposed.
     /// - The matrix has zero determinant.
     pub fn inverse(self) -> Result<Matrix<T>, Error> {
-        let rows = self.rows;
-        let cols = self.cols;
-        assert!(rows == cols, "Matrix is not square.");
-
-        let mut inv_t_data = Vec::<T>::new();
-        let (l, u, p) = try!(self.lup_decomp().map_err(|_| {
-            Error::new(ErrorKind::DecompFailure,
-                       "Could not compute LUP factorization for inverse.")
-        }));
-
-        let mut d = T::one();
-
-        unsafe {
-            for i in 0..l.cols {
-                d = d * *l.get_unchecked([i, i]);
-                d = d * *u.get_unchecked([i, i]);
-            }
-        }
-
-        if d == T::zero() {
-            return Err(Error::new(ErrorKind::DecompFailure,
-                                  "Matrix is singular and cannot be inverted."));
-        }
-
-        for i in 0..rows {
-            let mut id_col = vec![T::zero(); cols];
-            id_col[i] = T::one();
-
-            let b = forward_substitution(&l, &p * Vector::new(id_col))
-                .expect("Matrix is singular AND has non-zero determinant!?");
-            inv_t_data.append(&mut back_substitution(&u, b)
-                .expect("Matrix is singular AND has non-zero determinant!?")
-                .into_vec());
-
-        }
-
-        Ok(Matrix::new(rows, cols, inv_t_data).transpose())
+        PartialPivLu::decompose(self)?.inverse()
     }
 
     /// Computes the determinant of the matrix.
@@ -436,18 +406,8 @@ impl<T: Any + Float> Matrix<T> {
         let n = self.cols;
 
         if self.is_diag() {
-            let mut d = T::one();
-
-            unsafe {
-                for i in 0..n {
-                    d = d * *self.get_unchecked([i, i]);
-                }
-            }
-
-            return d;
-        }
-
-        if n == 2 {
+            self.diag().cloned().fold(T::one(), |d, entry| d * entry)
+        } else if n == 2 {
             (self[[0, 0]] * self[[1, 1]]) - (self[[0, 1]] * self[[1, 0]])
         } else if n == 3 {
             (self[[0, 0]] * self[[1, 1]] * self[[2, 2]]) +
@@ -457,26 +417,8 @@ impl<T: Any + Float> Matrix<T> {
             (self[[0, 1]] * self[[1, 0]] * self[[2, 2]]) -
             (self[[0, 2]] * self[[1, 1]] * self[[2, 0]])
         } else {
-            let (l, u, p) = match self.lup_decomp() {
-                Ok(x) => x,
-                Err(ref e) if *e.kind() == ErrorKind::DivByZero => return T::zero(),
-                _ => {
-                    panic!("Could not compute LUP decomposition.");
-                }
-            };
-
-            let mut d = T::one();
-
-            unsafe {
-                for i in 0..l.cols {
-                    d = d * *l.get_unchecked([i, i]);
-                    d = d * *u.get_unchecked([i, i]);
-                }
-            }
-
-            let sgn = parity(&p);
-
-            sgn * d
+            PartialPivLu::decompose(self).map(|lu| lu.det())
+                                         .unwrap_or(T::zero())
         }
     }
 }

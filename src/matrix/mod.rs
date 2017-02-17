@@ -12,11 +12,10 @@ use std::marker::PhantomData;
 use libnum::Float;
 
 use error::{Error, ErrorKind};
-use utils;
 use vector::Vector;
 
+pub mod decomposition;
 mod base;
-mod decomposition;
 mod deref;
 mod impl_mat;
 mod impl_ops;
@@ -370,35 +369,4 @@ fn forward_substitution<T, M>(m: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     }
 
     Ok(Vector::new(x))
-}
-
-/// Computes the parity of a permutation matrix.
-fn parity<T, M>(m: &M) -> T
-    where T: Any + Float,
-          M: BaseMatrix<T>
-{
-    let mut visited = vec![false; m.rows()];
-    let mut sgn = T::one();
-
-    for k in 0..m.rows() {
-        if !visited[k] {
-            let mut next = k;
-            let mut len = 0;
-
-            while !visited[next] {
-                len += 1;
-                visited[next] = true;
-                unsafe {
-                    next = utils::find(&m.row_unchecked(next)
-                                           .raw_slice(),
-                                       T::one());
-                }
-            }
-
-            if len % 2 == 0 {
-                sgn = -sgn;
-            }
-        }
-    }
-    sgn
 }

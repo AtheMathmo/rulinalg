@@ -101,6 +101,9 @@ pub mod ulp;
 pub mod norm;
 
 #[cfg(test)]
+mod testsupport;
+
+#[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
 
