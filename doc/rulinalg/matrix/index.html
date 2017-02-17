@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-158' class='srclink' href='../../src/rulinalg/src/matrix/mod.rs.html#1-381' title='goto source code'>[src]</a></span></h1>
+               </span><a class='srclink' href='../../src/rulinalg/matrix/mod.rs.html#1-372' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>The matrix module.</p>
 
 <p>Currently contains all code
@@ -55,8 +55,30 @@ relating to the matrix linear algebra struct.</p>
 
 <p>Most of the logic for manipulating matrices is generically implemented
 via <code>BaseMatrix</code> and <code>BaseMatrixMut</code> trait.</p>
-</div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
 <table>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='decomposition/index.html'
+                                  title='rulinalg::matrix::decomposition'>decomposition</a></td>
+                           <td class='docblock-short'>
+                                <p>Decompositions for matrices.</p>
+                           </td>
+                       </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Cols.html'
+                                  title='rulinalg::matrix::Cols'>Cols</a></td>
+                           <td class='docblock-short'>
+                                <p>Column iterator.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.ColsMut.html'
+                                  title='rulinalg::matrix::ColsMut'>ColsMut</a></td>
+                           <td class='docblock-short'>
+                                <p>Mutable column iterator.</p>
+                           </td>
+                       </tr>
                        <tr class=' module-item'>
                            <td><a class='struct' href='struct.Column.html'
                                   title='rulinalg::matrix::Column'>Column</a></td>
@@ -104,6 +126,13 @@ via <code>BaseMatrix</code> and <code>BaseMatrixMut</code> trait.</p>
                                   title='rulinalg::matrix::MatrixSliceMut'>MatrixSliceMut</a></td>
                            <td class='docblock-short'>
                                 <p>A mutable <code>MatrixSliceMut</code></p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.PermutationMatrix.html'
+                                  title='rulinalg::matrix::PermutationMatrix'>PermutationMatrix</a></td>
+                           <td class='docblock-short'>
+                                <p>An efficient implementation of a permutation matrix.</p>
                            </td>
                        </tr>
                        <tr class=' module-item'>
@@ -161,6 +190,13 @@ via <code>BaseMatrix</code> and <code>BaseMatrixMut</code> trait.</p>
                                   title='rulinalg::matrix::DiagOffset'>DiagOffset</a></td>
                            <td class='docblock-short'>
                                 <p>Diagonal offset (used by Diagonal iterator).</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.Parity.html'
+                                  title='rulinalg::matrix::Parity'>Parity</a></td>
+                           <td class='docblock-short'>
+                                <p>Parity is the fact of being even or odd.</p>
                            </td>
                        </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
 <table>

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error","An error produced by an operation on CSV data."]],"struct":[["Reader","A CSV reader."],["Writer","A CSV writer."]]});

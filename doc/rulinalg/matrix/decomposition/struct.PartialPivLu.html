@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `PartialPivLu` struct in crate `rulinalg`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, PartialPivLu">
+
+    <title>rulinalg::matrix::decomposition::PartialPivLu - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../../index.html'>rulinalg</a>::<wbr><a href='../index.html'>matrix</a>::<wbr><a href='index.html'>decomposition</a></p><script>window.sidebarCurrent = {name: 'PartialPivLu', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../../index.html'>rulinalg</a>::<wbr><a href='../index.html'>matrix</a>::<wbr><a href='index.html'>decomposition</a>::<wbr><a class='struct' href=''>PartialPivLu</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../../src/rulinalg/matrix/decomposition/lu.rs.html#129-132' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct PartialPivLu&lt;T&gt; { /* fields omitted */ }</pre><div class='docblock'><p>LU decomposition with partial pivoting.</p>
+
+<p>For any square matrix A, there exist a permutation matrix
+<code>P</code>, a lower triangular matrix <code>L</code> and an upper triangular
+matrix <code>U</code> such that</p>
+
+<pre><code class="language-text">PA = LU.
+</code></pre>
+
+<p>However, due to the way partial pivoting algorithms work,
+LU decomposition with partial pivoting is in general
+<em>only numerically stable for well-conditioned invertible matrices</em>.</p>
+
+<p>That said, partial pivoting is sufficient in the vast majority
+of practical applications, and it is also the fastest of the
+pivoting schemes in existence.</p>
+
+<h1 id='applications' class='section-header'><a href='#applications'>Applications</a></h1>
+<p>Given a matrix <code>x</code>, computing the LU(P) decomposition is simple:</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='kw'>use</span> <span class='ident'>rulinalg</span>::<span class='ident'>matrix</span>::<span class='ident'>decomposition</span>::{<span class='ident'>PartialPivLu</span>, <span class='ident'>LUP</span>, <span class='ident'>Decomposition</span>};
+<span class='kw'>use</span> <span class='ident'>rulinalg</span>::<span class='ident'>matrix</span>::<span class='ident'>Matrix</span>;
+
+<span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Matrix</span>::<span class='op'>&lt;</span><span class='ident'>f64</span><span class='op'>&gt;</span>::<span class='ident'>identity</span>(<span class='number'>4</span>);
+
+<span class='comment'>// The matrix is consumed and its memory</span>
+<span class='comment'>// re-purposed for the decomposition</span>
+<span class='kw'>let</span> <span class='ident'>lu</span> <span class='op'>=</span> <span class='ident'>PartialPivLu</span>::<span class='ident'>decompose</span>(<span class='ident'>x</span>).<span class='ident'>expect</span>(<span class='string'>&quot;Matrix is invertible.&quot;</span>);
+
+<span class='comment'>// See below for applications</span>
+<span class='comment'>// ...</span>
+
+<span class='comment'>// The factors L, U and P can be obtained by unpacking the</span>
+<span class='comment'>// decomposition, for example by destructuring as seen here</span>
+<span class='kw'>let</span> <span class='ident'>LUP</span> { <span class='ident'>l</span>, <span class='ident'>u</span>, <span class='ident'>p</span> } <span class='op'>=</span> <span class='ident'>lu</span>.<span class='ident'>unpack</span>();
+</pre>
+
+<h2 id='solving-linear-systems' class='section-header'><a href='#solving-linear-systems'>Solving linear systems</a></h2>
+<p>Arguably the most common use case of LU decomposition
+is the computation of solutions to (multiple) linear systems
+that share the same coefficient matrix.</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>3.0</span>, <span class='number'>4.0</span>, <span class='number'>2.0</span>, <span class='number'>1.0</span>];
+<span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>lu</span>.<span class='ident'>solve</span>(<span class='ident'>b</span>)
+          .<span class='ident'>expect</span>(<span class='string'>&quot;Matrix is invertible.&quot;</span>);
+<span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>y</span>, <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>3.0</span>, <span class='number'>4.0</span>, <span class='number'>2.0</span>, <span class='number'>1.0</span>], <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>);
+
+<span class='comment'>// We can efficiently solve multiple such systems</span>
+<span class='kw'>let</span> <span class='ident'>c</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>0.0</span>, <span class='number'>0.0</span>, <span class='number'>0.0</span>, <span class='number'>0.0</span>];
+<span class='kw'>let</span> <span class='ident'>z</span> <span class='op'>=</span> <span class='ident'>lu</span>.<span class='ident'>solve</span>(<span class='ident'>c</span>).<span class='ident'>unwrap</span>();
+<span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>z</span>, <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>0.0</span>, <span class='number'>0.0</span>, <span class='number'>0.0</span>, <span class='number'>0.0</span>], <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>);</pre>
+
+<h2 id='computing-the-inverse-of-a-matrix' class='section-header'><a href='#computing-the-inverse-of-a-matrix'>Computing the inverse of a matrix</a></h2>
+<p>The LU decomposition provides a convenient way to obtain
+the inverse of the decomposed matrix. However, please keep
+in mind that explicitly computing the inverse of a matrix
+is <em>usually</em> a bad idea. In many cases, one might instead simply
+solve multiple systems using <code>solve</code>.</p>
+
+<p>For example, a common misconception is that when one needs
+to solve multiple linear systems <code>Ax = b</code> for different <code>b</code>,
+one should pre-compute the inverse of the matrix for efficiency.
+In fact, this is practically never a good idea! A far more efficient
+and accurate method is to perform the LU decomposition once, and
+then solve each system as shown in the examples of the previous
+subsection.</p>
+
+<p>That said, there are definitely cases where an explicit inverse is
+needed. In these cases, the inverse can easily be obtained
+through the <code>inverse()</code> method.</p>
+
+<h1 id='computing-the-determinant-of-a-matrix' class='section-header'><a href='#computing-the-determinant-of-a-matrix'>Computing the determinant of a matrix</a></h1>
+<p>Once the LU decomposition has been obtained, computing
+the determinant of the decomposed matrix is a very cheap
+operation.</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>lu</span>.<span class='ident'>det</span>(), <span class='number'>1.0</span>);</pre>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl&lt;T:&nbsp;'static + Float&gt; <a class='struct' href='../../../rulinalg/matrix/decomposition/struct.PartialPivLu.html' title='rulinalg::matrix::decomposition::PartialPivLu'>PartialPivLu</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../../src/rulinalg/matrix/decomposition/lu.rs.html#149-197' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.decompose' class='method'><span id='decompose.v' class='invisible'><code>fn <a href='#method.decompose' class='fnname'>decompose</a>(matrix: <a class='struct' href='../../../rulinalg/matrix/struct.Matrix.html' title='rulinalg::matrix::Matrix'>Matrix</a>&lt;T&gt;) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;Self, <a class='struct' href='../../../rulinalg/error/struct.Error.html' title='rulinalg::error::Error'>Error</a>&gt;</code></span></h4>
+<div class='docblock'><p>Performs the decomposition.</p>
+
+<h1 id='panics' class='section-header'><a href='#panics'>Panics</a></h1>
+<p>The matrix must be square.</p>
+
+<h1 id='errors' class='section-header'><a href='#errors'>Errors</a></h1>
+<p>An error will be returned if the matrix
+is singular to working precision (badly conditioned).</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;T&gt; <a class='struct' href='../../../rulinalg/matrix/decomposition/struct.PartialPivLu.html' title='rulinalg::matrix::decomposition::PartialPivLu'>PartialPivLu</a>&lt;T&gt; <span class='where'>where T: <a class='trait' href='https://doc.rust-lang.org/nightly/core/any/trait.Any.html' title='core::any::Any'>Any</a> + Float</span></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../../src/rulinalg/matrix/decomposition/lu.rs.html#201-300' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.solve' class='method'><span id='solve.v' class='invisible'><code>fn <a href='#method.solve' class='fnname'>solve</a>(&amp;self, b: <a class='struct' href='../../../rulinalg/vector/struct.Vector.html' title='rulinalg::vector::Vector'>Vector</a>&lt;T&gt;) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../../../rulinalg/vector/struct.Vector.html' title='rulinalg::vector::Vector'>Vector</a>&lt;T&gt;, <a class='struct' href='../../../rulinalg/error/struct.Error.html' title='rulinalg::error::Error'>Error</a>&gt;</code></span></h4>
+<div class='docblock'><p>Solves the linear system <code>Ax = b</code>.</p>
+
+<p>Here, <code>A</code> is the decomposed matrix satisfying
+<code>PA = LU</code>. Note that this method is particularly
+well suited to solving multiple such linear systems
+involving the same <code>A</code> but different <code>b</code>.</p>
+
+<h1 id='errors-1' class='section-header'><a href='#errors-1'>Errors</a></h1>
+<p>If the matrix is very ill-conditioned, the function
+might fail to obtain the solution to the system.</p>
+
+<h1 id='panics-1' class='section-header'><a href='#panics-1'>Panics</a></h1>
+<p>The right-hand side vector <code>b</code> must have compatible size.</p>
+
+<h1 id='examples' class='section-header'><a href='#examples'>Examples</a></h1>
+<pre class='rust rust-example-rendered'>
+<span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>Matrix</span>::<span class='ident'>identity</span>(<span class='number'>4</span>);
+<span class='kw'>let</span> <span class='ident'>lu</span> <span class='op'>=</span> <span class='ident'>PartialPivLu</span>::<span class='ident'>decompose</span>(<span class='ident'>x</span>).<span class='ident'>unwrap</span>();
+<span class='kw'>let</span> <span class='ident'>b</span> <span class='op'>=</span> <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>3.0</span>, <span class='number'>4.0</span>, <span class='number'>2.0</span>, <span class='number'>1.0</span>];
+<span class='kw'>let</span> <span class='ident'>y</span> <span class='op'>=</span> <span class='ident'>lu</span>.<span class='ident'>solve</span>(<span class='ident'>b</span>)
+          .<span class='ident'>expect</span>(<span class='string'>&quot;Matrix is invertible.&quot;</span>);
+<span class='macro'>assert_vector_eq</span><span class='macro'>!</span>(<span class='ident'>y</span>, <span class='macro'>vector</span><span class='macro'>!</span>[<span class='number'>3.0</span>, <span class='number'>4.0</span>, <span class='number'>2.0</span>, <span class='number'>1.0</span>], <span class='ident'>comp</span> <span class='op'>=</span> <span class='ident'>float</span>);</pre>
+</div><h4 id='method.inverse' class='method'><span id='inverse.v' class='invisible'><code>fn <a href='#method.inverse' class='fnname'>inverse</a>(&amp;self) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../../../rulinalg/matrix/struct.Matrix.html' title='rulinalg::matrix::Matrix'>Matrix</a>&lt;T&gt;, <a class='struct' href='../../../rulinalg/error/struct.Error.html' title='rulinalg::error::Error'>Error</a>&gt;</code></span></h4>
+<div class='docblock'><p>Computes the inverse of the matrix which this LUP decomposition
+represents.</p>
+
+<h1 id='errors-2' class='section-header'><a href='#errors-2'>Errors</a></h1>
+<p>The inversion might fail if the matrix is very ill-conditioned.</p>
+</div><h4 id='method.det' class='method'><span id='det.v' class='invisible'><code>fn <a href='#method.det' class='fnname'>det</a>(&amp;self) -&gt; T</code></span></h4>
+<div class='docblock'><p>Computes the determinant of the decomposed matrix.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl&lt;T:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a>&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../../rulinalg/matrix/decomposition/struct.PartialPivLu.html' title='rulinalg::matrix::decomposition::PartialPivLu'>PartialPivLu</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../../src/rulinalg/matrix/decomposition/lu.rs.html#128' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;T:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a>&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='struct' href='../../../rulinalg/matrix/decomposition/struct.PartialPivLu.html' title='rulinalg::matrix::decomposition::PartialPivLu'>PartialPivLu</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../../src/rulinalg/matrix/decomposition/lu.rs.html#128' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.clone' class='method'><span id='clone.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='struct' href='../../../rulinalg/matrix/decomposition/struct.PartialPivLu.html' title='rulinalg::matrix::decomposition::PartialPivLu'>PartialPivLu</a>&lt;T&gt;</code></span></h4>
+<div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
+</div><h4 id='method.clone_from' class='method'><span id='clone_from.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div></span></h4>
+<div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;T:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> + One + Zero&gt; <a class='trait' href='../../../rulinalg/matrix/decomposition/trait.Decomposition.html' title='rulinalg::matrix::decomposition::Decomposition'>Decomposition</a> for <a class='struct' href='../../../rulinalg/matrix/decomposition/struct.PartialPivLu.html' title='rulinalg::matrix::decomposition::PartialPivLu'>PartialPivLu</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../../src/rulinalg/matrix/decomposition/lu.rs.html#134-147' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='associatedtype.Factors' class='type'><span id='Factors.t' class='invisible'><code>type <a href='../../../rulinalg/matrix/decomposition/trait.Decomposition.html#associatedtype.Factors' class='type'>Factors</a> = <a class='struct' href='../../../rulinalg/matrix/decomposition/struct.LUP.html' title='rulinalg::matrix::decomposition::LUP'>LUP</a>&lt;T&gt;</code></span></h4>
+<div class='docblock'><p>The type representing the ordered set of factors that when multiplied yields the decomposed matrix. <a href="../../../rulinalg/matrix/decomposition/trait.Decomposition.html#associatedtype.Factors">Read more</a></p>
+</div><h4 id='method.unpack' class='method'><span id='unpack.v' class='invisible'><code>fn <a href='../../../rulinalg/matrix/decomposition/trait.Decomposition.html#tymethod.unpack' class='fnname'>unpack</a>(self) -&gt; <a class='struct' href='../../../rulinalg/matrix/decomposition/struct.LUP.html' title='rulinalg::matrix::decomposition::LUP'>LUP</a>&lt;T&gt;</code></span></h4>
+<div class='docblock'><p>Extract the individual factors from this decomposition.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../";
+        window.currentCrate = "rulinalg";
+    </script>
+    <script src="../../../jquery.js"></script>
+    <script src="../../../main.js"></script>
+    <script defer src="../../../search-index.js"></script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `decomposition` mod in crate `rulinalg`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, decomposition">
+
+    <title>rulinalg::matrix::decomposition - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../../index.html'>rulinalg</a>::<wbr><a href='../index.html'>matrix</a></p><script>window.sidebarCurrent = {name: 'decomposition', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Module <a href='../../index.html'>rulinalg</a>::<wbr><a href='../index.html'>matrix</a>::<wbr><a class='mod' href=''>decomposition</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../../src/rulinalg/matrix/decomposition/mod.rs.html#1-193' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Decompositions for matrices.</p>
+
+<p>This module houses the decomposition API of <code>rulinalg</code>.
+A decomposition - or factorization - of a matrix is an
+ordered set of <em>factors</em> such that when multiplied reconstructs
+the original matrix. The <a href="trait.Decomposition.html">Decomposition</a>
+trait encodes this property.</p>
+
+<h1 id='the-decomposition-api' class='section-header'><a href='#the-decomposition-api'>The decomposition API</a></h1>
+<p>Decompositions in <code>rulinalg</code> are in general modeled after
+the following:</p>
+
+<ol>
+<li>Given an appropriate matrix, an opaque decomposition object
+may be computed which internally stores the factors
+in an efficient and appropriate format.</li>
+<li>In general, the factors may not be immediately available
+as distinct matrices after decomposition. If the user
+desires the explicit matrix factors involved in the
+decomposition, the user must <code>unpack</code> the decomposition.</li>
+<li>Before unpacking the decomposition, the decomposition
+data structure in question may offer an API that provides
+efficient implementations for some of the most common
+applications of the decomposition. The user is encouraged
+to use the decomposition-specific API rather than unpacking
+the decompositions whenever possible.</li>
+</ol>
+
+<p>For a motivating example that explains the rationale behind
+this design, let us consider the typical LU decomposition with
+partial pivoting. In this case, given a square invertible matrix
+<code>A</code>, one may find matrices <code>P</code>, <code>L</code> and <code>U</code> such that
+<code>PA = LU</code>. Here <code>P</code> is a permutation matrix, <code>L</code> is a lower
+triangular matrix and <code>U</code> is an upper triangular matrix.</p>
+
+<p>Once the decomposition has been obtained, one of its applications
+is the efficient solution of multiple similar linear systems.
+Consider that while computing the LU decomposition requires
+O(n<sup>3</sup>) floating point operations, the solution to
+the system <code>Ax = b</code> can be computed in O(n<sup>2</sup>) floating
+point operations if the LU decomposition has already been obtained.
+Since the right-hand side <code>b</code> has no bearing on the LU decomposition,
+it follows that one can efficiently solve this system for any <code>b</code>.</p>
+
+<p>It turns out that the matrices <code>L</code> and <code>U</code> can be stored compactly
+in the space of a single matrix. Indeed, this is how <code>PartialPivLu</code>
+stores the LU decomposition internally. This allows <code>rulinalg</code> to
+provide the user with efficient implementations of common applications
+for the LU decomposition. However, the full matrix factors are easily
+available to the user by unpacking the decomposition.</p>
+
+<h1 id='available-decompositions' class='section-header'><a href='#available-decompositions'>Available decompositions</a></h1>
+<p><strong>The decompositions API is a work in progress.</strong></p>
+
+<p>Currently, only a portion of the available decompositions in <code>rulinalg</code>
+are available through the decomposition API. Please see the
+<a href="../struct.Matrix.html">Matrix</a> API for the old decomposition
+implementations that have yet not been implemented within
+this framework.</p>
+
+<table>
+<thead>
+<tr>
+<th>Decomposition</th>
+<th>Applicable to</th>
+<th>Supported features</th>
+</tr>
+<tbody>
+
+<tr>
+<td><a href="struct.PartialPivLu.html">PartialPivLu</a></td>
+<td>Square, invertible matrices</td>
+<td>
+    <ul>
+    <li>Linear system solving</li>
+    <li>Matrix inverse</li>
+    <li>Determinant computation</li>
+    </ul>
+</td>
+</tr>
+
+</tbody>
+</table>
+</div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.LUP.html'
+                                  title='rulinalg::matrix::decomposition::LUP'>LUP</a></td>
+                           <td class='docblock-short'>
+                                <p>Result of unpacking an instance of
+<a href="struct.PartialPivLu.html">PartialPivLu</a>.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.PartialPivLu.html'
+                                  title='rulinalg::matrix::decomposition::PartialPivLu'>PartialPivLu</a></td>
+                           <td class='docblock-short'>
+                                <p>LU decomposition with partial pivoting.</p>
+                           </td>
+                       </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.Decomposition.html'
+                                  title='rulinalg::matrix::decomposition::Decomposition'>Decomposition</a></td>
+                           <td class='docblock-short'>
+                                <p>Base trait for decompositions.</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../";
+        window.currentCrate = "rulinalg";
+    </script>
+    <script src="../../../jquery.js"></script>
+    <script src="../../../main.js"></script>
+    <script defer src="../../../search-index.js"></script>
+</body>
+</html>

@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-1728' class='srclink' href='../../src/rulinalg/src/norm/mod.rs.html#56-59' title='goto source code'>[src]</a></span></h1>
+               </span><a class='srclink' href='../../src/rulinalg/norm/mod.rs.html#56-59' title='goto source code'>[src]</a></span></h1>
 <pre class='rust trait'>pub trait MatrixMetric&lt;'a, 'b, T, M1:&nbsp;'a + <a class='trait' href='../../rulinalg/matrix/trait.BaseMatrix.html' title='rulinalg::matrix::BaseMatrix'>BaseMatrix</a>&lt;T&gt;, M2:&nbsp;'b + <a class='trait' href='../../rulinalg/matrix/trait.BaseMatrix.html' title='rulinalg::matrix::BaseMatrix'>BaseMatrix</a>&lt;T&gt;&gt; {
     fn <a href='#tymethod.metric' class='fnname'>metric</a>(&amp;self, m1: &amp;'a M1, m2: &amp;'b M2) -&gt; T;
 }</pre><div class='docblock'><p>Trait for matrix metrics.</p>
@@ -58,7 +58,7 @@
 </div></div>
         <h2 id='implementors'>Implementors</h2>
         <ul class='item-list' id='implementors-list'>
-    <li><code>impl&lt;'a, 'b, U, T, M1, M2&gt; MatrixMetric&lt;'a, 'b, T, M1, M2&gt; for U <span class='where'>where U: <a class='trait' href='../../rulinalg/norm/trait.MatrixNorm.html' title='rulinalg::norm::MatrixNorm'>MatrixNorm</a>&lt;T, M1&gt;, M1: 'a + <a class='trait' href='../../rulinalg/matrix/trait.BaseMatrix.html' title='rulinalg::matrix::BaseMatrix'>BaseMatrix</a>&lt;T&gt;, M2: 'b + <a class='trait' href='../../rulinalg/matrix/trait.BaseMatrix.html' title='rulinalg::matrix::BaseMatrix'>BaseMatrix</a>&lt;T&gt;, &amp;'a M1: <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.Sub.html' title='core::ops::Sub'>Sub</a>&lt;&amp;'b M2, Output=M1&gt;</span></code></li>
+    <li><code>impl&lt;'a, 'b, U, T, M1, M2&gt; MatrixMetric&lt;'a, 'b, T, M1, M2&gt; for U <span class='where fmt-newline'>where U: <a class='trait' href='../../rulinalg/norm/trait.MatrixNorm.html' title='rulinalg::norm::MatrixNorm'>MatrixNorm</a>&lt;T, M1&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;M1: 'a + <a class='trait' href='../../rulinalg/matrix/trait.BaseMatrix.html' title='rulinalg::matrix::BaseMatrix'>BaseMatrix</a>&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;M2: 'b + <a class='trait' href='../../rulinalg/matrix/trait.BaseMatrix.html' title='rulinalg::matrix::BaseMatrix'>BaseMatrix</a>&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;'a M1: <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.Sub.html' title='core::ops::Sub'>Sub</a>&lt;&amp;'b M2, Output=M1&gt;</span></code></li>
 </ul><script type="text/javascript" async
                          src="../../implementors/rulinalg/norm/trait.MatrixMetric.js">
                  </script></section>

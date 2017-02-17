@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-0' class='srclink' href='../src/rulinalg/src/lib.rs.html#1-108' title='goto source code'>[src]</a></span></h1>
+               </span><a class='srclink' href='../src/rulinalg/lib.rs.html#1-124' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'>
 <h1 id='the-rulinalg-crate' class='section-header'><a href='#the-rulinalg-crate'>The rulinalg crate.</a></h1>
 <p>A crate that provides high-dimensional linear algebra
@@ -128,7 +128,7 @@ from <code>Matrix</code> structs and follow all of the borrowing rules of Rust.<
 <p>Note finally that much of the <code>Matrix</code>/<code>MatrixSlice</code>/<code>MatrixSliceMut</code> functionality is contained behind
 the <code>BaseMatrix</code>/<code>BaseMatrixMut</code> traits. This allows us to be generic over matrices or slices.</p>
 </div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
-<table><tr><td><code>pub use norm::{<a class='trait' href='../rulinalg/norm/trait.VectorNorm.html' title='rulinalg::norm::VectorNorm'>VectorNorm</a>, <a class='trait' href='../rulinalg/norm/trait.MatrixNorm.html' title='rulinalg::norm::MatrixNorm'>MatrixNorm</a>};</code></td></tr><tr><td><code>pub use norm::{<a class='trait' href='../rulinalg/norm/trait.VectorMetric.html' title='rulinalg::norm::VectorMetric'>VectorMetric</a>, <a class='trait' href='../rulinalg/norm/trait.MatrixMetric.html' title='rulinalg::norm::MatrixMetric'>MatrixMetric</a>};</code></td></tr></table><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table><tr><td><code>pub use norm::<a class='trait' href='../rulinalg/norm/trait.VectorNorm.html' title='rulinalg::norm::VectorNorm'>VectorNorm</a>;</code></td></tr><tr><td><code>pub use norm::<a class='trait' href='../rulinalg/norm/trait.MatrixNorm.html' title='rulinalg::norm::MatrixNorm'>MatrixNorm</a>;</code></td></tr><tr><td><code>pub use norm::<a class='trait' href='../rulinalg/norm/trait.VectorMetric.html' title='rulinalg::norm::VectorMetric'>VectorMetric</a>;</code></td></tr><tr><td><code>pub use norm::<a class='trait' href='../rulinalg/norm/trait.MatrixMetric.html' title='rulinalg::norm::MatrixMetric'>MatrixMetric</a>;</code></td></tr></table><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
 <table>
                        <tr class=' module-item'>
                            <td><a class='mod' href='convert/index.html'
@@ -142,6 +142,13 @@ the <code>BaseMatrix</code>/<code>BaseMatrixMut</code> traits. This allows us to
                                   title='rulinalg::error'>error</a></td>
                            <td class='docblock-short'>
                                 <p>Error handling for the linalg module.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='io/index.html'
+                                  title='rulinalg::io'>io</a></td>
+                           <td class='docblock-short'>
+                                <p>I/O Module</p>
                            </td>
                        </tr>
                        <tr class=' module-item'>
