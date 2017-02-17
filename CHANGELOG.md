@@ -2,6 +2,29 @@
 
 This document will be used to keep track of changes made between release versions. I'll do my best to note any breaking changes!
 
+## 0.4.2
+
+### Breaking Changes
+
+- None, but `Matrix::lup_decomp` has been deprecated and will be removed soon.
+
+### Features
+
+- Added dedicated `PermutationMatrix`. This type provides more efficent
+operations with permutation matrices.
+- Added CSV read/write functionality to `Matrix`. Under `io` feature flag.
+- Added column iterators, accessed via `BaseMatrix::col_iter` and `BaseMatrixMut::col_iter_mut` functions.
+- Added new `PartialPivLU` struct which contains the result of an LUP decomposition.
+This struct will replace the `Matrix::lup_decomp` function in a future release.
+
+### Bug Fixes
+
+- Fixed an overflow bug with `SliceIter`.
+
+### Minor Changes
+
+- Fixed (very) minor performance issue in `min`/`max` functions.
+
 ## 0.4.1
 
 ### Breaking Changes

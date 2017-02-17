@@ -101,6 +101,9 @@ pub mod ulp;
 pub mod norm;
 
 #[cfg(test)]
+mod testsupport;
+
+#[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
 
@@ -118,5 +121,4 @@ extern crate csv as libcsv;
 extern crate rustc_serialize;
 
 #[cfg(feature = "io")]
-/// io module
 pub mod io;

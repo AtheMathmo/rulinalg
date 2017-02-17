@@ -12,17 +12,16 @@ use std::marker::PhantomData;
 use libnum::Float;
 
 use error::{Error, ErrorKind};
-use utils;
 use vector::Vector;
 
-mod decomposition;
-mod impl_ops;
-mod impl_mat;
-mod mat_mul;
-mod iter;
-mod deref;
-mod slice;
+pub mod decomposition;
 mod base;
+mod deref;
+mod impl_mat;
+mod impl_ops;
+mod iter;
+mod mat_mul;
+mod slice;
 mod permutation_matrix;
 mod impl_permutation_mul;
 
@@ -133,29 +132,6 @@ pub struct RowMut<'a, T: 'a> {
     row: MatrixSliceMut<'a, T>,
 }
 
-
-// MAYBE WE SHOULD MOVE SOME OF THIS STUFF OUT
-//
-
-impl<'a, T: 'a> Row<'a, T> {
-    /// Returns the row as a slice.
-    pub fn raw_slice(&self) -> &'a [T] {
-        unsafe { std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols()) }
-    }
-}
-
-impl<'a, T: 'a> RowMut<'a, T> {
-    /// Returns the row as a slice.
-    pub fn raw_slice(&self) -> &'a [T] {
-        unsafe { std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols()) }
-    }
-
-    /// Returns the row as a slice.
-    pub fn raw_slice_mut(&mut self) -> &'a mut [T] {
-        unsafe { std::slice::from_raw_parts_mut(self.row.as_mut_ptr(), self.row.cols()) }
-    }
-}
-
 /// Row iterator.
 #[derive(Debug)]
 pub struct Rows<'a, T: 'a> {
@@ -176,6 +152,27 @@ pub struct RowsMut<'a, T: 'a> {
     slice_cols: usize,
     row_stride: isize,
     _marker: PhantomData<&'a mut T>,
+}
+
+// MAYBE WE SHOULD MOVE SOME OF THIS STUFF OUT
+
+impl<'a, T: 'a> Row<'a, T> {
+    /// Returns the row as a slice.
+    pub fn raw_slice(&self) -> &'a [T] {
+        unsafe { std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols()) }
+    }
+}
+
+impl<'a, T: 'a> RowMut<'a, T> {
+    /// Returns the row as a slice.
+    pub fn raw_slice(&self) -> &'a [T] {
+        unsafe { std::slice::from_raw_parts(self.row.as_ptr(), self.row.cols()) }
+    }
+
+    /// Returns the row as a slice.
+    pub fn raw_slice_mut(&mut self) -> &'a mut [T] {
+        unsafe { std::slice::from_raw_parts_mut(self.row.as_mut_ptr(), self.row.cols()) }
+    }
 }
 
 /// Column of a matrix.
@@ -230,6 +227,28 @@ pub struct Column<'a, T: 'a> {
 #[derive(Debug)]
 pub struct ColumnMut<'a, T: 'a> {
     col: MatrixSliceMut<'a, T>,
+}
+
+/// Column iterator.
+#[derive(Debug)]
+pub struct Cols<'a, T: 'a> {
+    _marker: PhantomData<&'a T>,
+    col_pos: usize,
+    row_stride: isize,
+    slice_cols: usize,
+    slice_rows: usize,
+    slice_start: *const T,
+}
+
+/// Mutable column iterator.
+#[derive(Debug)]
+pub struct ColsMut<'a, T: 'a> {
+    _marker: PhantomData<&'a mut T>,
+    col_pos: usize,
+    row_stride: isize,
+    slice_cols: usize,
+    slice_rows: usize,
+    slice_start: *mut T,
 }
 
 /// Diagonal offset (used by Diagonal iterator).
@@ -375,35 +394,4 @@ fn forward_substitution<T, M>(l: &M, y: Vector<T>) -> Result<Vector<T>, Error>
         x[i] = (x[i] - dot) / divisor;
     }
     Ok(x)
-}
-
-/// Computes the parity of a permutation matrix.
-fn parity<T, M>(m: &M) -> T
-    where T: Any + Float,
-          M: BaseMatrix<T>
-{
-    let mut visited = vec![false; m.rows()];
-    let mut sgn = T::one();
-
-    for k in 0..m.rows() {
-        if !visited[k] {
-            let mut next = k;
-            let mut len = 0;
-
-            while !visited[next] {
-                len += 1;
-                visited[next] = true;
-                unsafe {
-                    next = utils::find(&m.row_unchecked(next)
-                                           .raw_slice(),
-                                       T::one());
-                }
-            }
-
-            if len % 2 == 0 {
-                sgn = -sgn;
-            }
-        }
-    }
-    sgn
 }
