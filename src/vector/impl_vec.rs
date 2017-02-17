@@ -39,10 +39,12 @@ impl<T> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
     /// let v = Vector::from_fn(4, |x| x * 3);
-    /// assert_eq!(v, Vector::new(vec![0, 3, 6, 9]));
+    /// assert_eq!(v, vector![0, 3, 6, 9]);
+    /// # }
     /// ```
     pub fn from_fn<F>(size: usize, mut f: F) -> Vector<T>
         where F: FnMut(usize) -> T {
@@ -167,16 +169,18 @@ impl<T: Copy> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     /// fn add_two(a: f64) -> f64 {
     ///     a + 2f64
     /// }
     ///
-    /// let a = Vector::new(vec![0.;4]);
+    /// let a = vector![0.; 4];
     ///
     /// let b = a.apply(&add_two);
     ///
-    /// assert_eq!(b.into_vec(), vec![2.0; 4]);
+    /// assert_eq!(b, vector![2.0; 4]);
+    /// # }
     /// ```
     pub fn apply(mut self, f: &Fn(T) -> T) -> Vector<T> {
         for val in &mut self.data {
@@ -194,12 +198,14 @@ impl<T: Copy + PartialOrd> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = Vector::new(vec![1.0,2.0,0.0,5.0]);
+    /// let a = vector![1.0,2.0,0.0,5.0];
     /// let b = a.argmax();
     /// assert_eq!(b.0, 3);
     /// assert_eq!(b.1, 5.0);
+    /// # }
     /// ```
     pub fn argmax(&self) -> (usize, T) {
         utils::argmax(&self.data)
@@ -212,12 +218,14 @@ impl<T: Copy + PartialOrd> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = Vector::new(vec![1.0,2.0,0.0,5.0]);
+    /// let a = vector![1.0, 2.0, 0.0, 5.0];
     /// let b = a.argmin();
     /// assert_eq!(b.0, 2);
     /// assert_eq!(b.1, 0.0);
+    /// # }
     /// ```
     pub fn argmin(&self) -> (usize, T) {
         utils::argmin(&self.data)
@@ -228,14 +236,16 @@ impl<T: Copy + PartialOrd> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = Vector::new(vec![1.0,2.0,3.0,4.0,5.0]);
+    /// let a = vector![1.0, 2.0, 3.0, 4.0, 5.0];
     ///
-    /// let a_lower = a.select(&[2,3,4]);
+    /// let a_lower = a.select(&[2, 3, 4]);
     ///
     /// // Prints [3,4,5]
-    /// println!("{:?}", a_lower.data());
+    /// assert_eq!(a_lower, vector![3.0, 4.0, 5.0]);
+    /// # }
     /// ```
     pub fn select(&self, idxs: &[usize]) -> Vector<T> {
         let mut new_data = Vec::with_capacity(idxs.len());
@@ -294,13 +304,15 @@ impl<T: Copy + Zero + Mul<T, Output = T> + Add<T, Output = T>> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = Vector::new(vec![1.0,2.0,3.0,4.0]);
-    /// let b = Vector::new(vec![2.0; 4]);
+    /// let a = vector![1.0, 2.0, 3.0, 4.0];
+    /// let b = vector![2.0; 4];
     ///
     /// let c = a.dot(&b);
     /// assert_eq!(c, 20.0);
+    /// # }
     /// ```
     pub fn dot(&self, v: &Vector<T>) -> T {
         utils::dot(&self.data, &v.data)
@@ -315,12 +327,14 @@ impl<T: Copy + Zero + Add<T, Output = T>> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = Vector::new(vec![1.0,2.0,3.0,4.0]);
+    /// let a = vector![1.0, 2.0, 3.0, 4.0];
     ///
     /// let c = a.sum();
     /// assert_eq!(c, 10.0);
+    /// # }
     /// ```
     pub fn sum(&self) -> T {
         utils::unrolled_sum(&self.data[..])
@@ -333,13 +347,15 @@ impl<T: Copy + Mul<T, Output = T>> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = Vector::new(vec![1.0,2.0,3.0,4.0]);
-    /// let b = Vector::new(vec![1.0,2.0,3.0,4.0]);
+    /// let a = vector![1.0, 2.0, 3.0, 4.0];
+    /// let b = vector![1.0, 2.0, 3.0, 4.0];
     ///
     /// let c = &a.elemul(&b);
-    /// assert_eq!(*c.data(), vec![1.0, 4.0, 9.0, 16.0]);
+    /// assert_eq!(c, &vector![1.0, 4.0, 9.0, 16.0]);
+    /// # }
     /// ```
     pub fn elemul(&self, v: &Vector<T>) -> Vector<T> {
         assert_eq!(self.size, v.size);
@@ -353,13 +369,15 @@ impl<T: Copy + Div<T, Output = T>> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = Vector::new(vec![1.0,2.0,3.0,4.0]);
-    /// let b = Vector::new(vec![1.0,2.0,3.0,4.0]);
+    /// let a = vector![1.0, 2.0, 3.0, 4.0];
+    /// let b = vector![1.0, 2.0, 3.0, 4.0];
     ///
     /// let c = &a.elediv(&b);
-    /// assert_eq!(*c.data(), vec![1.0; 4]);
+    /// assert_eq!(c, &vector![1.0; 4]);
+    /// # }
     /// ```
     pub fn elediv(&self, v: &Vector<T>) -> Vector<T> {
         assert_eq!(self.size, v.size);
@@ -373,13 +391,15 @@ impl<T: Float> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     /// use rulinalg::norm::Euclidean;
     ///
-    /// let a = Vector::new(vec![3.0,4.0]);
+    /// let a = vector![3.0, 4.0];
     /// let c = a.norm(Euclidean);
     ///
     /// assert_eq!(c, 5.0);
+    /// # }
     /// ```
     pub fn norm<N: VectorNorm<T>>(&self, norm: N) -> T {
         norm.norm(self)
@@ -390,16 +410,18 @@ impl<T: Float> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     /// use rulinalg::norm::Euclidean;
     ///
-    /// let a = Vector::new(vec![3.0, 4.0]);
-    /// let b = Vector::new(vec![0.0, 8.0]);
+    /// let a = vector![3.0, 4.0];
+    /// let b = vector![0.0, 8.0];
     ///
     /// // Compute the square root of the sum of
     /// // elementwise squared-differences
     /// let c = a.metric(&b, Euclidean);
     /// assert_eq!(c, 5.0);
+    /// # }
     /// ```
     pub fn metric<M: VectorMetric<T>>(&self, v: &Vector<T>, m: M) -> T {
         m.metric(self, v)
@@ -414,12 +436,14 @@ impl<T: Float + FromPrimitive> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = Vector::<f32>::new(vec![1.0,2.0,3.0,4.0]);
+    /// let a = vector![1.0, 2.0, 3.0, 4.0];
     ///
     /// let c = a.mean();
     /// assert_eq!(c, 2.5);
+    /// # }
     /// ```
     pub fn mean(&self) -> T {
         let sum = self.sum();
@@ -433,12 +457,14 @@ impl<T: Float + FromPrimitive> Vector<T> {
     /// # Examples
     ///
     /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::vector::Vector;
     ///
-    /// let a = Vector::<f32>::new(vec![1.0,2.0,3.0,4.0]);
+    /// let a = vector![1.0, 2.0, 3.0, 4.0];
     ///
     /// let c = a.variance();
-    /// assert_eq!(c, 5.0/3.0);
+    /// assert_eq!(c, 5.0 / 3.0);
+    /// # }
     /// ```
     pub fn variance(&self) -> T {
         let m = self.mean();

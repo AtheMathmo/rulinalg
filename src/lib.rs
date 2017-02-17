@@ -101,8 +101,24 @@ pub mod ulp;
 pub mod norm;
 
 #[cfg(test)]
+mod testsupport;
+
+#[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
 
+#[cfg(test)]
+#[macro_use]
+extern crate itertools;
+
 pub use norm::{VectorNorm, MatrixNorm};
 pub use norm::{VectorMetric, MatrixMetric};
+
+#[cfg(feature = "io")]
+extern crate csv as libcsv;
+
+#[cfg(feature = "io")]
+extern crate rustc_serialize;
+
+#[cfg(feature = "io")]
+pub mod io;
