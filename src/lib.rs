@@ -121,5 +121,4 @@ extern crate csv as libcsv;
 extern crate rustc_serialize;
 
 #[cfg(feature = "io")]
-/// io module
 pub mod io;

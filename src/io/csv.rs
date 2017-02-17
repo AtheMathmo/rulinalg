@@ -1,4 +1,5 @@
-//! csv read / write module
+//! CSV read / write module
+
 pub use libcsv::{Reader, Writer, Error};
 
 use rustc_serialize::{Decodable, Encodable};
