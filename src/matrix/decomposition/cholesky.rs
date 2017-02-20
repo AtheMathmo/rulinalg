@@ -93,6 +93,34 @@ impl<T> Cholesky<T> where T: 'static + Float {
         transpose_back_substitution(&self.l, y)
             .expect("Internal error: L^T should be invertible.")
     }
+
+    /// Computes the inverse of the decomposed matrix.
+    pub fn inverse(&self) -> Matrix<T> {
+        let n = self.l.rows();
+        let mut inv = Matrix::zeros(n, n);
+        let mut e = Vector::zeros(n);
+
+        // Note: this is essentially the same as
+        // PartialPivLu::inverse(), and consequently
+        // the data access patterns here can also be
+        // improved by way of using BLAS-3 calls.
+        // Please see that function's implementation
+        // for more details.
+
+        // Solve for each column of the inverse matrix
+        for i in 0 .. n {
+            e[i] = T::one();
+            let col = self.solve(e);
+
+            for j in 0 .. n {
+                inv[[j, i]] = col[j];
+            }
+
+            e = col.apply(&|_| T::zero());
+        }
+
+        inv
+    }
 }
 
 impl<T: Zero> Decomposition for Cholesky<T> {
@@ -350,6 +378,43 @@ mod tests {
             let cholesky = Cholesky::decompose(a).unwrap();
             let x = cholesky.solve(b);
             assert_vector_eq!(x, expected, comp = float);
+        }
+    }
+
+    #[test]
+    fn cholesky_inverse_examples() {
+        {
+            let a: Matrix<f64> = matrix![];
+            let expected: Matrix<f64> = matrix![];
+            let cholesky = Cholesky::decompose(a).unwrap();
+            assert_eq!(cholesky.inverse(), expected);
+        }
+
+        {
+            let a = matrix![ 2.0 ];
+            let expected = matrix![ 0.5 ];
+            let cholesky = Cholesky::decompose(a).unwrap();
+            assert_matrix_eq!(cholesky.inverse(), expected, comp = float);
+        }
+
+        {
+            let a = matrix![ 4.0,  6.0;
+                             6.0, 25.0];
+            let expected = matrix![  0.390625, -0.09375;
+                                    -0.093750 , 0.06250];
+            let cholesky = Cholesky::decompose(a).unwrap();
+            assert_matrix_eq!(cholesky.inverse(), expected, comp = float);
+        }
+
+        {
+            let a = matrix![ 9.0,   6.0,   3.0;
+                             6.0,  20.0,  10.0;
+                             3.0,  10.0,  14.0];
+            let expected = matrix![0.1388888888888889, -0.0416666666666667,  0.0               ;
+                                  -0.0416666666666667,  0.0902777777777778, -0.0555555555555556;
+                                                  0.0, -0.0555555555555556,  0.1111111111111111];
+            let cholesky = Cholesky::decompose(a).unwrap();
+            assert_matrix_eq!(cholesky.inverse(), expected, comp = float);
         }
     }
 
