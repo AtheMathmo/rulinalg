@@ -49,7 +49,7 @@ use libnum::{Zero, Float};
 /// let cholesky = Cholesky::decompose(x)
 ///                         .expect("Matrix is SPD.");
 ///
-/// Obtain the matrix factor L
+/// // Obtain the matrix factor L
 /// let l = cholesky.unpack();
 ///
 /// assert_matrix_eq!(l, matrix![1.0,  0.0,  0.0;
@@ -71,7 +71,7 @@ use libnum::{Zero, Float};
 /// # let cholesky = Cholesky::decompose(x).unwrap();
 /// let b1 = vector![ 3.0,  2.0,  1.0];
 /// let b2 = vector![-2.0,  1.0,  0.0];
-/// assert_vector_eq!(cholesky.solve(b1), vector![ 22.00, -7.25,  2.75 ]);
+/// assert_vector_eq!(cholesky.solve(b1), vector![ 23.25, -7.75,  3.0 ]);
 /// assert_vector_eq!(cholesky.solve(b2), vector![-22.25,  7.75, -3.00 ]);
 /// # }
 /// ```
