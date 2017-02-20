@@ -325,17 +325,12 @@ mod tests {
     #[test]
     fn cholesky_solve_examples() {
         {
-            // TODO: Enable this test
-            // It is currently commented out because
-            // backward/forward substitution don't handle
-            // empty matrices. See PR #152 for more details.
-
-            // let a: Matrix<f64> = matrix![];
-            // let b: Vector<f64> = vector![];
-            // let expected: Vector<f64> = vector![];
-            // let cholesky = Cholesky::decompose(a).unwrap();
-            // let x = cholesky.solve(b);
-            // assert_eq!(x, expected);
+            let a: Matrix<f64> = matrix![];
+            let b: Vector<f64> = vector![];
+            let expected: Vector<f64> = vector![];
+            let cholesky = Cholesky::decompose(a).unwrap();
+            let x = cholesky.solve(b);
+            assert_eq!(x, expected);
         }
 
         {
