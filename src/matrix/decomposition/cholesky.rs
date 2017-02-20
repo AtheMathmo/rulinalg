@@ -188,22 +188,28 @@ fn transpose_back_substitution<T>(l: &Matrix<T>, b: Vector<T>)
     let n = l.rows();
     let mut x = b;
 
-    // TODO: Make this implementation more cache efficient
-    // At the moment it is a simple naive (very cache inefficient)
-    // implementation for the sake of correctness.
     for i in (0 .. n).rev() {
-        let mut inner_product = T::zero();
-        for j in (i + 1) .. n {
-            inner_product = inner_product + l[[j, i]] * x[j];
-        }
-
+        let row = l.row(i).raw_slice();
         let diagonal = l[[i, i]];
         if diagonal.abs() < T::epsilon() {
             return Err(Error::new(ErrorKind::DivByZero,
                 "Matrix L is singular to working precision."));
         }
 
-        x[i] = (x[i] - inner_product) / diagonal;
+        x[i] = x[i] / diagonal;
+
+        // Apply the BLAS-1 operation
+        // y <- y + α x
+        // where α = - x[i],
+        // y = x[0 .. i]
+        // and x = l[i, 0 .. i]
+        // TODO: Hopefully we'll have a more systematic way
+        // of applying optimized BLAS-like operations in the future.
+        // In this case, we should replace this loop with a call
+        // to the appropriate function.
+        for j in 0 .. i {
+            x[j] = x[j] - x[i] * row[j];
+        }
     }
 
     Ok(x)
