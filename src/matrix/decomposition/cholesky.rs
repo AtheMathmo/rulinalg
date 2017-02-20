@@ -9,14 +9,103 @@ use std::any::Any;
 
 use libnum::{Zero, Float};
 
-/// TODO
+/// Cholesky decomposition.
+///
+/// Given a square, symmetric positive definite matrix A,
+/// there exists an invertible lower triangular matrix L
+/// such that
+///
+/// A = L L<sup>T</sup>.
+///
+/// This is called the Cholesky decomposition of A.
+/// For not too ill-conditioned A, the computation
+/// of the decomposition is very robust, and it takes about
+/// half the effort of an LU decomposition with partial pivoting.
+///
+/// # Applications
+/// The Cholesky decomposition can be thought of as a specialized
+/// LU decomposition for symmetric positive definite matrices,
+/// and so its applications are similar to that of LU.
+///
+/// The following example shows how to compute the Cholesky
+/// decomposition of a given matrix. In this example, we also
+/// unpack the decomposition to retrieve the L matrix,
+/// but in many practical applications we are not so concerned
+/// with the factor itself. Instead, we may wish to
+/// solve linear systems or compute the determinant or the
+/// inverse of a symmetric positive definite matrix.
+/// In this case, see the next subsections.///
+///
+/// ```
+/// # #[macro_use] extern crate rulinalg; fn main() {
+/// use rulinalg::matrix::decomposition::Cholesky;
+///
+/// // Need to import Decomposition if we want to unpack
+/// use rulinalg::matrix::decomposition::Decomposition;
+///
+/// let x = matrix![ 1.0,  3.0,  1.0;
+///                  3.0, 13.0, 11.0;
+///                  1.0, 11.0, 21.0 ];
+/// let cholesky = Cholesky::decompose(x)
+///                         .expect("Matrix is SPD.");
+///
+/// Obtain the matrix factor L
+/// let l = cholesky.unpack();
+///
+/// assert_matrix_eq!(l, matrix![1.0,  0.0,  0.0;
+///                              3.0,  2.0,  0.0;
+///                              1.0,  4.0,  2.0], comp = float);
+/// # }
+/// ```
+///
+/// ## Solving linear systems
+/// After having decomposed the matrix, one may efficiently
+/// solve linear systems for different right-hand sides.
+///
+/// ```
+/// # #[macro_use] extern crate rulinalg; fn main() {
+/// # use rulinalg::matrix::decomposition::Cholesky;
+/// # let x = matrix![ 1.0,  3.0,  1.0;
+/// #                  3.0, 13.0, 11.0;
+/// #                  1.0, 11.0, 21.0 ];
+/// # let cholesky = Cholesky::decompose(x).unwrap();
+/// let b1 = vector![ 3.0,  2.0,  1.0];
+/// let b2 = vector![-2.0,  1.0,  0.0];
+/// assert_vector_eq!(cholesky.solve(b1), vector![ 22.00, -7.25,  2.75 ]);
+/// assert_vector_eq!(cholesky.solve(b2), vector![-22.25,  7.75, -3.00 ]);
+/// # }
+/// ```
+///
+/// ## Computing the inverse of a matrix
+///
+/// While computing the inverse explicitly is rarely
+/// the best solution to any given problem, it is sometimes
+/// necessary. In this case, it is easily accessible
+/// through the `inverse()` method on `Cholesky`.
+///
+/// # Computing the determinant of a matrix
+///
+/// As with LU decomposition, the `Cholesky` decomposition
+/// exposes a method `det` for computing the determinant
+/// of the decomposed matrix. This is a very cheap operation.
 #[derive(Clone, Debug)]
 pub struct Cholesky<T> {
     l: Matrix<T>
 }
 
 impl<T> Cholesky<T> where T: 'static + Float {
-    /// TODO
+    /// Computes the Cholesky decomposition A = L L<sup>T</sup>
+    /// for the given square, symmetric positive definite matrix.
+    ///
+    /// # Errors
+    /// - A diagonal entry is very close to zero, which
+    ///   corresponds to the matrix being effectively singular
+    ///   to working precision.
+    /// - A diagonal entry is negative.
+    ///
+    /// # Panics
+    ///
+    /// - The matrix must be square.
     pub fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
         assert!(matrix.rows() == matrix.cols(),
             "Matrix must be square for Cholesky decomposition.");
@@ -73,7 +162,7 @@ impl<T> Cholesky<T> where T: 'static + Float {
         })
     }
 
-    /// TODO
+    /// Computes the determinant of the decomposed matrix.
     pub fn det(&self) -> T {
         let l_det = self.l.diag()
                           .cloned()
@@ -81,7 +170,14 @@ impl<T> Cholesky<T> where T: 'static + Float {
         l_det * l_det
     }
 
-    /// TODO
+    /// Solves the linear system Ax = b.
+    ///
+    /// Here A is the decomposed matrix and b is the
+    /// supplied vector.
+    ///
+    /// # Panics
+    /// - The supplied right-hand side vector must be
+    ///   dimensionally compatible with the supplied matrix.
     pub fn solve(&self, b: Vector<T>) -> Vector<T> {
         assert!(self.l.rows() == b.size(),
             "RHS vector and coefficient matrix must be
