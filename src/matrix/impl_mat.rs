@@ -41,7 +41,7 @@ impl<T> Matrix<T> {
     }
 
     /// Constructor for Matrix struct that takes a function `f`
-    /// and constructs a new matrix such that `A_ij = f(i, j)`,
+    /// and constructs a new matrix such that `A_ij = f(j, i)`,
     /// where `i` is the row index and `j` the column index.
     ///
     /// Requires both the row and column dimensions
