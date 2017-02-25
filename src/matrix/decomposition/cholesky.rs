@@ -97,10 +97,15 @@ impl<T> Cholesky<T> where T: 'static + Float {
     /// Computes the Cholesky decomposition A = L L<sup>T</sup>
     /// for the given square, symmetric positive definite matrix.
     ///
+    /// Note that the implementation cannot reliably and efficiently
+    /// verify that the matrix truly is symmetric positive definite matrix,
+    /// so it is the responsibility of the user to make sure that this is
+    /// the case. In particular, if the input matrix is not SPD,
+    /// the returned decomposition may not be a valid decomposition
+    /// for the input matrix.
+    ///
     /// # Errors
-    /// - A diagonal entry is very close to zero, which
-    ///   corresponds to the matrix being effectively singular
-    ///   to working precision.
+    /// - A diagonal entry is effectively zero to working precision.
     /// - A diagonal entry is negative.
     ///
     /// # Panics
