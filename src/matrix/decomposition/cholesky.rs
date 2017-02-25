@@ -125,7 +125,6 @@ impl<T> Cholesky<T> where T: 'static + Float {
         // the upper triangular part.
         let mut a = matrix;
 
-        // Resolve each submatrix (j .. n, j .. n)
         for j in 0 .. n {
             if j > 0 {
                 // This is essentially a GAXPY operation y = y - Bx
