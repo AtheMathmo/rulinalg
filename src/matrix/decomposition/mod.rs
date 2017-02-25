@@ -62,14 +62,26 @@
 //! <thead>
 //! <tr>
 //! <th>Decomposition</th>
-//! <th>Applicable to</th>
+//! <th>Matrix requirements</th>
 //! <th>Supported features</th>
 //! </tr>
 //! <tbody>
 //!
 //! <tr>
 //! <td><a href="struct.PartialPivLu.html">PartialPivLu</a></td>
-//! <td>Square, invertible matrices</td>
+//! <td>Square, invertible</td>
+//! <td>
+//!     <ul>
+//!     <li>Linear system solving</li>
+//!     <li>Matrix inverse</li>
+//!     <li>Determinant computation</li>
+//!     </ul>
+//! </td>
+//! </tr>
+//!
+//! <tr>
+//! <td><a href="struct.Cholesky.html">Cholesky</a></td>
+//! <td>Square, symmetric positive definite</td>
 //! <td>
 //!     <ul>
 //!     <li>Linear system solving</li>
