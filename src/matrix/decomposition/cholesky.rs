@@ -237,6 +237,11 @@ impl<T> Matrix<T>
     ///
     /// Returns the cholesky decomposition of a positive definite matrix.
     ///
+    /// *NOTE*: This function is deprecated, and will be removed in a
+    /// future release. Please see
+    /// [Cholesky](decomposition/struct.Cholesky.html) for its
+    /// replacement.
+    ///
     /// # Examples
     ///
     /// ```
@@ -258,6 +263,7 @@ impl<T> Matrix<T>
     /// # Failures
     ///
     /// - Matrix is not positive definite.
+    #[deprecated]
     pub fn cholesky(&self) -> Result<Matrix<T>, Error> {
         assert!(self.rows == self.cols,
                 "Matrix must be square for Cholesky decomposition.");
@@ -352,6 +358,7 @@ mod tests {
 
     #[test]
     #[should_panic]
+    #[allow(deprecated)]
     fn test_non_square_cholesky() {
         let a = Matrix::<f64>::ones(2, 3);
 
