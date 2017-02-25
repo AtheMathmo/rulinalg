@@ -80,6 +80,35 @@ pub trait BaseMatrix<T>: Sized {
         &*(self.as_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
     }
 
+    /// Get a reference to a point in the matrix. 
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::matrix::{Matrix, BaseMatrix};
+    /// 
+    /// let mat = matrix![0, 1;
+    ///                   3, 4;
+    ///                   6, 7];
+    ///
+    /// assert_eq!(mat.get([0, 2]), None);
+    /// assert_eq!(mat.get([3, 0]), None);
+    ///
+    /// assert_eq!( *mat.get([0, 0]).unwrap(), 0)
+    /// # }
+    /// ```
+    fn get(&self, index: [usize; 2]) -> Option<&T> {
+				let row_ind = index[0];
+				let col_ind = index[1];
+				
+        if row_ind >= self.rows() || col_ind >= self.cols() {
+					None
+        } else {
+        	unsafe { Some(self.get_unchecked(index)) }
+        }
+    }
+
     /// Returns the column of a matrix at the given index.
     /// `None` if the index is out of bounds.
     ///
