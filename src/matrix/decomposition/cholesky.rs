@@ -34,7 +34,7 @@ use libnum::{Zero, Float};
 /// with the factor itself. Instead, we may wish to
 /// solve linear systems or compute the determinant or the
 /// inverse of a symmetric positive definite matrix.
-/// In this case, see the next subsections.///
+/// In this case, see the next subsections.
 ///
 /// ```
 /// # #[macro_use] extern crate rulinalg; fn main() {
