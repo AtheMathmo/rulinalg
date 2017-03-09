@@ -109,7 +109,7 @@ use vector::Vector;
 use utils;
 use error::{Error, ErrorKind};
 
-pub use self::lu::{PartialPivLu, LUP};
+pub use self::lu::{PartialPivLu, LUP, FullPivLu, LUPQ};
 
 use libnum::{Float};
 
