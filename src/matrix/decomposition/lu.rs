@@ -877,8 +877,8 @@ mod tests {
                         -12.0,   5.0,  17.0;
                          15.0,   0.0, -18.0;
                          -6.0,   0.0,   20.0];
-
-        FullPivLu::decompose(x.clone());
+                         
+        FullPivLu::decompose(x.clone()).unwrap();
     }
 
     #[test]
