@@ -376,6 +376,10 @@ impl<T: 'static + Float> FullPivLu<T> {
 
     /// Performs the decomposition.
     pub fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
+        assert!(
+            matrix.rows() == matrix.cols(),
+            "Matrix must be square for LU decomposition.");
+
         let mut lu = matrix.clone();
 
         let nrows = matrix.rows();
@@ -473,14 +477,7 @@ impl<T> FullPivLu<T> where T: Any + Float {
         let mut inv = Matrix::zeros(n, n);
         let mut e = Vector::zeros(n);
 
-        if self.lu.cols() != n {
-            return Err(
-                Error::new(
-                    ErrorKind::InvalidArg,
-                    "Only square matrices have inverses"));
-        }
-
-        if self.det() == T::zero() {
+        if self.rank() != n {
             return Err(
                 Error::new(
                     ErrorKind::InvalidArg,
@@ -507,10 +504,6 @@ impl<T> FullPivLu<T> where T: Any + Float {
     /// # Panics
     /// If the underlying matrix is non-square.
     pub fn det(&self) -> T {
-        assert!(
-            self.lu.rows() == self.lu.cols(),
-            "Only square matrices have determinants");
-
         // Recall that the determinant of a triangular matrix
         // is the product of its diagonal entries. Also,
         // the determinant of L is implicitly 1.
@@ -878,52 +871,14 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
     fn full_piv_lu_decompose_rectangular() {
         let x = matrix![ -3.0,   0.0,   4.0;
                         -12.0,   5.0,  17.0;
                          15.0,   0.0, -18.0;
                          -6.0,   0.0,   20.0];
 
-        let lu = FullPivLu::decompose(x.clone()).unwrap();
-
-        assert_eq!(lu.rank(), 3);
-
-        let LUPQ { l, u, p, q } = lu.unpack();
-
-        let y = p.inverse() * &l * &u * q.inverse();
-
-        assert_matrix_eq!(x, y, comp = float);
-        assert!(is_lower_triangular(&l));
-        assert!(is_upper_triangular(&u));
-    }
-
-    #[test]
-    fn full_piv_lu_decompose_rectangular2() {
-        let x = matrix![ -3.0,   0.0,   4.0;
-                         -6.0,   1.0,   20.0];
-
-        let lu = FullPivLu::decompose(x.clone()).unwrap();
-
-        assert_eq!(lu.rank(), 2);
-
-        let LUPQ { l, u, p, q } = lu.unpack();
-
-        let y = p.inverse() * &l * &u * q.inverse();
-
-        assert_matrix_eq!(x, y, comp = float);
-        assert!(is_lower_triangular(&l));
-        assert!(is_upper_triangular(&u));
-    }
-
-    #[test]
-    #[should_panic]
-    fn full_piv_lu_nonsquare_det() {
-        let x = matrix![ -3.0,   0.0,   4.0;
-                         -6.0,   1.0,   20.0];
-
-        let lu = FullPivLu::decompose(x.clone()).unwrap();
-
-        lu.det();
+        FullPivLu::decompose(x.clone());
     }
 
     #[test]
@@ -959,18 +914,6 @@ mod tests {
         let lu = FullPivLu::decompose(x).unwrap();
 
         assert_matrix_eq!(lu.inverse().unwrap(), inv, comp = float);
-    }
-
-    #[test]
-    pub fn full_piv_lu_inverse_rectangular() {
-        let x = matrix![5.0, 0.0, 1.0;
-                        2.0, 2.0, 1.0;
-                        4.0, 5.0, 5.0;
-                        1.0, 6.0, 5.0];
-
-        let lu = FullPivLu::decompose(x).unwrap();
-
-        assert!(lu.inverse().is_err());
     }
 
     #[test]
