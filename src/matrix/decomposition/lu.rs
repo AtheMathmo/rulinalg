@@ -380,10 +380,10 @@ impl<T: 'static + Float> FullPivLu<T> {
             matrix.rows() == matrix.cols(),
             "Matrix must be square for LU decomposition.");
 
-        let mut lu = matrix.clone();
+        let mut lu = matrix;
 
-        let nrows = matrix.rows();
-        let ncols = matrix.cols();
+        let nrows = lu.rows();
+        let ncols = lu.cols();
         let diag_size = cmp::min(nrows, ncols);
 
         let mut p = PermutationMatrix::identity(nrows);
@@ -395,7 +395,7 @@ impl<T: 'static + Float> FullPivLu<T> {
             // (index, index).
             let (piv_row, piv_col, piv_val) = FullPivLu::select_pivot(&lu, index);
 
-            if piv_val.abs() < T::epsilon() {
+            if piv_val.abs() == T::zero() {
               break;
             }
 
@@ -477,12 +477,8 @@ impl<T> FullPivLu<T> where T: Any + Float {
         let mut inv = Matrix::zeros(n, n);
         let mut e = Vector::zeros(n);
 
-        if self.rank() != n {
-            return Err(
-                Error::new(
-                    ErrorKind::InvalidArg,
-                    "Matrix not invertible"));
-        }
+        // "solve" will return an error if the matrix is
+        // singular, so no need to check for singularity here
 
         for i in 0 .. n {
             e[i] = T::one();
