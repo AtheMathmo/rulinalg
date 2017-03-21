@@ -477,8 +477,12 @@ impl<T> FullPivLu<T> where T: Any + Float {
         let mut inv = Matrix::zeros(n, n);
         let mut e = Vector::zeros(n);
 
-        // "solve" will return an error if the matrix is
-        // singular, so no need to check for singularity here
+        if self.is_singular() {
+            return Err(
+                Error::new(
+                    ErrorKind::DivByZero,
+                    "Singular matrix found while attempting inversion."));
+        }
 
         for i in 0 .. n {
             e[i] = T::one();
@@ -514,10 +518,63 @@ impl<T> FullPivLu<T> where T: Any + Float {
     }
 
     /// Computes the rank of the decomposed matrix.
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg;
+    /// # use rulinalg::matrix::decomposition::FullPivLu;
+    /// # use rulinalg::matrix::Matrix;
+    /// # fn main() {
+    /// let x = matrix![1.0, 2.0, 3.0;
+    ///                 4.0, 5.0, 6.0;
+    ///                 5.0, 7.0, 9.0];
+    /// let lu = FullPivLu::decompose(x).unwrap();
+    /// assert_eq!(lu.rank(), 2);
+    /// # }
+    /// ```
     pub fn rank(&self) -> usize {
-        self.lu.diag().fold(
-            0 as usize,
-            |x, &y| if y.abs() > T::epsilon() { x + 1 } else { x } )
+        let eps = self.epsilon();
+        let mut rank = 0;
+
+        for d in self.lu.diag() {
+            if d.abs() > eps {
+                rank = rank + 1;
+            } else {
+                break;
+            }
+        }
+
+        rank
+    }
+
+    /// Returns whether the matrix is singular.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg;
+    /// # use rulinalg::matrix::decomposition::FullPivLu;
+    /// # use rulinalg::matrix::Matrix;
+    /// # fn main() {
+    /// let x = Matrix::<f64>::identity(4);
+    /// let lu = FullPivLu::decompose(x).unwrap();
+    /// assert!(!lu.is_singular());
+    ///
+    /// let y = matrix![1.0, 2.0, 3.0;
+    ///                 4.0, 5.0, 6.0;
+    ///                 5.0, 7.0, 9.0];
+    /// let lu = FullPivLu::decompose(y).unwrap();
+    /// assert!(lu.is_singular());
+    /// # }
+    /// ```
+    pub fn is_singular(&self) -> bool {
+        let diag_size = cmp::min(self.lu.rows(), self.lu.cols());
+
+        self.rank() != diag_size
+    }
+
+    fn epsilon(&self) -> T {
+        self.lu[[0, 0]].abs() * T::epsilon()
     }
 }
 
