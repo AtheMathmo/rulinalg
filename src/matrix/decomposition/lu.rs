@@ -477,11 +477,11 @@ impl<T> FullPivLu<T> where T: Any + Float {
         let mut inv = Matrix::zeros(n, n);
         let mut e = Vector::zeros(n);
 
-        if self.is_singular() {
+        if !self.is_invertible() {
             return Err(
                 Error::new(
                     ErrorKind::DivByZero,
-                    "Singular matrix found while attempting inversion."));
+                    "Non-invertible matrix found while attempting inversion"));
         }
 
         for i in 0 .. n {
@@ -547,7 +547,10 @@ impl<T> FullPivLu<T> where T: Any + Float {
         rank
     }
 
-    /// Returns whether the matrix is singular.
+    /// Returns whether the matrix is invertible.
+    ///
+    /// Empty matrices are considered to be invertible for
+    /// the sake of this function.
     ///
     /// # Examples
     ///
@@ -558,23 +561,26 @@ impl<T> FullPivLu<T> where T: Any + Float {
     /// # fn main() {
     /// let x = Matrix::<f64>::identity(4);
     /// let lu = FullPivLu::decompose(x).unwrap();
-    /// assert!(!lu.is_singular());
+    /// assert!(lu.is_invertible());
     ///
     /// let y = matrix![1.0, 2.0, 3.0;
     ///                 4.0, 5.0, 6.0;
     ///                 5.0, 7.0, 9.0];
     /// let lu = FullPivLu::decompose(y).unwrap();
-    /// assert!(lu.is_singular());
+    /// assert!(!lu.is_invertible());
     /// # }
     /// ```
-    pub fn is_singular(&self) -> bool {
+    pub fn is_invertible(&self) -> bool {
         let diag_size = cmp::min(self.lu.rows(), self.lu.cols());
+        let diag_last = diag_size - 1;
 
-        self.rank() != diag_size
+        self.lu.get([diag_last, diag_last])
+            .map(|x| x.abs() > self.epsilon())
+            .unwrap_or(true)
     }
 
     fn epsilon(&self) -> T {
-        self.lu[[0, 0]].abs() * T::epsilon()
+        self.lu.get([0, 0]).unwrap_or(&T::one()).abs() * T::epsilon()
     }
 }
 
