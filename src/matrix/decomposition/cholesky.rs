@@ -71,8 +71,10 @@ use libnum::{Zero, Float};
 /// # let cholesky = Cholesky::decompose(x).unwrap();
 /// let b1 = vector![ 3.0,  2.0,  1.0];
 /// let b2 = vector![-2.0,  1.0,  0.0];
-/// assert_vector_eq!(cholesky.solve(b1), vector![ 23.25, -7.75,  3.0 ]);
-/// assert_vector_eq!(cholesky.solve(b2), vector![-22.25,  7.75, -3.00 ]);
+/// let y1 = cholesky.solve(b1).expect("Matrix is invertible.");
+/// let y2 = cholesky.solve(b2).expect("Matrix is invertible.");
+/// assert_vector_eq!(y1, vector![ 23.25, -7.75,  3.0 ]);
+/// assert_vector_eq!(y2, vector![-22.25,  7.75, -3.00 ]);
 /// # }
 /// ```
 ///
@@ -179,23 +181,29 @@ impl<T> Cholesky<T> where T: 'static + Float {
     /// Here A is the decomposed matrix and b is the
     /// supplied vector.
     ///
+    /// # Errors
+    /// If the matrix is sufficiently ill-conditioned,
+    /// it is possible that the solution cannot be obtained.
+    ///
     /// # Panics
     /// - The supplied right-hand side vector must be
     ///   dimensionally compatible with the supplied matrix.
-    pub fn solve(&self, b: Vector<T>) -> Vector<T> {
+    pub fn solve(&self, b: Vector<T>) -> Result<Vector<T>, Error> {
         assert!(self.l.rows() == b.size(),
             "RHS vector and coefficient matrix must be
              dimensionally compatible.");
         // Solve Ly = b
-        let y = forward_substitution(&self.l, b)
-                    .expect("Internal error: L should be invertible.");
+        let y = forward_substitution(&self.l, b)?;
         // Solve L^T x = y
         transpose_back_substitution(&self.l, y)
-            .expect("Internal error: L^T should be invertible.")
     }
 
     /// Computes the inverse of the decomposed matrix.
-    pub fn inverse(&self) -> Matrix<T> {
+    ///
+    /// # Errors
+    /// If the matrix is sufficiently ill-conditioned,
+    /// it is possible that the inverse cannot be obtained.
+    pub fn inverse(&self) -> Result<Matrix<T>, Error> {
         let n = self.l.rows();
         let mut inv = Matrix::zeros(n, n);
         let mut e = Vector::zeros(n);
@@ -210,7 +218,7 @@ impl<T> Cholesky<T> where T: 'static + Float {
         // Solve for each column of the inverse matrix
         for i in 0 .. n {
             e[i] = T::one();
-            let col = self.solve(e);
+            let col = self.solve(e)?;
 
             for j in 0 .. n {
                 inv[[j, i]] = col[j];
@@ -219,7 +227,7 @@ impl<T> Cholesky<T> where T: 'static + Float {
             e = col.apply(&|_| T::zero());
         }
 
-        inv
+        Ok(inv)
     }
 }
 
@@ -464,7 +472,7 @@ mod tests {
             let b: Vector<f64> = vector![];
             let expected: Vector<f64> = vector![];
             let cholesky = Cholesky::decompose(a).unwrap();
-            let x = cholesky.solve(b);
+            let x = cholesky.solve(b).unwrap();
             assert_eq!(x, expected);
         }
 
@@ -473,7 +481,7 @@ mod tests {
             let b = vector![ 4.0 ];
             let expected = vector![ 4.0 ];
             let cholesky = Cholesky::decompose(a).unwrap();
-            let x = cholesky.solve(b);
+            let x = cholesky.solve(b).unwrap();
             assert_vector_eq!(x, expected, comp = float);
         }
 
@@ -483,7 +491,7 @@ mod tests {
             let b = vector![ 2.0,  4.0];
             let expected = vector![ 0.40625,  0.0625 ];
             let cholesky = Cholesky::decompose(a).unwrap();
-            let x = cholesky.solve(b);
+            let x = cholesky.solve(b).unwrap();
             assert_vector_eq!(x, expected, comp = float);
         }
     }
@@ -494,14 +502,15 @@ mod tests {
             let a: Matrix<f64> = matrix![];
             let expected: Matrix<f64> = matrix![];
             let cholesky = Cholesky::decompose(a).unwrap();
-            assert_eq!(cholesky.inverse(), expected);
+            assert_eq!(cholesky.inverse().unwrap(), expected);
         }
 
         {
             let a = matrix![ 2.0 ];
             let expected = matrix![ 0.5 ];
             let cholesky = Cholesky::decompose(a).unwrap();
-            assert_matrix_eq!(cholesky.inverse(), expected, comp = float);
+            assert_matrix_eq!(cholesky.inverse().unwrap(), expected,
+                              comp = float);
         }
 
         {
@@ -510,7 +519,8 @@ mod tests {
             let expected = matrix![  0.390625, -0.09375;
                                     -0.093750 , 0.06250];
             let cholesky = Cholesky::decompose(a).unwrap();
-            assert_matrix_eq!(cholesky.inverse(), expected, comp = float);
+            assert_matrix_eq!(cholesky.inverse().unwrap(), expected,
+                              comp = float);
         }
 
         {
@@ -521,7 +531,8 @@ mod tests {
                                   -0.0416666666666667,  0.0902777777777778, -0.0555555555555556;
                                                   0.0, -0.0555555555555556,  0.1111111111111111];
             let cholesky = Cholesky::decompose(a).unwrap();
-            assert_matrix_eq!(cholesky.inverse(), expected, comp = float);
+            assert_matrix_eq!(cholesky.inverse().unwrap(), expected,
+                              comp = float);
         }
     }
 
