@@ -471,7 +471,7 @@ impl<T> FullPivLu<T> where T: Any + Float {
     ///
     /// # Errors
     /// The inversion might fail if the matrix is very ill-conditioned.
-    /// The inversion fails if the matrix is not square, or is not invertible.
+    /// The inversion fails is not invertible.
     pub fn inverse(&self) -> Result<Matrix<T>, Error> {
         let n = self.lu.rows();
         let mut inv = Matrix::zeros(n, n);
@@ -500,6 +500,8 @@ impl<T> FullPivLu<T> where T: Any + Float {
     }
 
     /// Computes the determinant of the decomposed matrix.
+    ///
+    /// Empty matrices are considered to have a determinant of 1.0.
     ///
     /// # Panics
     /// If the underlying matrix is non-square.
@@ -572,11 +574,16 @@ impl<T> FullPivLu<T> where T: Any + Float {
     /// ```
     pub fn is_invertible(&self) -> bool {
         let diag_size = cmp::min(self.lu.rows(), self.lu.cols());
-        let diag_last = diag_size - 1;
 
-        self.lu.get([diag_last, diag_last])
-            .map(|x| x.abs() > self.epsilon())
-            .unwrap_or(true)
+        if diag_size > 0 {
+            let diag_last = diag_size - 1;
+            let last =
+                unsafe { self.lu.get_unchecked([diag_last, diag_last]) };
+
+            last.abs() > self.epsilon()
+        } else {
+            true
+        }
     }
 
     fn epsilon(&self) -> T {
@@ -984,5 +991,34 @@ mod tests {
         let lu = FullPivLu::decompose(x).unwrap();
 
         assert!(lu.inverse().is_err());
+    }
+
+    #[test]
+    pub fn full_piv_lu_empty_matrix() {
+        use matrix::base::BaseMatrix;
+
+        let x = Matrix::from_fn(0, 0, |_, _| 0.0);
+        assert_eq!(x.rows(), 0);
+        assert_eq!(x.cols(), 0);
+
+        let lu = FullPivLu::decompose(x).unwrap();
+
+        assert!(lu.is_invertible());
+        assert_eq!(lu.rank(), 0);
+        assert_eq!(lu.det(), 1.0);
+
+        let inverse = lu.inverse().unwrap();
+        assert_eq!(inverse.rows(), 0);
+        assert_eq!(inverse.cols(), 0);
+
+        let LUPQ { l, u, p, q } = lu.unpack();
+        assert_eq!(l.rows(), 0);
+        assert_eq!(l.cols(), 0);
+
+        assert_eq!(u.rows(), 0);
+        assert_eq!(u.cols(), 0);
+
+        assert_eq!(p.size(), 0);
+        assert_eq!(q.size(), 0);
     }
 }
