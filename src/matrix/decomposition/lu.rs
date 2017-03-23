@@ -471,7 +471,7 @@ impl<T> FullPivLu<T> where T: Any + Float {
     ///
     /// # Errors
     /// The inversion might fail if the matrix is very ill-conditioned.
-    /// The inversion fails is not invertible.
+    /// The inversion fails if the matrix is not invertible.
     pub fn inverse(&self) -> Result<Matrix<T>, Error> {
         let n = self.lu.rows();
         let mut inv = Matrix::zeros(n, n);
