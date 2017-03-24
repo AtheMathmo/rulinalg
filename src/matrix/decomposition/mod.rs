@@ -79,6 +79,19 @@
 //! </td>
 //! </tr>
 //!
+//! <tr>
+//! <td><a href="struct.FullPivLu.html">FullPivLu</a></td>
+//! <td>Square matrices</td>
+//! <td>
+//!     <ul>
+//!     <li>Linear system solving</li>
+//!     <li>Matrix inverse</li>
+//!     <li>Determinant computation</li>
+//!     <li>Rank computation</li>
+//!     </ul>
+//! </td>
+//! </tr>
+//!
 //! </tbody>
 //! </table>
 
@@ -109,7 +122,7 @@ use vector::Vector;
 use utils;
 use error::{Error, ErrorKind};
 
-pub use self::lu::{PartialPivLu, LUP};
+pub use self::lu::{PartialPivLu, LUP, FullPivLu, LUPQ};
 
 use libnum::{Float};
 
