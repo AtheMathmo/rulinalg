@@ -169,6 +169,9 @@ impl<T> Cholesky<T> where T: 'static + Float {
     }
 
     /// Computes the determinant of the decomposed matrix.
+    ///
+    /// Note that the determinant of an empty matrix is considered
+    /// to be equal to 1.
     pub fn det(&self) -> T {
         let l_det = self.l.diag()
                           .cloned()

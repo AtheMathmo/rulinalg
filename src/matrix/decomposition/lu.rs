@@ -285,6 +285,9 @@ impl<T> PartialPivLu<T> where T: Any + Float {
     }
 
     /// Computes the determinant of the decomposed matrix.
+    ///
+    /// Note that the determinant of an empty matrix is considered
+    /// to be equal to 1.
     pub fn det(&self) -> T {
         // Recall that the determinant of a triangular matrix
         // is the product of its diagonal entries. Also,
