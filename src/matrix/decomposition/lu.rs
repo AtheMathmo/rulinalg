@@ -5,6 +5,7 @@ use vector::Vector;
 use error::{Error, ErrorKind};
 
 use std::any::Any;
+use std::cmp;
 
 use libnum::{Float, Zero, One};
 
@@ -183,13 +184,8 @@ impl<T: 'static + Float> PartialPivLu<T> {
 
             lu.swap_rows(index, curr_max_idx);
             p.swap_rows(index, curr_max_idx);
-            for i in (index+1)..n {
-                let mult = lu[[i, index]] / curr_max;
-                lu[[i, index]] = mult;
-                for j in (index+1)..n {
-                    lu[[i, j]] = lu[[i,j]] - mult*lu[[index, j]];
-                }
-            }
+
+            gaussian_elimination(&mut lu, index);
         }
         Ok(PartialPivLu {
             lu: lu,
@@ -301,6 +297,321 @@ impl<T> PartialPivLu<T> where T: Any + Float {
     }
 }
 
+/// Result of unpacking an instance of
+/// [FullPivLu](struct.FullPivLu.html).
+///
+/// PAQ = LU
+#[derive(Debug, Clone)]
+pub struct LUPQ<T> {
+    /// The lower triangular matrix in the decomposition.
+    pub l: Matrix<T>,
+
+    /// The upper triangular matrix in the decomposition.
+    pub u: Matrix<T>,
+
+    /// The row-exchange permutation matrix in the decomposition.
+    pub p: PermutationMatrix<T>,
+
+    /// The column-exchange permutation matrix in the decomposition.
+    pub q: PermutationMatrix<T>
+}
+
+/// LU decomposition with complete pivoting.
+///
+/// For any square matrix A, there exist two permutation matrices
+/// `P` and `Q`, a lower triangular matrix `L` and an upper triangular
+/// matrix `U` such that
+///
+/// ```text
+/// PAQ = LU.
+/// ```
+///
+/// Unlike the LU decomposition computed with partial pivoting, this
+/// decomposition is stable for singular matrices. It is also a rank-
+/// revealing decomposition.
+///
+/// See [PartialPivLu](decomposition/struct.PartialPivLu.html) for
+/// applications of LU decompositions in general.
+#[derive(Debug, Clone)]
+pub struct FullPivLu<T> {
+    lu: Matrix<T>,
+    p: PermutationMatrix<T>,
+    q: PermutationMatrix<T>
+}
+
+impl<T: Clone + One + Zero> Decomposition for FullPivLu<T> {
+    type Factors = LUPQ<T>;
+
+    fn unpack(self) -> LUPQ<T> {
+        use internal_utils::nullify_lower_triangular_part;
+        let l = unit_lower_triangular_part(&self.lu);
+        let mut u = self.lu;
+        nullify_lower_triangular_part(&mut u);
+
+        LUPQ {
+            l: l,
+            u: u,
+            p: self.p,
+            q: self.q,
+        }
+    }
+}
+
+impl<T: 'static + Float> FullPivLu<T> {
+    fn select_pivot(mat: &Matrix<T>, index: usize) -> (usize, usize, T) {
+        let mut piv_row = index;
+        let mut piv_col = index;
+        let mut piv_val = mat[[index,index]];
+
+        for row in index..mat.rows() {
+            for col in index..mat.cols() {
+                let val = mat[[row,col]];
+
+                if val.abs() > piv_val.abs() {
+                    piv_val = val;
+                    piv_row = row;
+                    piv_col = col;
+                }
+            }
+        }
+
+        (piv_row, piv_col, piv_val)
+    }
+
+    /// Performs the decomposition.
+    pub fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
+        assert!(
+            matrix.rows() == matrix.cols(),
+            "Matrix must be square for LU decomposition.");
+
+        let mut lu = matrix;
+
+        let nrows = lu.rows();
+        let ncols = lu.cols();
+        let diag_size = cmp::min(nrows, ncols);
+
+        let mut p = PermutationMatrix::identity(nrows);
+        let mut q = PermutationMatrix::identity(ncols);
+
+        for index in 0..diag_size {
+            // Select the current pivot. This is the largest value in
+            // the bottom right corner of the matrix, starting at
+            // (index, index).
+            let (piv_row, piv_col, piv_val) = FullPivLu::select_pivot(&lu, index);
+
+            if piv_val.abs() == T::zero() {
+              break;
+            }
+
+            lu.swap_rows(index, piv_row);
+            lu.swap_cols(index, piv_col);
+
+            p.swap_rows(index, piv_row);
+
+            // This is a little misleading, but even though
+            // we're calling swap_rows here, since q is applied on the
+            // right to A (i.e. P * A * Q), the result is a column swap of A.
+            q.swap_rows(index, piv_col);
+
+            // We've swapped the pivot row and column so that the pivot
+            // ends up in the (index, index) position, so apply gaussian
+            // elimination to the bottom-right corner.
+            gaussian_elimination(&mut lu, index);
+        }
+
+        Ok(FullPivLu {
+            lu: lu,
+            p: p.inverse(),
+            q: q.inverse()
+        })
+    }
+}
+
+// TODO: Remove Any bound (cannot for the time being, since
+// back substitution uses Any bound)
+impl<T> FullPivLu<T> where T: Any + Float {
+
+    /// Solves the linear system `Ax = b`.
+    ///
+    /// Here, `A` is the decomposed matrix satisfying
+    /// `PAQ = LU`. Note that this method is particularly
+    /// well suited to solving multiple such linear systems
+    /// involving the same `A` but different `b`.
+    ///
+    /// # Errors
+    ///
+    /// If the matrix is very ill-conditioned, the function
+    /// might fail to obtain the solution to the system.
+    ///
+    /// # Panics
+    ///
+    /// The right-hand side vector `b` must have compatible size.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg;
+    /// # use rulinalg::matrix::decomposition::FullPivLu;
+    /// # use rulinalg::matrix::Matrix;
+    /// # fn main() {
+    /// let x = Matrix::identity(4);
+    /// let lu = FullPivLu::decompose(x).unwrap();
+    /// let b = vector![3.0, 4.0, 2.0, 1.0];
+    /// let y = lu.solve(b)
+    ///           .expect("Matrix is invertible.");
+    /// assert_vector_eq!(y, vector![3.0, 4.0, 2.0, 1.0], comp = float);
+    /// # }
+    /// ```
+    pub fn solve(&self, b: Vector<T>) -> Result<Vector<T>, Error> {
+        assert!(b.size() == self.lu.rows(),
+            "Right-hand side vector must have compatible size.");
+
+        let b = lu_forward_substitution(&self.lu, &self.p * b);
+        back_substitution(&self.lu, b).map(|x| &self.q * x)
+    }
+
+    /// Computes the inverse of the matrix which this LUP decomposition
+    /// represents.
+    ///
+    /// # Errors
+    /// The inversion might fail if the matrix is very ill-conditioned.
+    /// The inversion fails if the matrix is not invertible.
+    pub fn inverse(&self) -> Result<Matrix<T>, Error> {
+        let n = self.lu.rows();
+        let mut inv = Matrix::zeros(n, n);
+        let mut e = Vector::zeros(n);
+
+        if !self.is_invertible() {
+            return Err(
+                Error::new(
+                    ErrorKind::DivByZero,
+                    "Non-invertible matrix found while attempting inversion"));
+        }
+
+        for i in 0 .. n {
+            e[i] = T::one();
+
+            let col = try!(self.solve(e));
+
+            for j in 0 .. n {
+                inv[[j, i]] = col[j];
+            }
+
+            e = col.apply(&|_| T::zero());
+        }
+
+        Ok(inv)
+    }
+
+    /// Computes the determinant of the decomposed matrix.
+    ///
+    /// Empty matrices are considered to have a determinant of 1.0.
+    ///
+    /// # Panics
+    /// If the underlying matrix is non-square.
+    pub fn det(&self) -> T {
+        // Recall that the determinant of a triangular matrix
+        // is the product of its diagonal entries. Also,
+        // the determinant of L is implicitly 1.
+        let u_det = self.lu.diag().fold(T::one(), |x, &y| x * y);
+
+        // Note that the determinants of P and Q are equal to the
+        // determinant of P^T and Q^T, so we don't have to invert them
+        let p_det = self.p.clone().det();
+        let q_det = self.q.clone().det();
+
+        p_det * u_det * q_det
+    }
+
+    /// Computes the rank of the decomposed matrix.
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg;
+    /// # use rulinalg::matrix::decomposition::FullPivLu;
+    /// # use rulinalg::matrix::Matrix;
+    /// # fn main() {
+    /// let x = matrix![1.0, 2.0, 3.0;
+    ///                 4.0, 5.0, 6.0;
+    ///                 5.0, 7.0, 9.0];
+    /// let lu = FullPivLu::decompose(x).unwrap();
+    /// assert_eq!(lu.rank(), 2);
+    /// # }
+    /// ```
+    pub fn rank(&self) -> usize {
+        let eps = self.epsilon();
+        let mut rank = 0;
+
+        for d in self.lu.diag() {
+            if d.abs() > eps {
+                rank = rank + 1;
+            } else {
+                break;
+            }
+        }
+
+        rank
+    }
+
+    /// Returns whether the matrix is invertible.
+    ///
+    /// Empty matrices are considered to be invertible for
+    /// the sake of this function.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rulinalg;
+    /// # use rulinalg::matrix::decomposition::FullPivLu;
+    /// # use rulinalg::matrix::Matrix;
+    /// # fn main() {
+    /// let x = Matrix::<f64>::identity(4);
+    /// let lu = FullPivLu::decompose(x).unwrap();
+    /// assert!(lu.is_invertible());
+    ///
+    /// let y = matrix![1.0, 2.0, 3.0;
+    ///                 4.0, 5.0, 6.0;
+    ///                 5.0, 7.0, 9.0];
+    /// let lu = FullPivLu::decompose(y).unwrap();
+    /// assert!(!lu.is_invertible());
+    /// # }
+    /// ```
+    pub fn is_invertible(&self) -> bool {
+        let diag_size = cmp::min(self.lu.rows(), self.lu.cols());
+
+        if diag_size > 0 {
+            let diag_last = diag_size - 1;
+            let last =
+                unsafe { self.lu.get_unchecked([diag_last, diag_last]) };
+
+            last.abs() > self.epsilon()
+        } else {
+            true
+        }
+    }
+
+    fn epsilon(&self) -> T {
+        self.lu.get([0, 0]).unwrap_or(&T::one()).abs() * T::epsilon()
+    }
+}
+
+/// Performs Gaussian elimination in the lower-right hand corner starting at
+/// (index, index).
+fn gaussian_elimination<T: Float>(lu: &mut Matrix<T>, index: usize) {
+
+    let piv_val = lu[[index, index]];
+
+    for i in (index+1)..lu.rows() {
+        let mult = lu[[i, index]] / piv_val;
+
+        lu[[i, index]] = mult;
+
+        for j in (index+1)..lu.cols() {
+            lu[[i, j]] = lu[[i,j]] - mult*lu[[index, j]];
+        }
+    }
+}
+
 /// Performs forward substitution using the LU matrix
 /// for which L has an implicit unit diagonal. That is,
 /// the strictly lower triangular part of LU corresponds
@@ -329,24 +640,23 @@ fn lu_forward_substitution<T: Float>(lu: &Matrix<T>, b: Vector<T>) -> Vector<T> 
 
 fn unit_lower_triangular_part<T, M>(matrix: &M) -> Matrix<T>
     where T: Zero + One + Clone, M: BaseMatrix<T> {
-    let (m, n) = (matrix.rows(), matrix.cols());
-    let mut data = Vec::<T>::with_capacity(m * n);
+
+    let m = matrix.rows();
+    let mut data = Vec::<T>::with_capacity(m * m);
 
     for (i, row) in matrix.row_iter().enumerate() {
         for element in row.iter().take(i).cloned() {
             data.push(element);
         }
 
-        if i < n {
-            data.push(T::one());
-        }
+        data.push(T::one());
 
-        for _ in (i + 1) .. n {
+        for _ in (i + 1) .. m {
             data.push(T::zero());
         }
     }
 
-    Matrix::new(m, n, data)
+    Matrix::new(m, m, data)
 }
 
 
@@ -429,7 +739,7 @@ mod tests {
     use matrix::{Matrix, PermutationMatrix};
     use testsupport::{is_lower_triangular, is_upper_triangular};
 
-    use super::{PartialPivLu, LUP};
+    use super::{PartialPivLu, LUP, FullPivLu, LUPQ};
     use matrix::decomposition::Decomposition;
 
     use libnum::Float;
@@ -578,4 +888,132 @@ mod tests {
         }
     }
 
+    #[test]
+    fn full_piv_lu_decompose_arbitrary() {
+        // Since the LUP decomposition is not in general unique,
+        // we can not test against factors directly, but
+        // instead we must rely on the fact that the
+        // matrices P, L and U together construct the
+        // original matrix
+        let x = matrix![ -3.0,   0.0,   4.0,   1.0;
+                        -12.0,   5.0,  17.0,   1.0;
+                         15.0,   0.0, -18.0,  -5.0;
+                          6.0,  20.0, -10.0, -15.0 ];
+
+        let LUPQ { l, u, p, q } = FullPivLu::decompose(x.clone())
+                                           .unwrap()
+                                           .unpack();
+
+        let y = p.inverse() * &l * &u * q.inverse();
+
+        assert_matrix_eq!(x, y, comp = float);
+        assert!(is_lower_triangular(&l));
+        assert!(is_upper_triangular(&u));
+    }
+
+    #[test]
+    fn full_piv_lu_decompose_singular() {
+        let x = matrix![ -3.0,   0.0,   4.0,   1.0;
+                        -12.0,   5.0,  17.0,   1.0;
+                         15.0,   0.0, -18.0,  -5.0;
+                         -6.0,   0.0,   8.0,   2.0 ];
+
+        let lu = FullPivLu::decompose(x.clone()).unwrap();
+
+        assert_eq!(lu.rank(), 3);
+
+        let LUPQ { l, u, p, q } = lu.unpack();
+
+        let y = p.inverse() * &l * &u * q.inverse();
+
+        assert_matrix_eq!(x, y, comp = float);
+        assert!(is_lower_triangular(&l));
+        assert!(is_upper_triangular(&u));
+    }
+
+    #[test]
+    #[should_panic]
+    fn full_piv_lu_decompose_rectangular() {
+        let x = matrix![ -3.0,   0.0,   4.0;
+                        -12.0,   5.0,  17.0;
+                         15.0,   0.0, -18.0;
+                         -6.0,   0.0,   20.0];
+                         
+        FullPivLu::decompose(x.clone()).unwrap();
+    }
+
+    #[test]
+    pub fn full_piv_lu_solve_arbitrary_matrix() {
+        let x = matrix![ 5.0, 0.0, 0.0, 1.0;
+                         2.0, 2.0, 2.0, 1.0;
+                         4.0, 5.0, 5.0, 5.0;
+                         1.0, 6.0, 4.0, 5.0 ];
+        let b = vector![9.0, 16.0, 49.0, 45.0];
+        let expected = vector![1.0, 2.0, 3.0, 4.0];
+
+        let lu = FullPivLu::decompose(x).unwrap();
+        let y = lu.solve(b).unwrap();
+
+        // Need to up the tolerance to take into account
+        // numerical error. Ideally there'd be a more systematic
+        // way to test this.
+        assert_vector_eq!(y, expected, comp = ulp, tol = 100);
+    }
+
+    #[test]
+    pub fn full_piv_lu_inverse_arbitrary_invertible_matrix() {
+        let x = matrix![5.0, 0.0, 0.0, 1.0;
+                        2.0, 2.0, 2.0, 1.0;
+                        4.0, 5.0, 5.0, 5.0;
+                        1.0, 6.0, 4.0, 5.0];
+
+        let inv = matrix![1.85185185185185203e-01,   1.85185185185185175e-01, -7.40740740740740561e-02, -1.02798428206033007e-17;
+                          1.66666666666666630e-01,   6.66666666666666519e-01, -6.66666666666666519e-01,  4.99999999999999833e-01;
+                         -3.88888888888888840e-01,   1.11111111111111174e-01,  5.55555555555555358e-01, -4.99999999999999833e-01;
+                          7.40740740740740838e-02,  -9.25925925925925819e-01,  3.70370370370370294e-01,  5.13992141030165006e-17];
+
+        let lu = FullPivLu::decompose(x).unwrap();
+
+        assert_matrix_eq!(lu.inverse().unwrap(), inv, comp = float);
+    }
+
+    #[test]
+    pub fn full_piv_lu_inverse_noninvertible() {
+        let x = matrix![5.0, 0.0, 1.0;
+                        4.0, 5.0, 5.0;
+                        9.0, 5.0, 6.0];
+
+        let lu = FullPivLu::decompose(x).unwrap();
+
+        assert!(lu.inverse().is_err());
+    }
+
+    #[test]
+    pub fn full_piv_lu_empty_matrix() {
+        use matrix::base::BaseMatrix;
+
+        let x = Matrix::from_fn(0, 0, |_, _| 0.0);
+        assert_eq!(x.rows(), 0);
+        assert_eq!(x.cols(), 0);
+
+        let lu = FullPivLu::decompose(x).unwrap();
+
+        assert!(lu.is_invertible());
+        assert_eq!(lu.rank(), 0);
+        assert_eq!(lu.det(), 1.0);
+
+        let inverse = lu.inverse().unwrap();
+        assert_eq!(inverse.rows(), 0);
+        assert_eq!(inverse.cols(), 0);
+
+        let LUPQ { l, u, p, q } = lu.unpack();
+        assert_eq!(l.rows(), 0);
+        assert_eq!(l.cols(), 0);
+
+        assert_eq!(u.rows(), 0);
+        assert_eq!(u.cols(), 0);
+
+        assert_eq!(p.size(), 0);
+        assert_eq!(q.size(), 0);
+    }
 }
