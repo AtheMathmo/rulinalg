@@ -171,6 +171,7 @@ fn matrix_partial_piv_lu() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn cholesky() {
     let a = matrix![25., 15., -5.;
                     15., 18., 0.;

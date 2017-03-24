@@ -136,8 +136,10 @@ impl<T: Clone + One + Zero> Decomposition for PartialPivLu<T> {
     type Factors = LUP<T>;
 
     fn unpack(self) -> LUP<T> {
+        use internal_utils::nullify_lower_triangular_part;
         let l = unit_lower_triangular_part(&self.lu);
-        let u = nullify_lower_triangular_part(self.lu);
+        let mut u = self.lu;
+        nullify_lower_triangular_part(&mut u);
 
         LUP {
             l: l,
@@ -283,6 +285,9 @@ impl<T> PartialPivLu<T> where T: Any + Float {
     }
 
     /// Computes the determinant of the decomposed matrix.
+    ///
+    /// Note that the determinant of an empty matrix is considered
+    /// to be equal to 1.
     pub fn det(&self) -> T {
         // Recall that the determinant of a triangular matrix
         // is the product of its diagonal entries. Also,
@@ -341,8 +346,10 @@ impl<T: Clone + One + Zero> Decomposition for FullPivLu<T> {
     type Factors = LUPQ<T>;
 
     fn unpack(self) -> LUPQ<T> {
+        use internal_utils::nullify_lower_triangular_part;
         let l = unit_lower_triangular_part(&self.lu);
-        let u = nullify_lower_triangular_part(self.lu);
+        let mut u = self.lu;
+        nullify_lower_triangular_part(&mut u);
 
         LUPQ {
             l: l,
@@ -653,15 +660,6 @@ fn unit_lower_triangular_part<T, M>(matrix: &M) -> Matrix<T>
     }
 
     Matrix::new(m, m, data)
-}
-
-fn nullify_lower_triangular_part<T: Zero>(mut matrix: Matrix<T>) -> Matrix<T> {
-    for (i, mut row) in matrix.row_iter_mut().enumerate() {
-        for element in row.iter_mut().take(i) {
-            *element = T::zero();
-        }
-    }
-    matrix
 }
 
 
