@@ -99,6 +99,7 @@ pub mod utils;
 pub mod vector;
 pub mod ulp;
 pub mod norm;
+pub mod sparse_matrix;
 
 mod internal_utils;
 
