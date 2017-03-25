@@ -67,6 +67,20 @@ impl<T> Vector<T> {
         &self.data
     }
 
+    /// Returns the top `count` rows of the Vector.
+    pub fn top(&self, count: usize) -> Vector<T> where T: Clone {
+        assert!(
+            count <= self.size,
+            "count: {}, self.size: {}",
+            count,
+            self.size);
+
+        Vector {
+            size: count,
+            data: self.data[0..count].to_vec()
+        }
+    }
+
     /// Returns a mutable slice of the underlying data.
     pub fn mut_data(&mut self) -> &mut [T] {
         &mut self.data

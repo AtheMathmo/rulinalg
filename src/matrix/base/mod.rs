@@ -51,9 +51,15 @@ pub trait BaseMatrix<T>: Sized {
     /// Row stride in the matrix.
     fn row_stride(&self) -> usize;
 
-    /// Returns true if the matrix contais no elements
+    /// Returns true if the matrix contains no elements
     fn is_empty(&self) -> bool {
         self.rows() == 0 || self.cols() == 0
+    }
+
+    /// Returns true if the matrix has the same number of
+    /// rows as columns.
+    fn is_square(&self) -> bool {
+        self.rows() == self.cols()
     }
 
     /// Top left index of the matrix.
