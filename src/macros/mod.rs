@@ -9,6 +9,9 @@ mod matrix;
 #[macro_use]
 mod assert_matrix_eq;
 
+#[macro_use]
+mod assert_vector_eq;
+
 mod comparison;
 
 pub use self::comparison::{
@@ -22,7 +25,5 @@ pub use self::comparison::{
     ElementwiseComparator
 };
 
-pub use self::assert_matrix_eq::{
-    elementwise_matrix_comparison,
-    elementwise_vector_comparison,
-};
+pub use self::assert_matrix_eq::elementwise_matrix_comparison;
+pub use self::assert_vector_eq::elementwise_vector_comparison;
