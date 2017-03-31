@@ -396,3 +396,85 @@ fn forward_substitution<T, M>(l: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     }
     Ok(x)
 }
+
+impl<'a, T> ColumnMut<'a, T> where T: Clone {
+    /// Clones the elements of the given slice of compatible size
+    /// into this column.
+    ///
+    /// # Panics
+    /// - The slice does not have the same length as
+    ///   the number of rows in the column.
+    pub fn clone_from_slice(&mut self, slice: &[T]) {
+        assert!(slice.len() == self.rows());
+        let slice_iter = slice.iter().cloned();
+        for (c, s) in self.iter_mut().zip(slice_iter) {
+            *c = s;
+        }
+    }
+
+    /// Clones the elements of this column into a
+    /// slice of compatible size.
+    ///
+    /// # Panics
+    /// - The slice does not have the same length as
+    ///   the number of rows in the column.
+    pub fn clone_into_slice(&self, slice: &mut [T]) {
+        assert!(slice.len() == self.rows());
+        let col_iter = self.iter().cloned();
+        for (s, c) in slice.iter_mut().zip(col_iter) {
+            *s = c;
+        }
+    }
+}
+
+impl<'a, T> Column<'a, T> where T: Clone {
+    /// Clones the elements of this column into a
+    /// slice of compatible size.
+    ///
+    /// # Panics
+    /// - The slice does not have the same length as
+    ///   the number of rows in the column.
+    pub fn clone_into_slice(&self, slice: &mut [T]) {
+        assert!(slice.len() == self.rows());
+        let col_iter = self.iter().cloned();
+        for (s, c) in slice.iter_mut().zip(col_iter) {
+            *s = c;
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use matrix::{BaseMatrix, BaseMatrixMut};
+
+    #[test]
+    fn column_clone_into_slice() {
+        let mat = matrix![1, 2;
+                          3, 4];
+        let mut v = vec![0, 0];
+        mat.col(0).clone_into_slice(&mut v);
+        assert_eq!(v, vec![1, 3]);
+    }
+
+    #[test]
+    fn column_mut_clone_into_slice() {
+        let mut mat = matrix![1, 2;
+                          3, 4];
+        let mut v = vec![0, 0];
+        mat.col_mut(0).clone_into_slice(&mut v);
+        assert_eq!(v, vec![1, 3]);
+    }
+
+    #[test]
+    fn column_mut_clone_from_slice() {
+        let mut mat = matrix![1, 2;
+                              3, 4];
+        let v = vec![5, 6];
+        {
+            let mut col = mat.col_mut(0);
+            col.clone_from_slice(&v);
+        }
+        assert_matrix_eq!(mat, matrix![5, 2;
+                                       6, 4]);
+    }
+}
