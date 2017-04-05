@@ -53,6 +53,7 @@ fn householder_qr_decompose_unpack_100x500(b: &mut Bencher) {
 }
 
 #[bench]
+#[allow(deprecated)]
 fn qr_decomp_100x100(b: &mut Bencher) {
     let x = reproducible_random_matrix(100, 100);
     b.iter(|| {
@@ -61,6 +62,7 @@ fn qr_decomp_100x100(b: &mut Bencher) {
 }
 
 #[bench]
+#[allow(deprecated)]
 fn qr_decomp_100x500(b: &mut Bencher) {
     let x = reproducible_random_matrix(100, 500);
     b.iter(|| {

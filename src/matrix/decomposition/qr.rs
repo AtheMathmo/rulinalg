@@ -321,6 +321,10 @@ impl<T> Matrix<T>
     ///
     /// Returns the tuple (Q,R).
     ///
+    /// Note: this function is deprecated in favor of
+    /// [HouseholderQr](./decomposition/struct.HouseholderQr.html)
+    /// and will be removed in a future release.
+    ///
     /// # Examples
     ///
     /// ```
@@ -338,6 +342,7 @@ impl<T> Matrix<T>
     /// # Failures
     ///
     /// - Cannot compute the QR decomposition.
+    #[deprecated]
     pub fn qr_decomp(self) -> Result<(Matrix<T>, Matrix<T>), Error> {
         let m = self.rows();
         let n = self.cols();
