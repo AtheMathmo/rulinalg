@@ -104,6 +104,12 @@
 //! </td>
 //! </tr>
 //!
+//! <tr>
+//! <td><a href="struct.HouseholderQr.html">HouseholderQr</a></td>
+//! <td>Any matrix</td>
+//! <td></td>
+//! </tr>
+//!
 //! </tbody>
 //! </table>
 
