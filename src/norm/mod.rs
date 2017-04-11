@@ -80,10 +80,10 @@ impl<U, T> VectorMetric<T> for U
 ///
 /// `d = M(m1, m2) = N(m1 - m2)`
 impl<'a, 'b, U, T, M1, M2> MatrixMetric<'a, 'b, T, M1, M2> for U
-    where U: MatrixNorm<T, M1>,
+    where U: MatrixNorm<T, ::matrix::Matrix<T>>,
     M1: 'a + BaseMatrix<T>,
     M2: 'b + BaseMatrix<T>,
-    &'a M1: Sub<&'b M2, Output=M1> {
+    &'a M1: Sub<&'b M2, Output=::matrix::Matrix<T>> {
 
     fn metric(&self, m1: &'a M1, m2: &'b M2) -> T {
         self.norm(&(m1 - m2))
@@ -282,6 +282,48 @@ mod tests {
         let m2 = matrix![1.0, 2.0, 3.0];
 
         MatrixMetric::metric(&Euclidean, &m, &m2);
+    }
+
+    #[test]
+    fn test_euclidean_matrixslice_metric() {
+        let m = matrix![
+            1.0, 1.0, 1.0;
+            1.0, 1.0, 1.0;
+            1.0, 1.0, 1.0
+        ];
+
+        let m2 = matrix![
+            0.0, 0.0, 0.0;
+            0.0, 0.0, 0.0;
+            0.0, 0.0, 0.0
+        ];
+
+        let m_slice = MatrixSlice::from_matrix(
+            &m, [0; 2], 1, 2
+        );
+
+        let m2_slice = MatrixSlice::from_matrix(
+            &m2, [0; 2], 1, 2
+        );
+
+        assert!(MatrixMetric::metric(&Euclidean, &m_slice, &m2_slice) == 2.0.sqrt());
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_euclidean_matrixslice_metric_bad_dim() {
+        let m = matrix![3.0, 4.0];
+        let m2 = matrix![1.0, 2.0, 3.0];
+
+        let m_slice = MatrixSlice::from_matrix(
+            &m, [0; 2], 1, 1
+        );
+
+        let m2_slice = MatrixSlice::from_matrix(
+            &m2, [0; 2], 1, 2
+        );
+
+        MatrixMetric::metric(&Euclidean, &m_slice, &m2_slice);
     }
 
     #[test]
