@@ -1,11 +1,7 @@
-use std::ops::{Mul, Add, Div};
+use std::ops::{Mul, Add};
 use libnum::{One, Zero, Float, FromPrimitive};
 use std::fmt;
-use std::iter::FromIterator;
-use std::slice::{Iter, IterMut};
-use std::vec::IntoIter;
 
-use norm::{VectorNorm, VectorMetric};
 use utils;
 
 use super::Vector;
@@ -47,7 +43,8 @@ impl<T> Vector<T> {
     /// # }
     /// ```
     pub fn from_fn<F>(size: usize, mut f: F) -> Vector<T>
-        where F: FnMut(usize) -> T {
+        where F: FnMut(usize) -> T
+    {
 
         let data: Vec<T> = (0..size).into_iter().map(|x| f(x)).collect();
 
@@ -57,78 +54,15 @@ impl<T> Vector<T> {
         }
     }
 
-    /// Returns the size of the Vector.
-    pub fn size(&self) -> usize {
-        self.size
-    }
-
-    /// Returns a non-mutable reference to the underlying data.
-    pub fn data(&self) -> &Vec<T> {
-        &self.data
-    }
-
-    /// Returns a mutable slice of the underlying data.
-    pub fn mut_data(&mut self) -> &mut [T] {
-        &mut self.data
-    }
-
     /// Consumes the Vector and returns the Vec of data.
     pub fn into_vec(self) -> Vec<T> {
         self.data
     }
-
-    /// Returns an iterator over the Vector's data.
-    pub fn iter(&self) -> Iter<T> {
-        self.data.iter()
-    }
-
-    /// Returns an iterator over mutable references to the Vector's data.
-    pub fn iter_mut(&mut self) -> IterMut<T> {
-        self.mut_data().iter_mut()
-    }
-
-    /// Returns a pointer to the element at the given index, without doing
-    /// bounds checking.
-    pub unsafe fn get_unchecked(&self, index: usize) -> &T {
-        self.data.get_unchecked(index)
-    }
-
-    /// Returns an unsafe mutable pointer to the element at the given index,
-    /// without doing bounds checking.
-    pub unsafe fn get_unchecked_mut(&mut self, index: usize) -> &mut T {
-        self.data.get_unchecked_mut(index)
-    }
-
 }
 
 impl<T> Into<Vec<T>> for Vector<T> {
     fn into(self) -> Vec<T> {
         self.data
-    }
-}
-
-impl<T> IntoIterator for Vector<T> {
-    type Item = T;
-    type IntoIter = IntoIter<T>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.data.into_iter()
-    }
-}
-
-impl<'a, T> IntoIterator for &'a Vector<T> {
-    type Item = &'a T;
-    type IntoIter = Iter<'a, T>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
-    }
-}
-
-impl<T> FromIterator<T> for Vector<T> {
-    fn from_iter<I>(iter: I) -> Self where I: IntoIterator<Item=T> {
-        let values: Vec<T> = iter.into_iter().collect();
-        Vector::new(values)
     }
 }
 
@@ -230,32 +164,6 @@ impl<T: Copy + PartialOrd> Vector<T> {
     pub fn argmin(&self) -> (usize, T) {
         utils::argmin(&self.data)
     }
-
-    /// Select elements from the Vector and form a new Vector from them.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::vector::Vector;
-    ///
-    /// let a = vector![1.0, 2.0, 3.0, 4.0, 5.0];
-    ///
-    /// let a_lower = a.select(&[2, 3, 4]);
-    ///
-    /// // Prints [3,4,5]
-    /// assert_eq!(a_lower, vector![3.0, 4.0, 5.0]);
-    /// # }
-    /// ```
-    pub fn select(&self, idxs: &[usize]) -> Vector<T> {
-        let mut new_data = Vec::with_capacity(idxs.len());
-
-        for idx in idxs.into_iter() {
-            new_data.push(self[*idx]);
-        }
-
-        Vector::new(new_data)
-    }
 }
 
 impl<T: Clone + Zero> Vector<T> {
@@ -341,93 +249,6 @@ impl<T: Copy + Zero + Add<T, Output = T>> Vector<T> {
     }
 }
 
-impl<T: Copy + Mul<T, Output = T>> Vector<T> {
-    /// The elementwise product of two vectors.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::vector::Vector;
-    ///
-    /// let a = vector![1.0, 2.0, 3.0, 4.0];
-    /// let b = vector![1.0, 2.0, 3.0, 4.0];
-    ///
-    /// let c = &a.elemul(&b);
-    /// assert_eq!(c, &vector![1.0, 4.0, 9.0, 16.0]);
-    /// # }
-    /// ```
-    pub fn elemul(&self, v: &Vector<T>) -> Vector<T> {
-        assert_eq!(self.size, v.size);
-        Vector::new(utils::ele_mul(&self.data, &v.data))
-    }
-}
-
-impl<T: Copy + Div<T, Output = T>> Vector<T> {
-    /// The elementwise division of two vectors.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::vector::Vector;
-    ///
-    /// let a = vector![1.0, 2.0, 3.0, 4.0];
-    /// let b = vector![1.0, 2.0, 3.0, 4.0];
-    ///
-    /// let c = &a.elediv(&b);
-    /// assert_eq!(c, &vector![1.0; 4]);
-    /// # }
-    /// ```
-    pub fn elediv(&self, v: &Vector<T>) -> Vector<T> {
-        assert_eq!(self.size, v.size);
-        Vector::new(utils::ele_div(&self.data, &v.data))
-    }
-}
-
-impl<T: Float> Vector<T> {
-    /// Compute vector norm for vector.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::vector::Vector;
-    /// use rulinalg::norm::Euclidean;
-    ///
-    /// let a = vector![3.0, 4.0];
-    /// let c = a.norm(Euclidean);
-    ///
-    /// assert_eq!(c, 5.0);
-    /// # }
-    /// ```
-    pub fn norm<N: VectorNorm<T>>(&self, norm: N) -> T {
-        norm.norm(self)
-    }
-
-    /// Compute metric distance between two vectors.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::vector::Vector;
-    /// use rulinalg::norm::Euclidean;
-    ///
-    /// let a = vector![3.0, 4.0];
-    /// let b = vector![0.0, 8.0];
-    ///
-    /// // Compute the square root of the sum of
-    /// // elementwise squared-differences
-    /// let c = a.metric(&b, Euclidean);
-    /// assert_eq!(c, 5.0);
-    /// # }
-    /// ```
-    pub fn metric<M: VectorMetric<T>>(&self, v: &Vector<T>, m: M) -> T {
-        m.metric(self, v)
-    }
-}
-
 impl<T: Float + FromPrimitive> Vector<T> {
     /// The mean of the vector.
     ///
@@ -447,7 +268,7 @@ impl<T: Float + FromPrimitive> Vector<T> {
     /// ```
     pub fn mean(&self) -> T {
         let sum = self.sum();
-        sum / FromPrimitive::from_usize(self.size()).unwrap()
+        sum / FromPrimitive::from_usize(self.size).unwrap()
     }
 
     /// The variance of the vector.
@@ -474,14 +295,13 @@ impl<T: Float + FromPrimitive> Vector<T> {
             var = var + (*u - m) * (*u - m);
         }
 
-        var / FromPrimitive::from_usize(self.size() - 1).unwrap()
+        var / FromPrimitive::from_usize(self.size - 1).unwrap()
     }
 }
 
 #[cfg(test)]
 mod tests {
-
-    use super::super::Vector;
+    use super::super::{BaseVector, BaseVectorMut, Vector};
     use norm::Euclidean;
 
     #[test]
@@ -530,7 +350,10 @@ mod tests {
         assert_eq!(v2, vector![0., 1., 2.]);
 
         let mut z = 0;
-        let v3 = Vector::from_fn(3, |x| { z += 1; x + z });
+        let v3 = Vector::from_fn(3, |x| {
+            z += 1;
+            x + z
+        });
         assert_eq!(v3, vector![0 + 1, 1 + 2, 2 + 3]);
 
         let v4 = Vector::from_fn(3, move |x| x + 1);
