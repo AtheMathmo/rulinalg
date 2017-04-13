@@ -2,7 +2,7 @@ use matrix::{Matrix, BaseMatrix};
 use error::{Error, ErrorKind};
 use matrix::decomposition::Decomposition;
 use matrix::forward_substitution;
-use vector::Vector;
+use vector::{BaseVector, Vector};
 use utils::dot;
 
 use std::any::Any;

@@ -1,7 +1,7 @@
 use std;
 
 use matrix::{Matrix, BaseMatrix, BaseMatrixMut};
-use vector::Vector;
+use vector::{BaseVector, BaseVectorMut, Vector};
 use error::{Error, ErrorKind};
 
 use libnum::Num;
@@ -301,7 +301,7 @@ impl<T> PermutationMatrix<T> {
     ///   the permutation matrix.
     pub fn permute_vector_in_place(mut self, vector: &mut Vector<T>) {
         validate_permutation_vector_dimensions(&self, vector);
-        permute_by_swap(&mut self.perm, |i, j| vector.mut_data().swap(i, j));
+        permute_by_swap(&mut self.perm, |i, j| vector.data_mut().swap(i, j));
     }
 }
 

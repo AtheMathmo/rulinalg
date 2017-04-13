@@ -11,7 +11,7 @@ use error::{Error, ErrorKind};
 
 use super::matrix::{DiagOffset, Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix,
                     Row, RowMut, Column, ColumnMut};
-use super::vector::Vector;
+use super::vector::{BaseVector, Vector};
 
 impl<T> From<Vec<T>> for Vector<T> {
     fn from(vec: Vec<T>) -> Self {

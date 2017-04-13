@@ -1,7 +1,7 @@
 use matrix::{Matrix, BaseMatrix, BaseMatrixMut};
 use matrix::{back_substitution};
 use matrix::PermutationMatrix;
-use vector::Vector;
+use vector::{BaseVector, Vector};
 use error::{Error, ErrorKind};
 
 use std::any::Any;

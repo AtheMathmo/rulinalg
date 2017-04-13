@@ -11,7 +11,7 @@ use std::marker::PhantomData;
 use libnum::Float;
 
 use error::{Error, ErrorKind};
-use vector::Vector;
+use vector::{BaseVector, Vector};
 
 use utils;
 

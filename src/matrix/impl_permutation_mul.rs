@@ -1,7 +1,7 @@
 use matrix::{PermutationMatrix, Matrix,
              MatrixSlice, MatrixSliceMut,
              BaseMatrix};
-use vector::Vector;
+use vector::{BaseVector, Vector};
 
 use libnum::Zero;
 

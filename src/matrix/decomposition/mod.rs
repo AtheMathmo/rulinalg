@@ -130,7 +130,7 @@ use std::any::Any;
 
 use matrix::{Matrix, BaseMatrix};
 use norm::Euclidean;
-use vector::Vector;
+use vector::{BaseVector, Vector};
 use utils;
 use error::{Error, ErrorKind};
 

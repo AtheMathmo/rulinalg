@@ -6,7 +6,7 @@ use super::{Matrix};
 use super::{Axes};
 use super::base::BaseMatrix;
 use error::{Error, ErrorKind};
-use vector::Vector;
+use vector::{BaseVector, Vector};
 use matrix::decomposition::PartialPivLu;
 
 impl<T> Matrix<T> {

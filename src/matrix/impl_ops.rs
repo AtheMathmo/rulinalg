@@ -3,7 +3,7 @@ use super::{Row, RowMut, Column, ColumnMut};
 use super::{BaseMatrix, BaseMatrixMut};
 
 use super::super::utils;
-use super::super::vector::Vector;
+use vector::{BaseVector, Vector};
 
 use std::ops::{Mul, Add, Div, Sub, Index, IndexMut, Neg};
 use std::ops::{MulAssign, AddAssign, SubAssign, DivAssign};

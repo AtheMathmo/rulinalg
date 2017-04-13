@@ -25,7 +25,7 @@ use matrix::{DiagOffset, Diagonal, DiagonalMut};
 use matrix::{back_substitution, forward_substitution};
 use matrix::{SliceIter, SliceIterMut};
 use norm::{MatrixNorm, MatrixMetric};
-use vector::Vector;
+use vector::{BaseVector, Vector};
 use utils;
 use libnum::{Zero, Float};
 use error::Error;
@@ -429,7 +429,7 @@ pub trait BaseMatrix<T>: Sized {
     /// assert_eq!(c, 5.0);
     /// # }
     /// ```
-    fn norm<N: MatrixNorm<T, Self>>(&self, norm: N) -> T
+    fn norm<N: MatrixNorm<Self, T>>(&self, norm: N) -> T
         where T: Float
     {
         norm.norm(self)
@@ -458,7 +458,7 @@ pub trait BaseMatrix<T>: Sized {
     /// ```
     fn metric<'a, 'b, B, M>(&'a self, mat: &'b B, metric: M) -> T
         where B: 'b + BaseMatrix<T>,
-              M: MatrixMetric<'a, 'b, T, Self, B>
+              M: MatrixMetric<'a, 'b, Self, B, T>
     {
         metric.metric(self, mat)
     }
