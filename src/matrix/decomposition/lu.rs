@@ -1,5 +1,5 @@
 use matrix::{Matrix, BaseMatrix, BaseMatrixMut};
-use matrix::{back_substitution};
+use matrix::back_substitution;
 use matrix::PermutationMatrix;
 use vector::Vector;
 use error::{Error, ErrorKind};
@@ -20,7 +20,7 @@ pub struct LUP<T> {
     /// The upper triangular matrix in the decomposition.
     pub u: Matrix<T>,
     /// The permutation matrix in the decomposition.
-    pub p: PermutationMatrix<T>
+    pub p: PermutationMatrix<T>,
 }
 
 /// LU decomposition with partial pivoting.
@@ -129,7 +129,7 @@ pub struct LUP<T> {
 #[derive(Debug, Clone)]
 pub struct PartialPivLu<T> {
     lu: Matrix<T>,
-    p: PermutationMatrix<T>
+    p: PermutationMatrix<T>,
 }
 
 impl<T: Clone + One + Zero> Decomposition for PartialPivLu<T> {
@@ -144,7 +144,7 @@ impl<T: Clone + One + Zero> Decomposition for PartialPivLu<T> {
         LUP {
             l: l,
             u: u,
-            p: self.p
+            p: self.p,
         }
     }
 }
@@ -162,7 +162,8 @@ impl<T: 'static + Float> PartialPivLu<T> {
     /// is singular to working precision (badly conditioned).
     pub fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
         let n = matrix.cols;
-        assert!(matrix.rows == n, "Matrix must be square for LU decomposition.");
+        assert!(matrix.rows == n,
+                "Matrix must be square for LU decomposition.");
         let mut lu = matrix;
         let mut p = PermutationMatrix::identity(n);
 
@@ -170,7 +171,7 @@ impl<T: 'static + Float> PartialPivLu<T> {
             let mut curr_max_idx = index;
             let mut curr_max = lu[[curr_max_idx, curr_max_idx]];
 
-            for i in (curr_max_idx+1)..n {
+            for i in (curr_max_idx + 1)..n {
                 if lu[[i, index]].abs() > curr_max.abs() {
                     curr_max = lu[[i, index]];
                     curr_max_idx = i;
@@ -178,7 +179,7 @@ impl<T: 'static + Float> PartialPivLu<T> {
             }
             if curr_max.abs() < T::epsilon() {
                 return Err(Error::new(ErrorKind::DivByZero,
-                    "The matrix is too ill-conditioned for
+                                      "The matrix is too ill-conditioned for
                      LU decomposition with partial pivoting."));
             }
 
@@ -188,15 +189,17 @@ impl<T: 'static + Float> PartialPivLu<T> {
             gaussian_elimination(&mut lu, index);
         }
         Ok(PartialPivLu {
-            lu: lu,
-            p: p.inverse()
-        })
+               lu: lu,
+               p: p.inverse(),
+           })
     }
 }
 
 // TODO: Remove Any bound (cannot for the time being, since
 // back substitution uses Any bound)
-impl<T> PartialPivLu<T> where T: Any + Float {
+impl<T> PartialPivLu<T>
+    where T: Any + Float
+{
     /// Solves the linear system `Ax = b`.
     ///
     /// Here, `A` is the decomposed matrix satisfying
@@ -230,7 +233,7 @@ impl<T> PartialPivLu<T> where T: Any + Float {
     /// ```
     pub fn solve(&self, b: Vector<T>) -> Result<Vector<T>, Error> {
         assert!(b.size() == self.lu.rows(),
-            "Right-hand side vector must have compatible size.");
+                "Right-hand side vector must have compatible size.");
         // Note that applying p here implicitly incurs a clone.
         // TODO: Is it possible to avoid the clone somehow?
         // To my knowledge, applying a permutation matrix
@@ -269,12 +272,12 @@ impl<T> PartialPivLu<T> where T: Any + Float {
         // we do not have available.
 
         // Solve for each column of the inverse matrix
-        for i in 0 .. n {
+        for i in 0..n {
             e[i] = T::one();
 
             let col = try!(self.solve(e));
 
-            for j in 0 .. n {
+            for j in 0..n {
                 inv[[j, i]] = col[j];
             }
 
@@ -316,7 +319,7 @@ pub struct LUPQ<T> {
     pub p: PermutationMatrix<T>,
 
     /// The column-exchange permutation matrix in the decomposition.
-    pub q: PermutationMatrix<T>
+    pub q: PermutationMatrix<T>,
 }
 
 /// LU decomposition with complete pivoting.
@@ -339,7 +342,7 @@ pub struct LUPQ<T> {
 pub struct FullPivLu<T> {
     lu: Matrix<T>,
     p: PermutationMatrix<T>,
-    q: PermutationMatrix<T>
+    q: PermutationMatrix<T>,
 }
 
 impl<T: Clone + One + Zero> Decomposition for FullPivLu<T> {
@@ -364,11 +367,11 @@ impl<T: 'static + Float> FullPivLu<T> {
     fn select_pivot(mat: &Matrix<T>, index: usize) -> (usize, usize, T) {
         let mut piv_row = index;
         let mut piv_col = index;
-        let mut piv_val = mat[[index,index]];
+        let mut piv_val = mat[[index, index]];
 
         for row in index..mat.rows() {
             for col in index..mat.cols() {
-                let val = mat[[row,col]];
+                let val = mat[[row, col]];
 
                 if val.abs() > piv_val.abs() {
                     piv_val = val;
@@ -383,9 +386,8 @@ impl<T: 'static + Float> FullPivLu<T> {
 
     /// Performs the decomposition.
     pub fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
-        assert!(
-            matrix.rows() == matrix.cols(),
-            "Matrix must be square for LU decomposition.");
+        assert!(matrix.rows() == matrix.cols(),
+                "Matrix must be square for LU decomposition.");
 
         let mut lu = matrix;
 
@@ -403,7 +405,7 @@ impl<T: 'static + Float> FullPivLu<T> {
             let (piv_row, piv_col, piv_val) = FullPivLu::select_pivot(&lu, index);
 
             if piv_val.abs() == T::zero() {
-              break;
+                break;
             }
 
             lu.swap_rows(index, piv_row);
@@ -423,17 +425,18 @@ impl<T: 'static + Float> FullPivLu<T> {
         }
 
         Ok(FullPivLu {
-            lu: lu,
-            p: p.inverse(),
-            q: q.inverse()
-        })
+               lu: lu,
+               p: p.inverse(),
+               q: q.inverse(),
+           })
     }
 }
 
 // TODO: Remove Any bound (cannot for the time being, since
 // back substitution uses Any bound)
-impl<T> FullPivLu<T> where T: Any + Float {
-
+impl<T> FullPivLu<T>
+    where T: Any + Float
+{
     /// Solves the linear system `Ax = b`.
     ///
     /// Here, `A` is the decomposed matrix satisfying
@@ -467,7 +470,7 @@ impl<T> FullPivLu<T> where T: Any + Float {
     /// ```
     pub fn solve(&self, b: Vector<T>) -> Result<Vector<T>, Error> {
         assert!(b.size() == self.lu.rows(),
-            "Right-hand side vector must have compatible size.");
+                "Right-hand side vector must have compatible size.");
 
         let b = lu_forward_substitution(&self.lu, &self.p * b);
         back_substitution(&self.lu, b).map(|x| &self.q * x)
@@ -485,18 +488,16 @@ impl<T> FullPivLu<T> where T: Any + Float {
         let mut e = Vector::zeros(n);
 
         if !self.is_invertible() {
-            return Err(
-                Error::new(
-                    ErrorKind::DivByZero,
-                    "Non-invertible matrix found while attempting inversion"));
+            return Err(Error::new(ErrorKind::DivByZero,
+                                  "Non-invertible matrix found while attempting inversion"));
         }
 
-        for i in 0 .. n {
+        for i in 0..n {
             e[i] = T::one();
 
             let col = try!(self.solve(e));
 
-            for j in 0 .. n {
+            for j in 0..n {
                 inv[[j, i]] = col[j];
             }
 
@@ -584,8 +585,7 @@ impl<T> FullPivLu<T> where T: Any + Float {
 
         if diag_size > 0 {
             let diag_last = diag_size - 1;
-            let last =
-                unsafe { self.lu.get_unchecked([diag_last, diag_last]) };
+            let last = unsafe { self.lu.get_unchecked([diag_last, diag_last]) };
 
             last.abs() > self.epsilon()
         } else {
@@ -604,13 +604,13 @@ fn gaussian_elimination<T: Float>(lu: &mut Matrix<T>, index: usize) {
 
     let piv_val = lu[[index, index]];
 
-    for i in (index+1)..lu.rows() {
+    for i in (index + 1)..lu.rows() {
         let mult = lu[[i, index]] / piv_val;
 
         lu[[i, index]] = mult;
 
-        for j in (index+1)..lu.cols() {
-            lu[[i, j]] = lu[[i,j]] - mult*lu[[index, j]];
+        for j in (index + 1)..lu.cols() {
+            lu[[i, j]] = lu[[i, j]] - mult * lu[[index, j]];
         }
     }
 }
@@ -623,18 +623,19 @@ fn gaussian_elimination<T: Float>(lu: &mut Matrix<T>, index: usize) {
 /// This is equivalent to solving the system Lx = b.
 fn lu_forward_substitution<T: Float>(lu: &Matrix<T>, b: Vector<T>) -> Vector<T> {
     assert!(lu.rows() == lu.cols(), "LU matrix must be square.");
-    assert!(b.size() == lu.rows(), "LU matrix and RHS vector must be compatible.");
+    assert!(b.size() == lu.rows(),
+            "LU matrix and RHS vector must be compatible.");
     let mut x = b;
 
     for (i, row) in lu.row_iter().enumerate().skip(1) {
         // Note that at time of writing we need raw_slice here for
         // auto-vectorization to kick in
         let adjustment = row.raw_slice()
-                            .iter()
-                            .take(i)
-                            .cloned()
-                            .zip(x.iter().cloned())
-                            .fold(T::zero(), |sum, (l, x)| sum + l * x);
+            .iter()
+            .take(i)
+            .cloned()
+            .zip(x.iter().cloned())
+            .fold(T::zero(), |sum, (l, x)| sum + l * x);
 
         x[i] = x[i] - adjustment;
     }
@@ -642,7 +643,9 @@ fn lu_forward_substitution<T: Float>(lu: &Matrix<T>, b: Vector<T>) -> Vector<T> 
 }
 
 fn unit_lower_triangular_part<T, M>(matrix: &M) -> Matrix<T>
-    where T: Zero + One + Clone, M: BaseMatrix<T> {
+    where T: Zero + One + Clone,
+          M: BaseMatrix<T>
+{
 
     let m = matrix.rows();
     let mut data = Vec::<T>::with_capacity(m * m);
@@ -654,7 +657,7 @@ fn unit_lower_triangular_part<T, M>(matrix: &M) -> Matrix<T>
 
         data.push(T::one());
 
-        for _ in (i + 1) .. m {
+        for _ in (i + 1)..m {
             data.push(T::zero());
         }
     }
@@ -663,7 +666,8 @@ fn unit_lower_triangular_part<T, M>(matrix: &M) -> Matrix<T>
 }
 
 
-impl<T> Matrix<T> where T: Any + Float
+impl<T> Matrix<T>
+    where T: Any + Float
 {
     /// Computes L, U, and P for LUP decomposition.
     ///
@@ -697,7 +701,8 @@ impl<T> Matrix<T> where T: Any + Float
     #[deprecated]
     pub fn lup_decomp(self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
         let n = self.cols;
-        assert!(self.rows == n, "Matrix must be square for LUP decomposition.");
+        assert!(self.rows == n,
+                "Matrix must be square for LUP decomposition.");
         let mut l = Matrix::<T>::zeros(n, n);
         let mut u = self;
         let mut p = Matrix::<T>::identity(n);
@@ -706,7 +711,7 @@ impl<T> Matrix<T> where T: Any + Float
             let mut curr_max_idx = index;
             let mut curr_max = u[[curr_max_idx, curr_max_idx]];
 
-            for i in (curr_max_idx+1)..n {
+            for i in (curr_max_idx + 1)..n {
                 if u[[i, index]].abs() > curr_max.abs() {
                     curr_max = u[[i, index]];
                     curr_max_idx = i;
@@ -714,7 +719,7 @@ impl<T> Matrix<T> where T: Any + Float
             }
             if curr_max.abs() < T::epsilon() {
                 return Err(Error::new(ErrorKind::DivByZero,
-                    "Singular matrix found in LUP decomposition. \
+                                      "Singular matrix found in LUP decomposition. \
                     A value in the diagonal of U == 0.0."));
             }
 
@@ -724,12 +729,12 @@ impl<T> Matrix<T> where T: Any + Float
                 p.swap_rows(index, curr_max_idx);
             }
             l[[index, index]] = T::one();
-            for i in (index+1)..n {
-                let mult = u[[i, index]]/curr_max;
+            for i in (index + 1)..n {
+                let mult = u[[i, index]] / curr_max;
                 l[[i, index]] = mult;
                 u[[i, index]] = T::zero();
-                for j in (index+1)..n {
-                    u[[i, j]] = u[[i,j]] - mult*u[[index, j]];
+                for j in (index + 1)..n {
+                    u[[i, j]] = u[[i, j]] - mult * u[[index, j]];
                 }
             }
         }
@@ -769,7 +774,7 @@ mod tests {
 
         match a.lup_decomp() {
             Err(e) => assert!(*e.kind() == ErrorKind::DivByZero),
-            Ok(_) => panic!()
+            Ok(_) => panic!(),
         }
     }
 
@@ -785,9 +790,7 @@ mod tests {
                          15.0,   0.0, -18.0,  -5.0;
                           6.0,  20.0, -10.0, -15.0 ];
 
-        let LUP { l, u, p } = PartialPivLu::decompose(x.clone())
-                                           .unwrap()
-                                           .unpack();
+        let LUP { l, u, p } = PartialPivLu::decompose(x.clone()).unwrap().unpack();
         let y = p.inverse() * &l * &u;
         assert_matrix_eq!(x, y, comp = float);
         assert!(is_lower_triangular(&l));
@@ -798,7 +801,7 @@ mod tests {
     pub fn partial_piv_lu_inverse_identity() {
         let lu = PartialPivLu::<f64> {
             lu: Matrix::identity(3),
-            p: PermutationMatrix::identity(3)
+            p: PermutationMatrix::identity(3),
         };
 
         let inv = lu.inverse().expect("Matrix is invertible.");
@@ -827,7 +830,7 @@ mod tests {
     pub fn partial_piv_lu_det_identity() {
         let lu = PartialPivLu::<f64> {
             lu: Matrix::identity(3),
-            p: PermutationMatrix::identity(3)
+            p: PermutationMatrix::identity(3),
         };
 
         assert_eq!(lu.det(), 1.0);
@@ -903,9 +906,7 @@ mod tests {
                          15.0,   0.0, -18.0,  -5.0;
                           6.0,  20.0, -10.0, -15.0 ];
 
-        let LUPQ { l, u, p, q } = FullPivLu::decompose(x.clone())
-                                           .unwrap()
-                                           .unpack();
+        let LUPQ { l, u, p, q } = FullPivLu::decompose(x.clone()).unwrap().unpack();
 
         let y = p.inverse() * &l * &u * q.inverse();
 
@@ -941,7 +942,7 @@ mod tests {
                         -12.0,   5.0,  17.0;
                          15.0,   0.0, -18.0;
                          -6.0,   0.0,   20.0];
-                         
+
         FullPivLu::decompose(x.clone()).unwrap();
     }
 

@@ -3,7 +3,7 @@ use error::{Error, ErrorKind};
 
 use std::any::Any;
 
-use libnum::{Float};
+use libnum::Float;
 
 impl<T: Any + Float> Matrix<T> {
     /// Returns H, where H is the upper hessenberg form.

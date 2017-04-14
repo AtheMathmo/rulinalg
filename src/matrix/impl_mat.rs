@@ -2,8 +2,8 @@ use std::any::Any;
 use std::fmt;
 use libnum::{One, Zero, Float, FromPrimitive};
 
-use super::{Matrix};
-use super::{Axes};
+use super::Matrix;
+use super::Axes;
 use super::base::BaseMatrix;
 use error::{Error, ErrorKind};
 use vector::Vector;
@@ -406,7 +406,9 @@ impl<T: Any + Float> Matrix<T> {
         let n = self.cols;
 
         if self.is_diag() {
-            self.diag().cloned().fold(T::one(), |d, entry| d * entry)
+            self.diag()
+                .cloned()
+                .fold(T::one(), |d, entry| d * entry)
         } else if n == 2 {
             (self[[0, 0]] * self[[1, 1]]) - (self[[0, 1]] * self[[1, 0]])
         } else if n == 3 {
@@ -417,8 +419,9 @@ impl<T: Any + Float> Matrix<T> {
             (self[[0, 1]] * self[[1, 0]] * self[[2, 2]]) -
             (self[[0, 2]] * self[[1, 1]] * self[[2, 0]])
         } else {
-            PartialPivLu::decompose(self).map(|lu| lu.det())
-                                         .unwrap_or(T::zero())
+            PartialPivLu::decompose(self)
+                .map(|lu| lu.det())
+                .unwrap_or(T::zero())
         }
     }
 }

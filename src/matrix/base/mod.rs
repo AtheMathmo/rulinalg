@@ -77,7 +77,8 @@ pub trait BaseMatrix<T>: Sized {
 
     /// Get a reference to an element in the matrix without bounds checking.
     unsafe fn get_unchecked(&self, index: [usize; 2]) -> &T {
-        &*(self.as_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
+        &*(self.as_ptr()
+               .offset((index[0] * self.row_stride() + index[1]) as isize))
     }
 
     /// Get a reference to an element in the matrix.
@@ -87,7 +88,7 @@ pub trait BaseMatrix<T>: Sized {
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
-    /// 
+    ///
     /// let mat = matrix![0, 1;
     ///                   3, 4;
     ///                   6, 7];
@@ -103,9 +104,9 @@ pub trait BaseMatrix<T>: Sized {
         let col_ind = index[1];
 
         if row_ind >= self.rows() || col_ind >= self.cols() {
-          None
+            None
         } else {
-          unsafe { Some(self.get_unchecked(index)) }
+            unsafe { Some(self.get_unchecked(index)) }
         }
     }
 
@@ -205,7 +206,8 @@ pub trait BaseMatrix<T>: Sized {
     /// # }
     /// ```
     unsafe fn row_unchecked(&self, index: usize) -> Row<T> {
-        let ptr = self.as_ptr().offset((self.row_stride() * index) as isize);
+        let ptr = self.as_ptr()
+            .offset((self.row_stride() * index) as isize);
         Row { row: MatrixSlice::from_raw_parts(ptr, 1, self.cols(), self.row_stride()) }
     }
 
@@ -410,7 +412,8 @@ pub trait BaseMatrix<T>: Sized {
         where T: Copy + Zero + Add<T, Output = T>
     {
         let mut col_sum = Vec::with_capacity(self.rows());
-        col_sum.extend(self.row_iter().map(|row| utils::unrolled_sum(row.raw_slice())));
+        col_sum.extend(self.row_iter()
+                           .map(|row| utils::unrolled_sum(row.raw_slice())));
         Vector::new(col_sum)
     }
 
@@ -973,12 +976,14 @@ pub trait BaseMatrix<T>: Sized {
         where T: Zero + PartialEq
     {
         let mut next_diag = 0usize;
-        self.iter().enumerate().all(|(i, data)| if i == next_diag {
-            next_diag += self.cols() + 1;
-            true
-        } else {
-            data == &T::zero()
-        })
+        self.iter()
+            .enumerate()
+            .all(|(i, data)| if i == next_diag {
+                     next_diag += self.cols() + 1;
+                     true
+                 } else {
+                     data == &T::zero()
+                 })
     }
 
     /// Solves an upper triangular linear system.
@@ -1170,7 +1175,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
 
     /// Get a mutable reference to an element in the matrix without bounds checks.
     unsafe fn get_unchecked_mut(&mut self, index: [usize; 2]) -> &mut T {
-        &mut *(self.as_mut_ptr().offset((index[0] * self.row_stride() + index[1]) as isize))
+        &mut *(self.as_mut_ptr()
+                   .offset((index[0] * self.row_stride() + index[1]) as isize))
     }
 
     /// Get a mutable reference to an element in the matrix.
@@ -1198,9 +1204,9 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
         let col_ind = index[1];
 
         if row_ind >= self.rows() || col_ind >= self.cols() {
-          None
+            None
         } else {
-          unsafe { Some(self.get_unchecked_mut(index)) }
+            unsafe { Some(self.get_unchecked_mut(index)) }
         }
     }
 
@@ -1358,7 +1364,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
     /// # }
     /// ```
     unsafe fn row_unchecked_mut(&mut self, index: usize) -> RowMut<T> {
-        let ptr = self.as_mut_ptr().offset((self.row_stride() * index) as isize);
+        let ptr = self.as_mut_ptr()
+            .offset((self.row_stride() * index) as isize);
         RowMut { row: MatrixSliceMut::from_raw_parts(ptr, 1, self.cols(), self.row_stride()) }
     }
 
@@ -1684,8 +1691,8 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
                                                              self.rows(),
                                                              mid,
                                                              self.row_stride());
-                    slice_2 = MatrixSliceMut::from_raw_parts(self.as_mut_ptr()
-                                                                 .offset(mid as isize),
+                    slice_2 = MatrixSliceMut::from_raw_parts(self.as_mut_ptr().offset(mid as
+                                                                                      isize),
                                                              self.rows(),
                                                              self.cols() - mid,
                                                              self.row_stride());

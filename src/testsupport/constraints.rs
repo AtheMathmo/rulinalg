@@ -8,26 +8,26 @@ use std::iter::Iterator;
 /// This generalizes to rectangular matrices, in which case
 /// it returns true if the matrix is lower trapezoidal.
 pub fn is_lower_triangular<T, M>(m: &M) -> bool
-    where T: Zero + PartialEq<T>, M: BaseMatrix<T> {
+    where T: Zero + PartialEq<T>,
+          M: BaseMatrix<T>
+{
 
     m.row_iter()
-     .enumerate()
-     .all(|(i, row)| row.iter()
-                        .skip(i + 1)
-                        .all(|x| x == &T::zero()))
+        .enumerate()
+        .all(|(i, row)| row.iter().skip(i + 1).all(|x| x == &T::zero()))
 }
 
 /// Returns true if the matrix is upper triangular, otherwise false.
 /// This generalizes to rectangular matrices, in which case
 /// it returns true if the matrix is upper trapezoidal.
 pub fn is_upper_triangular<T, M>(m: &M) -> bool
-    where T: Zero + PartialEq<T>, M: BaseMatrix<T> {
+    where T: Zero + PartialEq<T>,
+          M: BaseMatrix<T>
+{
 
     m.row_iter()
-     .enumerate()
-     .all(|(i, row)| row.iter()
-                        .take(i)
-                        .all(|x| x == &T::zero()))
+        .enumerate()
+        .all(|(i, row)| row.iter().take(i).all(|x| x == &T::zero()))
 }
 
 #[cfg(test)]
@@ -136,4 +136,3 @@ mod tests {
         }
     }
 }
-

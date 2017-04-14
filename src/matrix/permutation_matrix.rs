@@ -107,7 +107,7 @@ pub struct PermutationMatrix<T> {
 
     // Currently, we need to let PermutationMatrix be generic over T,
     // because BaseMatrixMut is.
-    marker: std::marker::PhantomData<T>
+    marker: std::marker::PhantomData<T>,
 }
 
 /// Parity is the fact of being even or odd.
@@ -116,15 +116,15 @@ pub enum Parity {
     /// Even parity.
     Even,
     /// Odd parity.
-    Odd
+    Odd,
 }
 
 impl<T> PermutationMatrix<T> {
     /// The identity permutation.
     pub fn identity(n: usize) -> Self {
         PermutationMatrix {
-            perm: (0 .. n).collect(),
-            marker: std::marker::PhantomData
+            perm: (0..n).collect(),
+            marker: std::marker::PhantomData,
         }
     }
 
@@ -143,7 +143,7 @@ impl<T> PermutationMatrix<T> {
 
         PermutationMatrix {
             perm: inv,
-            marker: std::marker::PhantomData
+            marker: std::marker::PhantomData,
         }
     }
 
@@ -165,7 +165,7 @@ impl<T> PermutationMatrix<T> {
     pub fn from_array<A: Into<Vec<usize>>>(array: A) -> Result<PermutationMatrix<T>, Error> {
         let p = PermutationMatrix {
             perm: array.into(),
-            marker: std::marker::PhantomData
+            marker: std::marker::PhantomData,
         };
         validate_permutation(&p.perm).map(|_| p)
     }
@@ -190,7 +190,7 @@ impl<T> PermutationMatrix<T> {
     pub unsafe fn from_array_unchecked<A: Into<Vec<usize>>>(array: A) -> PermutationMatrix<T> {
         let p = PermutationMatrix {
             perm: array.into(),
-            marker: std::marker::PhantomData
+            marker: std::marker::PhantomData,
         };
         p
     }
@@ -226,24 +226,18 @@ impl<T> PermutationMatrix<T> {
         let mut is_even = true;
         permute_by_swap(&mut self.perm, |_, _| is_even = !is_even);
 
-        if is_even {
-            Parity::Even
-        } else {
-            Parity::Odd
-        }
+        if is_even { Parity::Even } else { Parity::Odd }
     }
 }
 
 impl<T: Num> PermutationMatrix<T> {
     /// The permutation matrix in an equivalent full matrix representation.
     pub fn as_matrix(&self) -> Matrix<T> {
-        Matrix::from_fn(self.size(), self.size(), |i, j|
-            if self.perm[i] == j {
-                T::one()
-            } else {
-                T::zero()
-            }
-        )
+        Matrix::from_fn(self.size(), self.size(), |i, j| if self.perm[i] == j {
+            T::one()
+        } else {
+            T::zero()
+        })
     }
 
     /// Computes the determinant of the permutation matrix.
@@ -255,7 +249,7 @@ impl<T: Num> PermutationMatrix<T> {
         let parity = self.parity();
         match parity {
             Parity::Even => T::one(),
-            Parity::Odd  => T::zero() - T::one()
+            Parity::Odd => T::zero() - T::one(),
         }
     }
 }
@@ -267,7 +261,9 @@ impl<T> PermutationMatrix<T> {
     ///
     /// - The number of rows in the matrix is not equal to
     ///   the size of the permutation matrix.
-    pub fn permute_rows_in_place<M>(mut self, matrix: &mut M) where M: BaseMatrixMut<T> {
+    pub fn permute_rows_in_place<M>(mut self, matrix: &mut M)
+        where M: BaseMatrixMut<T>
+    {
         validate_permutation_left_mul_dimensions(&self, matrix);
         permute_by_swap(&mut self.perm, |i, j| matrix.swap_rows(i, j));
     }
@@ -278,7 +274,9 @@ impl<T> PermutationMatrix<T> {
     ///
     /// - The number of columns in the matrix is not equal to
     ///   the size of the permutation matrix.
-    pub fn permute_cols_in_place<M>(mut self, matrix: &mut M) where M: BaseMatrixMut<T> {
+    pub fn permute_cols_in_place<M>(mut self, matrix: &mut M)
+        where M: BaseMatrixMut<T>
+    {
         validate_permutation_right_mul_dimensions(matrix, &self);
         // Note: it _may_ be possible to increase cache efficiency
         // of this routine by swapping elements in each row individually
@@ -316,17 +314,19 @@ impl<T: Clone> PermutationMatrix<T> {
     /// - The dimensions of the source matrix and the buffer
     ///   are not identical.
     pub fn permute_rows_into_buffer<X, Y>(&self, source_matrix: &X, buffer: &mut Y)
-        where X: BaseMatrix<T>, Y: BaseMatrixMut<T> {
+        where X: BaseMatrix<T>,
+              Y: BaseMatrixMut<T>
+    {
         assert!(source_matrix.rows() == buffer.rows()
                 && source_matrix.cols() == buffer.cols(),
                 "Source and target matrix must have equal dimensions.");
         validate_permutation_left_mul_dimensions(self, source_matrix);
-        for (source_row, target_row_index) in source_matrix.row_iter()
-                                                           .zip(self.perm.iter()
-                                                                         .cloned()) {
-            buffer.row_mut(target_row_index)
-                  .raw_slice_mut()
-                  .clone_from_slice(source_row.raw_slice());
+        for (source_row, target_row_index) in
+            source_matrix.row_iter().zip(self.perm.iter().cloned()) {
+            buffer
+                .row_mut(target_row_index)
+                .raw_slice_mut()
+                .clone_from_slice(source_row.raw_slice());
         }
     }
 
@@ -340,16 +340,20 @@ impl<T: Clone> PermutationMatrix<T> {
     /// - The dimensions of the source matrix and the buffer
     ///   are not identical.
     pub fn permute_cols_into_buffer<X, Y>(&self, source_matrix: &X, target_matrix: &mut Y)
-        where X: BaseMatrix<T>, Y: BaseMatrixMut<T> {
+        where X: BaseMatrix<T>,
+              Y: BaseMatrixMut<T>
+    {
         assert!(source_matrix.rows() == target_matrix.rows()
                 && source_matrix.cols() == target_matrix.cols(),
                 "Source and target matrix must have equal dimensions.");
         validate_permutation_right_mul_dimensions(source_matrix, self);
 
         // Permute columns in one row at a time for (presumably) better cache performance
-        for (row_index, source_row) in source_matrix.row_iter()
-                                                           .map(|r| r.raw_slice())
-                                                           .enumerate() {
+        for (row_index, source_row) in
+            source_matrix
+                .row_iter()
+                .map(|r| r.raw_slice())
+                .enumerate() {
             let target_row = target_matrix.row_mut(row_index).raw_slice_mut();
             for (source_element, target_col) in source_row.iter().zip(self.perm.iter().cloned()) {
                 target_row[target_col] = source_element.clone();
@@ -366,17 +370,15 @@ impl<T: Clone> PermutationMatrix<T> {
     ///   size of the permutation matrix.
     /// - The dimensions of the source vector and the buffer
     ///   are not identical.
-    pub fn permute_vector_into_buffer(
-        &self,
-        source_vector: &Vector<T>,
-        buffer: &mut Vector<T>
-    ) {
+    pub fn permute_vector_into_buffer(&self, source_vector: &Vector<T>, buffer: &mut Vector<T>) {
         assert!(source_vector.size() == buffer.size(),
                "Source and target vector must have equal dimensions.");
         validate_permutation_vector_dimensions(self, buffer);
-        for (source_element, target_index) in source_vector.data()
-                                                           .iter()
-                                                           .zip(self.perm.iter().cloned()) {
+        for (source_element, target_index) in
+            source_vector
+                .data()
+                .iter()
+                .zip(self.perm.iter().cloned()) {
             buffer[target_index] = source_element.clone();
         }
     }
@@ -388,16 +390,14 @@ impl<T: Clone> PermutationMatrix<T> {
     ///
     /// - The size of the permutation matrix (self) is not equal to the
     ///   size of the source permutation matrix.
-    pub fn compose_into_buffer(
-        &self,
-        source_perm: &PermutationMatrix<T>,
-        buffer: &mut PermutationMatrix<T>
-    ) {
+    pub fn compose_into_buffer(&self,
+                               source_perm: &PermutationMatrix<T>,
+                               buffer: &mut PermutationMatrix<T>) {
         assert!(source_perm.size() == buffer.size(),
             "Source and target permutation matrix must have equal dimensions.");
         let left = self;
         let right = source_perm;
-        for i in 0 .. self.perm.len() {
+        for i in 0..self.perm.len() {
             buffer.perm[i] = left.perm[right.perm[i]];
         }
     }
@@ -422,15 +422,17 @@ fn validate_permutation_vector_dimensions<T>(p: &PermutationMatrix<T>, v: &Vecto
 
 
 fn validate_permutation_left_mul_dimensions<T, M>(p: &PermutationMatrix<T>, rhs: &M)
-    where M: BaseMatrix<T> {
-     assert!(p.size() == rhs.rows(),
+    where M: BaseMatrix<T>
+{
+    assert!(p.size() == rhs.rows(),
             "Permutation matrix and right-hand side matrix dimensions
              are not compatible.");
 }
 
 fn validate_permutation_right_mul_dimensions<T, M>(lhs: &M, p: &PermutationMatrix<T>)
-    where M: BaseMatrix<T> {
-     assert!(lhs.cols() == p.size(),
+    where M: BaseMatrix<T>
+{
+    assert!(lhs.cols() == p.size(),
             "Left-hand side matrix and permutation matrix dimensions
              are not compatible.");
 }
@@ -451,10 +453,9 @@ fn validate_permutation(perm: &[usize]) -> Result<(), Error> {
     for p in perm.iter().cloned() {
         if p < n {
             visited[p] = true;
-        }
-        else {
+        } else {
             return Err(Error::new(ErrorKind::InvalidPermutation,
-                "Supplied permutation array contains elements out of bounds."));
+                                  "Supplied permutation array contains elements out of bounds."));
         }
     }
     let all_unique = visited.iter().all(|x| x.clone());
@@ -462,7 +463,7 @@ fn validate_permutation(perm: &[usize]) -> Result<(), Error> {
         Ok(())
     } else {
         Err(Error::new(ErrorKind::InvalidPermutation,
-            "Supplied permutation array contains duplicate elements."))
+                       "Supplied permutation array contains duplicate elements."))
     }
 }
 
@@ -476,7 +477,9 @@ fn validate_permutation(perm: &[usize]) -> Result<(), Error> {
 ///
 /// - O(1) memory usage.
 /// - O(n) worst case number of calls to `swap`.
-fn permute_by_swap<S>(perm: &mut [usize], mut swap: S) where S: FnMut(usize, usize) -> () {
+fn permute_by_swap<S>(perm: &mut [usize], mut swap: S)
+    where S: FnMut(usize, usize) -> ()
+{
     // Please see https://en.wikipedia.org/wiki/Cyclic_permutation
     // for some explanation to the terminology used here.
     // Some useful resources I found on the internet:
@@ -491,7 +494,7 @@ fn permute_by_swap<S>(perm: &mut [usize], mut swap: S) where S: FnMut(usize, usi
     // An observation is thus that given a permutation P,
     // we can trace out the cycle that includes index i
     // by starting at i and moving to P[i] recursively.
-    for i in 0 .. perm.len() {
+    for i in 0..perm.len() {
         let mut target = perm[i];
         while i != target {
             // When resolving a cycle, we resolve each index in the cycle
@@ -742,7 +745,7 @@ mod tests {
     impl Arbitrary for ValidPermutationArray {
         fn arbitrary<G: Gen>(g: &mut G) -> Self {
             let upper_bound = g.size();
-            let mut array = (0 .. upper_bound).collect::<Vec<usize>>();
+            let mut array = (0..upper_bound).collect::<Vec<usize>>();
             g.shuffle(&mut array);
             ValidPermutationArray(array)
         }
@@ -771,7 +774,7 @@ mod tests {
 
             if should_have_out_of_bounds {
                 let num_out_of_bounds_rounds = g.gen_range::<usize>(1, n);
-                for _ in 0 .. num_out_of_bounds_rounds {
+                for _ in 0..num_out_of_bounds_rounds {
                     let interior_index = g.gen_range::<usize>(0, n);
                     let exterior_index = n + g.gen::<usize>();
                     permutation_array[interior_index] = exterior_index;
@@ -780,7 +783,7 @@ mod tests {
 
             if should_have_duplicates {
                 let num_duplicates = g.gen_range::<usize>(1, n);
-                for _ in 0 .. num_duplicates {
+                for _ in 0..num_duplicates {
                     let interior_index = g.gen_range::<usize>(0, n);
                     let duplicate_value = permutation_array[interior_index];
                     permutation_array.push(duplicate_value);

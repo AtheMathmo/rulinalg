@@ -96,7 +96,9 @@ impl<'a, T> MatrixSliceMut<'a, T> {
 
         unsafe {
             MatrixSliceMut {
-                ptr: mat.mut_data().get_unchecked_mut(start[0] * mat_cols + start[1]) as *mut T,
+                ptr: mat.mut_data()
+                    .get_unchecked_mut(start[0] * mat_cols + start[1]) as
+                     *mut T,
                 rows: rows,
                 cols: cols,
                 row_stride: mat_cols,

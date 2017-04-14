@@ -92,10 +92,12 @@ use libnum::{Zero, Float};
 /// of the decomposed matrix. This is a very cheap operation.
 #[derive(Clone, Debug)]
 pub struct Cholesky<T> {
-    l: Matrix<T>
+    l: Matrix<T>,
 }
 
-impl<T> Cholesky<T> where T: 'static + Float {
+impl<T> Cholesky<T>
+    where T: 'static + Float
+{
     /// Computes the Cholesky decomposition A = L L<sup>T</sup>
     /// for the given square, symmetric positive definite matrix.
     ///
@@ -115,7 +117,7 @@ impl<T> Cholesky<T> where T: 'static + Float {
     /// - The matrix must be square.
     pub fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
         assert!(matrix.rows() == matrix.cols(),
-            "Matrix must be square for Cholesky decomposition.");
+                "Matrix must be square for Cholesky decomposition.");
         let n = matrix.rows();
 
         // The implementation here is based on the
@@ -132,17 +134,17 @@ impl<T> Cholesky<T> where T: 'static + Float {
         // the upper triangular part.
         let mut a = matrix;
 
-        for j in 0 .. n {
+        for j in 0..n {
             if j > 0 {
                 // This is essentially a GAXPY operation y = y - Bx
                 // where B is the [j .. n, 0 .. j] submatrix of A,
                 // x is the [ j, 0 .. j ] submatrix of A,
                 // and y is the [ j .. n, j ] submatrix of A
-                for k in j .. n {
+                for k in j..n {
                     let kj_dot = {
                         let j_row = a.row(j).raw_slice();
                         let k_row = a.row(k).raw_slice();
-                        dot(&k_row[0 .. j], &j_row[0 .. j])
+                        dot(&k_row[0..j], &j_row[0..j])
                     };
                     a[[k, j]] = a[[k, j]] - kj_dot;
                 }
@@ -151,21 +153,19 @@ impl<T> Cholesky<T> where T: 'static + Float {
             let diagonal = a[[j, j]];
             if diagonal.abs() < T::epsilon() {
                 return Err(Error::new(ErrorKind::DecompFailure,
-                    "Matrix is singular to working precision."));
+                                      "Matrix is singular to working precision."));
             } else if diagonal < T::zero() {
                 return Err(Error::new(ErrorKind::DecompFailure,
-                    "Diagonal entries of matrix are not all positive."));
+                                      "Diagonal entries of matrix are not all positive."));
             }
 
             let divisor = diagonal.sqrt();
-            for k in j .. n {
+            for k in j..n {
                 a[[k, j]] = a[[k, j]] / divisor;
             }
         }
 
-        Ok(Cholesky {
-            l: a
-        })
+        Ok(Cholesky { l: a })
     }
 
     /// Computes the determinant of the decomposed matrix.
@@ -173,9 +173,7 @@ impl<T> Cholesky<T> where T: 'static + Float {
     /// Note that the determinant of an empty matrix is considered
     /// to be equal to 1.
     pub fn det(&self) -> T {
-        let l_det = self.l.diag()
-                          .cloned()
-                          .fold(T::one(), |a, b| a * b);
+        let l_det = self.l.diag().cloned().fold(T::one(), |a, b| a * b);
         l_det * l_det
     }
 
@@ -193,7 +191,7 @@ impl<T> Cholesky<T> where T: 'static + Float {
     ///   dimensionally compatible with the supplied matrix.
     pub fn solve(&self, b: Vector<T>) -> Result<Vector<T>, Error> {
         assert!(self.l.rows() == b.size(),
-            "RHS vector and coefficient matrix must be
+                "RHS vector and coefficient matrix must be
              dimensionally compatible.");
         // Solve Ly = b
         let y = forward_substitution(&self.l, b)?;
@@ -219,11 +217,11 @@ impl<T> Cholesky<T> where T: 'static + Float {
         // for more details.
 
         // Solve for each column of the inverse matrix
-        for i in 0 .. n {
+        for i in 0..n {
             e[i] = T::one();
             let col = self.solve(e)?;
 
-            for j in 0 .. n {
+            for j in 0..n {
                 inv[[j, i]] = col[j];
             }
 
@@ -317,28 +315,30 @@ impl<T> Matrix<T>
         }
 
         Ok(Matrix {
-            rows: self.rows(),
-            cols: self.cols(),
-            data: new_data,
-        })
+               rows: self.rows(),
+               cols: self.cols(),
+               data: new_data,
+           })
     }
 }
 
 /// Solves the square system L^T x = b,
 /// where L is lower triangular
-fn transpose_back_substitution<T>(l: &Matrix<T>, b: Vector<T>)
-    -> Result<Vector<T>, Error> where T: Float {
+fn transpose_back_substitution<T>(l: &Matrix<T>, b: Vector<T>) -> Result<Vector<T>, Error>
+    where T: Float
+{
     assert!(l.rows() == l.cols(), "Matrix L must be square.");
-    assert!(l.rows() == b.size(), "L and b must be dimensionally compatible.");
+    assert!(l.rows() == b.size(),
+            "L and b must be dimensionally compatible.");
     let n = l.rows();
     let mut x = b;
 
-    for i in (0 .. n).rev() {
+    for i in (0..n).rev() {
         let row = l.row(i).raw_slice();
         let diagonal = l[[i, i]];
         if diagonal.abs() < T::epsilon() {
             return Err(Error::new(ErrorKind::DivByZero,
-                "Matrix L is singular to working precision."));
+                                  "Matrix L is singular to working precision."));
         }
 
         x[i] = x[i] / diagonal;
@@ -352,7 +352,7 @@ fn transpose_back_substitution<T>(l: &Matrix<T>, b: Vector<T>)
         // of applying optimized BLAS-like operations in the future.
         // In this case, we should replace this loop with a call
         // to the appropriate function.
-        for j in 0 .. i {
+        for j in 0..i {
             x[j] = x[j] - x[i] * row[j];
         }
     }
@@ -384,19 +384,15 @@ mod tests {
     #[test]
     fn cholesky_unpack_empty() {
         let x: Matrix<f64> = matrix![];
-        let l = Cholesky::decompose(x.clone())
-                            .unwrap()
-                            .unpack();
+        let l = Cholesky::decompose(x.clone()).unwrap().unpack();
         assert_matrix_eq!(l, x);
     }
 
     #[test]
     fn cholesky_unpack_1x1() {
-        let x = matrix![ 4.0 ];
-        let expected = matrix![ 2.0 ];
-        let l = Cholesky::decompose(x)
-                            .unwrap()
-                            .unpack();
+        let x = matrix![4.0];
+        let expected = matrix![2.0];
+        let l = Cholesky::decompose(x).unwrap().unpack();
         assert_matrix_eq!(l, expected, comp = float);
     }
 
@@ -408,9 +404,7 @@ mod tests {
             let expected = matrix![ 3.0, 0.0;
                                    -2.0, 4.0];
 
-            let l = Cholesky::decompose(x)
-                        .unwrap()
-                        .unpack();
+            let l = Cholesky::decompose(x).unwrap().unpack();
             assert_matrix_eq!(l, expected, comp = float);
         }
     }
@@ -480,9 +474,9 @@ mod tests {
         }
 
         {
-            let a = matrix![ 1.0 ];
-            let b = vector![ 4.0 ];
-            let expected = vector![ 4.0 ];
+            let a = matrix![1.0];
+            let b = vector![4.0];
+            let expected = vector![4.0];
             let cholesky = Cholesky::decompose(a).unwrap();
             let x = cholesky.solve(b).unwrap();
             assert_vector_eq!(x, expected, comp = float);
@@ -491,8 +485,8 @@ mod tests {
         {
             let a = matrix![ 4.0,  6.0;
                              6.0, 25.0];
-            let b = vector![ 2.0,  4.0];
-            let expected = vector![ 0.40625,  0.0625 ];
+            let b = vector![2.0, 4.0];
+            let expected = vector![0.40625, 0.0625];
             let cholesky = Cholesky::decompose(a).unwrap();
             let x = cholesky.solve(b).unwrap();
             assert_vector_eq!(x, expected, comp = float);
@@ -509,11 +503,10 @@ mod tests {
         }
 
         {
-            let a = matrix![ 2.0 ];
-            let expected = matrix![ 0.5 ];
+            let a = matrix![2.0];
+            let expected = matrix![0.5];
             let cholesky = Cholesky::decompose(a).unwrap();
-            assert_matrix_eq!(cholesky.inverse().unwrap(), expected,
-                              comp = float);
+            assert_matrix_eq!(cholesky.inverse().unwrap(), expected, comp = float);
         }
 
         {
@@ -522,20 +515,19 @@ mod tests {
             let expected = matrix![  0.390625, -0.09375;
                                     -0.093750 , 0.06250];
             let cholesky = Cholesky::decompose(a).unwrap();
-            assert_matrix_eq!(cholesky.inverse().unwrap(), expected,
-                              comp = float);
+            assert_matrix_eq!(cholesky.inverse().unwrap(), expected, comp = float);
         }
 
         {
             let a = matrix![ 9.0,   6.0,   3.0;
                              6.0,  20.0,  10.0;
                              3.0,  10.0,  14.0];
-            let expected = matrix![0.1388888888888889, -0.0416666666666667,  0.0               ;
+            let expected =
+                matrix![0.1388888888888889, -0.0416666666666667,  0.0               ;
                                   -0.0416666666666667,  0.0902777777777778, -0.0555555555555556;
                                                   0.0, -0.0555555555555556,  0.1111111111111111];
             let cholesky = Cholesky::decompose(a).unwrap();
-            assert_matrix_eq!(cholesky.inverse().unwrap(), expected,
-                              comp = float);
+            assert_matrix_eq!(cholesky.inverse().unwrap(), expected, comp = float);
         }
     }
 
@@ -579,7 +571,7 @@ mod tests {
             let l = matrix![2.0, 0.0;
                             3.0, 4.0];
             let b = vector![2.0, 1.0];
-            let expected = vector![0.625, 0.25 ];
+            let expected = vector![0.625, 0.25];
             let x = transpose_back_substitution(&l, b).unwrap();
             assert_vector_eq!(x, expected, comp = float);
         }
@@ -589,7 +581,7 @@ mod tests {
                              5.0, -1.0,  0.0;
                             -2.0,  0.0,  1.0];
             let b = vector![-1.0, 2.0, 3.0];
-            let expected = vector![ 7.5, -2.0, 3.0 ];
+            let expected = vector![7.5, -2.0, 3.0];
             let x = transpose_back_substitution(&l, b).unwrap();
             assert_vector_eq!(x, expected, comp = float);
         }

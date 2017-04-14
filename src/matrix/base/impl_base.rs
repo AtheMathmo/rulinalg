@@ -211,7 +211,8 @@ mod tests {
         let mut a = Matrix::new(4, 4, (0..16).collect::<Vec<_>>());
         {
             let slice = a.sub_slice([1, 1], 3, 2);
-            assert_eq!(&slice.iter().cloned().collect::<Vec<_>>(), &vec![5, 6, 9, 10, 13, 14]);
+            assert_eq!(&slice.iter().cloned().collect::<Vec<_>>(),
+                       &vec![5, 6, 9, 10, 13, 14]);
 
             let slice = slice.sub_slice([1, 1], 2, 1);
             assert_eq!(&slice.iter().cloned().collect::<Vec<_>>(), &vec![10, 14]);
@@ -308,9 +309,7 @@ mod tests {
                         4.0, 5.0, 6.0, 7.0;
                         8.0, 9.0, 10.0, 11.0];
 
-        for _ in a.diag_iter(DiagOffset::Above(4)) {
-
-        }
+        for _ in a.diag_iter(DiagOffset::Above(4)) {}
     }
 
     #[test]
@@ -320,9 +319,7 @@ mod tests {
                         4.0, 5.0, 6.0, 7.0;
                         8.0, 9.0, 10.0, 11.0];
 
-        for _ in a.diag_iter(DiagOffset::Below(3)) {
-
-        }
+        for _ in a.diag_iter(DiagOffset::Below(3)) {}
     }
 
     #[test]

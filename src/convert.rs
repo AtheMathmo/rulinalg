@@ -9,8 +9,8 @@ use libnum::{Zero, ToPrimitive, NumCast};
 
 use error::{Error, ErrorKind};
 
-use super::matrix::{DiagOffset, Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix,
-                    Row, RowMut, Column, ColumnMut};
+use super::matrix::{DiagOffset, Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix, Row, RowMut,
+                    Column, ColumnMut};
 use super::vector::Vector;
 
 impl<T> From<Vec<T>> for Vector<T> {
@@ -121,8 +121,7 @@ impl_column_to_vector!(ColumnMut);
 
 #[cfg(test)]
 mod tests {
-    use matrix::{DiagOffset, Matrix, MatrixSlice, MatrixSliceMut,
-                 BaseMatrix, BaseMatrixMut};
+    use matrix::{DiagOffset, Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix, BaseMatrixMut};
     use vector::Vector;
 
     #[test]

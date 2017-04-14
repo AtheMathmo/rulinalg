@@ -82,9 +82,11 @@ impl<T: Any + Float + Signed> Matrix<T> {
                       "Francis shift only works on matrices greater than 2x2.");
         debug_assert!(n == self.cols, "Matrix must be square for Francis shift.");
 
-        let mut h = try!(self
-            .upper_hessenberg()
-            .map_err(|_| Error::new(ErrorKind::DecompFailure, "Could not compute eigenvalues.")));
+        let mut h = try!(self.upper_hessenberg()
+                             .map_err(|_| {
+                                          Error::new(ErrorKind::DecompFailure,
+                                                     "Could not compute eigenvalues.")
+                                      }));
         h.balance_matrix();
 
         // The final index of the active matrix
@@ -223,10 +225,11 @@ impl<T: Any + Float + Signed> Matrix<T> {
                       "Francis shift only works on matrices greater than 2x2.");
         debug_assert!(n == self.cols, "Matrix must be square for Francis shift.");
 
-        let (u, mut h) = try!(self.upper_hess_decomp().map_err(|_| {
-            Error::new(ErrorKind::DecompFailure,
-                       "Could not compute eigen decomposition.")
-        }));
+        let (u, mut h) = try!(self.upper_hess_decomp()
+                                  .map_err(|_| {
+                                               Error::new(ErrorKind::DecompFailure,
+                                                          "Could not compute eigen decomposition.")
+                                           }));
         h.balance_matrix();
         let mut transformation = Matrix::identity(n);
 
@@ -409,8 +412,14 @@ mod tests {
         let v2 = vector![eigenvecs[[0, 1]], eigenvecs[[1, 1]]];
 
         let epsilon = 0.00001;
-        assert!((&a * &v1 - &v1 * lambda_1).into_vec().iter().all(|&c| c < epsilon));
-        assert!((&a * &v2 - &v2 * lambda_2).into_vec().iter().all(|&c| c < epsilon));
+        assert!((&a * &v1 - &v1 * lambda_1)
+                    .into_vec()
+                    .iter()
+                    .all(|&c| c < epsilon));
+        assert!((&a * &v2 - &v2 * lambda_2)
+                    .into_vec()
+                    .iter()
+                    .all(|&c| c < epsilon));
     }
 
     #[test]

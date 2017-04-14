@@ -3,8 +3,7 @@ use std::mem;
 
 /// Represents the result of an ULP-based comparison between two floating point numbers.
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum UlpComparisonResult
-{
+pub enum UlpComparisonResult {
     /// Signifies an exact match between two floating point numbers.
     ExactMatch,
     /// The difference in ULP between two floating point numbers.
@@ -14,7 +13,7 @@ pub enum UlpComparisonResult
     IncompatibleSigns,
     /// One or both of the two floating point numbers is a NaN,
     /// in which case the ULP comparison is not meaningful.
-    Nan
+    Nan,
 }
 
 /// Floating point types for which two instances can be compared for Unit in the Last Place (ULP) difference.

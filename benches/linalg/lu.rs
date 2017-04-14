@@ -1,6 +1,5 @@
-use rulinalg::matrix::{BaseMatrix, BaseMatrixMut,
-                       Matrix};
-use rulinalg::matrix::decomposition::{PartialPivLu};
+use rulinalg::matrix::{BaseMatrix, BaseMatrixMut, Matrix};
+use rulinalg::matrix::decomposition::PartialPivLu;
 use rulinalg::vector::Vector;
 
 use linalg::util::reproducible_random_matrix;
@@ -9,8 +8,8 @@ use libnum::{Zero, One};
 use test::Bencher;
 
 fn nullify_upper_triangular_part<T: Zero>(matrix: &mut Matrix<T>) {
-    for i in 0 .. matrix.rows() {
-        for j in (i + 1) .. matrix.cols() {
+    for i in 0..matrix.rows() {
+        for j in (i + 1)..matrix.cols() {
             matrix[[i, j]] = T::zero();
         }
     }
@@ -19,8 +18,8 @@ fn nullify_upper_triangular_part<T: Zero>(matrix: &mut Matrix<T>) {
 }
 
 fn nullify_lower_triangular_part<T: Zero>(matrix: &mut Matrix<T>) {
-    for i in 0 .. matrix.rows() {
-        for j in 0 .. i {
+    for i in 0..matrix.rows() {
+        for j in 0..i {
             matrix[[i, j]] = T::zero();
         }
     }
@@ -54,10 +53,10 @@ fn partial_piv_lu_decompose_10x10(b: &mut Bencher) {
     let n = 10;
     let x = well_conditioned_matrix(n);
     b.iter(|| {
-        // Assume that the cost of cloning x is roughly
-        // negligible in comparison with the cost of LU
-        PartialPivLu::decompose(x.clone()).expect("Matrix is well-conditioned")
-    })
+               // Assume that the cost of cloning x is roughly
+               // negligible in comparison with the cost of LU
+               PartialPivLu::decompose(x.clone()).expect("Matrix is well-conditioned")
+           })
 }
 
 #[bench]
@@ -65,76 +64,62 @@ fn partial_piv_lu_decompose_100x100(b: &mut Bencher) {
     let n = 100;
     let x = well_conditioned_matrix(n);
     b.iter(|| {
-        // Assume that the cost of cloning x is roughly
-        // negligible in comparison with the cost of LU
-        PartialPivLu::decompose(x.clone()).expect("Matrix is well-conditioned")
-    })
+               // Assume that the cost of cloning x is roughly
+               // negligible in comparison with the cost of LU
+               PartialPivLu::decompose(x.clone()).expect("Matrix is well-conditioned")
+           })
 }
 
 #[bench]
 fn partial_piv_lu_inverse_10x10(b: &mut Bencher) {
     let n = 10;
     let x = well_conditioned_matrix(n);
-    let lu = PartialPivLu::decompose(x)
-                     .expect("Matrix is well-conditioned.");
-    b.iter(|| {
-        lu.inverse()
-    })
+    let lu = PartialPivLu::decompose(x).expect("Matrix is well-conditioned.");
+    b.iter(|| lu.inverse())
 }
 
 #[bench]
 fn partial_piv_lu_inverse_100x100(b: &mut Bencher) {
     let n = 100;
     let x = well_conditioned_matrix(n);
-    let lu = PartialPivLu::decompose(x)
-                     .expect("Matrix is well-conditioned.");
-    b.iter(|| {
-        lu.inverse()
-    })
+    let lu = PartialPivLu::decompose(x).expect("Matrix is well-conditioned.");
+    b.iter(|| lu.inverse())
 }
 
 #[bench]
 fn partial_piv_lu_det_10x10(b: &mut Bencher) {
     let n = 10;
     let x = well_conditioned_matrix(n);
-    let lu = PartialPivLu::decompose(x)
-                     .expect("Matrix is well-conditioned.");
-    b.iter(|| {
-        lu.det()
-    })
+    let lu = PartialPivLu::decompose(x).expect("Matrix is well-conditioned.");
+    b.iter(|| lu.det())
 }
 
 #[bench]
 fn partial_piv_lu_det_100x100(b: &mut Bencher) {
     let n = 100;
     let x = well_conditioned_matrix(n);
-    let lu = PartialPivLu::decompose(x)
-                     .expect("Matrix is well-conditioned.");
-    b.iter(|| {
-        lu.det()
-    })
+    let lu = PartialPivLu::decompose(x).expect("Matrix is well-conditioned.");
+    b.iter(|| lu.det())
 }
 
 #[bench]
 fn partial_piv_lu_solve_10x10(b: &mut Bencher) {
     let n = 10;
     let x = well_conditioned_matrix(n);
-    let lu = PartialPivLu::decompose(x)
-                     .expect("Matrix is well-conditioned.");
+    let lu = PartialPivLu::decompose(x).expect("Matrix is well-conditioned.");
     b.iter(|| {
-        let b = Vector::ones(n);
-        lu.solve(b).unwrap()
-    })
+               let b = Vector::ones(n);
+               lu.solve(b).unwrap()
+           })
 }
 
 #[bench]
 fn partial_piv_lu_solve_100x100(b: &mut Bencher) {
     let n = 100;
     let x = well_conditioned_matrix(n);
-    let lu = PartialPivLu::decompose(x)
-                     .expect("Matrix is well-conditioned.");
+    let lu = PartialPivLu::decompose(x).expect("Matrix is well-conditioned.");
     b.iter(|| {
-        let b = Vector::ones(n);
-        lu.solve(b).unwrap()
-    })
+               let b = Vector::ones(n);
+               lu.solve(b).unwrap()
+           })
 }

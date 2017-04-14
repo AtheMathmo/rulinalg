@@ -103,7 +103,8 @@ macro_rules! mat_mul_general (
 );
 
 /// Multiplies two matrices together.
-impl<'a, T: Any + Copy + Zero + Add<T, Output=T> + Mul<T, Output=T>> Mul<Matrix<T>> for Matrix<T> {
+impl<'a, T: Any + Copy + Zero + Add<T, Output = T> + Mul<T, Output = T>> Mul<Matrix<T>>
+    for Matrix<T> {
     type Output = Matrix<T>;
 
     fn mul(self, m: Matrix<T>) -> Matrix<T> {

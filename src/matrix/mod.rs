@@ -325,14 +325,14 @@ fn back_substitution<T, M>(u: &M, y: Vector<T>) -> Result<Vector<T>, Error>
     let mut x = y;
 
     let n = u.rows();
-    for i in (0 .. n).rev() {
+    for i in (0..n).rev() {
         let row = u.row(i);
 
         // TODO: Remove unsafe once `get` is available in `BaseMatrix`
         let divisor = unsafe { u.get_unchecked([i, i]).clone() };
         if divisor.abs() < T::epsilon() {
             return Err(Error::new(ErrorKind::DivByZero,
-                "Lower triangular matrix is singular to working precision."));
+                                  "Lower triangular matrix is singular to working precision."));
         }
 
         // We have
@@ -345,8 +345,8 @@ fn back_substitution<T, M>(u: &M, y: Vector<T>) -> Result<Vector<T>, Error>
         // This is handy, because we have a very efficient
         // dot(., .) implementation!
         let dot = {
-            let row_part = &row.raw_slice()[(i + 1) .. n];
-            let x_part = &x.data()[(i + 1) .. n];
+            let row_part = &row.raw_slice()[(i + 1)..n];
+            let x_part = &x.data()[(i + 1)..n];
             utils::dot(row_part, x_part)
         };
 
@@ -374,7 +374,7 @@ fn forward_substitution<T, M>(l: &M, y: Vector<T>) -> Result<Vector<T>, Error>
         let divisor = unsafe { l.get_unchecked([i, i]).clone() };
         if divisor.abs() < T::epsilon() {
             return Err(Error::new(ErrorKind::DivByZero,
-                "Lower triangular matrix is singular to working precision."));
+                                  "Lower triangular matrix is singular to working precision."));
         }
 
         // We have
@@ -387,8 +387,8 @@ fn forward_substitution<T, M>(l: &M, y: Vector<T>) -> Result<Vector<T>, Error>
         // This is handy, because we have a very efficient
         // dot(., .) implementation!
         let dot = {
-            let row_part = &row.raw_slice()[0 .. i];
-            let x_part = &x.data()[0 .. i];
+            let row_part = &row.raw_slice()[0..i];
+            let x_part = &x.data()[0..i];
             utils::dot(row_part, x_part)
         };
 

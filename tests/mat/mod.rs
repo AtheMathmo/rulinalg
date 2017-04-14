@@ -1,4 +1,4 @@
-use rulinalg::matrix::{BaseMatrix};
+use rulinalg::matrix::BaseMatrix;
 
 #[test]
 fn test_solve() {
@@ -15,8 +15,15 @@ fn test_solve() {
     let b = vector![-100.0, 0.0, 0.0, -100.0, 0.0, 0.0, -100.0, 0.0, 0.0];
 
     let c = a.solve(b).unwrap();
-    let true_solution = vector![42.85714286, 18.75, 7.14285714, 52.67857143,
-                                25.0, 9.82142857, 42.85714286, 18.75, 7.14285714];
+    let true_solution = vector![42.85714286,
+                                18.75,
+                                7.14285714,
+                                52.67857143,
+                                25.0,
+                                9.82142857,
+                                42.85714286,
+                                18.75,
+                                7.14285714];
 
     // Note: the "true_solution" given here has way too few
     // significant digits, and since I can't be bothered to enter
@@ -44,7 +51,8 @@ fn matrix_lup_decomp() {
                     2., 4., 7.;
                     1., 1., 0.];
 
-    let (l, u, p) = a.lup_decomp().expect("Matrix SHOULD be able to be decomposed...");
+    let (l, u, p) = a.lup_decomp()
+        .expect("Matrix SHOULD be able to be decomposed...");
 
     let l_true = vec![1., 0., 0., 0.5, 1., 0., 0.5, -1., 1.];
     let u_true = vec![2., 4., 7., 0., 1., 1.5, 0., 0., -2.];
@@ -60,7 +68,9 @@ fn matrix_lup_decomp() {
                     0., 0., 0., 6., 5.;
                     0., 0., 0., 5., 6.];
 
-    let (l, u, p) = b.clone().lup_decomp().expect("Matrix SHOULD be able to be decomposed...");
+    let (l, u, p) = b.clone()
+        .lup_decomp()
+        .expect("Matrix SHOULD be able to be decomposed...");
     let k = p.transpose() * l * u;
 
     for i in 0..25 {
@@ -106,8 +116,8 @@ fn matrix_partial_piv_lu() {
                         1., 1., 0.];
 
         let LUP { l, u, p } = PartialPivLu::decompose(a)
-                                        .expect("Matrix is well-conditioned")
-                                        .unpack();
+            .expect("Matrix is well-conditioned")
+            .unpack();
 
         let l_true = matrix![1.0,  0.0,  0.0;
                              0.5,  1.0,  0.0;
@@ -132,8 +142,8 @@ fn matrix_partial_piv_lu() {
                         0., 0., 0., 5., 6.];
 
         let LUP { l, u, p } = PartialPivLu::decompose(b.clone())
-                         .expect("Matrix is well-conditioned.")
-                         .unpack();
+            .expect("Matrix is well-conditioned.")
+            .unpack();
         let k = p.inverse() * l * u;
 
         assert_matrix_eq!(k, b, comp = float);
@@ -150,9 +160,7 @@ fn matrix_partial_piv_lu() {
                         0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, -4.0, 1.0;
                         0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, -4.0];
 
-        let LUP { l, u, p } = PartialPivLu::decompose(c.clone())
-                                .unwrap()
-                                .unpack();
+        let LUP { l, u, p } = PartialPivLu::decompose(c.clone()).unwrap().unpack();
         let c_reconstructed = p.inverse() * l * u;
         assert_matrix_eq!(c_reconstructed, c, comp = float);
     }
@@ -162,9 +170,7 @@ fn matrix_partial_piv_lu() {
                         0.0, 0.0, 1.0, 0.0;
                         -1.0, 0.0, 0.0, 0.0;
                         0.0, 0.0, 0.0, 1.0];
-        let LUP { l, u, p } = PartialPivLu::decompose(d.clone())
-                                .unwrap()
-                                .unpack();
+        let LUP { l, u, p } = PartialPivLu::decompose(d.clone()).unwrap().unpack();
         let d_reconstructed = p.inverse() * l * u;
         assert_matrix_eq!(d_reconstructed, d, comp = float);
     }
@@ -181,7 +187,8 @@ fn cholesky() {
 
     assert!(l.is_ok());
 
-    assert_eq!(*l.unwrap().data(), vec![5., 0., 0., 3., 3., 0., -1., 1., 3.]);
+    assert_eq!(*l.unwrap().data(),
+               vec![5., 0., 0., 3., 3., 0., -1., 1., 3.]);
 }
 
 #[test]
@@ -209,11 +216,13 @@ fn qr() {
     let r_diff = (r - &true_r).into_vec();
 
     for (val, expected) in q_diff.into_iter().zip(true_q.data().iter()) {
-        assert!(val < tol, format!("diff is {0}, expecting {1}", val, expected));
+        assert!(val < tol,
+                format!("diff is {0}, expecting {1}", val, expected));
     }
 
     for (val, expected) in r_diff.into_iter().zip(true_r.data().iter()) {
-        assert!(val < tol, format!("diff is {0}, expecting {1}", val, expected));
+        assert!(val < tol,
+                format!("diff is {0}, expecting {1}", val, expected));
     }
 
 }

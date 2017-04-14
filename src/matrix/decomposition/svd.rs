@@ -59,10 +59,10 @@ fn sort_svd<T>(mut b: Matrix<T>,
     // Sorting a vector of indices simultaneously with the singular values
     // gives us a mapping between old and new (final) column indices.
     indexed_sorted_values.sort_by(|&(_, ref x), &(_, ref y)| {
-        x.partial_cmp(y)
+                                      x.partial_cmp(y)
             .expect("All singular values should be finite, and thus sortable.")
             .reverse()
-    });
+                                  });
 
     // Set the diagonal elements of the singular value matrix
     for (i, &(_, value)) in indexed_sorted_values.iter().enumerate() {
@@ -76,7 +76,8 @@ fn sort_svd<T>(mut b: Matrix<T>,
     // any further sorting or hashsets or similar by noting that we can simply
     // remove any (i, j) for which j >= i. This also removes (i, i) pairs,
     // i.e. columns that don't need to be swapped.
-    let swappable_pairs = indexed_sorted_values.into_iter()
+    let swappable_pairs = indexed_sorted_values
+        .into_iter()
         .enumerate()
         .map(|(new_index, (old_index, _))| (old_index, new_index))
         .filter(|&(old_index, new_index)| old_index < new_index);
@@ -147,7 +148,10 @@ impl<T: Any + Float + Signed> Matrix<T> {
 
         // Get the bidiagonal decomposition
         let (mut b, mut u, mut v) = try!(self.bidiagonal_decomp()
-            .map_err(|_| Error::new(ErrorKind::DecompFailure, "Could not compute SVD.")));
+                                             .map_err(|_| {
+                                                          Error::new(ErrorKind::DecompFailure,
+                                                                     "Could not compute SVD.")
+                                                      }));
 
         loop {
             // Values to count the size of lower diagonal block
@@ -212,7 +216,9 @@ impl<T: Any + Float + Signed> Matrix<T> {
             // Apply Golub-Kahan svd step
             unsafe {
                 try!(Matrix::<T>::golub_kahan_svd_step(&mut b, &mut u, &mut v, p, q)
-                    .map_err(|_| Error::new(ErrorKind::DecompFailure, "Could not compute SVD.")));
+                         .map_err(|_| {
+                                      Error::new(ErrorKind::DecompFailure, "Could not compute SVD.")
+                                  }));
             }
         }
 
@@ -332,9 +338,9 @@ mod tests {
         assert_eq!(recovered.cols(), mat.cols());
 
         assert!(!mat.data()
-            .iter()
-            .zip(recovered.data().iter())
-            .any(|(&x, &y)| (x - y).abs() > 1e-10));
+                     .iter()
+                     .zip(recovered.data().iter())
+                     .any(|(&x, &y)| (x - y).abs() > 1e-10));
 
         // The transposition is due to the fact that there does not exist
         // any column iterators at the moment, and we need to simultaneously iterate
@@ -399,9 +405,10 @@ mod tests {
         validate_svd(&mat, &b, &u, &v);
 
         // Assert the singular values are what we expect
-        assert!(expected_values.iter()
-            .zip(b.diag())
-            .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
+        assert!(expected_values
+                    .iter()
+                    .zip(b.diag())
+                    .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
     }
 
     #[test]
@@ -419,9 +426,10 @@ mod tests {
         validate_svd(&mat, &b, &u, &v);
 
         // Assert the singular values are what we expect
-        assert!(expected_values.iter()
-            .zip(b.diag())
-            .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
+        assert!(expected_values
+                    .iter()
+                    .zip(b.diag())
+                    .all(|(expected, actual)| (expected - actual).abs() < 1e-14));
     }
 
     #[test]
@@ -442,8 +450,9 @@ mod tests {
         validate_svd(&mat, &b, &u, &v);
 
         // Assert the singular values are what we expect
-        assert!(expected_values.iter()
-            .zip(b.diag())
-            .all(|(expected, actual)| (expected - actual).abs() < 1e-12));
+        assert!(expected_values
+                    .iter()
+                    .zip(b.diag())
+                    .all(|(expected, actual)| (expected - actual).abs() < 1e-12));
     }
 }

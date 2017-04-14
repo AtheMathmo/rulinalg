@@ -60,7 +60,10 @@ impl<'a, T> IndexMut<[usize; 2]> for MatrixSliceMut<'a, T> {
         assert!(idx[1] < self.cols,
                 "Column index is greater than column dimension.");
 
-        unsafe { &mut *(self.ptr.offset((idx[0] * self.row_stride + idx[1]) as isize)) }
+        unsafe {
+            &mut *(self.ptr
+                       .offset((idx[0] * self.row_stride + idx[1]) as isize))
+        }
     }
 }
 
@@ -301,7 +304,8 @@ impl<'a, 'b, T> Mul<&'b Vector<T>> for &'a Matrix<T>
     type Output = Vector<T>;
 
     fn mul(self, v: &Vector<T>) -> Vector<T> {
-        assert!(v.size() == self.cols, "Matrix and Vector dimensions do not agree.");
+        assert!(v.size() == self.cols,
+                "Matrix and Vector dimensions do not agree.");
 
         let mut new_data = Vec::with_capacity(self.rows);
 
@@ -775,7 +779,12 @@ impl<'a, 'b, 'c, T> $assign_trt<&'c $target_slice<'b, T>> for MatrixSliceMut<'a,
 impl_op_assign_slice!(MatrixSlice, AddAssign, Add, add, add_assign, "addition");
 impl_op_assign_slice!(MatrixSlice, SubAssign, Sub, sub, sub_assign, "subtraction");
 impl_op_assign_slice!(MatrixSliceMut, AddAssign, Add, add, add_assign, "addition");
-impl_op_assign_slice!(MatrixSliceMut, SubAssign, Sub, sub, sub_assign, "subtraction");
+impl_op_assign_slice!(MatrixSliceMut,
+                      SubAssign,
+                      Sub,
+                      sub,
+                      sub_assign,
+                      "subtraction");
 
 macro_rules! impl_op_assign_mat_slice (
     ($target_mat:ident, $assign_trt:ident, $trt:ident, $op:ident, $op_assign:ident, $doc:expr) => (
@@ -813,7 +822,12 @@ impl<'a, 'b, T> $assign_trt<&'b $target_mat<'a, T>> for Matrix<T>
 impl_op_assign_mat_slice!(MatrixSlice, AddAssign, Add, add, add_assign, "addition");
 impl_op_assign_mat_slice!(MatrixSlice, SubAssign, Sub, sub, sub_assign, "subtraction");
 impl_op_assign_mat_slice!(MatrixSliceMut, AddAssign, Add, add, add_assign, "addition");
-impl_op_assign_mat_slice!(MatrixSliceMut, SubAssign, Sub, sub, sub_assign, "subtraction");
+impl_op_assign_mat_slice!(MatrixSliceMut,
+                          SubAssign,
+                          Sub,
+                          sub,
+                          sub_assign,
+                          "subtraction");
 
 macro_rules! impl_neg_slice (
     ($slice:ident) => (

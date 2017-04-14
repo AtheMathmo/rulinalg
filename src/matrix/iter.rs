@@ -299,10 +299,10 @@ impl<'a, T: 'a + Copy> FromIterator<&'a [T]> for Matrix<T> {
         match iterator.next() {
             None => {
                 return Matrix {
-                    data: Vec::new(),
-                    rows: 0,
-                    cols: 0,
-                }
+                           data: Vec::new(),
+                           rows: 0,
+                           cols: 0,
+                       }
             }
             Some(row) => {
                 rows += 1;
@@ -968,14 +968,11 @@ mod tests {
         let a = Matrix::ones(3, 3) * 2.;
         let mut b = MatrixSlice::from_matrix(&a, [1, 1], 2, 2);
 
-        for _ in b {
-        }
+        for _ in b {}
 
-        for _ in &b {
-        }
+        for _ in &b {}
 
-        for _ in &mut b {
-        }
+        for _ in &mut b {}
     }
 
     #[test]
@@ -993,8 +990,7 @@ mod tests {
         {
             let b = MatrixSliceMut::from_matrix(&mut a, [1, 1], 2, 2);
 
-            for _ in &b {
-            }
+            for _ in &b {}
         }
 
         {
@@ -1055,15 +1051,15 @@ mod tests {
         // are no more elements.
         let collect_slice = |(i, j), rows, cols| {
             x.sub_slice([i, j], rows, cols)
-             .iter()
-             .cloned()
-             .collect::<Vec<_>>()
+                .iter()
+                .cloned()
+                .collect::<Vec<_>>()
         };
 
         {
             // Zero elements
-            for i in 0 .. 2 {
-                for j in 0 .. 2 {
+            for i in 0..2 {
+                for j in 0..2 {
                     let y = x.sub_slice([i, j], 0, 0);
                     assert!(y.iter().next().is_none());
                 }
@@ -1073,8 +1069,8 @@ mod tests {
 
         {
             // One element
-            for i in 0 .. 2 {
-                for j in 0 .. 2 {
+            for i in 0..2 {
+                for j in 0..2 {
                     let y = x.sub_slice([i, j], 1, 1);
                     assert_eq!(y.iter().next(), Some(&x[[i, j]]));
                 }

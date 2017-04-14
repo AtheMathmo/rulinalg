@@ -1,6 +1,4 @@
-use matrix::{PermutationMatrix, Matrix,
-             MatrixSlice, MatrixSliceMut,
-             BaseMatrix};
+use matrix::{PermutationMatrix, Matrix, MatrixSlice, MatrixSliceMut, BaseMatrix};
 use vector::Vector;
 
 use libnum::Zero;
@@ -18,7 +16,9 @@ impl<T> Mul<Vector<T>> for PermutationMatrix<T> {
 }
 
 /// Left-multiply a vector by a permutation matrix.
-impl<'a, T> Mul<Vector<T>> for &'a PermutationMatrix<T> where T: Clone + Zero {
+impl<'a, T> Mul<Vector<T>> for &'a PermutationMatrix<T>
+    where T: Clone + Zero
+{
     type Output = Vector<T>;
 
     fn mul(self, rhs: Vector<T>) -> Vector<T> {
@@ -30,7 +30,9 @@ impl<'a, T> Mul<Vector<T>> for &'a PermutationMatrix<T> where T: Clone + Zero {
 }
 
 /// Left-multiply a vector by a permutation matrix.
-impl<'a, 'b, T> Mul<&'a Vector<T>> for &'b PermutationMatrix<T> where T: Clone + Zero {
+impl<'a, 'b, T> Mul<&'a Vector<T>> for &'b PermutationMatrix<T>
+    where T: Clone + Zero
+{
     type Output = Vector<T>;
 
     fn mul(self, rhs: &'a Vector<T>) -> Vector<T> {
@@ -41,7 +43,9 @@ impl<'a, 'b, T> Mul<&'a Vector<T>> for &'b PermutationMatrix<T> where T: Clone +
 }
 
 /// Left-multiply a vector by a permutation matrix.
-impl<'a, T> Mul<&'a Vector<T>> for PermutationMatrix<T> where T: Clone + Zero {
+impl<'a, T> Mul<&'a Vector<T>> for PermutationMatrix<T>
+    where T: Clone + Zero
+{
     type Output = Vector<T>;
 
     fn mul(self, rhs: &'a Vector<T>) -> Vector<T> {
@@ -60,7 +64,9 @@ impl<T> Mul<Matrix<T>> for PermutationMatrix<T> {
 }
 
 /// Left-multiply a matrix by a permutation matrix.
-impl<'b, T> Mul<Matrix<T>> for &'b PermutationMatrix<T> where T: Clone {
+impl<'b, T> Mul<Matrix<T>> for &'b PermutationMatrix<T>
+    where T: Clone
+{
     type Output = Matrix<T>;
 
     fn mul(self, mut rhs: Matrix<T>) -> Matrix<T> {
@@ -137,7 +143,9 @@ impl<T> Mul<PermutationMatrix<T>> for Matrix<T> {
 }
 
 /// Right-multiply a matrix by a permutation matrix.
-impl<'a, T> Mul<&'a PermutationMatrix<T>> for Matrix<T> where T: Clone {
+impl<'a, T> Mul<&'a PermutationMatrix<T>> for Matrix<T>
+    where T: Clone
+{
     type Output = Matrix<T>;
 
     fn mul(mut self, rhs: &'a PermutationMatrix<T>) -> Matrix<T> {

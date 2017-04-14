@@ -7,13 +7,13 @@ extern crate test;
 extern crate rand;
 
 pub mod linalg {
-	mod iter;
-	mod matrix;
-	mod svd;
-	mod lu;
-	mod cholesky;
-	mod norm;
-	mod triangular;
-	mod permutation;
-	pub mod util;
+    mod iter;
+    mod matrix;
+    mod svd;
+    mod lu;
+    mod cholesky;
+    mod norm;
+    mod triangular;
+    mod permutation;
+    pub mod util;
 }

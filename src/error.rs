@@ -30,7 +30,7 @@ pub enum ErrorKind {
     /// Failure due to inability to convert between scalar types
     ScalarConversionFailure,
     /// A user-supplied permutation is not a valid permutation.
-    InvalidPermutation
+    InvalidPermutation,
 }
 
 impl Error {

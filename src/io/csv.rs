@@ -8,8 +8,9 @@ use std::io::{Read, Write};
 use super::super::matrix::{Matrix, BaseMatrix};
 
 
-impl<T> Matrix<T> where T: Decodable {
-
+impl<T> Matrix<T>
+    where T: Decodable
+{
     /// Read csv file as Matrix.
     ///
     /// # Examples
@@ -21,8 +22,7 @@ impl<T> Matrix<T> where T: Decodable {
     /// let rdr = Reader::from_file("./data.csv").unwrap().has_headers(false);
     /// let res = Matrix::<f64>::read_csv(rdr).unwrap();
     /// ```
-    pub fn read_csv<'a, R: Read>(mut reader: Reader<R>)
-        -> Result<Matrix<T>, Error> {
+    pub fn read_csv<'a, R: Read>(mut reader: Reader<R>) -> Result<Matrix<T>, Error> {
 
         // headers read 1st row regardless of has_headers property
         let header: Vec<String> = try!(reader.headers());
@@ -40,8 +40,9 @@ impl<T> Matrix<T> where T: Decodable {
     }
 }
 
-impl<T> Matrix<T> where T: Encodable {
-
+impl<T> Matrix<T>
+    where T: Encodable
+{
     /// Write Matrix as csv file.
     ///
     /// # Examples
@@ -55,8 +56,7 @@ impl<T> Matrix<T> where T: Encodable {
     /// let mut wtr = Writer::from_file("./data.csv").unwrap();
     /// mat.write_csv(&mut wtr).unwrap();
     /// ```
-    pub fn write_csv<W: Write>(&self, writer: &mut Writer<W>)
-        -> Result<(), Error> {
+    pub fn write_csv<W: Write>(&self, writer: &mut Writer<W>) -> Result<(), Error> {
 
         for row in self.row_iter() {
             try!(writer.encode(row.raw_slice()));

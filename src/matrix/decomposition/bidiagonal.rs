@@ -38,12 +38,14 @@ impl<T> Matrix<T>
             let h_holder: Matrix<T>;
             {
                 let lower_slice = MatrixSlice::from_matrix(&self, [k, k], m - k, 1);
-                h_holder = try!(Matrix::make_householder(&lower_slice.iter()
-                        .cloned()
-                        .collect::<Vec<_>>())
-                    .map_err(|_| {
-                        Error::new(ErrorKind::DecompFailure, "Cannot compute bidiagonal form.")
-                    }));
+                h_holder = try!(Matrix::make_householder(&lower_slice
+                                                              .iter()
+                                                              .cloned()
+                                                              .collect::<Vec<_>>())
+                                        .map_err(|_| {
+                                                     Error::new(ErrorKind::DecompFailure,
+                                                                "Cannot compute bidiagonal form.")
+                                                 }));
             }
 
             {
@@ -62,7 +64,8 @@ impl<T> Matrix<T>
                     // Get the kth row from column k+1 to end.
                     row = std::slice::from_raw_parts(self.data
                                                          .as_ptr()
-                                                         .offset((k * self.cols + k + 1) as isize),
+                                                         .offset((k * self.cols + k + 1) as
+                                                                 isize),
                                                      n - k - 1);
                 }
 
@@ -121,9 +124,9 @@ mod tests {
         assert_eq!(recovered.cols(), mat.cols());
 
         assert!(!mat.data()
-            .iter()
-            .zip(recovered.data().iter())
-            .any(|(&x, &y)| (x - y).abs() > 1e-10));
+                     .iter()
+                     .zip(recovered.data().iter())
+                     .any(|(&x, &y)| (x - y).abs() > 1e-10));
     }
 
     #[test]
