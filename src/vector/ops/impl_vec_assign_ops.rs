@@ -71,7 +71,6 @@ impl_assign_op_scalar!(BitAndAssign, BitAnd, bitand, bitand_assign, "bitwise-and
 impl_assign_op_scalar!(BitOrAssign, BitOr, bitor, bitor_assign, "bitwise-or");
 impl_assign_op_scalar!(BitXorAssign, BitXor, bitxor, bitxor_assign, "bitwise-xor");
 
-
 #[cfg(test)]
 mod tests {
     use vector::Vector;

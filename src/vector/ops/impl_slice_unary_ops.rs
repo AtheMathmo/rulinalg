@@ -32,3 +32,48 @@ impl_unary_op!(Neg, neg, "negative", VectorSlice);
 impl_unary_op!(Neg, neg, "negative", VectorSliceMut);
 impl_unary_op!(Not, not, "not", VectorSlice);
 impl_unary_op!(Not, not, "not", VectorSliceMut);
+
+#[cfg(test)]
+mod tests {
+    use vector::{BaseVector, VectorSlice};
+
+    #[test]
+    fn vector_slice_neg_f32() {
+        let a = vector![1., 2., 3., 4., 5., 6.];
+        let b = VectorSlice::from_vector(&a, 0, 6);
+        let exp = &[-1., -2., -3., -4., -5., -6.];
+
+        assert_eq!((-&b).data(), exp);
+        assert_eq!((-b).data(), exp);
+    }
+
+    #[test]
+    fn vector_slice_neg_int() {
+        let a = vector![1, 2, 3, 4, 5, 6];
+        let b = VectorSlice::from_vector(&a, 0, 6);
+        let exp = &[-1, -2, -3, -4, -5, -6];
+
+        assert_eq!((-&b).data(), exp);
+        assert_eq!((-b).data(), exp);
+    }
+
+    #[test]
+    fn vector_slice_not_int() {
+        let a = vector![1, 2, 3, 4, 5, 6];
+        let b = VectorSlice::from_vector(&a, 0, 6);
+        let exp = &[!1, !2, !3, !4, !5, !6];
+
+        assert_eq!((!&b).data(), exp);
+        assert_eq!((!b).data(), exp);
+    }
+
+    #[test]
+    fn vector_slice_not_bool() {
+        let a = vector![false, true, false];
+        let b = VectorSlice::from_vector(&a, 0, 3);
+        let exp = &[true, false, true];
+
+        assert_eq!((!&b).data(), exp);
+        assert_eq!((!b).data(), exp);
+    }
+}
