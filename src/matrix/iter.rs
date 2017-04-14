@@ -186,11 +186,12 @@ impl<'a, T> Iterator for $rows<'a, T> {
 // Check if we have reached the end
         if self.row_pos < self.slice_rows {
             let row: $row_type;
+            let row_stride = self.row_stride as usize;
             unsafe {
 // Get pointer and create a slice from raw parts
                 let ptr = self.slice_start.offset(self.row_pos as isize * self.row_stride);
                 row = $row_base {
-                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
+                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, row_stride)
                 };
             }
 
@@ -204,11 +205,12 @@ impl<'a, T> Iterator for $rows<'a, T> {
     fn last(self) -> Option<Self::Item> {
 // Check if already at the end
         if self.row_pos < self.slice_rows {
+            let row_stride = self.row_stride as usize;
             unsafe {
 // Get pointer to last row and create a slice from raw parts
                 let ptr = self.slice_start.offset((self.slice_rows - 1) as isize * self.row_stride);
                 Some($row_base {
-                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
+                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, row_stride)
                 })
             }
         } else {
@@ -219,10 +221,11 @@ impl<'a, T> Iterator for $rows<'a, T> {
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
         if self.row_pos + n < self.slice_rows {
             let row: $row_type;
+            let row_stride = self.row_stride as usize;
             unsafe {
                 let ptr = self.slice_start.offset((self.row_pos + n) as isize * self.row_stride);
                 row = $row_base {
-                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, self.row_stride as usize)
+                    row: $slice_base::from_raw_parts(ptr, 1, self.slice_cols, row_stride)
                 }
             }
 

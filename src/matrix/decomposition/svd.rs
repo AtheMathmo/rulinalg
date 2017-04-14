@@ -95,10 +95,11 @@ impl<T: Any + Float + Signed> Matrix<T> {
     ///
     /// Computes the SVD using the Golub-Reinsch algorithm.
     ///
-    /// Returns Σ, U, V, such that `self` = U Σ V<sup>T</sup>. Σ is a diagonal matrix whose elements
-    /// correspond to the non-negative singular values of the matrix. The singular values are ordered in
-    /// non-increasing order. U and V have orthonormal columns, and each column represents the
-    /// left and right singular vectors for the corresponding singular value in Σ, respectively.
+    /// Returns Σ, U, V, such that `self` = U Σ V<sup>T</sup>. Σ is a diagonal matrix whose
+    /// elements correspond to the non-negative singular values of the matrix. The singular
+    /// values are ordered in non-increasing order. U and V have orthonormal columns, and each
+    /// column represents the left and right singular vectors for the corresponding singular
+    /// value in Σ, respectively.
     ///
     /// If `self` has M rows and N columns, the dimensions of the returned matrices
     /// are as follows.
@@ -120,7 +121,8 @@ impl<T: Any + Float + Signed> Matrix<T> {
     /// # Failures
     ///
     /// This function may fail in some cases. The current decomposition whilst being
-    /// efficient is fairly basic. Hopefully the algorithm can be made not to fail in the near future.
+    /// efficient is fairly basic. Hopefully the algorithm can be made not to fail in
+    /// the near future.
     pub fn svd(self) -> Result<(Matrix<T>, Matrix<T>, Matrix<T>), Error> {
         let (b, u, v) = try!(self.svd_unordered());
         Ok(sort_svd(b, u, v))
@@ -350,20 +352,25 @@ mod tests {
         let ref v_transposed = v.transpose();
         let ref mat_transposed = mat.transpose();
 
-        let mut singular_triplets = u_transposed.row_iter().zip(b.diag()).zip(v_transposed.row_iter())
+        let mut singular_triplets = u_transposed
+            .row_iter()
+            .zip(b.diag())
+            .zip(v_transposed.row_iter())
             // chained zipping results in nested tuple. Flatten it.
-            .map(|((u_col, singular_value), v_col)| (Vector::new(u_col.raw_slice()), singular_value, Vector::new(v_col.raw_slice())));
+            .map(|((u_col, singular_value), v_col)| (
+                Vector::new(u_col.raw_slice()), singular_value, Vector::new(v_col.raw_slice())
+            ));
 
         assert!(singular_triplets.by_ref()
-            // For a matrix M, each singular value σ and left and right singular vectors u and v respectively
-            // satisfy M v = σ u, so we take the difference
+            // For a matrix M, each singular value σ and left and right singular vectors u and v
+            // respectively satisfy M v = σ u, so we take the difference
             .map(|(ref u, sigma, ref v)| mat * v - u * sigma)
             .flat_map(|v| v.into_vec().into_iter())
             .all(|x| x.abs() < 1e-10));
 
         assert!(singular_triplets.by_ref()
-            // For a matrix M, each singular value σ and left and right singular vectors u and v respectively
-            // satisfy M_transposed u = σ v, so we take the difference
+            // For a matrix M, each singular value σ and left and right singular vectors u and v
+            // respectively satisfy M_transposed u = σ v, so we take the difference
             .map(|(ref u, sigma, ref v)| mat_transposed * u - v * sigma)
             .flat_map(|v| v.into_vec().into_iter())
             .all(|x| x.abs() < 1e-10));
@@ -393,11 +400,13 @@ mod tests {
     fn test_svd_tall_matrix() {
         // Note: This matrix is not arbitrary. It has been constructed specifically so that
         // the "natural" order of the singular values it not sorted by default.
-        let mat = matrix![3.61833700244349288, -3.28382346228211697,  1.97968027781346501, -0.41869628192662156;
-                          3.96046289599926427,  0.70730060716580723, -2.80552479438772817, -1.45283286109873933;
-                          1.44435028724617442,  1.27749196276785826, -1.09858397535426366, -0.03159619816434689;
-                          1.13455445826500667,  0.81521390274755756,  3.99123446373437263, -2.83025703359666192;
-                          -3.30895752093770579, -0.04979044289857298,  3.03248594516832792,  3.85962479743330977];
+        let mat = matrix![
+            3.61833700244349288, -3.28382346228211697,  1.97968027781346501, -0.41869628192662156;
+            3.96046289599926427,  0.70730060716580723, -2.80552479438772817, -1.45283286109873933;
+            1.44435028724617442,  1.27749196276785826, -1.09858397535426366, -0.03159619816434689;
+            1.13455445826500667,  0.81521390274755756,  3.99123446373437263, -2.83025703359666192;
+            -3.30895752093770579, -0.04979044289857298,  3.03248594516832792,  3.85962479743330977
+        ];
         let (b, u, v) = mat.clone().svd().unwrap();
 
         let expected_values = vec![8.0, 6.0, 4.0, 2.0];
@@ -415,10 +424,19 @@ mod tests {
     fn test_svd_short_matrix() {
         // Note: This matrix is not arbitrary. It has been constructed specifically so that
         // the "natural" order of the singular values it not sorted by default.
-        let mat = matrix![3.61833700244349288,  3.96046289599926427,  1.44435028724617442,  1.13455445826500645, -3.30895752093770579;
-                         -3.28382346228211697,  0.70730060716580723,  1.27749196276785826,  0.81521390274755756, -0.04979044289857298;
-                          1.97968027781346545, -2.80552479438772817, -1.09858397535426366,  3.99123446373437263,  3.03248594516832792;
-                         -0.41869628192662156, -1.45283286109873933, -0.03159619816434689, -2.83025703359666192,  3.85962479743330977];
+        let mat = matrix![
+            3.61833700244349288, 3.96046289599926427, 1.44435028724617442,
+            1.13455445826500645, -3.30895752093770579;
+
+            -3.28382346228211697, 0.70730060716580723, 1.27749196276785826,
+            0.81521390274755756,  -0.04979044289857298;
+
+            1.97968027781346545, -2.80552479438772817, -1.09858397535426366,
+            3.99123446373437263, 3.03248594516832792;
+
+            -0.41869628192662156, -1.45283286109873933, -0.03159619816434689,
+            -2.83025703359666192, 3.85962479743330977
+        ];
         let (b, u, v) = mat.clone().svd().unwrap();
 
         let expected_values = vec![8.0, 6.0, 4.0, 2.0];

@@ -317,8 +317,7 @@ impl<T: Clone> PermutationMatrix<T> {
         where X: BaseMatrix<T>,
               Y: BaseMatrixMut<T>
     {
-        assert!(source_matrix.rows() == buffer.rows()
-                && source_matrix.cols() == buffer.cols(),
+        assert!(source_matrix.rows() == buffer.rows() && source_matrix.cols() == buffer.cols(),
                 "Source and target matrix must have equal dimensions.");
         validate_permutation_left_mul_dimensions(self, source_matrix);
         for (source_row, target_row_index) in
@@ -343,8 +342,8 @@ impl<T: Clone> PermutationMatrix<T> {
         where X: BaseMatrix<T>,
               Y: BaseMatrixMut<T>
     {
-        assert!(source_matrix.rows() == target_matrix.rows()
-                && source_matrix.cols() == target_matrix.cols(),
+        assert!(source_matrix.rows() == target_matrix.rows() &&
+                source_matrix.cols() == target_matrix.cols(),
                 "Source and target matrix must have equal dimensions.");
         validate_permutation_right_mul_dimensions(source_matrix, self);
 
@@ -372,7 +371,7 @@ impl<T: Clone> PermutationMatrix<T> {
     ///   are not identical.
     pub fn permute_vector_into_buffer(&self, source_vector: &Vector<T>, buffer: &mut Vector<T>) {
         assert!(source_vector.size() == buffer.size(),
-               "Source and target vector must have equal dimensions.");
+                "Source and target vector must have equal dimensions.");
         validate_permutation_vector_dimensions(self, buffer);
         for (source_element, target_index) in
             source_vector
@@ -394,7 +393,7 @@ impl<T: Clone> PermutationMatrix<T> {
                                source_perm: &PermutationMatrix<T>,
                                buffer: &mut PermutationMatrix<T>) {
         assert!(source_perm.size() == buffer.size(),
-            "Source and target permutation matrix must have equal dimensions.");
+                "Source and target permutation matrix must have equal dimensions.");
         let left = self;
         let right = source_perm;
         for i in 0..self.perm.len() {
@@ -485,7 +484,7 @@ fn permute_by_swap<S>(perm: &mut [usize], mut swap: S)
     // Some useful resources I found on the internet:
     //
     // https://blog.merovius.de/2014/08/12/applying-permutation-in-constant.html
-    // http://stackoverflow.com/questions/16501424/algorithm-to-apply-permutation-in-constant-memory-space
+    // http://stackoverflow.com/q/16501424
     //
     // A fundamental property of permutations on finite sets is that
     // any such permutation can be decomposed into a collection of
@@ -703,36 +702,36 @@ mod tests {
 
     #[test]
     fn permute_cols_into_buffer() {
-        let x = matrix![ 0, 1, 2, 3];
+        let x = matrix![0, 1, 2, 3];
         let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
         let mut output = Matrix::zeros(1, 4);
         p.permute_cols_into_buffer(&x, &mut output);
-        assert_matrix_eq!(output, matrix![ 3, 1, 0, 2]);
+        assert_matrix_eq!(output, matrix![3, 1, 0, 2]);
     }
 
     #[test]
     fn permute_cols_in_place() {
-        let mut x = matrix![ 0, 1, 2, 3];
+        let mut x = matrix![0, 1, 2, 3];
         let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
         p.permute_cols_in_place(&mut x);
-        assert_matrix_eq!(x, matrix![ 3, 1, 0, 2]);
+        assert_matrix_eq!(x, matrix![3, 1, 0, 2]);
     }
 
     #[test]
     fn permute_vector_into_buffer() {
-        let x = vector![ 0, 1, 2, 3];
+        let x = vector![0, 1, 2, 3];
         let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
         let mut output = Vector::zeros(4);
         p.permute_vector_into_buffer(&x, &mut output);
-        assert_vector_eq!(output, vector![ 3, 1, 0, 2]);
+        assert_vector_eq!(output, vector![3, 1, 0, 2]);
     }
 
     #[test]
     fn permute_vector_in_place() {
-        let mut x = vector![ 0, 1, 2, 3];
+        let mut x = vector![0, 1, 2, 3];
         let p = PermutationMatrix::from_array(vec![2, 1, 3, 0]).unwrap();
         p.permute_vector_in_place(&mut x);
-        assert_vector_eq!(x, vector![ 3, 1, 0, 2]);
+        assert_vector_eq!(x, vector![3, 1, 0, 2]);
     }
 
     use quickcheck::{Arbitrary, Gen};
@@ -807,19 +806,19 @@ mod tests {
     }
 
     quickcheck! {
-        fn property_validate_permutation_is_ok_for_valid_input(array: ValidPermutationArray) -> bool {
+        fn prop_validate_permut_is_ok_for_valid_input(array: ValidPermutationArray) -> bool {
             validate_permutation(&array.0).is_ok()
         }
     }
 
     quickcheck! {
-        fn property_validate_permutation_is_err_for_invalid_input(array: InvalidPermutationArray) -> bool {
+        fn prop_validate_permut_is_err_for_invalid_input(array: InvalidPermutationArray) -> bool {
             validate_permutation(&array.0).is_err()
         }
     }
 
     quickcheck! {
-        fn property_identity_has_identity_array(size: usize) -> bool {
+        fn prop_identity_has_identity_array(size: usize) -> bool {
             let p = PermutationMatrix::<u64>::identity(size);
             let p_as_array: Vec<usize> = p.into();
             let expected = (0 .. size).collect::<Vec<usize>>();
@@ -837,13 +836,13 @@ mod tests {
     }
 
     quickcheck! {
-        fn property_inverse_of_inverse_is_original(p: PermutationMatrix<u32>) -> bool {
+        fn prop_inverse_of_inverse_is_original(p: PermutationMatrix<u32>) -> bool {
             p == p.inverse().inverse()
         }
     }
 
     quickcheck! {
-        fn property_inverse_composes_to_identity(p: PermutationMatrix<u32>) -> bool {
+        fn prop_inverse_composes_to_identity(p: PermutationMatrix<u32>) -> bool {
             // Recall that P * P_inv = I and P_inv * P = I
             let n = p.size();
             let pinv = p.inverse();
@@ -858,14 +857,14 @@ mod tests {
     }
 
     quickcheck! {
-        fn property_identity_parity_is_even(n: usize) -> bool {
+        fn prop_identity_parity_is_even(n: usize) -> bool {
             let p = PermutationMatrix::<u32>::identity(n);
             p.parity() ==  Parity::Even
         }
     }
 
     quickcheck! {
-        fn property_parity_agrees_with_parity_of_inversions(p: PermutationMatrix<u32>) -> bool {
+        fn prop_parity_agrees_with_parity_of_inversions(p: PermutationMatrix<u32>) -> bool {
             let array: &[usize] = (&p).into();
             let num_inversions = array.iter().cloned().enumerate()
                                       .cartesian_product(array.iter().cloned().enumerate())
