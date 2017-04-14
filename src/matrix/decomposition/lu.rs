@@ -741,6 +741,7 @@ impl<T> Matrix<T> where T: Any + Float
 mod tests {
     use matrix::{Matrix, PermutationMatrix};
     use testsupport::{is_lower_triangular, is_upper_triangular};
+    use vector::BaseVector;
 
     use super::{PartialPivLu, LUP, FullPivLu, LUPQ};
     use matrix::decomposition::Decomposition;

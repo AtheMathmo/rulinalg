@@ -187,8 +187,6 @@ impl_bin_op_slice!(Sub, sub, VectorSliceMut, "subtraction");
 
 #[cfg(test)]
 mod tests {
-    use super::super::{BaseVector, Vector};
-
     /*************************
      *                        *
      *     Arithmetic Ops     *

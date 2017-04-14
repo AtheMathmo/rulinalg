@@ -722,6 +722,7 @@ Please see the documentation for ways to compare matrices approximately.\n\n",
         {
             use $crate::macros::{elementwise_matrix_comparison, FloatElementwiseComparator};
             use $crate::matrix::BaseMatrix;
+            
             let comp = FloatElementwiseComparator::default()$(.$key($val))+;
             let msg = elementwise_matrix_comparison(&$x.as_slice(), &$y.as_slice(), comp).panic_message();
             if let Some(msg) = msg {
@@ -744,6 +745,7 @@ macro_rules! assert_vector_eq {
             // we don't attempt to call elementwise_matrix_comparison with a &&BaseMatrix type (double reference),
             // which does not work due to generics.
             use $crate::macros::{elementwise_vector_comparison, ExactElementwiseComparator};
+            use $crate::vector::BaseVector;
             let comp = ExactElementwiseComparator;
             let msg = elementwise_vector_comparison($x.data(), $y.data(), comp).panic_message();
             if let Some(msg) = msg {
@@ -779,6 +781,7 @@ Please see the documentation for ways to compare vectors approximately.\n\n",
     ($x:expr, $y:expr, comp = ulp, tol = $tol:expr) => {
         {
             use $crate::macros::{elementwise_vector_comparison, UlpElementwiseComparator};
+            use $crate::vector::BaseVector;
             let comp = UlpElementwiseComparator { tol: $tol };
             let msg = elementwise_vector_comparison($x.data(), $y.data(), comp).panic_message();
             if let Some(msg) = msg {
@@ -789,6 +792,7 @@ Please see the documentation for ways to compare vectors approximately.\n\n",
     ($x:expr, $y:expr, comp = float) => {
         {
             use $crate::macros::{elementwise_vector_comparison, FloatElementwiseComparator};
+            use $crate::vector::BaseVector;
             let comp = FloatElementwiseComparator::default();
             let msg = elementwise_vector_comparison($x.data(), $y.data(), comp).panic_message();
             if let Some(msg) = msg {
@@ -824,6 +828,7 @@ mod tests {
     use ulp::{Ulp, UlpComparisonResult};
     use quickcheck::TestResult;
     use std::f64;
+    use vector::BaseVector;
 
     /// Returns the next adjacent floating point number (in the direction of positive infinity)
     fn next_f64(x: f64) -> f64 {

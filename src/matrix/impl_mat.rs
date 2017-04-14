@@ -495,6 +495,7 @@ impl<T: fmt::Display> fmt::Display for Matrix<T> {
 mod tests {
     use matrix::{Axes, BaseMatrix, Matrix};
     use libnum::abs;
+    use vector::BaseVector;
 
     #[test]
     fn test_new_mat() {
@@ -744,10 +745,10 @@ mod tests {
         let a: Matrix<f64> = matrix![];
 
         let c = a.mean(Axes::Row);
-        assert_eq!(*c.data(), vec![]);
+        assert_eq!(c.data(), &[]);
 
         let d = a.mean(Axes::Col);
-        assert_eq!(*d.data(), vec![]);
+        assert_eq!(d.data(), &[]);
     }
 
     #[test]
@@ -759,13 +760,13 @@ mod tests {
         assert!(a_row.is_err());
 
         let a_col = a.variance(Axes::Col).unwrap();
-        assert_eq!(*a_col.data(), vec![0.5]);
+        assert_eq!(a_col.data(), &[0.5]);
 
         // Only one column
         let b: Matrix<f32> = matrix![1.0; 2.0];
 
         let b_row = b.variance(Axes::Row).unwrap();
-        assert_eq!(*b_row.data(), vec![0.5]);
+        assert_eq!(b_row.data(), &[0.5]);
 
         let b_col = b.variance(Axes::Col);
         assert!(b_col.is_err());

@@ -110,7 +110,6 @@ mod testsupport;
 extern crate quickcheck;
 
 #[cfg(test)]
-#[macro_use]
 extern crate itertools;
 
 pub use norm::{VectorNorm, MatrixNorm};

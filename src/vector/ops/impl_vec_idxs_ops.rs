@@ -20,6 +20,8 @@ impl<T> IndexMut<usize> for Vector<T> {
 
 #[cfg(test)]
 mod tests {
+    use vector::Vector;
+    
     #[test]
     fn vector_index_mut() {
         let our_vec = vec![1., 2., 3., 4.];

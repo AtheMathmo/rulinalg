@@ -1,4 +1,5 @@
 use rulinalg::matrix::{BaseMatrix};
+use rulinalg::vector::BaseVector;
 
 #[test]
 fn test_solve() {

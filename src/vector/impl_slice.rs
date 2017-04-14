@@ -9,10 +9,11 @@ impl<'a, T> VectorSlice<'a, T> {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::vector::Vector;
+    /// use rulinalg::vector::{BaseVector, VectorSlice};
     ///
     /// let vector = vector![1, 2, 3, 4, 5];
     /// let slice = VectorSlice::from_vector(&vector, 0, 2);
+    /// assert_eq!(slice.data(), &[1, 2]);
     /// # }
     /// ```
     pub fn from_vector(vector: &'a Vector<T>, start: usize, size: usize) -> Self {
@@ -22,7 +23,7 @@ impl<'a, T> VectorSlice<'a, T> {
         unsafe {
             VectorSlice {
                 marker: PhantomData::<&'a T>,
-                ptr: vector.data.get_unchecked(start * size) as *const T,
+                ptr: vector.data.get_unchecked(start) as *const T,
                 size: size,
             }
         }
@@ -34,11 +35,13 @@ impl<'a, T> VectorSlice<'a, T> {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::vector::{BaseVector, VectorSlice};
+    ///
     /// let a = vector![1, 2, 3, 4, 5];
     ///
     /// unsafe {
     ///     // Create a vector slice with size 3
-    ///     let b = MatrixSlice::from_raw_parts(a.as_ptr(), 3);
+    ///     let b = VectorSlice::from_raw_parts(a.as_ptr(), 3);
     /// }
     /// # }
     /// ```
@@ -63,10 +66,11 @@ impl<'a, T> VectorSliceMut<'a, T> {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::vector::Vector;
+    /// use rulinalg::vector::{BaseVectorMut, VectorSliceMut};
     ///
     /// let mut vector = vector![1, 2, 3, 4, 5];
-    /// let slice = VectorSlice::from_vector(&mut vector, 0, 3);
+    /// let mut slice = VectorSliceMut::from_vector(&mut vector, 1, 3);
+    /// assert_eq!(slice.data_mut(), &mut [2, 3, 4]);
     /// # }
     /// ```
     pub fn from_vector(vector: &'a mut Vector<T>, start: usize, size: usize) -> Self {
@@ -75,7 +79,7 @@ impl<'a, T> VectorSliceMut<'a, T> {
 
         VectorSliceMut {
             marker: PhantomData::<&'a mut T>,
-            ptr: unsafe { vector.data.get_unchecked_mut(start * size) as *mut T },
+            ptr: unsafe { vector.data.get_unchecked_mut(start) as *mut T },
             size: size,
         }
     }
@@ -86,11 +90,13 @@ impl<'a, T> VectorSliceMut<'a, T> {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::vector::{BaseVectorMut, VectorSliceMut};
+    ///
     /// let mut a = vector![1, 2, 3, 4, 5];
     ///
     /// unsafe {
     ///     // Create a vector slice with size 3
-    ///     let b = MatrixSliceMut::from_raw_parts(a.as_mut_ptr(), 3);
+    ///     let b = VectorSliceMut::from_raw_parts(a.as_mut_ptr(), 3);
     /// }
     /// # }
     /// ```
@@ -135,8 +141,8 @@ mod tests {
             assert_eq!(b.size(), 2);
             b += 2.0;
         }
+        println!("{:?}", a);
         let exp = vector![2.0, 4.0, 4.0];
         assert_vector_eq!(a, exp);
-
     }
 }

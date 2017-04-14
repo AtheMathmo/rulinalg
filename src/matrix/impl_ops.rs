@@ -884,10 +884,10 @@ impl<'a, T> Neg for &'a Matrix<T>
 
 #[cfg(test)]
 mod tests {
-
     use super::super::Matrix;
     use super::super::MatrixSlice;
     use super::super::MatrixSliceMut;
+    use super::super::BaseVector;
 
     #[test]
     fn indexing_mat() {

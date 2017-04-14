@@ -74,7 +74,7 @@ impl_assign_op_scalar!(BitXorAssign, BitXor, bitxor, bitxor_assign, "bitwise-xor
 
 #[cfg(test)]
 mod tests {
-    use super::super::{BaseVector, Vector};
+    use vector::Vector;
 
     /*********************************
     *                                *

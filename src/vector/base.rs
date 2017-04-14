@@ -9,13 +9,16 @@
 //!
 //! ```
 //! # #[macro_use] extern crate rulinalg; fn main() {
-//! let a = vector![10, 11, 12, 13, 14];
+//! use rulinalg::vector::BaseVector;
 //!
-//! // Manually create our slice - [13, 14].
+//! let a = vector![1, 2, 3, 4, 5];
+//! let b = vector![6, 7];
+//!
+//! // Manually create our slice - [4, 5].
 //! let vector_slice = a.sub_slice(3, 2);
 //!
 //! // We can perform arithmetic with mixing owned and borrowed versions
-//! let new_vector = &vector_slice * &a;
+//! let _new_vector = &vector_slice + &b;
 //! # }
 //! ```
 
@@ -39,6 +42,8 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::vector::BaseVector;
+    ///
     /// let a = vector![1, 2, 3, 4, 5];
     /// let b = a.as_slice();
     /// # }
@@ -53,6 +58,8 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::vector::BaseVector;
+    ///
     /// let a = vector![1, 2, 3];
     /// let b = vector![4, 5];
     ///
@@ -79,6 +86,8 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::vector::{BaseVector, VectorSlice};
+    ///
     /// let a = vector![1, 2, 3, 4, 5];
     ///
     /// assert_eq!(a.data(), &[1, 2, 3, 4, 5]);
@@ -98,7 +107,7 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::vector::Vector;
+    /// use rulinalg::vector::{BaseVector, Vector};
     ///
     /// let a = vector![1, 2, 3, 4, 5];
     /// let b = vector![1, 2, 3, 4, 5];
@@ -120,7 +129,7 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::vector::Vector;
+    /// use rulinalg::vector::{BaseVector, Vector};
     ///
     /// let a = vector![1, 2, 3, 4, 5];
     /// let b = vector![1, 2, 3, 4, 5];
@@ -142,12 +151,14 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::vector::BaseVector;
+    ///
     /// let a = vector![1, 2, 3, 4, 5];
     ///
     /// assert_eq!(a.get(5), None);
     /// assert_eq!(a.get(6), None);
     ///
-    /// assert_eq!(*a.get(0).unwrap(), 0)
+    /// assert_eq!(*a.get(0).unwrap(), 1)
     /// # }
     /// ```
     fn get(&self, index: usize) -> Option<&T> {
@@ -169,11 +180,13 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::vector::BaseVector;
+    ///
     /// let a = vector![1, 2, 3, 4, 5];
-    /// let b = vector.sub_slice(1, 2);
+    /// let b = a.sub_slice(1, 2);
     ///
     /// let c = b.iter().map(|v| *v).collect::<Vec<usize>>();
-    /// assert_eq!(c, vec![12, 13]);
+    /// assert_eq!(c, vec![2, 3]);
     /// # }
     /// ```
     fn iter<'a>(&self) -> slice::Iter<T>
@@ -188,16 +201,16 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::vector::Vector;
+    /// use rulinalg::vector::{BaseVector, Vector};
     /// use rulinalg::norm::Euclidean;
     ///
-    /// let a = vector![3, 4];
-    /// let b = vector![0, 8];
+    /// let a = vector![3.0, 4.0];
+    /// let b = vector![0.0, 8.0];
     ///
     /// // Compute the square root of the sum of
     /// // elementwise squared-differences
     /// let c = a.metric(&b, Euclidean);
-    /// assert_eq!(c, 5);
+    /// assert_eq!(c, 5.0);
     /// # }
     /// ```
     fn metric<'a, 'b, B, M>(&'a self, vector: &'b B, m: M) -> T
@@ -213,13 +226,13 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::vector::Vector;
+    /// use rulinalg::vector::{BaseVector, Vector};
     /// use rulinalg::norm::Euclidean;
     ///
-    /// let a = vector![3, 4];
+    /// let a = vector![3.0, 4.0];
     /// let c = a.norm(Euclidean);
     ///
-    /// assert_eq!(c, 5);
+    /// assert_eq!(c, 5.0);
     /// # }
     /// ```
     fn norm<N>(&self, norm: N) -> T
@@ -234,9 +247,10 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::vector::BaseVector;
     ///
     /// let a = vector![1, 2, 3, 4, 5];
-    /// let b = &a.select(&[0, 3]]);
+    /// let b = &a.select(&[0, 3]);
     ///
     /// assert_eq!(b.size(), 2);
     /// assert_eq!(b.data(), &[1, 4]);
@@ -271,7 +285,9 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// let a = vector![1, 2, 3, 4, 5]
+    /// use rulinalg::vector::BaseVector;
+    ///
+    /// let a = vector![1, 2, 3, 4, 5];
     /// let (b, c) = a.split_at(1);
     /// # }
     /// ```
@@ -296,6 +312,7 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::vector::{BaseVector, VectorSlice};
     ///
     /// let a = vector![1, 2, 3, 4, 5];
     /// let slice = VectorSlice::from_vector(&a, 1, 3);
@@ -319,12 +336,10 @@ pub trait BaseVector<T>: Sized {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// use rulinalg::vector::Vector;
-    ///
     /// let a = vector![1, 2, 3, 4, 5];
     ///
     /// let c = a.sum();
-    /// assert_eq!(c, 10);
+    /// assert_eq!(c, 15);
     /// # }
     /// ```
     fn sum(&self) -> T
@@ -350,7 +365,9 @@ pub trait BaseVectorMut<T>: BaseVector<T> {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// let a = vector![1, 2, 3, 4, 5];
+    /// use rulinalg::vector::BaseVectorMut;
+    ///
+    /// let mut a = vector![1, 2, 3, 4, 5];
     /// let b = a.as_mut_slice();
     /// # }
     /// ```
@@ -364,15 +381,19 @@ pub trait BaseVectorMut<T>: BaseVector<T> {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// let a = vector![1, 2, 3, 4, 5];
-    /// let a_data_mut = a.data_mut();
+    /// use rulinalg::vector::{BaseVectorMut, VectorSliceMut};
     ///
-    /// a_data_mut[0] = 0;
-    /// assert_eq!(a_data_mut, &[0, 2, 3, 4, 5]);
+    /// let mut a = vector![1, 2, 3, 4, 5];
     ///
-    /// let b = VectorSlice::from_vector(&a, 1, 2);
+    /// {
+    ///     let a_data_mut = a.data_mut();
+    ///     a_data_mut[0] = 0;
+    ///     assert_eq!(a_data_mut, &[0, 2, 3, 4, 5]);
+    /// }
+    ///
+    /// let mut b = VectorSliceMut::from_vector(&mut a, 1, 2);
+    ///
     /// let b_data_mut = b.data_mut();
-    ///
     /// b_data_mut[1] = 10;
     /// assert_eq!(b_data_mut, &[2, 10]);
     /// # }
@@ -387,7 +408,9 @@ pub trait BaseVectorMut<T>: BaseVector<T> {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// let a = vector![1, 2, 3, 4, 5];
+    /// use rulinalg::vector::{BaseVector, BaseVectorMut};
+    ///
+    /// let mut a = vector![1, 2, 3, 4, 5];
     ///
     /// assert_eq!(a.get(5), None);
     /// assert_eq!(a.get(6), None);
@@ -397,7 +420,7 @@ pub trait BaseVectorMut<T>: BaseVector<T> {
     /// assert_eq!(*a.get_mut(0).unwrap(), 2);
     /// # }
     /// ```
-    fn get_mut(&mut self, index: usize) -> Option<&T> {
+    fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         if index >= self.size() {
             None
         } else {
@@ -411,11 +434,13 @@ pub trait BaseVectorMut<T>: BaseVector<T> {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::vector::BaseVector;
+    ///
     /// let a = vector![1, 2, 3, 4, 5];
-    /// let b = vector.sub_slice(1, 2);
+    /// let b = a.sub_slice(1, 2);
     ///
     /// let c = b.iter().map(|v| *v).collect::<Vec<usize>>();
-    /// assert_eq!(c, vec![12, 13]);
+    /// assert_eq!(c, vec![2, 3]);
     /// # }
     /// ```
     fn iter_mut<'a>(&mut self) -> slice::IterMut<T>
@@ -424,14 +449,16 @@ pub trait BaseVectorMut<T>: BaseVector<T> {
         self.data_mut().iter_mut()
     }
 
-    /// Split the vector at the specified index returning two `VectorxSlice`s.
+    /// Split the vector at the specified index returning two `VectorxSliceMut`s.
     ///
     /// # Examples
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
-    /// let a = vector![1, 2, 3, 4, 5]
-    /// let (b, c) = a.split_at(1);
+    /// use rulinalg::vector::BaseVectorMut;
+    ///
+    /// let mut a = vector![1, 2, 3, 4, 5];
+    /// let (b, c) = a.split_at_mut(1);
     /// # }
     /// ```
     fn split_at_mut(&mut self, index: usize) -> (VectorSliceMut<T>, VectorSliceMut<T>) {
@@ -455,10 +482,11 @@ pub trait BaseVectorMut<T>: BaseVector<T> {
     ///
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
+    /// use rulinalg::vector::{BaseVectorMut, VectorSliceMut};
     ///
-    /// let a = vector![1, 2, 3, 4, 5];
-    /// let slice = VectorSlice::from_vector(&a, 1, 3);
-    /// let new_slice = slice.sub_slice(0, 1);
+    /// let mut a = vector![1, 2, 3, 4, 5];
+    /// let mut slice = VectorSliceMut::from_vector(&mut a, 1, 3);
+    /// let new_slice = slice.sub_slice_mut(0, 1);
     /// # }
     /// ```
     fn sub_slice_mut<'a>(&mut self, start: usize, size: usize) -> VectorSliceMut<'a, T>

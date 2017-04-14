@@ -37,7 +37,7 @@ impl_unary_op!(Neg, neg, -, "negative");
 impl_unary_op!(Not, not, !, "not");
 
 #[cfg(test)]
-mod tests {
+mod tests {    
     #[test]
     fn vector_neg_f32() {
         let a = vector![1., 2., 3., 4., 5., 6.];
