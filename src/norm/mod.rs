@@ -285,7 +285,7 @@ mod tests {
     }
 
     #[test]
-    fn test_euclidean_matrixslice_metric() {
+    fn test_euclidean_matrix_slice_metric() {
         let m = matrix![
             1.0, 1.0, 1.0;
             1.0, 1.0, 1.0;
@@ -311,7 +311,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn test_euclidean_matrixslice_metric_bad_dim() {
+    fn test_euclidean_matrix_slice_metric_bad_dim() {
         let m = matrix![3.0, 4.0];
         let m2 = matrix![1.0, 2.0, 3.0];
 
