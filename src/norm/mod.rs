@@ -235,6 +235,12 @@ mod tests {
         let m = matrix![3.0, 4.0;
                         1.0, 3.0];
         assert!((MatrixNorm::norm(&Euclidean, &m) - 35.0.sqrt()) < 1e-14);
+    }
+
+    #[test]
+    fn test_euclidean_matrix_slice_norm() {
+        let m = matrix![3.0, 4.0;
+                        1.0, 3.0];
 
         let slice = MatrixSlice::from_matrix(&m, [0,0], 1, 2);
         assert!((MatrixNorm::norm(&Euclidean, &slice) - 5.0) < 1e-14);
