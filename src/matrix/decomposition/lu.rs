@@ -5,7 +5,6 @@ use vector::Vector;
 use error::{Error, ErrorKind};
 
 use std::any::Any;
-use std::ops::Mul;
 use std::cmp;
 
 use libnum::{Float, Zero, One};
@@ -13,6 +12,7 @@ use libnum::{Float, Zero, One};
 use utils;
 use norm::{Euclidean, VectorNorm};
 
+use matrix::DiagOffset;
 use matrix::decomposition::Decomposition;
 
 /// Result of unpacking an instance of
@@ -351,9 +351,37 @@ impl<T: Clone + One + Zero> Decomposition for FullPivLu<T> {
 
     fn unpack(self) -> LUPQ<T> {
         use internal_utils::nullify_lower_triangular_part;
-        let l = unit_lower_triangular_part(&self.lu);
-        let mut u = self.lu;
-        nullify_lower_triangular_part(&mut u);
+        use internal_utils::nullify_upper_triangular_part;
+
+        // We want the L matrix to be M x P, and the U matrix to be
+        // P x N, where P is the minimum of M and N. Since self.lu
+        // is already M x N, and we want to reuse that memory to store
+        // at least one of the matrices, we need to figure out which
+        // matrix to store in self.lu, and which to allocate anew. The
+        // nice thing here is that the new allocation will always be
+        // PxP, which is the smaller of the two matrices.
+
+        let (l,u) =
+          if self.lu.rows() <= self.lu.cols() {
+            let l = unit_lower_triangular_part(&self.lu);
+
+            let mut u = self.lu;
+            nullify_lower_triangular_part(&mut u);
+
+            (l,u)
+
+          } else {
+            let u = upper_triangular_part(&self.lu);
+
+            let mut l = self.lu;
+            nullify_upper_triangular_part(&mut l);
+
+            for val in l.diag_iter_mut(DiagOffset::Main) {
+                *val = T::one();
+            }
+
+            (l,u)
+          };
 
         LUPQ {
             l: l,
@@ -498,7 +526,10 @@ impl<T> FullPivLu<T> where T: Any + Float {
         // We have a potential solution, but we need to verify that it actually
         // solves the equation.
         let norm = VectorNorm::norm(&Euclidean, &x);
-        let diff_norm = VectorNorm::norm(&Euclidean, &(self * &x - b));
+
+        let rhs = self.map_vector(&x) - b;
+
+        let diff_norm = VectorNorm::norm(&Euclidean, &rhs);
 
         if diff_norm < norm * self.epsilon() {
             Ok(x)
@@ -639,53 +670,22 @@ impl<T> FullPivLu<T> where T: Any + Float {
     fn epsilon(&self) -> T {
         self.lu.get([0, 0]).unwrap_or(&T::one()).abs() * T::epsilon()
     }
-}
 
-/// Multiplies an LU decomposed matrix by vector.
-impl<T> Mul<Vector<T>> for FullPivLu<T> where T: Float {
-    type Output = Vector<T>;
-
-    fn mul(self, m: Vector<T>) -> Vector<T> {
-        (&self) * (&m)
-    }
-}
-
-/// Multiplies an LU decomposed matrix by vector.
-impl<'a, T> Mul<Vector<T>> for &'a FullPivLu<T> where T: Float {
-    type Output = Vector<T>;
-
-    fn mul(self, m: Vector<T>) -> Vector<T> {
-        self * &m
-    }
-}
-
-/// Multiplies an LU decomposed matrix by vector.
-impl<'a, T> Mul<&'a Vector<T>> for FullPivLu<T> where T: Float {
-    type Output = Vector<T>;
-
-    fn mul(self, m: &Vector<T>) -> Vector<T> {
-        (&self) * m
-    }
-}
-
-/// Multiplies an LU decomposed matrix by vector.
-impl<'a, 'b, T> Mul<&'b Vector<T>> for &'a FullPivLu<T> where T: Float {
-    type Output = Vector<T>;
-
-    fn mul(self, v: &Vector<T>) -> Vector<T> {
+    fn map_vector(&self, v: &Vector<T>) -> Vector<T> {
         assert!(
             v.size() == self.lu.cols(),
             "Matrix and Vector dimensions do not agree.");
 
         let r = self.lu.rows();
         let c = self.lu.cols();
+        let d = cmp::min(r, c);
 
         let v = self.q.inverse() * v;
 
         let mut new_data = Vec::with_capacity(r);
 
         // First, do the U multiplication.
-        for i in 0..r {
+        for i in 0..d {
             let entry =
                 utils::dot(
                     &self.lu.data()[(i*(c+1)) .. ((i+1)*c)],
@@ -694,14 +694,22 @@ impl<'a, 'b, T> Mul<&'b Vector<T>> for &'a FullPivLu<T> where T: Float {
             new_data.push(entry);
         }
 
+        for _ in d..r {
+            new_data.push(T::zero());
+        }
+
         // Now, do L multiplication
         for i in (1..r).rev() {
             let row_begin = i * c;
 
-            let entry =
-                utils::dot(
-                    &self.lu.data()[row_begin .. row_begin + i],
-                    &new_data[0..i]);
+            let entry = {
+              let offset = cmp::min(d, i);
+
+              let data_slice = &new_data[0..offset];
+              let lu_slice = &self.lu.data()[row_begin .. row_begin + offset];
+
+              utils::dot(lu_slice, data_slice)
+            };
 
             new_data[i] = new_data[i] + entry;
         }
@@ -741,7 +749,9 @@ fn lu_forward_substitution<T: Float>(lu: &Matrix<T>, b: Vector<T>) -> Vector<T> 
     assert!(b.size() == lu.rows(), "LU matrix and RHS vector must be compatible.");
     let mut x = b;
 
-    for (i, row) in lu.row_iter().enumerate().skip(1) {
+    let diag_size = cmp::min(lu.rows(), lu.cols());
+
+    for (i, row) in lu.row_iter().enumerate().take(diag_size).skip(1) {
         // Note that at time of writing we need raw_slice here for
         // auto-vectorization to kick in
         let adjustment = row.raw_slice()
@@ -777,6 +787,24 @@ fn unit_lower_triangular_part<T, M>(matrix: &M) -> Matrix<T>
     Matrix::new(m, m, data)
 }
 
+fn upper_triangular_part<T, M>(matrix: &M) -> Matrix<T>
+    where T: Zero + One + Clone, M: BaseMatrix<T> {
+
+    let n = matrix.cols();
+    let mut data = Vec::<T>::with_capacity(n * n);
+
+    for (i, row) in matrix.row_iter().take(n).enumerate() {
+        for _ in 0..i {
+            data.push(T::zero());
+        }
+
+        for element in row.iter().skip(i).cloned() {
+            data.push(element);
+        }
+    }
+
+    Matrix::new(n, n, data)
+}
 
 impl<T> Matrix<T> where T: Any + Float
 {
@@ -1130,11 +1158,53 @@ mod tests {
     }
 
     #[test]
-    pub fn full_piv_lu_solve_rectangular_matrix2() {
-        let a = matrix![ 5.0, 1.0;
-                         2.0, 1.0;
-                         1.0, 5.0 ];
-        let b = vector![7.0, 4.0, 11.0];
+    pub fn full_piv_lu_solve_rectangular_matrix_tall() {
+        let a = matrix![  1.0, 1.0;
+                          2.0, 1.0;
+                          3.0, 1.0;
+                          4.0, 1.0;
+                          5.0, 1.0;
+                          6.0, 1.0;
+                          7.0, 1.0;
+                          8.0, 1.0;
+                          9.0, 1.0;
+                         10.0, 1.0;
+                         11.0, 1.0;
+                         12.0, 1.0;
+                         13.0, 1.0;
+                         14.0, 1.0;
+                         15.0, 1.0;
+                         16.0, 1.0 ];
+        let b = vector![ 2.0,
+                         3.0,
+                         4.0,
+                         5.0,
+                         6.0,
+                         7.0,
+                         8.0,
+                         9.0,
+                        10.0,
+                        11.0,
+                        12.0,
+                        13.0,
+                        14.0,
+                        15.0,
+                        16.0,
+                        17.0];
+
+        let lu = FullPivLu::decompose(a.clone()).unwrap();
+        let x = lu.solve(b.clone()).unwrap();
+
+        let res = a * x;
+
+        assert_vector_eq!(res, b, comp = ulp, tol = 100);
+    }
+
+    #[test]
+    pub fn full_piv_lu_solve_rectangular_matrix_wide() {
+        let a = matrix![ 0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0;
+                         1.0, 0.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+        let b = vector![2.0, 3.0];
 
         let lu = FullPivLu::decompose(a.clone()).unwrap();
         let x = lu.solve(b.clone()).unwrap();
@@ -1145,7 +1215,7 @@ mod tests {
     }
 
    #[test]
-    pub fn full_piv_lu_solve_rectangular_matrix3() {
+    pub fn full_piv_lu_solve_rectangular_small_values() {
         let a = matrix![ 0.005, 0.001;
                          0.002, 0.001;
                          0.001, 0.005 ];
@@ -1215,22 +1285,6 @@ mod tests {
         let lu = FullPivLu::decompose(x).unwrap();
 
         assert!(lu.inverse().is_err());
-    }
-
-    #[test]
-    pub fn full_piv_lu_mul() {
-        let x = matrix![5.0, 0.0;
-                        4.0, 5.0;
-                        9.0, 5.0];
-
-        let lu = FullPivLu::decompose(x).unwrap();
-
-        let x = vector![1.0, 2.0];
-        let expected = vector![5.0, 14.0, 19.0];
-
-        let y = &lu * &x;
-
-        assert_vector_eq!(y, expected, comp = ulp, tol = 100);
     }
 
     #[test]
