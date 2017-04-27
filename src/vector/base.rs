@@ -80,7 +80,7 @@ pub trait BaseVector<T>: Sized {
         Vector::new(new_data)
     }
 
-    /// Returns the slice that represents the currently struct view.
+    /// Returns a slice representing the underlying data of the vector.
     ///
     /// # Examples
     ///
@@ -162,11 +162,7 @@ pub trait BaseVector<T>: Sized {
     /// # }
     /// ```
     fn get(&self, index: usize) -> Option<&T> {
-        if index >= self.size() {
-            None
-        } else {
-            unsafe { Some(self.get_unchecked(index)) }
-        }
+        self.data().get(index)
     }
 
     /// Returns true if the vector contais no elements.
@@ -241,7 +237,7 @@ pub trait BaseVector<T>: Sized {
         norm.norm(self)
     }
 
-    /// Select block vector from vector.
+    /// Returns a new vector based on desired indexes.
     ///
     /// # Examples
     ///
@@ -259,7 +255,7 @@ pub trait BaseVector<T>: Sized {
     ///
     /// # Panics
     ///
-    /// - Panics if indixes exceed the vector size.
+    /// - Panics if indexes exceed the vector size.
     fn select(&self, indexes: &[usize]) -> Vector<T>
         where T: Copy
     {
@@ -350,7 +346,7 @@ pub trait BaseVector<T>: Sized {
 
     /// Get a reference to an element in the vector without bounds checking.
     unsafe fn get_unchecked(&self, index: usize) -> &T {
-        &*(self.as_ptr().offset(index as isize))
+        self.data().get_unchecked(index)
     }
 }
 
@@ -375,7 +371,7 @@ pub trait BaseVectorMut<T>: BaseVector<T> {
         unsafe { VectorSliceMut::from_raw_parts(self.as_mut_ptr(), self.size()) }
     }
 
-    /// Returns the mutable slice that represents the currently struct view.
+    /// Returns a mutable slice representing the underlying data of the vector.
     ///
     /// # Examples
     ///
@@ -421,11 +417,7 @@ pub trait BaseVectorMut<T>: BaseVector<T> {
     /// # }
     /// ```
     fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        if index >= self.size() {
-            None
-        } else {
-            unsafe { Some(self.get_unchecked_mut(index)) }
-        }
+        self.data_mut().get_mut(index)
     }
 
     /// Returns an iterator over the vector data.
@@ -500,7 +492,7 @@ pub trait BaseVectorMut<T>: BaseVector<T> {
 
     /// Get a mutable reference to an element in the vector without bounds checking.
     unsafe fn get_unchecked_mut(&mut self, index: usize) -> &mut T {
-        &mut *(self.as_mut_ptr().offset(index as isize))
+        self.data_mut().get_unchecked_mut(index)
     }
 }
 
