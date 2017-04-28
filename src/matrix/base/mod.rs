@@ -1012,7 +1012,7 @@ pub trait BaseMatrix<T>: Sized {
     /// - There is no valid solution to the system (matrix is singular).
     /// - The matrix is empty.
     fn solve_u_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
-        where T: 'static + Float
+        where T: Float
     {
         assert!(self.cols() == y.size(),
                 format!("Vector size {0} != {1} Matrix column count.",
@@ -1055,7 +1055,7 @@ pub trait BaseMatrix<T>: Sized {
     /// - There is no valid solution to the system (matrix is singular).
     /// - The matrix is empty.
     fn solve_l_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
-        where T: 'static + Float
+        where T: Float
     {
         assert!(self.cols() == y.size(),
                 format!("Vector size {0} != {1} Matrix column count.",

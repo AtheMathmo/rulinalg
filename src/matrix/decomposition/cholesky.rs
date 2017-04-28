@@ -93,7 +93,7 @@ pub struct Cholesky<T> {
     l: Matrix<T>
 }
 
-impl<T> Cholesky<T> where T: 'static + Float {
+impl<T> Cholesky<T> where T: Float {
     /// Computes the Cholesky decomposition A = L L<sup>T</sup>
     /// for the given square, symmetric positive definite matrix.
     ///

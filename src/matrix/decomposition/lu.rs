@@ -148,7 +148,7 @@ impl<T: Clone + One + Zero> Decomposition for PartialPivLu<T> {
     }
 }
 
-impl<T: 'static + Float> PartialPivLu<T> {
+impl<T: Float> PartialPivLu<T> {
     /// Performs the decomposition.
     ///
     /// # Panics
@@ -193,7 +193,7 @@ impl<T: 'static + Float> PartialPivLu<T> {
     }
 }
 
-impl<T> PartialPivLu<T> where T: 'static + Float {
+impl<T> PartialPivLu<T> where T: Float {
     /// Solves the linear system `Ax = b`.
     ///
     /// Here, `A` is the decomposed matrix satisfying
@@ -357,7 +357,7 @@ impl<T: Clone + One + Zero> Decomposition for FullPivLu<T> {
     }
 }
 
-impl<T: 'static + Float> FullPivLu<T> {
+impl<T: Float> FullPivLu<T> {
     fn select_pivot(mat: &Matrix<T>, index: usize) -> (usize, usize, T) {
         let mut piv_row = index;
         let mut piv_col = index;
@@ -427,7 +427,7 @@ impl<T: 'static + Float> FullPivLu<T> {
     }
 }
 
-impl<T> FullPivLu<T> where T: 'static + Float {
+impl<T> FullPivLu<T> where T: Float {
 
     /// Solves the linear system `Ax = b`.
     ///

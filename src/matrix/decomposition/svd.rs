@@ -15,7 +15,7 @@ fn correct_svd_signs<T>(mut b: Matrix<T>,
                         mut u: Matrix<T>,
                         mut v: Matrix<T>)
                         -> (Matrix<T>, Matrix<T>, Matrix<T>)
-    where T: 'static + Float + Signed
+    where T: Float + Signed
 {
 
     // When correcting the signs of the singular vectors, we can choose
@@ -46,7 +46,7 @@ fn sort_svd<T>(mut b: Matrix<T>,
                mut u: Matrix<T>,
                mut v: Matrix<T>)
                -> (Matrix<T>, Matrix<T>, Matrix<T>)
-    where T: 'static + Float + Signed
+    where T: Float + Signed
 {
 
     assert!(u.cols() == b.cols() && b.cols() == v.cols());
