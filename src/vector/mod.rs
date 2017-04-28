@@ -34,7 +34,7 @@ pub struct VectorSlice<'a, T: 'a> {
     size: usize,
 }
 
-/// A mutable `MatrixSliceMut`
+/// A mutable `VectorSliceMut`
 ///
 /// This struct provides a mutable slice into a vector.
 ///
