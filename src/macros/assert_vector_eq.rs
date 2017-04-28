@@ -145,8 +145,9 @@ pub fn elementwise_vector_comparison<T, C, E>(x: &[T], y: &[T], comparator: C)
 /// This macro works analogously to [assert_matrix_eq!](macro.assert_matrix_eq.html),
 /// but is used for comparing instances of [Vector](vector/struct.Vector.html) rather than
 /// matrices. Please see the documentation for `assert_matrix_eq!`
-/// for details on how to compare matrices containing floating-point numbers
-/// for approximate equality.
+/// for details about issues that arise when comparing floating-point numbers,
+/// as well as an explanation for how these macros can be used to resolve
+/// these issues.
 #[macro_export]
 macro_rules! assert_vector_eq {
     ($x:expr, $y:expr) => {
