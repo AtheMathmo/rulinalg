@@ -9,7 +9,7 @@ use std::ops::{Mul, Add, Div, Sub, Index, IndexMut, Neg};
 use std::ops::{MulAssign, AddAssign, SubAssign, DivAssign};
 use libnum::Zero;
 
-/// Indexes matrix.
+/// Indices matrix.
 ///
 /// Takes row index first then column.
 impl<T> Index<[usize; 2]> for Matrix<T> {
@@ -27,7 +27,7 @@ impl<T> Index<[usize; 2]> for Matrix<T> {
 
 macro_rules! impl_index_slice (
     ($slice_type:ident, $doc:expr) => (
-/// Indexes
+/// Indices
 #[doc=$doc]
 /// Takes row index first then column.
 impl<'a, T> Index<[usize; 2]> for $slice_type<'a, T> {
@@ -50,7 +50,7 @@ impl<'a, T> Index<[usize; 2]> for $slice_type<'a, T> {
 impl_index_slice!(MatrixSlice, "matrix slice.");
 impl_index_slice!(MatrixSliceMut, "mutable matrix slice.");
 
-/// Indexes mutable matrix slice.
+/// Indices mutable matrix slice.
 ///
 /// Takes row index first then column.
 impl<'a, T> IndexMut<[usize; 2]> for MatrixSliceMut<'a, T> {
@@ -64,7 +64,7 @@ impl<'a, T> IndexMut<[usize; 2]> for MatrixSliceMut<'a, T> {
     }
 }
 
-/// Indexes mutable matrix.
+/// Indices mutable matrix.
 ///
 /// Takes row index first then column.
 impl<T> IndexMut<[usize; 2]> for Matrix<T> {

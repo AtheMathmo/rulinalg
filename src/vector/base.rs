@@ -237,7 +237,7 @@ pub trait BaseVector<T>: Sized {
         norm.norm(self)
     }
 
-    /// Returns a new vector based on desired indexes.
+    /// Returns a new vector based on desired indices.
     ///
     /// # Examples
     ///
@@ -255,13 +255,13 @@ pub trait BaseVector<T>: Sized {
     ///
     /// # Panics
     ///
-    /// - Panics if indexes exceed the vector size.
-    fn select(&self, indexes: &[usize]) -> Vector<T>
+    /// - Panics if indices exceed the vector size.
+    fn select(&self, indices: &[usize]) -> Vector<T>
         where T: Copy
     {
-        let mut values_vector = Vec::with_capacity(indexes.len());
+        let mut values_vector = Vec::with_capacity(indices.len());
 
-        for index in indexes {
+        for index in indices {
             assert!(*index < self.size(), "Index is greater than size of vector");
 
             unsafe {
