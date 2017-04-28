@@ -101,9 +101,6 @@ pub fn scalar_comparison<T, C, E>(x: T, y: T, comparator: C)
 macro_rules! assert_scalar_eq {
     ($x:expr, $y:expr) => {
         {
-            // Note: The reason we take slices of both x and y is that if x or y are passed as references,
-            // we don't attempt to call elementwise_matrix_comparison with a &&BaseMatrix type (double reference),
-            // which does not work due to generics.
             use $crate::macros::{scalar_comparison, ExactElementwiseComparator};
             let comp = ExactElementwiseComparator;
             let msg = scalar_comparison($x.clone(), $y.clone(), comp).panic_message();
