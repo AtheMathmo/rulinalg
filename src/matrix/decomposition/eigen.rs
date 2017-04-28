@@ -3,12 +3,10 @@ use norm::Euclidean;
 use error::{Error, ErrorKind};
 
 use std::cmp;
-use std::any::Any;
-
 use libnum::{Float, Signed};
 use libnum::{cast, abs};
 
-impl<T: Any + Float + Signed> Matrix<T> {
+impl<T: 'static + Float + Signed> Matrix<T> {
     fn balance_matrix(&mut self) {
         let n = self.rows();
         let radix = T::one() + T::one();

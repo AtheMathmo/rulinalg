@@ -126,8 +126,6 @@ mod hessenberg;
 mod lu;
 mod eigen;
 
-use std::any::Any;
-
 use matrix::{Matrix, BaseMatrix};
 use norm::Euclidean;
 use vector::Vector;
@@ -155,7 +153,7 @@ pub trait Decomposition {
 }
 
 impl<T> Matrix<T>
-    where T: Any + Float
+    where T: 'static + Float
 {
     /// Compute the cos and sin values for the givens rotation.
     ///

@@ -1,11 +1,9 @@
 use matrix::{Matrix, BaseMatrix, BaseMatrixMut, MatrixSlice, MatrixSliceMut};
 use error::{Error, ErrorKind};
 
-use std::any::Any;
-
 use libnum::{Float};
 
-impl<T: Any + Float> Matrix<T> {
+impl<T: 'static + Float> Matrix<T> {
     /// Returns H, where H is the upper hessenberg form.
     ///
     /// If the transformation matrix is also required, you should

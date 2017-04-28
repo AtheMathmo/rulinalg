@@ -5,8 +5,6 @@ use matrix::forward_substitution;
 use vector::Vector;
 use utils::dot;
 
-use std::any::Any;
-
 use libnum::{Zero, Float};
 
 /// Cholesky decomposition.
@@ -247,7 +245,7 @@ impl<T: Zero> Decomposition for Cholesky<T> {
 
 
 impl<T> Matrix<T>
-    where T: Any + Float
+    where T: 'static + Float
 {
     /// Cholesky decomposition
     ///

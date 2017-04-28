@@ -1,12 +1,10 @@
 use matrix::{Matrix, MatrixSlice, BaseMatrix};
 use error::{Error, ErrorKind};
 
-use std::any::Any;
-
 use libnum::Float;
 
 impl<T> Matrix<T>
-    where T: Any + Float
+    where T: 'static + Float
 {
     /// Compute the QR decomposition of the matrix.
     ///

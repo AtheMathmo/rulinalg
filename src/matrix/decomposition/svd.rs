@@ -1,7 +1,6 @@
 use matrix::{Matrix, BaseMatrix, BaseMatrixMut, MatrixSlice, MatrixSliceMut};
 use error::{Error, ErrorKind};
 
-use std::any::Any;
 use std::cmp;
 
 use libnum::{Float, Signed};
@@ -16,7 +15,7 @@ fn correct_svd_signs<T>(mut b: Matrix<T>,
                         mut u: Matrix<T>,
                         mut v: Matrix<T>)
                         -> (Matrix<T>, Matrix<T>, Matrix<T>)
-    where T: Any + Float + Signed
+    where T: 'static + Float + Signed
 {
 
     // When correcting the signs of the singular vectors, we can choose
@@ -47,7 +46,7 @@ fn sort_svd<T>(mut b: Matrix<T>,
                mut u: Matrix<T>,
                mut v: Matrix<T>)
                -> (Matrix<T>, Matrix<T>, Matrix<T>)
-    where T: Any + Float + Signed
+    where T: 'static + Float + Signed
 {
 
     assert!(u.cols() == b.cols() && b.cols() == v.cols());
@@ -89,7 +88,7 @@ fn sort_svd<T>(mut b: Matrix<T>,
     (b, u, v)
 }
 
-impl<T: Any + Float + Signed> Matrix<T> {
+impl<T: 'static + Float + Signed> Matrix<T> {
     /// Singular Value Decomposition
     ///
     /// Computes the SVD using the Golub-Reinsch algorithm.

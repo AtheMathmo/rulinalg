@@ -1,4 +1,4 @@
-use std::any::Any;
+
 use std::fmt;
 use libnum::{One, Zero, Float, FromPrimitive};
 
@@ -310,7 +310,7 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     }
 }
 
-impl<T: Any + Float> Matrix<T> {
+impl<T: 'static + Float> Matrix<T> {
     /// Solves the equation `Ax = y`.
     ///
     /// Requires a Vector `y` as input.
