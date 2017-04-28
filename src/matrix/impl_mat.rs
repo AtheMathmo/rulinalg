@@ -67,6 +67,10 @@ impl<T> Matrix<T> {
     ///     2.0, 1.0, 0.0,
     /// ]);
     /// ```
+    /// # Warning
+    ///
+    /// _This function will be changed in a future release so that `A_ij = f(i, j)` - to be consistent
+    /// with the rest of the library._
     pub fn from_fn<F>(rows: usize, cols: usize, mut f: F) -> Matrix<T>
         where F: FnMut(usize, usize) -> T
     {
