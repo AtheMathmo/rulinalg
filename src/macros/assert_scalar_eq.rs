@@ -85,7 +85,8 @@ pub fn scalar_comparison<T, C, E>(x: T, y: T, comparator: C)
 ///
 /// This macro works analogously to [assert_matrix_eq!](macro.assert_matrix_eq.html),
 /// but is used for comparing scalars (e.g. integers, floating-point numbers)
-/// rather than matrices.
+/// rather than matrices. Please see the documentation for `assert_matrix_eq!`
+/// for details on how to compare floating-point matrices for approximate equality.
 ///
 /// # Examples
 ///
