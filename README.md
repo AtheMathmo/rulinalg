@@ -1,6 +1,6 @@
 # rulinalg
 
-[![Build Status](https://travis-ci.org/AtheMathmo/rulinalg.svg?branch=master)](https://travis-ci.org/AtheMathmo/rulinalg)
+[![Join the chat at https://gitter.im/rulinalg/Lobby](https://badges.gitter.im/rulinalg/Lobby.svg)](https://gitter.im/rulinalg/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/AtheMathmo/rulinalg.svg?branch=master)](https://travis-ci.org/AtheMathmo/rulinalg)
 
 The crate is currently on [version 0.4.2](https://crates.io/crates/rulinalg).
 
