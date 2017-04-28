@@ -35,7 +35,7 @@ use std::ops::Sub;
 use libnum::Float;
 
 /// Trait for matrix norms.
-pub trait MatrixNorm<M, T>
+pub trait MatrixNorm<T, M>
     where M: BaseMatrix<T>
 {
     /// Computes the matrix norm.
@@ -43,7 +43,7 @@ pub trait MatrixNorm<M, T>
 }
 
 /// Trait for matrix metrics.
-pub trait MatrixMetric<'a, 'b, M1, M2, T>
+pub trait MatrixMetric<'a, 'b, T, M1, M2>
     where M1: 'a + BaseMatrix<T>,
           M2: 'b + BaseMatrix<T>
 {
@@ -75,11 +75,11 @@ pub trait VectorMetric<'a, 'b, T, V1, V2>
 /// as follows:
 ///
 /// `d = M(m1, m2) = N(m1 - m2)`
-impl<'a, 'b, M1, M2, T, U> MatrixMetric<'a, 'b, M1, M2, T> for U
+impl<'a, 'b, M1, M2, T, U> MatrixMetric<'a, 'b, T, M1, M2> for U
     where &'a M1: Sub<&'b M2, Output = M1>,
           M1: 'a + BaseMatrix<T>,
           M2: 'b + BaseMatrix<T>,
-          U: MatrixNorm<M1, T>
+          U: MatrixNorm<T, M1>
 {
     fn metric(&self, m1: &'a M1, m2: &'b M2) -> T {
         self.norm(&(m1 - m2))
@@ -123,7 +123,7 @@ impl<T, V> VectorNorm<T, V> for Euclidean
     }
 }
 
-impl<M, T> MatrixNorm<M, T> for Euclidean
+impl<M, T> MatrixNorm<T, M> for Euclidean
     where M: BaseMatrix<T>,
           T: Float
 {
@@ -206,7 +206,7 @@ impl<T, V> VectorNorm<T, V> for Lp<T>
     }
 }
 
-impl<M, T> MatrixNorm<M, T> for Lp<T>
+impl<M, T> MatrixNorm<T, M> for Lp<T>
     where M: BaseMatrix<T>,
           T: Float
 {
