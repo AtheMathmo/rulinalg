@@ -3,6 +3,7 @@ name = "rulinalg"
 version = "0.4.2"
 authors = ["AtheMathmo"]
 
+categories = ["science"]
 description = "A linear algebra library."
 repository = "https://github.com/AtheMathmo/rulinalg"
 documentation = "https://AtheMathmo.github.io/rulinalg/"
