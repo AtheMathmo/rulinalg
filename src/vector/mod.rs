@@ -25,8 +25,7 @@ pub struct Vector<T> {
 ///
 /// This struct provides a slice into a vector.
 ///
-/// The struct contains the left point of the slice
-/// and the width of the slice.
+/// The struct contains a `Vector` pointer and the width of the slice.
 #[derive(Debug, Clone, Copy)]
 pub struct VectorSlice<'a, T: 'a> {
     marker: PhantomData<&'a T>,
@@ -38,8 +37,7 @@ pub struct VectorSlice<'a, T: 'a> {
 ///
 /// This struct provides a mutable slice into a vector.
 ///
-/// The struct contains the left point of the slice
-/// and the width of the slice.
+/// The struct contains a `Vector` pointer and the width of the slice.
 #[derive(Debug)]
 pub struct VectorSliceMut<'a, T: 'a> {
     marker: PhantomData<&'a mut T>,

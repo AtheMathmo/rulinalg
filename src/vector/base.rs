@@ -33,7 +33,7 @@ use super::{Vector, VectorSlice, VectorSliceMut};
 
 /// Trait for immutable vector structs.
 pub trait BaseVector<T>: Sized {
-    /// Left index of the vector.
+    /// Pointer to an owned vector.
     fn as_ptr(&self) -> *const T;
 
     /// Returns a `VectorSlice` over the whole vector.
@@ -52,7 +52,7 @@ pub trait BaseVector<T>: Sized {
         unsafe { VectorSlice::from_raw_parts(self.as_ptr(), self.size()) }
     }
 
-    /// Horizontally concatenates two vectors. With self on the left.
+    /// Concatenates two vectors returning a new vector;
     ///
     /// # Examples
     ///
@@ -352,7 +352,7 @@ pub trait BaseVector<T>: Sized {
 
 /// Trait for mutable vector structs.
 pub trait BaseVectorMut<T>: BaseVector<T> {
-    /// Left index of the vector.
+    /// Mutable pointer to a owned vector.
     fn as_mut_ptr(&mut self) -> *mut T;
 
     /// Returns a `VectorSliceMut` over the whole vector.
