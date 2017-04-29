@@ -1,5 +1,6 @@
 use matrix::{BaseMatrix, BaseMatrixMut};
 use libnum::{Zero, Num};
+use utils::in_place_vec_bin_op;
 
 pub fn nullify_lower_triangular_part<T, M>(matrix: &mut M)
     where T: Zero, M: BaseMatrixMut<T> {
@@ -52,16 +53,9 @@ pub fn axpy<T>(a: T, x: &[T], y: &mut [T])
     where T: Num + Copy
 {
     assert!(x.len() == y.len());
-    // This pattern tells the compiler that the
-    // slices have the same length, which more easily
-    // enables vectorization
-    let len = x.len();
-    let xs = &x[..len];
-    let ys = &mut y[..len];
-
-    for (y, x) in ys.iter_mut().zip(xs.iter()) {
+    in_place_vec_bin_op(y, x, |y, x| {
         *y = y.clone() + a * x.clone();
-    }
+    });
 }
 
 /// Given a `m x n` matrix `A` and vectors `x` and `y` and
