@@ -6,14 +6,17 @@ use error::{Error, ErrorKind};
 
 use std::any::Any;
 use std::cmp;
+use std::fmt::Debug;
 
 use libnum::{Float, Zero, One};
 
 use utils;
-use norm::{Euclidean, VectorNorm};
 
 use matrix::DiagOffset;
 use matrix::decomposition::Decomposition;
+
+use internal_utils::nullify_lower_triangular_part;
+use internal_utils::nullify_upper_triangular_part;
 
 /// Result of unpacking an instance of
 /// [PartialPivLu](struct.PartialPivLu.html).
@@ -140,7 +143,6 @@ impl<T: Clone + One + Zero> Decomposition for PartialPivLu<T> {
     type Factors = LUP<T>;
 
     fn unpack(self) -> LUP<T> {
-        use internal_utils::nullify_lower_triangular_part;
         let l = unit_lower_triangular_part(&self.lu);
         let mut u = self.lu;
         nullify_lower_triangular_part(&mut u);
@@ -350,8 +352,6 @@ impl<T: Clone + One + Zero> Decomposition for FullPivLu<T> {
     type Factors = LUPQ<T>;
 
     fn unpack(self) -> LUPQ<T> {
-        use internal_utils::nullify_lower_triangular_part;
-        use internal_utils::nullify_upper_triangular_part;
 
         // We want the L matrix to be M x P, and the U matrix to be
         // P x N, where P is the minimum of M and N. Since self.lu
@@ -460,7 +460,7 @@ impl<T: 'static + Float> FullPivLu<T> {
 
 // TODO: Remove Any bound (cannot for the time being, since
 // back substitution uses Any bound)
-impl<T> FullPivLu<T> where T: Any + Float {
+impl<T> FullPivLu<T> where T: Any + Float + Debug {
 
     /// Solves the linear system `Ax = b`.
     ///
@@ -497,19 +497,47 @@ impl<T> FullPivLu<T> where T: Any + Float {
         assert!(b.size() == self.lu.rows(),
             "Right-hand side vector must have compatible size.");
 
-        // These two products are guarenteed to exist, since self.p
-        // is a permutation matrix, and the lower-triangular portion
-        // of self.lu is a composition of elementary row operations.
-        let x = lu_forward_substitution(&self.lu, &self.p * &b);
+        let diag_size = cmp::min(self.lu.rows(), self.lu.cols());
 
-        // Here, though, the result might not exist. This happens
-        // if the columns of the matrix don't span the entire range
-        // (i.e. the matrix is rank-deficient or the matrix has more
-        // rows than columns).
-        //
-        // We get around this by only considering the top-left square
-        // invertible portion of U, solving that problem, and verifying
-        // the solution later.
+        let b = &self.p * &b;
+
+        let x =
+            lu_forward_substitution(
+                &self.lu.sub_slice([0, 0], diag_size, diag_size),
+                b.top(diag_size));
+
+        // Check that the bottom elements of X are all zero.
+        let eps = self.epsilon();
+
+        for v in x.iter().skip(diag_size) {
+            if v.abs() > eps {
+                return Err(
+                    Error::new(
+                        ErrorKind::AlgebraFailure,
+                        "No solution exists"));
+            }
+        }
+
+        // Get the lower portion of the L matrix and verify the solution
+        // found.
+        for (i, expected) in b.iter().enumerate().skip(diag_size) {
+            let row_begin = self.lu.row_stride() * i;
+            let row_end = row_begin + diag_size;
+
+            let val =
+                utils::dot(
+                    &self.lu.data()[row_begin .. row_end],
+                    &x.data()[0 .. diag_size]);
+
+            if (val - *expected).abs() > eps {
+                return Err(
+                    Error::new(
+                        ErrorKind::AlgebraFailure,
+                        "No solution exists"));
+            }
+        }
+
+        // Consider the top-left square invertible portion of U.
         let r = self.rank();
         let nonzero_u = self.lu.sub_slice([0, 0], r, r);
 
@@ -521,22 +549,7 @@ impl<T> FullPivLu<T> where T: Any + Float {
             self.lu.cols(),
             |i| if i < r { unsafe{ *x.get_unchecked(i) }} else { T::zero() });
 
-        let x = &self.q * x;
-
-        // We have a potential solution, but we need to verify that it actually
-        // solves the equation.
-        let norm = VectorNorm::norm(&Euclidean, &x);
-
-        let rhs = self.map_vector(&x) - b;
-
-        let diff_norm = VectorNorm::norm(&Euclidean, &rhs);
-
-        if diff_norm < norm * self.epsilon() {
-            Ok(x)
-        } else {
-            Err(Error::new(ErrorKind::AlgebraFailure,
-                "No solution exists"))
-        }
+        Ok(&self.q * x)
     }
 
     /// Computes the inverse of the matrix which this LUP decomposition
@@ -670,56 +683,6 @@ impl<T> FullPivLu<T> where T: Any + Float {
     fn epsilon(&self) -> T {
         self.lu.get([0, 0]).unwrap_or(&T::one()).abs() * T::epsilon()
     }
-
-    fn map_vector(&self, v: &Vector<T>) -> Vector<T> {
-        assert!(
-            v.size() == self.lu.cols(),
-            "Matrix and Vector dimensions do not agree.");
-
-        let r = self.lu.rows();
-        let c = self.lu.cols();
-        let d = cmp::min(r, c);
-
-        let v = self.q.inverse() * v;
-
-        let mut new_data = Vec::with_capacity(r);
-
-        // First, do the U multiplication.
-        for i in 0..d {
-            let entry =
-                utils::dot(
-                    &self.lu.data()[(i*(c+1)) .. ((i+1)*c)],
-                    &v.data()[i..c]);
-
-            new_data.push(entry);
-        }
-
-        for _ in d..r {
-            new_data.push(T::zero());
-        }
-
-        // Now, do L multiplication
-        for i in (1..r).rev() {
-            let row_begin = i * c;
-
-            let entry = {
-              let offset = cmp::min(d, i);
-
-              let data_slice = &new_data[0..offset];
-              let lu_slice = &self.lu.data()[row_begin .. row_begin + offset];
-
-              utils::dot(lu_slice, data_slice)
-            };
-
-            new_data[i] = new_data[i] + entry;
-        }
-
-        let mut v = Vector::new(new_data);
-
-        self.p.inverse().permute_vector_in_place(&mut v);
-
-        v
-    }
 }
 
 /// Performs Gaussian elimination in the lower-right hand corner starting at
@@ -745,13 +708,12 @@ fn gaussian_elimination<T: Float>(lu: &mut Matrix<T>, index: usize) {
 /// to the strictly lower triangular part of L.
 ///
 /// This is equivalent to solving the system Lx = b.
-fn lu_forward_substitution<T: Float>(lu: &Matrix<T>, b: Vector<T>) -> Vector<T> {
+fn lu_forward_substitution<T, M>(lu: &M, b: Vector<T>) -> Vector<T>
+    where T: Float, M: BaseMatrix<T> {
     assert!(b.size() == lu.rows(), "LU matrix and RHS vector must be compatible.");
     let mut x = b;
 
-    let diag_size = cmp::min(lu.rows(), lu.cols());
-
-    for (i, row) in lu.row_iter().enumerate().take(diag_size).skip(1) {
+    for (i, row) in lu.row_iter().enumerate().skip(1) {
         // Note that at time of writing we need raw_slice here for
         // auto-vectorization to kick in
         let adjustment = row.raw_slice()
