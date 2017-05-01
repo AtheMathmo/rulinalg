@@ -12,6 +12,7 @@ pub mod linalg {
 	mod svd;
 	mod lu;
 	mod cholesky;
+	mod qr;
 	mod norm;
 	mod triangular;
 	mod permutation;

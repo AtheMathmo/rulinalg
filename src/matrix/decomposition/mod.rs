@@ -104,6 +104,12 @@
 //! </td>
 //! </tr>
 //!
+//! <tr>
+//! <td><a href="struct.HouseholderQr.html">HouseholderQr</a></td>
+//! <td>Any matrix</td>
+//! <td></td>
+//! </tr>
+//!
 //! </tbody>
 //! </table>
 
@@ -125,6 +131,7 @@ mod svd;
 mod hessenberg;
 mod lu;
 mod eigen;
+mod householder;
 
 use std::any::Any;
 
@@ -134,8 +141,12 @@ use vector::Vector;
 use utils;
 use error::{Error, ErrorKind};
 
+use self::householder::HouseholderReflection;
+
+pub use self::householder::HouseholderComposition;
 pub use self::lu::{PartialPivLu, LUP, FullPivLu, LUPQ};
 pub use self::cholesky::Cholesky;
+pub use self::qr::{HouseholderQr, QR, ThinQR};
 
 use libnum::{Float};
 

@@ -185,6 +185,7 @@ fn cholesky() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn qr() {
     let a = matrix![12., -51., 4.;
                     6., 167., -68.;
