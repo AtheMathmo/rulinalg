@@ -6,7 +6,6 @@ use error::{Error, ErrorKind};
 
 use std::any::Any;
 use std::cmp;
-use std::fmt::Debug;
 
 use libnum::{Float, Zero, One};
 
@@ -460,7 +459,7 @@ impl<T: 'static + Float> FullPivLu<T> {
 
 // TODO: Remove Any bound (cannot for the time being, since
 // back substitution uses Any bound)
-impl<T> FullPivLu<T> where T: Any + Float + Debug {
+impl<T> FullPivLu<T> where T: Any + Float {
 
     /// Solves the linear system `Ax = b`.
     ///
