@@ -1203,6 +1203,56 @@ mod tests {
     }
 
     #[test]
+    pub fn full_piv_lu_solve_no_solution_tall_matrix() {
+         let a = matrix![ 1.0, 0.0;
+                          2.0, 1.0;
+                          3.0, 0.0;
+                          4.0, 1.0;
+                          5.0, 0.0;
+                          6.0, 1.0;
+                          7.0, 0.0;
+                          8.0, 1.0;
+                          9.0, 0.0;
+                         10.0, 1.0;
+                         11.0, 0.0;
+                         12.0, 1.0;
+                         13.0, 0.0;
+                         14.0, 1.0;
+                         15.0, 0.0;
+                         16.0, 1.0 ];
+        let b = vector![ 2.0,
+                         3.0,
+                         4.0,
+                         5.0,
+                         6.0,
+                         7.0,
+                         8.0,
+                         9.0,
+                        10.0,
+                        11.0,
+                        12.0,
+                        13.0,
+                        14.0,
+                        15.0,
+                        16.0,
+                        17.0];
+
+        let lu = FullPivLu::decompose(a.clone()).unwrap();
+        assert!(lu.solve(b).is_err());
+    }
+
+    #[test]
+    pub fn full_piv_lu_solve_no_solution_matrix_wide() {
+        let a = matrix![ 1.0, 2.0, 3.0;
+                         1.0, 2.0, 3.0];
+        let b = vector![2.0, 3.0];
+
+        let lu = FullPivLu::decompose(a.clone()).unwrap();
+
+        assert!(lu.solve(b).is_err());
+    }
+
+    #[test]
     pub fn full_piv_lu_solve_arbitrary_matrix() {
         let x = matrix![ 5.0, 0.0, 0.0, 1.0;
                          2.0, 2.0, 2.0, 1.0;
