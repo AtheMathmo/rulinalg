@@ -1,6 +1,6 @@
 use matrix::{BaseMatrix, BaseMatrixMut};
 use libnum::{Zero, Num};
-use utils::in_place_vec_bin_op;
+use utils::{dot, in_place_vec_bin_op};
 
 pub fn nullify_lower_triangular_part<T, M>(matrix: &mut M)
     where T: Zero, M: BaseMatrixMut<T> {
@@ -17,6 +17,30 @@ pub fn nullify_upper_triangular_part<T, M>(matrix: &mut M)
         for element in row.raw_slice_mut().iter_mut().skip(i + 1) {
             *element = T::zero();
         }
+    }
+}
+
+/// Given a vector `x` and a `m x n` matrix `A`, compute
+/// `y = A x`.
+///
+/// This is a stopgap solution until we have a more proper
+/// BLIS/BLAS-like API.
+pub fn gemv<T, M>(a: &M, x: &[T], y: &mut [T])
+    where M: BaseMatrix<T>, T: Num + Copy
+{
+    let m = a.rows();
+    let n = a.cols();
+
+    assert!(x.len() == n, "A and x must be dimensionally compatible.");
+    assert!(y.len() == m, "A and y must be dimensionally compatible.");
+
+    for element in y.iter_mut() {
+        *element = T::zero();
+    }
+
+    for i in 0 .. m {
+        let a_i = a.row(i).raw_slice();
+        y[i] = dot(a_i, x);
     }
 }
 
@@ -88,7 +112,7 @@ mod tests {
 
     use super::nullify_lower_triangular_part;
     use super::nullify_upper_triangular_part;
-    use super::transpose_gemv;
+    use super::{gemv, transpose_gemv};
     use super::ger;
 
     #[test]
@@ -115,6 +139,21 @@ mod tests {
             4.0, 5.0, 0.0;
             7.0, 8.0, 9.0
         ]);
+    }
+
+    #[test]
+    fn gemv_examples() {
+        {
+            let a = matrix![3.0, 4.0;
+                            5.0, 2.0;
+                            3.0, 1.0];
+            let x = vec![2.0, 3.0];
+            let mut y = vec![0.0; 3];
+            gemv(&a, &x, &mut y);
+
+            let y = Vector::new(y);
+            assert_vector_eq!(y, vector![18.0, 16.0, 9.0]);
+        }
     }
 
     #[test]
