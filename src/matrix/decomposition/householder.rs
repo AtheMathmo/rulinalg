@@ -1,6 +1,7 @@
 use matrix::{Matrix, BaseMatrix, BaseMatrixMut, Column, ColumnMut};
 use vector::Vector;
 use utils;
+use internal_utils::{gemv, transpose_gemv, ger};
 
 use libnum::Float;
 
@@ -100,7 +101,6 @@ impl<T: Float> HouseholderReflection<T> {
     pub fn buffered_left_multiply_into<M>(&self, matrix: &mut M, buffer: &mut [T])
         where M: BaseMatrixMut<T>
     {
-        use internal_utils::{transpose_gemv, ger};
         assert!(buffer.len() == matrix.cols());
 
         // Recall that the Householder reflection is represented by
@@ -127,6 +127,35 @@ impl<T: Float> HouseholderReflection<T> {
 
         // A <- A - τ v uᵀ
         ger(matrix, - self.tau, v, u);
+    }
+
+    /// Right-multiplies the given matrix by this Householder reflection.
+    ///
+    /// More precisely, let `H` denote this Householder reflection matrix,
+    /// and let `A` be a dimensionally compatible matrix. Then
+    /// this function computes the product `AH` and stores the result
+    /// back in `A`.
+    ///
+    /// The user must provide a buffer of size `A.rows()` which is used
+    /// to store intermediate results.
+    pub fn buffered_right_multiply_into<M>(&self, matrix: &mut M, buffer: &mut [T])
+        where M: BaseMatrixMut<T>
+    {
+        assert!(buffer.len() == matrix.rows());
+
+        // See `buffered_left_multiply_into`. The implementation here
+        // is almost exactly the same, except we instead have:
+        // AH = A - τ (A v) vᵀ = A - τ u vᵀ,
+        // where u = Av.
+
+        let ref v = self.v.data();
+        let mut u = buffer;
+
+        // u = A v
+        gemv(matrix, v, u);
+
+        // A <- A - τ v uᵀ
+        ger(matrix, - self.tau, u, v);
     }
 
     pub fn as_vector(&self) -> &Vector<T> {
@@ -374,6 +403,29 @@ mod tests {
                                 -6.6667,  -7.0000, -7.3333,  -7.6667;
                                 -8.0000,  -9.0000,-10.0000, -11.0000;
                                 -9.3333, -11.0000,-12.6667, -14.3333];
+        assert_matrix_eq!(x, expected, comp = abs, tol = 1e-3);
+    }
+
+    #[test]
+    fn householder_reflection_right_multiply() {
+        let mut x = matrix![ 0.0,  1.0,  2.0,  3.0;
+                             4.0,  5.0,  6.0,  7.0;
+                             8.0,  9.0, 10.0, 11.0;
+                            12.0, 13.0, 14.0, 15.0 ];
+
+        let h = HouseholderReflection {
+            tau: 1.0 / 15.0,
+            v: vector![1.0, 2.0, 3.0, 4.0]
+        };
+
+        let mut buffer = vec![0.0; 4];
+
+        h.buffered_right_multiply_into(&mut x, &mut buffer);
+
+        let expected = matrix![ -1.3333, -1.6667, - 2.0000, - 2.3333;
+                                 0.0000, -3.0000, - 6.0000, - 9.0000;
+                                 1.3333, -4.3333, -10.0000, -15.6667;
+                                 2.6667, -5.6667, -14.0000, -22.3333 ];
         assert_matrix_eq!(x, expected, comp = abs, tol = 1e-3);
     }
 
