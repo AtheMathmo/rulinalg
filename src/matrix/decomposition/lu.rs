@@ -497,6 +497,7 @@ impl<T> FullPivLu<T> where T: Any + Float {
             "Right-hand side vector must have compatible size.");
 
         let diag_size = cmp::min(self.lu.rows(), self.lu.cols());
+        let rank = self.rank();
 
         let b = &self.p * &b;
 
@@ -508,7 +509,7 @@ impl<T> FullPivLu<T> where T: Any + Float {
         // Check that the bottom elements of X are all zero.
         let eps = self.epsilon();
 
-        for v in x.iter().skip(diag_size) {
+        for v in x.iter().skip(rank) {
             if v.abs() > eps {
                 return Err(
                     Error::new(
@@ -519,7 +520,7 @@ impl<T> FullPivLu<T> where T: Any + Float {
 
         // Get the lower portion of the L matrix and verify the solution
         // found.
-        for (i, expected) in b.iter().enumerate().skip(diag_size) {
+        for (i, expected) in b.iter().enumerate().skip(rank) {
             let row_begin = self.lu.row_stride() * i;
             let row_end = row_begin + diag_size;
 
@@ -537,16 +538,15 @@ impl<T> FullPivLu<T> where T: Any + Float {
         }
 
         // Consider the top-left square invertible portion of U.
-        let r = self.rank();
-        let nonzero_u = self.lu.sub_slice([0, 0], r, r);
+        let nonzero_u = self.lu.sub_slice([0, 0], rank, rank);
 
-        let x = back_substitution(&nonzero_u, x.top(r)).unwrap();
+        let x = back_substitution(&nonzero_u, x.top(rank)).unwrap();
 
         // Now we pad x back up to its actual size and map through
         // the last permutation matrix.
         let x = Vector::from_fn(
             self.lu.cols(),
-            |i| if i < r { unsafe{ *x.get_unchecked(i) }} else { T::zero() });
+            |i| if i < rank { unsafe{ *x.get_unchecked(i) }} else { T::zero() });
 
         Ok(&self.q * x)
     }
