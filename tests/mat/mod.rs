@@ -191,11 +191,7 @@ fn qr() {
                     6., 167., -68.;
                     -4., 24., -41.];
 
-    let res = a.qr_decomp();
-
-    assert!(res.is_ok());
-
-    let (q, r) = res.unwrap();
+    let (q, r) = a.qr_decomp().unwrap();
 
     let true_q = matrix![-0.857143, 0.394286, 0.331429;
                          -0.428571, -0.902857, -0.034286;
@@ -204,10 +200,6 @@ fn qr() {
                          0., -175., 70.;
                          0., 0., -35.];
 
-    for (q_test, q_true) in q.iter().zip(true_q.iter()) {
-        assert_scalar_eq!(q_test, q_true, comp = float, eps = 1e-6);
-    }
-    for (r_test, r_true) in r.iter().zip(true_r.iter()) {
-        assert_scalar_eq!(r_test, r_true, comp = float, eps = 1e-6);
-    }
+    assert_matrix_eq!(q, true_q, comp = abs, tol = 1e-6);
+    assert_matrix_eq!(r, true_r, comp = abs, tol = 1e-6);
 }
