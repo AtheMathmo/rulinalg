@@ -206,7 +206,7 @@ impl<T> HouseholderQr<T> where T: Float {
             // gets shorter for each iteration, so we truncate the buffer
             // to the appropriate length.
             buffer.truncate(m - j);
-            multiply_buffer.truncate(bottom_right.cols());
+
             bottom_right.col(0).clone_into_slice(&mut buffer);
 
             let house = HouseholderReflection::compute(Vector::new(buffer));

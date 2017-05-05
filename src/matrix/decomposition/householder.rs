@@ -96,12 +96,12 @@ impl<T: Float> HouseholderReflection<T> {
     /// this function computes the product `HA` and stores the result
     /// back in `A`.
     ///
-    /// The user must provide a buffer of size `A.cols()` which is used
+    /// The user must provide a buffer of size at least `A.cols()` which is used
     /// to store intermediate results.
     pub fn buffered_left_multiply_into<M>(&self, matrix: &mut M, buffer: &mut [T])
         where M: BaseMatrixMut<T>
     {
-        assert!(buffer.len() == matrix.cols());
+        assert!(buffer.len() >= matrix.cols());
 
         // Recall that the Householder reflection is represented by
         // H = I - τ v vᵀ,
@@ -120,7 +120,7 @@ impl<T: Float> HouseholderReflection<T> {
         // Instead, we will use the provided buffer to hold the result of the
         // matrix-vector product.
         let ref v = self.v.data();
-        let mut u = buffer;
+        let mut u = &mut buffer[0 .. matrix.cols()];
 
         // u = A^T v
         transpose_gemv(matrix, v, u);
@@ -136,12 +136,12 @@ impl<T: Float> HouseholderReflection<T> {
     /// this function computes the product `AH` and stores the result
     /// back in `A`.
     ///
-    /// The user must provide a buffer of size `A.rows()` which is used
+    /// The user must provide a buffer of size at least `A.rows()` which is used
     /// to store intermediate results.
     pub fn buffered_right_multiply_into<M>(&self, matrix: &mut M, buffer: &mut [T])
         where M: BaseMatrixMut<T>
     {
-        assert!(buffer.len() == matrix.rows());
+        assert!(buffer.len() >= matrix.rows());
 
         // See `buffered_left_multiply_into`. The implementation here
         // is almost exactly the same, except we instead have:
@@ -149,7 +149,7 @@ impl<T: Float> HouseholderReflection<T> {
         // where u = Av.
 
         let ref v = self.v.data();
-        let mut u = buffer;
+        let mut u = &mut buffer[0..matrix.rows()];
 
         // u = A v
         gemv(matrix, v, u);
