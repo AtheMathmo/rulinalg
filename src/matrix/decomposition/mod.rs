@@ -147,6 +147,7 @@ pub use self::householder::HouseholderComposition;
 pub use self::lu::{PartialPivLu, LUP, FullPivLu, LUPQ};
 pub use self::cholesky::Cholesky;
 pub use self::qr::{HouseholderQr, QR, ThinQR};
+pub use self::hessenberg::{HessenbergDecomposition, QH};
 
 use libnum::{Float};
 
