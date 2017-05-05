@@ -745,8 +745,6 @@ mod tests {
     use super::{PartialPivLu, LUP, FullPivLu, LUPQ};
     use matrix::decomposition::Decomposition;
 
-    use libnum::Float;
-
     #[allow(deprecated)]
     #[test]
     #[should_panic]
@@ -843,8 +841,7 @@ mod tests {
         let lu = PartialPivLu::decompose(x).unwrap();
 
         let expected_det = 149.99999999999997;
-        let diff = lu.det() - expected_det;
-        assert!(diff.abs() < 1e-12);
+        assert_scalar_eq!(lu.det(), expected_det, comp = float);
     }
 
     #[test]

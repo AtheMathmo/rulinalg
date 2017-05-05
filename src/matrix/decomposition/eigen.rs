@@ -409,8 +409,8 @@ mod tests {
         let v2 = vector![eigenvecs[[0, 1]], eigenvecs[[1, 1]]];
 
         let epsilon = 0.00001;
-        assert!((&a * &v1 - &v1 * lambda_1).into_vec().iter().all(|&c| c < epsilon));
-        assert!((&a * &v2 - &v2 * lambda_2).into_vec().iter().all(|&c| c < epsilon));
+        assert!((&a * &v1 - &v1 * lambda_1).iter().all(|&c| c < epsilon));
+        assert!((&a * &v2 - &v2 * lambda_2).iter().all(|&c| c < epsilon));
     }
 
     #[test]
@@ -419,7 +419,7 @@ mod tests {
                         22., 29., 36.;
                         27., 36., 45.];
 
-        let eigs = a.clone().eigenvalues().unwrap();
+        let eigs = a.eigenvalues().unwrap();
 
         let eig_1 = 90.4026;
         let eig_2 = 0.5973;
