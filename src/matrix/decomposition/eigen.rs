@@ -408,9 +408,8 @@ mod tests {
         let v1 = vector![eigenvecs[[0, 0]], eigenvecs[[1, 0]]];
         let v2 = vector![eigenvecs[[0, 1]], eigenvecs[[1, 1]]];
 
-        let epsilon = 0.00001;
-        assert!((&a * &v1 - &v1 * lambda_1).iter().all(|&c| c < epsilon));
-        assert!((&a * &v2 - &v2 * lambda_2).iter().all(|&c| c < epsilon));
+        assert_vector_eq!(&a * &v1, &v1 * lambda_1, comp = float);
+        assert_vector_eq!(&a * &v2, &v2 * lambda_2, comp = float);
     }
 
     #[test]
