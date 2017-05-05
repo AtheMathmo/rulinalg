@@ -16,5 +16,6 @@ pub mod linalg {
 	mod norm;
 	mod triangular;
 	mod permutation;
+	mod hessenberg;
 	pub mod util;
 }
