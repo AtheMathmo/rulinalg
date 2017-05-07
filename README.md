@@ -49,6 +49,7 @@ rulinalg="0.4.2"
 And then import the library using:
 
 ```rust
+#[macro_use]
 extern crate rulinalg;
 ```
 
@@ -70,10 +71,13 @@ let b = Matrix::new(2, 3, vec![
 ]);
 
 let c = &a * &b; // Matrix product of a and b
-// [
-        9.0, 12.0, 15.0,
-       19.0, 26.0, 33.0,
-// ]
+
+// Construct the product of `a` and `b` using the `matrix!` macro:
+let expected = matrix![9.0, 12.0, 15.0;
+                       19.0, 26.0, 33.0];
+
+// Test for equality:
+assert_matrix_eq!(c, expected);
 ```
 
 More detailed coverage can be found in the [API documentation](https://AtheMathmo.github.io/rulinalg/).
