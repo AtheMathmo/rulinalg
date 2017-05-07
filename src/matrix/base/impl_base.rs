@@ -76,6 +76,11 @@ impl<T> BaseMatrix<T> for Matrix<T> {
             data: new_data,
         }
     }
+
+    fn is_data_contiguous(&self) -> bool
+    {
+        true
+    }
 }
 
 impl<'a, T> BaseMatrix<T> for MatrixSlice<'a, T> {
@@ -467,5 +472,36 @@ mod tests {
         assert_eq!(a[[2, 1]], c[[1, 2]]);
         assert_eq!(a[[3, 1]], c[[1, 3]]);
         assert_eq!(a[[4, 1]], c[[1, 4]]);
+    }
+
+    #[test]
+    fn is_data_contiguous() {
+        let mut a = matrix![1., 2.;
+                            3., 4.;
+                            5., 6.;
+                            7., 8.;
+                            9., 10.];
+
+        assert!(a.is_data_contiguous());
+
+        {
+            let mut_slice = a.as_mut_slice();
+            assert!(mut_slice.is_data_contiguous());
+        }
+
+        {
+            let mut_slice = a.sub_slice_mut([1,0], 2, 1);
+            assert!(!mut_slice.is_data_contiguous());
+        }
+
+        {
+            let slice = a.as_slice();
+            assert!(slice.is_data_contiguous());
+        }
+
+        {
+            let slice = a.sub_slice([0,1], 3, 1);
+            assert!(!slice.is_data_contiguous());
+        }
     }
 }

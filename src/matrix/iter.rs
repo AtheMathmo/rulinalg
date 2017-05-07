@@ -3,7 +3,7 @@ use std::mem;
 
 use super::{Matrix, MatrixSlice, MatrixSliceMut};
 use super::{Column, ColumnMut, Cols, ColsMut, Row, RowMut, Rows, RowsMut, Diagonal, DiagonalMut};
-use super::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut};
+use super::{BaseMatrix, BaseMatrixMut, SliceIter, SliceIterMut, SliceIterIndices};
 
 macro_rules! impl_slice_iter (
     ($slice_iter:ident, $data_type:ty) => (
@@ -12,25 +12,49 @@ impl<'a, T> Iterator for $slice_iter<'a, T> {
     type Item = $data_type;
 
     fn next(&mut self) -> Option<$data_type> {
-        let offset = self.row_pos * self.row_stride + self.col_pos;
-        let end = self.slice_rows * self.row_stride;
-        // Set the position of the next element
-        if offset < end {
-            unsafe {
-                let iter_ptr = self.slice_start.offset(offset as isize);
-
-                // If end of row, set to start of next row
-                if self.col_pos + 1 == self.slice_cols {
-                    self.row_pos += 1usize;
-                    self.col_pos = 0usize;
+        match self.indices {
+            SliceIterIndices::Contiguous { ref mut index, slice_size } => {
+                if *index == slice_size {
+                    None
                 } else {
-                    self.col_pos += 1usize;
-                }
+                    let old_index = *index;
+                    *index += 1;
 
-                Some(mem::transmute(iter_ptr))
+                    unsafe {
+                        let iter_ptr = self.slice_start.offset(old_index as isize);
+                        Some(mem::transmute(iter_ptr))
+                    }
+                }
+            },
+
+            SliceIterIndices::NonContiguous {
+                        ref mut row_pos, 
+                        ref mut col_pos, 
+                        slice_rows, 
+                        slice_cols,
+                        row_stride } => {
+                let offset = *row_pos * row_stride + *col_pos;
+                let end = slice_rows * row_stride;
+
+                // Set the position of the next element
+                if offset < end {
+                    unsafe {
+                        let iter_ptr = self.slice_start.offset(offset as isize);
+
+                        // If end of row, set to start of next row
+                        if *col_pos + 1 == slice_cols {
+                            *row_pos += 1usize;
+                            *col_pos = 0usize;
+                        } else {
+                            *col_pos += 1usize;
+                        }
+
+                        Some(mem::transmute(iter_ptr))
+                    }
+                } else {
+                    None
+                }
             }
-        } else {
-            None
         }
     }
 }

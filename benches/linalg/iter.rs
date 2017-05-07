@@ -57,3 +57,31 @@ fn mat_diag_manual_100_500(b: &mut Bencher) {
         }
     });
 }
+
+#[bench]
+fn mat_contigous_iter_10_50(b: &mut Bencher) {
+
+    let a = Matrix::new(10, 50, vec![2.0;500]);
+    let slice = a.sub_slice([0,0], 10, 50);
+
+    b.iter(|| {
+        for x in slice.iter()
+        {
+            black_box(x);
+        }
+    });
+}
+
+#[bench]
+fn mat_noncontigous_iter_10_50(b: &mut Bencher) {
+
+    let a = Matrix::new(20, 100, vec![2.0;20*100]);
+    let slice = a.sub_slice([0,0], 10, 50);
+
+    b.iter(|| {
+        for x in slice.iter()
+        {
+            black_box(x);
+        }
+    });
+}
