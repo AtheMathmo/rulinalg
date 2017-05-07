@@ -110,6 +110,12 @@
 //! <td></td>
 //! </tr>
 //!
+//! <tr>
+//! <td><a href="struct.HessenbergDecomposition.html">HessenbergDecomposition</a></td>
+//! <td>Square</td>
+//! <td></td>
+//! </tr>
+//!
 //! </tbody>
 //! </table>
 
