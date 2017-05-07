@@ -173,6 +173,11 @@ impl<T: Any + Float> Matrix<T> {
     /// If the transformation matrix is also required, you should
     /// use `upper_hess_decomp`.
     ///
+    /// Note: This function is deprecated and will be removed in a future
+    /// release. See
+    /// [HessenbergDecomposition](decomposition/struct.HessenbergDecomposition.html)
+    /// for its replacement.
+    ///
     /// # Examples
     ///
     /// ```
@@ -196,6 +201,7 @@ impl<T: Any + Float> Matrix<T> {
     /// # Failures
     ///
     /// - The matrix cannot be reduced to upper hessenberg form.
+    #[deprecated]
     pub fn upper_hessenberg(mut self) -> Result<Matrix<T>, Error> {
         let n = self.rows;
         assert!(n == self.cols,
@@ -249,6 +255,11 @@ impl<T: Any + Float> Matrix<T> {
     ///
     /// Note: The current transform matrix seems broken...
     ///
+    /// Note: This function is deprecated and will be removed in a future
+    /// release. See
+    /// [HessenbergDecomposition](decomposition/struct.HessenbergDecomposition.html)
+    /// for its replacement.
+    ///
     /// # Examples
     ///
     /// ```
@@ -273,6 +284,7 @@ impl<T: Any + Float> Matrix<T> {
     /// # Failures
     ///
     /// - The matrix cannot be reduced to upper hessenberg form.
+    #[deprecated]
     pub fn upper_hess_decomp(self) -> Result<(Matrix<T>, Matrix<T>), Error> {
         let n = self.rows;
         assert!(n == self.cols,
@@ -300,6 +312,7 @@ impl<T: Any + Float> Matrix<T> {
         }
 
         // Now we reduce to upper hessenberg
+        #[allow(deprecated)]
         Ok((transform, try!(self.upper_hessenberg())))
     }
 }
@@ -315,6 +328,7 @@ mod tests {
 
     #[test]
     #[should_panic]
+    #[allow(deprecated)]
     fn test_non_square_upper_hessenberg() {
         let a: Matrix<f64> = Matrix::ones(2, 3);
 
@@ -323,6 +337,7 @@ mod tests {
 
     #[test]
     #[should_panic]
+    #[allow(deprecated)]
     fn test_non_square_upper_hess_decomp() {
         let a: Matrix<f64> = Matrix::ones(2, 3);
 
