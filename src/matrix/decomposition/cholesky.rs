@@ -369,7 +369,6 @@ mod tests {
     use super::Cholesky;
     use super::transpose_back_substitution;
 
-    use libnum::Float;
     use quickcheck::TestResult;
 
     #[test]
@@ -454,8 +453,7 @@ mod tests {
         {
             let x = matrix![1.0];
             let cholesky = Cholesky::decompose(x).unwrap();
-            let diff = cholesky.det() - 1.0;
-            assert!(diff.abs() < 1e-14);
+            assert_scalar_eq!(cholesky.det(), 1.0, comp = float);
         }
 
         {
@@ -463,8 +461,7 @@ mod tests {
                             3.0,  18.0,  33.0;
                             5.0,  33.0,  65.0];
             let cholesky = Cholesky::decompose(x).unwrap();
-            let diff = cholesky.det() - 36.0;
-            assert!(diff.abs() < 1e-14);
+            assert_scalar_eq!(cholesky.det(), 36.0, comp = float);
         }
     }
 

@@ -227,14 +227,14 @@ mod tests {
     #[test]
     fn test_euclidean_vector_norm() {
         let v = vector![3.0, 4.0];
-        assert!((VectorNorm::norm(&Euclidean, &v) - 5.0) < 1e-14);
+        assert_scalar_eq!(VectorNorm::norm(&Euclidean, &v), 5.0, comp = float);
     }
 
     #[test]
     fn test_euclidean_matrix_norm() {
         let m = matrix![3.0, 4.0;
                         1.0, 3.0];
-        assert!((MatrixNorm::norm(&Euclidean, &m) - 35.0.sqrt()) < 1e-14);
+        assert_scalar_eq!(MatrixNorm::norm(&Euclidean, &m), 35.0.sqrt(), comp = float);
     }
 
     #[test]
@@ -243,19 +243,19 @@ mod tests {
                         1.0, 3.0];
 
         let slice = MatrixSlice::from_matrix(&m, [0,0], 1, 2);
-        assert!((MatrixNorm::norm(&Euclidean, &slice) - 5.0) < 1e-14);
+        assert_scalar_eq!(MatrixNorm::norm(&Euclidean, &slice), 5.0, comp = float);
     }
 
     #[test]
     fn test_euclidean_vector_metric() {
         let v = vector![3.0, 4.0];
-        assert!((VectorMetric::metric(&Euclidean, &v, &v)) < 1e-14);
+        assert_scalar_eq!(VectorMetric::metric(&Euclidean, &v, &v), 0.0, comp = float);
 
         let v1 = vector![0.0, 0.0];
-        assert!((VectorMetric::metric(&Euclidean, &v, &v1) - 5.0) < 1e-14);
+        assert_scalar_eq!(VectorMetric::metric(&Euclidean, &v, &v1), 5.0, comp = float);
 
         let v2 = vector![4.0, 3.0];
-        assert!((VectorMetric::metric(&Euclidean, &v, &v2) - 2.0.sqrt()) < 1e-14);
+        assert_scalar_eq!(VectorMetric::metric(&Euclidean, &v, &v2), 2.0.sqrt(), comp = float);
     }
 
     #[test]
@@ -271,14 +271,14 @@ mod tests {
     fn test_euclidean_matrix_metric() {
         let m = matrix![3.0, 4.0;
                         1.0, 3.0];
-        assert!((MatrixMetric::metric(&Euclidean, &m, &m)) < 1e-14);
+        assert_scalar_eq!(MatrixMetric::metric(&Euclidean, &m, &m), 0.0, comp = float);
 
         let m1 = Matrix::zeros(2, 2);
-        assert!((MatrixMetric::metric(&Euclidean, &m, &m1) - 35.0.sqrt()) < 1e-14);
+        assert_scalar_eq!(MatrixMetric::metric(&Euclidean, &m, &m1), 35.0.sqrt(), comp = float);
 
         let m2 = matrix![2.0, 3.0;
                          2.0, 4.0];
-        assert!((MatrixMetric::metric(&Euclidean, &m, &m2) - 2.0) < 1e-14);
+        assert_scalar_eq!(MatrixMetric::metric(&Euclidean, &m, &m2), 2.0, comp = float);
     }
 
     #[test]
@@ -312,7 +312,7 @@ mod tests {
             &m2, [0; 2], 1, 2
         );
 
-        assert!(MatrixMetric::metric(&Euclidean, &m_slice, &m2_slice) == 2.0.sqrt());
+        assert_scalar_eq!(MatrixMetric::metric(&Euclidean, &m_slice, &m2_slice), 2.0.sqrt(), comp = exact);
     }
 
     #[test]

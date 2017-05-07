@@ -498,7 +498,6 @@ impl<T: fmt::Display> fmt::Display for Matrix<T> {
 #[cfg(test)]
 mod tests {
     use matrix::{Axes, BaseMatrix, Matrix};
-    use libnum::abs;
 
     #[test]
     fn test_new_mat() {
@@ -668,9 +667,7 @@ mod tests {
 
         let f = e.det();
 
-        println!("det is {0}", f);
-        let error = abs(f - 99.);
-        assert!(error < 1e-10);
+        assert_scalar_eq!(f, 99.0, comp = float);
 
         let g: Matrix<f64> = matrix![1., 2., 3., 4.;
                                      0., 0., 0., 0.;

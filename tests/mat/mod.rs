@@ -191,13 +191,7 @@ fn qr() {
                     6., 167., -68.;
                     -4., 24., -41.];
 
-    let res = a.qr_decomp();
-
-    assert!(res.is_ok());
-
-    let (q, r) = res.unwrap();
-
-    let tol = 1e-6;
+    let (q, r) = a.qr_decomp().unwrap();
 
     let true_q = matrix![-0.857143, 0.394286, 0.331429;
                          -0.428571, -0.902857, -0.034286;
@@ -206,15 +200,6 @@ fn qr() {
                          0., -175., 70.;
                          0., 0., -35.];
 
-    let q_diff = (q - &true_q).into_vec();
-    let r_diff = (r - &true_r).into_vec();
-
-    for (val, expected) in q_diff.into_iter().zip(true_q.data().iter()) {
-        assert!(val < tol, format!("diff is {0}, expecting {1}", val, expected));
-    }
-
-    for (val, expected) in r_diff.into_iter().zip(true_r.data().iter()) {
-        assert!(val < tol, format!("diff is {0}, expecting {1}", val, expected));
-    }
-
+    assert_matrix_eq!(q, true_q, comp = abs, tol = 1e-6);
+    assert_matrix_eq!(r, true_r, comp = abs, tol = 1e-6);
 }
