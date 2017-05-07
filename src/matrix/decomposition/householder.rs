@@ -201,8 +201,10 @@ impl<T: Float> HouseholderReflection<T> {
 /// Q = Q_1 * Q_2 * ... * Q_p
 /// ```
 ///
-/// as explained in the documentation for
-/// [HouseholderQr](struct.HouseholderQr.html).
+/// where `p` is the number of transformations. See the
+/// documentation for [HouseholderQr](struct.HouseholderQr.html)
+/// and [HessenbergDecomposition](struct.HessenbergDecomposition.html)
+/// for more details.
 #[derive(Debug, Clone)]
 pub struct HouseholderComposition<'a, T> where T: 'a {
     storage: &'a Matrix<T>,
