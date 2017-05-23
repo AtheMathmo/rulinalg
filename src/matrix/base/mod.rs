@@ -30,7 +30,6 @@ use utils;
 use libnum::{Zero, Float};
 use error::Error;
 
-use std::any::Any;
 use std::cmp::min;
 use std::marker::PhantomData;
 use std::mem;
@@ -87,7 +86,7 @@ pub trait BaseMatrix<T>: Sized {
     /// ```
     /// # #[macro_use] extern crate rulinalg; fn main() {
     /// use rulinalg::matrix::{Matrix, BaseMatrix};
-    /// 
+    ///
     /// let mat = matrix![0, 1;
     ///                   3, 4;
     ///                   6, 7];
@@ -1013,7 +1012,7 @@ pub trait BaseMatrix<T>: Sized {
     /// - There is no valid solution to the system (matrix is singular).
     /// - The matrix is empty.
     fn solve_u_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
-        where T: Any + Float
+        where T: Float
     {
         assert!(self.cols() == y.size(),
                 format!("Vector size {0} != {1} Matrix column count.",
@@ -1056,7 +1055,7 @@ pub trait BaseMatrix<T>: Sized {
     /// - There is no valid solution to the system (matrix is singular).
     /// - The matrix is empty.
     fn solve_l_triangular(&self, y: Vector<T>) -> Result<Vector<T>, Error>
-        where T: Any + Float
+        where T: Float
     {
         assert!(self.cols() == y.size(),
                 format!("Vector size {0} != {1} Matrix column count.",

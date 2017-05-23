@@ -4,7 +4,6 @@ use matrix::PermutationMatrix;
 use vector::Vector;
 use error::{Error, ErrorKind};
 
-use std::any::Any;
 use std::cmp;
 
 use libnum::{Float, Zero, One};
@@ -194,9 +193,7 @@ impl<T: 'static + Float> PartialPivLu<T> {
     }
 }
 
-// TODO: Remove Any bound (cannot for the time being, since
-// back substitution uses Any bound)
-impl<T> PartialPivLu<T> where T: Any + Float {
+impl<T> PartialPivLu<T> where T: Float {
     /// Solves the linear system `Ax = b`.
     ///
     /// Here, `A` is the decomposed matrix satisfying
@@ -430,9 +427,7 @@ impl<T: 'static + Float> FullPivLu<T> {
     }
 }
 
-// TODO: Remove Any bound (cannot for the time being, since
-// back substitution uses Any bound)
-impl<T> FullPivLu<T> where T: Any + Float {
+impl<T> FullPivLu<T> where T: Float {
 
     /// Solves the linear system `Ax = b`.
     ///
@@ -663,7 +658,7 @@ fn unit_lower_triangular_part<T, M>(matrix: &M) -> Matrix<T>
 }
 
 
-impl<T> Matrix<T> where T: Any + Float
+impl<T> Matrix<T> where T: Float
 {
     /// Computes L, U, and P for LUP decomposition.
     ///
@@ -938,7 +933,7 @@ mod tests {
                         -12.0,   5.0,  17.0;
                          15.0,   0.0, -18.0;
                          -6.0,   0.0,   20.0];
-                         
+
         FullPivLu::decompose(x.clone()).unwrap();
     }
 

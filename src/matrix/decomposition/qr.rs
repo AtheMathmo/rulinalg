@@ -8,8 +8,6 @@ use matrix::decomposition::{
 };
 use matrix::decomposition::householder;
 
-use std::any::Any;
-
 use libnum::Float;
 
 /// The result of unpacking a QR decomposition.
@@ -315,7 +313,7 @@ fn extract_r1<T: Float>(qr: &Matrix<T>) -> Matrix<T> {
 }
 
 impl<T> Matrix<T>
-    where T: Any + Float
+    where T: Float + 'static
 {
     /// Compute the QR decomposition of the matrix.
     ///
