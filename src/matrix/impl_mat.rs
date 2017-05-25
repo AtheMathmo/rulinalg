@@ -304,9 +304,9 @@ impl<T: Float + FromPrimitive> Matrix<T> {
                 }
             }
 
-            let v = Vector::new(t);
+            let diff = Vector::new(t) - &mean;
 
-            variance = variance + &(&v - &mean).elemul(&(&v - &mean));
+            variance = variance + diff.elemul(&diff);
         }
 
         let var_size: T = FromPrimitive::from_usize(n - 1).unwrap();
