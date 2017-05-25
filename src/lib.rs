@@ -39,7 +39,7 @@
 //! ```
 //!
 //! The matrices are stored in row-major order. This means in the example above the top
-//! row will be [1,2,3].
+//! row will be [1, 2].
 //!
 //! We can perform operations on matrices.
 //!
