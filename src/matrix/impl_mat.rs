@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::fmt;
 use libnum::{One, Zero, Float, FromPrimitive};
 
@@ -96,6 +95,152 @@ impl<T> Matrix<T> {
     /// Consumes the Matrix and returns the Vec of data.
     pub fn into_vec(self) -> Vec<T> {
         self.data
+    }
+
+    /// Transposes the Matrix in place.
+    pub fn in_place_transpose(&mut self)
+        where T: Copy + Zero
+    {
+        use std::ptr;
+        use matrix::base::BaseMatrixMut;
+
+        // Special case square matrices
+        if self.rows == self.cols {
+            for i in 0..self.cols() {
+                for j in i..self.rows() {
+                    unsafe {
+                        let pa: *mut T = self.get_unchecked_mut([i, j]);
+                        let pb: *mut T = self.get_unchecked_mut([j, i]);
+                        ptr::swap(pa, pb);
+                    }
+                }
+            }
+        }
+        else {
+            // From https://research.nvidia.com/sites/default/files/publications/ppopp2014.pdf
+            use std::cmp::max;
+
+            let m = self.rows;
+            let n = self.cols;
+
+            let mut tmp = vec![T::zero(); max(m, n)];
+
+            let c = gcd(m, n);
+            let a = m / c;
+            let b = n / c;
+
+            if c > 1 {
+                for j in 0..n {
+                    for i in 0..m {
+                        // r_j(i) = (i + floor(j / b)) mod m
+                        let rji = (i + j / b) % m;
+                        unsafe {
+                            *tmp.get_unchecked_mut(i) = *self.get_unchecked([rji, j]);
+                        }
+
+                    }
+                    for i in 0..m {
+                        unsafe {
+                            *self.get_unchecked_mut([i, j]) = *tmp.get_unchecked(i);
+                        }
+                    }
+                }
+            }
+
+            for i in 0..m {
+                for j in 0..n {
+                    // d'_i(j) = ((i + floor(j / b)) mod m + j * m) mod n
+                    let dij = ((i + j / b) % m + j * m) % n;
+                    unsafe {
+                        *tmp.get_unchecked_mut(dij) = *self.get_unchecked([i, j]);
+                    }
+                }
+                for j in 0..n {
+                    unsafe {
+                        *self.get_unchecked_mut([i, j]) = *tmp.get_unchecked(j);
+                    }
+                }
+            }
+
+            for j in 0..n {
+                for i in 0..m {
+                    // s'_j(i) = (j + i * n - floor(i/a)) mod m
+                    let sji = (j + i * n - i / a) % m;
+                    unsafe {
+                        *tmp.get_unchecked_mut(i) = *self.get_unchecked([sji, j]);
+                    }
+                }
+                for i in 0..m {
+                    unsafe {
+                        *self.get_unchecked_mut([i, j]) = *tmp.get_unchecked(i);
+                    }
+                }
+            }
+        }
+
+        let tmp = self.rows;
+        self.rows = self.cols;
+        self.cols = tmp;
+    }
+}
+
+fn gcd(m: usize, n: usize) -> usize {
+    let mut m = m;
+    let mut n = n;
+    while m != 0 {
+        let temp = m;
+        m = n % temp;
+        n = temp;
+    }
+    n
+}
+
+#[test]
+fn test_transpose_square() {
+    let mut x = matrix![
+        1, 2, 3;
+        4, 5, 6;
+        7, 8, 9
+    ];
+    x.in_place_transpose();
+    let expected = matrix![
+        1, 4, 7;
+        2, 5, 8;
+        3, 6, 9
+    ];
+
+    assert_matrix_eq!(x, expected, comp = exact);
+}
+
+#[test]
+fn test_transpose_rectangular() {
+    let mut x = matrix![
+        1, 2, 3;
+        4, 5, 6
+    ];
+    x.in_place_transpose();
+    let expected = matrix![
+        1, 4;
+        2, 5;
+        3, 6
+    ];
+
+    assert_matrix_eq!(x, expected, comp = exact);
+}
+
+#[test]
+fn test_in_place_transpose_matches_transpose() {
+    for rows in 0..10 {
+        for cols in 0..10 {
+            let mut x = Matrix::new(
+                rows,
+                cols,
+                (0usize..rows * cols).collect::<Vec<usize>>());
+
+            let actual = x.transpose();
+            x.in_place_transpose();
+            assert_matrix_eq!(x, actual, comp = exact);
+        }
     }
 }
 
@@ -314,7 +459,7 @@ impl<T: Float + FromPrimitive> Matrix<T> {
     }
 }
 
-impl<T: Any + Float> Matrix<T> {
+impl<T: Float + 'static> Matrix<T> {
     /// Solves the equation `Ax = y`.
     ///
     /// Requires a Vector `y` as input.

@@ -2,12 +2,11 @@ use matrix::{Matrix, BaseMatrix, BaseMatrixMut, MatrixSlice, MatrixSliceMut};
 use error::{Error, ErrorKind};
 
 use std;
-use std::any::Any;
 
 use libnum::Float;
 
 impl<T> Matrix<T>
-    where T: Any + Float
+    where T: Float + 'static
 {
     /// Converts matrix to bidiagonal form
     ///
