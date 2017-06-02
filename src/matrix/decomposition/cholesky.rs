@@ -154,7 +154,7 @@ impl<T> Cholesky<T> where T: 'static + Float {
                     "Matrix is singular to working precision."));
             } else if diagonal < T::zero() {
                 return Err(Error::new(ErrorKind::DecompFailure,
-                    "Diagonal entries of matrix are not all positive."));
+                    "Matrix is not positive definite."));
             }
 
             let divisor = diagonal.sqrt();
