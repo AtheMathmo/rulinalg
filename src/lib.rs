@@ -109,6 +109,12 @@ mod testsupport;
 #[macro_use]
 extern crate quickcheck;
 
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde_derive;
+#[cfg(feature = "serde")]
+extern crate serde;
+
 #[cfg(test)]
 extern crate itertools;
 
