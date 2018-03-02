@@ -18,7 +18,7 @@ pub struct Vector<T> {
 
 #[cfg(test)]
 mod tests {
-    #[cfg_attr(feature = "serde", test)]
+    #[cfg(all(feature = "serde", test))]
     fn serde_test() {
         use serde_test::{Token, assert_tokens};
 

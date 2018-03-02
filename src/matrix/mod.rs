@@ -479,7 +479,7 @@ mod tests {
                                        6, 4]);
     }
 
-    #[cfg_attr(feature = "serde", test)]
+    #[cfg(all(feature = "serde", test))]
     fn serde() {
         use serde_test::{Token, assert_tokens};
 
