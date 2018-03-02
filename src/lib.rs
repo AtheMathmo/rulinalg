@@ -111,9 +111,9 @@ extern crate quickcheck;
 
 #[cfg(feature = "serde")]
 #[macro_use]
-extern crate serde_derive;
-#[cfg(feature = "serde")]
 extern crate serde;
+#[cfg(all(feature = "serde", test))]
+extern crate serde_test;
 
 #[cfg(test)]
 extern crate itertools;
