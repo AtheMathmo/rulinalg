@@ -193,7 +193,7 @@ impl<T> Matrix<T>
                                    entry is 0."));
         }
 
-        let mut v = column.into_iter().map(|&x| x / denom).collect::<Vec<T>>();
+        let mut v = column.iter().map(|&x| x / denom).collect::<Vec<T>>();
         // Ensure first element is fixed to 1.
         v[0] = T::one();
         let v = Vector::new(v);
@@ -220,7 +220,7 @@ impl<T> Matrix<T>
                                    entry is 0."));
         }
 
-        let mut v = column.into_iter().map(|&x| x / denom).collect::<Vec<T>>();
+        let mut v = column.iter().map(|&x| x / denom).collect::<Vec<T>>();
         // Ensure first element is fixed to 1.
         v[0] = T::one();
         let v = Matrix::new(size, 1, v);

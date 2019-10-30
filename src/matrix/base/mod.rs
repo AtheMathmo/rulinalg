@@ -1408,7 +1408,7 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
                                                                   isize),
                                                       self.cols());
 
-                for (x, y) in row_a.into_iter().zip(row_b.into_iter()) {
+                for (x, y) in row_a.iter_mut().zip(row_b.iter_mut()) {
                     mem::swap(x, y);
                 }
             }
