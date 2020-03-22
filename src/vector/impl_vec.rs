@@ -250,7 +250,7 @@ impl<T: Copy + PartialOrd> Vector<T> {
     pub fn select(&self, idxs: &[usize]) -> Vector<T> {
         let mut new_data = Vec::with_capacity(idxs.len());
 
-        for idx in idxs.into_iter() {
+        for idx in idxs.iter() {
             new_data.push(self[*idx]);
         }
 

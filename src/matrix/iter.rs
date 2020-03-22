@@ -734,13 +734,13 @@ mod tests {
 
         let mut col_iter = a.col_iter();
 
-        let mut nth0 = col_iter.nth(0).unwrap().into_iter();
+        let mut nth0 = col_iter.nth(0).unwrap().iter();
 
         assert_eq!(0, *nth0.next().unwrap());
         assert_eq!(4, *nth0.next().unwrap());
         assert_eq!(8, *nth0.next().unwrap());
 
-        let mut nth1 = col_iter.nth(2).unwrap().into_iter();
+        let mut nth1 = col_iter.nth(2).unwrap().iter();
 
         assert_eq!(3, *nth1.next().unwrap());
         assert_eq!(7, *nth1.next().unwrap());
@@ -755,7 +755,7 @@ mod tests {
                         4, 5, 6, 7;
                         8, 9, 10, 11];
 
-        let mut col_iter = a.col_iter().last().unwrap().into_iter();
+        let mut col_iter = a.col_iter().last().unwrap().iter();
 
         assert_eq!(3, *col_iter.next().unwrap());
         assert_eq!(7, *col_iter.next().unwrap());
@@ -765,7 +765,7 @@ mod tests {
 
         col_iter.next();
 
-        let mut last_col_iter = col_iter.last().unwrap().into_iter();
+        let mut last_col_iter = col_iter.last().unwrap().iter();
 
         assert_eq!(3, *last_col_iter.next().unwrap());
         assert_eq!(7, *last_col_iter.next().unwrap());

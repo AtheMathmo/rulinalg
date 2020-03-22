@@ -134,7 +134,7 @@ impl<T: Clone + Zero> Matrix<T> {
         let size = diag.len();
         let mut data = vec![T::zero(); size * size];
 
-        for (i, item) in diag.into_iter().enumerate().take(size) {
+        for (i, item) in diag.iter().enumerate().take(size) {
             data[i * (size + 1)] = item.clone();
         }
 
