@@ -9,7 +9,13 @@ use std::cmp;
 
 use libnum::{Float, Zero, One};
 
+use utils;
+
+use matrix::DiagOffset;
 use matrix::decomposition::Decomposition;
+
+use internal_utils::nullify_lower_triangular_part;
+use internal_utils::nullify_upper_triangular_part;
 
 /// Result of unpacking an instance of
 /// [PartialPivLu](struct.PartialPivLu.html).
@@ -136,7 +142,6 @@ impl<T: Clone + One + Zero> Decomposition for PartialPivLu<T> {
     type Factors = LUP<T>;
 
     fn unpack(self) -> LUP<T> {
-        use internal_utils::nullify_lower_triangular_part;
         let l = unit_lower_triangular_part(&self.lu);
         let mut u = self.lu;
         nullify_lower_triangular_part(&mut u);
@@ -346,10 +351,36 @@ impl<T: Clone + One + Zero> Decomposition for FullPivLu<T> {
     type Factors = LUPQ<T>;
 
     fn unpack(self) -> LUPQ<T> {
-        use internal_utils::nullify_lower_triangular_part;
-        let l = unit_lower_triangular_part(&self.lu);
-        let mut u = self.lu;
-        nullify_lower_triangular_part(&mut u);
+
+        // We want the L matrix to be M x P, and the U matrix to be
+        // P x N, where P is the minimum of M and N. Since self.lu
+        // is already M x N, and we want to reuse that memory to store
+        // at least one of the matrices, we need to figure out which
+        // matrix to store in self.lu, and which to allocate anew. The
+        // nice thing here is that the new allocation will always be
+        // PxP, which is the smaller of the two matrices.
+
+        let (l,u) =
+          if self.lu.rows() <= self.lu.cols() {
+            let l = unit_lower_triangular_part(&self.lu);
+
+            let mut u = self.lu;
+            nullify_lower_triangular_part(&mut u);
+
+            (l,u)
+
+          } else {
+            let u = upper_triangular_part(&self.lu);
+
+            let mut l = self.lu;
+            nullify_upper_triangular_part(&mut l);
+
+            for val in l.diag_iter_mut(DiagOffset::Main) {
+                *val = T::one();
+            }
+
+            (l,u)
+          };
 
         LUPQ {
             l: l,
@@ -383,10 +414,6 @@ impl<T: 'static + Float> FullPivLu<T> {
 
     /// Performs the decomposition.
     pub fn decompose(matrix: Matrix<T>) -> Result<Self, Error> {
-        assert!(
-            matrix.rows() == matrix.cols(),
-            "Matrix must be square for LU decomposition.");
-
         let mut lu = matrix;
 
         let nrows = lu.rows();
@@ -469,8 +496,59 @@ impl<T> FullPivLu<T> where T: Any + Float {
         assert!(b.size() == self.lu.rows(),
             "Right-hand side vector must have compatible size.");
 
-        let b = lu_forward_substitution(&self.lu, &self.p * b);
-        back_substitution(&self.lu, b).map(|x| &self.q * x)
+        let diag_size = cmp::min(self.lu.rows(), self.lu.cols());
+        let rank = self.rank();
+
+        let b = &self.p * &b;
+
+        let x =
+            lu_forward_substitution(
+                &self.lu.sub_slice([0, 0], diag_size, diag_size),
+                b.top(diag_size));
+
+        // Check that the bottom elements of X are all zero.
+        let eps = self.epsilon();
+
+        for v in x.iter().skip(rank) {
+            if v.abs() > eps {
+                return Err(
+                    Error::new(
+                        ErrorKind::AlgebraFailure,
+                        "No solution exists"));
+            }
+        }
+
+        // Get the lower portion of the L matrix and verify the solution
+        // found.
+        for (i, expected) in b.iter().enumerate().skip(rank) {
+            let row_begin = self.lu.row_stride() * i;
+            let row_end = row_begin + diag_size;
+
+            let val =
+                utils::dot(
+                    &self.lu.data()[row_begin .. row_end],
+                    &x.data()[0 .. diag_size]);
+
+            if (val - *expected).abs() > eps {
+                return Err(
+                    Error::new(
+                        ErrorKind::AlgebraFailure,
+                        "No solution exists"));
+            }
+        }
+
+        // Consider the top-left square invertible portion of U.
+        let nonzero_u = self.lu.sub_slice([0, 0], rank, rank);
+
+        let x = back_substitution(&nonzero_u, x.top(rank)).unwrap();
+
+        // Now we pad x back up to its actual size and map through
+        // the last permutation matrix.
+        let x = Vector::from_fn(
+            self.lu.cols(),
+            |i| if i < rank { unsafe{ *x.get_unchecked(i) }} else { T::zero() });
+
+        Ok(&self.q * x)
     }
 
     /// Computes the inverse of the matrix which this LUP decomposition
@@ -483,6 +561,10 @@ impl<T> FullPivLu<T> where T: Any + Float {
         let n = self.lu.rows();
         let mut inv = Matrix::zeros(n, n);
         let mut e = Vector::zeros(n);
+
+        assert!(
+            self.lu.is_square(),
+            "Matrix must be square to take inverses.");
 
         if !self.is_invertible() {
             return Err(
@@ -513,6 +595,10 @@ impl<T> FullPivLu<T> where T: Any + Float {
     /// # Panics
     /// If the underlying matrix is non-square.
     pub fn det(&self) -> T {
+        assert!(
+            self.lu.is_square(),
+            "Matrix must be square to take determinants.");
+
         // Recall that the determinant of a triangular matrix
         // is the product of its diagonal entries. Also,
         // the determinant of L is implicitly 1.
@@ -558,8 +644,7 @@ impl<T> FullPivLu<T> where T: Any + Float {
 
     /// Returns whether the matrix is invertible.
     ///
-    /// Empty matrices are considered to be invertible for
-    /// the sake of this function.
+    /// Empty matrices are invertible while rectangular matrices are not.
     ///
     /// # Examples
     ///
@@ -580,16 +665,17 @@ impl<T> FullPivLu<T> where T: Any + Float {
     /// # }
     /// ```
     pub fn is_invertible(&self) -> bool {
-        let diag_size = cmp::min(self.lu.rows(), self.lu.cols());
+        if !self.lu.is_square() {
+            false
 
-        if diag_size > 0 {
-            let diag_last = diag_size - 1;
-            let last =
-                unsafe { self.lu.get_unchecked([diag_last, diag_last]) };
+        } else if self.lu.is_empty() {
+            true
+
+        } else {
+            let diag_last = self.lu.rows() - 1;
+            let last = self.lu.get([diag_last, diag_last]).unwrap();
 
             last.abs() > self.epsilon()
-        } else {
-            true
         }
     }
 
@@ -621,8 +707,8 @@ fn gaussian_elimination<T: Float>(lu: &mut Matrix<T>, index: usize) {
 /// to the strictly lower triangular part of L.
 ///
 /// This is equivalent to solving the system Lx = b.
-fn lu_forward_substitution<T: Float>(lu: &Matrix<T>, b: Vector<T>) -> Vector<T> {
-    assert!(lu.rows() == lu.cols(), "LU matrix must be square.");
+fn lu_forward_substitution<T, M>(lu: &M, b: Vector<T>) -> Vector<T>
+    where T: Float, M: BaseMatrix<T> {
     assert!(b.size() == lu.rows(), "LU matrix and RHS vector must be compatible.");
     let mut x = b;
 
@@ -662,6 +748,24 @@ fn unit_lower_triangular_part<T, M>(matrix: &M) -> Matrix<T>
     Matrix::new(m, m, data)
 }
 
+fn upper_triangular_part<T, M>(matrix: &M) -> Matrix<T>
+    where T: Zero + One + Clone, M: BaseMatrix<T> {
+
+    let n = matrix.cols();
+    let mut data = Vec::<T>::with_capacity(n * n);
+
+    for (i, row) in matrix.row_iter().take(n).enumerate() {
+        for _ in 0..i {
+            data.push(T::zero());
+        }
+
+        for element in row.iter().skip(i).cloned() {
+            data.push(element);
+        }
+    }
+
+    Matrix::new(n, n, data)
+}
 
 impl<T> Matrix<T> where T: Any + Float
 {
@@ -932,14 +1036,217 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn full_piv_lu_decompose_rectangular() {
         let x = matrix![ -3.0,   0.0,   4.0;
                         -12.0,   5.0,  17.0;
                          15.0,   0.0, -18.0;
                          -6.0,   0.0,   20.0];
                          
-        FullPivLu::decompose(x.clone()).unwrap();
+        let lu = FullPivLu::decompose(x.clone()).unwrap();
+
+        assert_eq!(lu.rank(), 3);
+        assert!(!lu.is_invertible());
+
+        let LUPQ { l, u, p, q } = lu.unpack();
+
+        let y = p.inverse() * &l * &u * q.inverse();
+
+        assert_matrix_eq!(x, y, comp = float);
+        assert!(is_lower_triangular(&l));
+        assert!(is_upper_triangular(&u));
+    }
+
+    #[test]
+    fn full_piv_lu_decompose_rectangular2() {
+        let x = matrix![ -3.0,   0.0,   4.0;
+                         -6.0,   0.0,   20.0];
+
+        let lu = FullPivLu::decompose(x.clone()).unwrap();
+
+        assert_eq!(lu.rank(), 2);
+        assert!(!lu.is_invertible());
+
+        let LUPQ { l, u, p, q } = lu.unpack();
+
+        let y = p.inverse() * &l * &u * q.inverse();
+
+        assert_matrix_eq!(x, y, comp = float);
+        assert!(is_lower_triangular(&l));
+        assert!(is_upper_triangular(&u));
+    }
+
+    #[test]
+    #[should_panic]
+    fn full_piv_lu_rectangular_det() {
+        let x = matrix![ -3.0,   0.0,   4.0;
+                         -6.0,   0.0,   20.0];
+
+        let lu = FullPivLu::decompose(x.clone()).unwrap();
+
+        lu.det();
+    }
+
+    #[test]
+    #[should_panic]
+    fn full_piv_lu_rectangular_inverse() {
+        let x = matrix![ -3.0,   0.0,   4.0;
+                         -6.0,   0.0,   20.0];
+
+        let lu = FullPivLu::decompose(x.clone()).unwrap();
+
+        lu.inverse().unwrap();
+    }
+
+    #[test]
+    pub fn full_piv_lu_solve_rectangular_matrix() {
+        let a = matrix![ 5.0, 0.0, 0.0, 1.0;
+                         2.0, 2.0, 2.0, 1.0;
+                         1.0, 6.0, 4.0, 5.0 ];
+        let b = vector![9.0, 16.0, 45.0];
+
+        let lu = FullPivLu::decompose(a.clone()).unwrap();
+        let x = lu.solve(b.clone()).unwrap();
+
+        // Note that we shouldn't just choose an expected
+        // value here, since there are an infinte number of
+        // solutions
+        let res = a * x;
+
+        assert_vector_eq!(res, b, comp = ulp, tol = 100);
+    }
+
+    #[test]
+    pub fn full_piv_lu_solve_rectangular_matrix_tall() {
+        let a = matrix![  1.0, 1.0;
+                          2.0, 1.0;
+                          3.0, 1.0;
+                          4.0, 1.0;
+                          5.0, 1.0;
+                          6.0, 1.0;
+                          7.0, 1.0;
+                          8.0, 1.0;
+                          9.0, 1.0;
+                         10.0, 1.0;
+                         11.0, 1.0;
+                         12.0, 1.0;
+                         13.0, 1.0;
+                         14.0, 1.0;
+                         15.0, 1.0;
+                         16.0, 1.0 ];
+        let b = vector![ 2.0,
+                         3.0,
+                         4.0,
+                         5.0,
+                         6.0,
+                         7.0,
+                         8.0,
+                         9.0,
+                        10.0,
+                        11.0,
+                        12.0,
+                        13.0,
+                        14.0,
+                        15.0,
+                        16.0,
+                        17.0];
+
+        let lu = FullPivLu::decompose(a.clone()).unwrap();
+        let x = lu.solve(b.clone()).unwrap();
+
+        let res = a * x;
+
+        assert_vector_eq!(res, b, comp = ulp, tol = 100);
+    }
+
+    #[test]
+    pub fn full_piv_lu_solve_rectangular_matrix_wide() {
+        let a = matrix![ 0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0;
+                         1.0, 0.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+        let b = vector![2.0, 3.0];
+
+        let lu = FullPivLu::decompose(a.clone()).unwrap();
+        let x = lu.solve(b.clone()).unwrap();
+
+        let res = a * x;
+
+        assert_vector_eq!(res, b, comp = ulp, tol = 100);
+    }
+
+   #[test]
+    pub fn full_piv_lu_solve_rectangular_small_values() {
+        let a = matrix![ 0.005, 0.001;
+                         0.002, 0.001;
+                         0.001, 0.005 ];
+        let b = vector![0.0007, 0.0004, 0.0011];
+
+        let lu = FullPivLu::decompose(a.clone()).unwrap();
+        let x = lu.solve(b.clone()).unwrap();
+
+        let res = a * x;
+
+        assert_vector_eq!(res, b, comp = ulp, tol = 100);
+    }
+
+    #[test]
+    pub fn full_piv_lu_solve_no_solution() {
+        let a = matrix![ 1.0, 0.0;
+                         0.0, 1.0;
+                         0.0, 0.0];
+        let b = vector![0.0, 0.0, 1.0];
+
+        let lu = FullPivLu::decompose(a).unwrap();
+
+        assert!(lu.solve(b).is_err())
+    }
+
+    #[test]
+    pub fn full_piv_lu_solve_no_solution_tall_matrix() {
+         let a = matrix![ 1.0, 0.0;
+                          2.0, 1.0;
+                          3.0, 0.0;
+                          4.0, 1.0;
+                          5.0, 0.0;
+                          6.0, 1.0;
+                          7.0, 0.0;
+                          8.0, 1.0;
+                          9.0, 0.0;
+                         10.0, 1.0;
+                         11.0, 0.0;
+                         12.0, 1.0;
+                         13.0, 0.0;
+                         14.0, 1.0;
+                         15.0, 0.0;
+                         16.0, 1.0 ];
+        let b = vector![ 2.0,
+                         3.0,
+                         4.0,
+                         5.0,
+                         6.0,
+                         7.0,
+                         8.0,
+                         9.0,
+                        10.0,
+                        11.0,
+                        12.0,
+                        13.0,
+                        14.0,
+                        15.0,
+                        16.0,
+                        17.0];
+
+        let lu = FullPivLu::decompose(a.clone()).unwrap();
+        assert!(lu.solve(b).is_err());
+    }
+
+    #[test]
+    pub fn full_piv_lu_solve_no_solution_matrix_wide() {
+        let a = matrix![ 1.0, 2.0, 3.0;
+                         1.0, 2.0, 3.0];
+        let b = vector![2.0, 3.0];
+
+        let lu = FullPivLu::decompose(a.clone()).unwrap();
+
+        assert!(lu.solve(b).is_err());
     }
 
     #[test]
