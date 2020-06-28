@@ -41,7 +41,7 @@ impl<T> Matrix<T> {
     }
 
     /// Constructor for Matrix struct that takes a function `f`
-    /// and constructs a new matrix such that `A_ij = f(j, i)`,
+    /// and constructs a new matrix such that `A_ij = f(i, j)`,
     /// where `i` is the row index and `j` the column index.
     ///
     /// Requires both the row and column dimensions
@@ -55,8 +55,8 @@ impl<T> Matrix<T> {
     /// // Let's assume you have an array of "things" for
     /// // which you want to generate a distance matrix:
     /// let things: [i32; 3] = [1, 2, 3];
-    /// let distances: Matrix<f64> = Matrix::from_fn(things.len(), things.len(), |col, row| {
-    ///     (things[col] - things[row]).abs().into()
+    /// let distances: Matrix<f64> = Matrix::from_fn(things.len(), things.len(), |row, col| {
+    ///     (things[row] - things[col]).abs().into()
     /// });
     ///
     /// assert_eq!(distances.rows(), 3);
@@ -67,17 +67,18 @@ impl<T> Matrix<T> {
     ///     2.0, 1.0, 0.0,
     /// ]);
     /// ```
-    /// # Warning
     ///
-    /// _This function will be changed in a future release so that `A_ij = f(i, j)` - to be consistent
-    /// with the rest of the library._
+    /// # Note
+    ///
+    /// This function was recently changed from `A_ij = f(j, i)` to `A_ij = f(i, j)` to be
+    /// more consistent with the rest of the library.
     pub fn from_fn<F>(rows: usize, cols: usize, mut f: F) -> Matrix<T>
         where F: FnMut(usize, usize) -> T
     {
         let mut data = Vec::with_capacity(rows * cols);
         for row in 0..rows {
             for col in 0..cols {
-                data.push(f(col, row));
+                data.push(f(row, col));
             }
         }
         Matrix::new(rows, cols, data)
@@ -528,6 +529,19 @@ mod tests {
         assert!(m.cols() == 2);
         assert!(m.data == vec![0, 1, 2, 3, 4, 5]);
     }
+
+    #[test]
+    fn test_mat_from_fn_is_row_major() {
+        let rows = 3;
+        let cols = 4;
+        let m: Matrix<usize> = Matrix::from_fn(rows, cols, |r, c| {
+            r*cols + c
+        });
+        assert!(m.rows() == rows);
+        assert!(m.cols() == cols);
+        assert!(m.data == &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+    }
+
 
     #[test]
     fn test_equality() {
