@@ -82,6 +82,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
                       "Francis shift only works on matrices greater than 2x2.");
         debug_assert!(n == self.cols, "Matrix must be square for Francis shift.");
 
+        #[allow(deprecated)]
         let mut h = try!(self
             .upper_hessenberg()
             .map_err(|_| Error::new(ErrorKind::DecompFailure, "Could not compute eigenvalues.")));
@@ -223,6 +224,7 @@ impl<T: Any + Float + Signed> Matrix<T> {
                       "Francis shift only works on matrices greater than 2x2.");
         debug_assert!(n == self.cols, "Matrix must be square for Francis shift.");
 
+        #[allow(deprecated)]
         let (u, mut h) = try!(self.upper_hess_decomp().map_err(|_| {
             Error::new(ErrorKind::DecompFailure,
                        "Could not compute eigen decomposition.")

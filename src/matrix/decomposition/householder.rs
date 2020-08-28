@@ -1,6 +1,7 @@
 use matrix::{Matrix, BaseMatrix, BaseMatrixMut, Column, ColumnMut};
 use vector::Vector;
 use utils;
+use internal_utils::{gemv, transpose_gemv, ger};
 
 use libnum::Float;
 
@@ -95,13 +96,12 @@ impl<T: Float> HouseholderReflection<T> {
     /// this function computes the product `HA` and stores the result
     /// back in `A`.
     ///
-    /// The user must provide a buffer of size `A.cols()` which is used
+    /// The user must provide a buffer of size at least `A.cols()` which is used
     /// to store intermediate results.
     pub fn buffered_left_multiply_into<M>(&self, matrix: &mut M, buffer: &mut [T])
         where M: BaseMatrixMut<T>
     {
-        use internal_utils::{transpose_gemv, ger};
-        assert!(buffer.len() == matrix.cols());
+        assert!(buffer.len() >= matrix.cols());
 
         // Recall that the Householder reflection is represented by
         // H = I - τ v vᵀ,
@@ -120,13 +120,42 @@ impl<T: Float> HouseholderReflection<T> {
         // Instead, we will use the provided buffer to hold the result of the
         // matrix-vector product.
         let ref v = self.v.data();
-        let mut u = buffer;
+        let mut u = &mut buffer[0 .. matrix.cols()];
 
         // u = A^T v
         transpose_gemv(matrix, v, u);
 
         // A <- A - τ v uᵀ
         ger(matrix, - self.tau, v, u);
+    }
+
+    /// Right-multiplies the given matrix by this Householder reflection.
+    ///
+    /// More precisely, let `H` denote this Householder reflection matrix,
+    /// and let `A` be a dimensionally compatible matrix. Then
+    /// this function computes the product `AH` and stores the result
+    /// back in `A`.
+    ///
+    /// The user must provide a buffer of size at least `A.rows()` which is used
+    /// to store intermediate results.
+    pub fn buffered_right_multiply_into<M>(&self, matrix: &mut M, buffer: &mut [T])
+        where M: BaseMatrixMut<T>
+    {
+        assert!(buffer.len() >= matrix.rows());
+
+        // See `buffered_left_multiply_into`. The implementation here
+        // is almost exactly the same, except we instead have:
+        // AH = A - τ (A v) vᵀ = A - τ u vᵀ,
+        // where u = Av.
+
+        let ref v = self.v.data();
+        let mut u = &mut buffer[0..matrix.rows()];
+
+        // u = A v
+        gemv(matrix, v, u);
+
+        // A <- A - τ v uᵀ
+        ger(matrix, - self.tau, u, v);
     }
 
     pub fn as_vector(&self) -> &Vector<T> {
@@ -172,12 +201,18 @@ impl<T: Float> HouseholderReflection<T> {
 /// Q = Q_1 * Q_2 * ... * Q_p
 /// ```
 ///
-/// as explained in the documentation for
-/// [HouseholderQr](struct.HouseholderQr.html).
+/// where `p` is the number of transformations. See the
+/// documentation for [HouseholderQr](struct.HouseholderQr.html)
+/// and [HessenbergDecomposition](struct.HessenbergDecomposition.html)
+/// for more details.
 #[derive(Debug, Clone)]
 pub struct HouseholderComposition<'a, T> where T: 'a {
     storage: &'a Matrix<T>,
-    tau: &'a [T]
+    tau: &'a [T],
+
+    // The subdiagonal index determines the subdiagonal to pull Householder
+    // reflectors from. This is 0 for QR and 1 for Hessenberg.
+    subdiagonal: usize
 }
 
 /// Instantiates a HouseholderComposition with the given
@@ -188,12 +223,13 @@ pub struct HouseholderComposition<'a, T> where T: 'a {
 /// a HouseholderComposition by themselves, which is desirable
 /// because we want to have the freedom to change details
 /// of the internal representation if necessary.
-pub fn create_composition<'a, T>(storage: &'a Matrix<T>, tau: &'a [T])
+pub fn create_composition<'a, T>(storage: &'a Matrix<T>, tau: &'a [T], subdiagonal: usize)
     -> HouseholderComposition<'a, T>
 {
     HouseholderComposition {
             storage: storage,
-            tau: tau
+            tau: tau,
+            subdiagonal: subdiagonal
     }
 }
 
@@ -209,15 +245,17 @@ impl<'a, T> HouseholderComposition<'a, T> where T: Float {
         let n = self.storage.cols();
         let p = min(m, n);
         let q = matrix.cols();
+        let s = self.subdiagonal;
 
         assert!(matrix.rows() == m, "Matrix does not have compatible dimensions.");
 
         let mut house_buffer = Vec::with_capacity(m);
         let mut multiply_buffer = vec![T::zero(); q];
-        for j in (0 .. p).rev() {
-            house_buffer.resize(m - j, T::zero());
-            let storage_block = self.storage.sub_slice([j, j], m - j, n - j);
-            let mut matrix_block = matrix.sub_slice_mut([j, 0], m - j, q);
+        for j in (0 .. p.saturating_sub(s)).rev() {
+            house_buffer.resize(m - j - s, T::zero());
+
+            let storage_block = self.storage.sub_slice([j + s, j], m - j - s, n - j);
+            let mut matrix_block = matrix.sub_slice_mut([j + s, 0], m - j - s, q);
             let house = load_house_from_col(&storage_block.col(0),
                                             self.tau[j], house_buffer);
             house.buffered_left_multiply_into(&mut matrix_block,
@@ -237,6 +275,7 @@ impl<'a, T> HouseholderComposition<'a, T> where T: Float {
         let m = self.storage.rows();
         let n = self.storage.cols();
         let p = min(m, n);
+        let s = self.subdiagonal;
 
         assert!(k <= self.storage.rows(),
             "k cannot exceed m, the number of rows of Q");
@@ -252,12 +291,12 @@ impl<'a, T> HouseholderComposition<'a, T> where T: Float {
         // to reduce the number of operations
         // (note the size of the "q_k_block")
         let mut buffer = Vec::with_capacity(m);
-        let mut multiply_buffer = Vec::with_capacity(k);
-        for j in (0 .. min(p, k)).rev() {
-            buffer.resize(m - j, T::zero());
-            multiply_buffer.resize(k - j, T::zero());
-            let storage_block = self.storage.sub_slice([j, j], m - j, n - j);
-            let mut q_k_block = q_k.sub_slice_mut([j, j], m - j, k - j);
+        let mut multiply_buffer = vec![T::zero(); k];
+        for j in (0 .. min(p.saturating_sub(s), k)).rev() {
+            buffer.resize(m - j - s, T::zero());
+
+            let storage_block = self.storage.sub_slice([j + s, j], m - j - s, n - j);
+            let mut q_k_block = q_k.sub_slice_mut([j + s, j], m - j - s, k - j);
             let house = load_house_from_col(&storage_block.col(0),
                                             self.tau[j], buffer);
             house.buffered_left_multiply_into(&mut q_k_block,
@@ -378,6 +417,29 @@ mod tests {
     }
 
     #[test]
+    fn householder_reflection_right_multiply() {
+        let mut x = matrix![ 0.0,  1.0,  2.0,  3.0;
+                             4.0,  5.0,  6.0,  7.0;
+                             8.0,  9.0, 10.0, 11.0;
+                            12.0, 13.0, 14.0, 15.0 ];
+
+        let h = HouseholderReflection {
+            tau: 1.0 / 15.0,
+            v: vector![1.0, 2.0, 3.0, 4.0]
+        };
+
+        let mut buffer = vec![0.0; 4];
+
+        h.buffered_right_multiply_into(&mut x, &mut buffer);
+
+        let expected = matrix![ -1.3333, -1.6667, - 2.0000, - 2.3333;
+                                 0.0000, -3.0000, - 6.0000, - 9.0000;
+                                 1.3333, -4.3333, -10.0000, -15.6667;
+                                 2.6667, -5.6667, -14.0000, -22.3333 ];
+        assert_matrix_eq!(x, expected, comp = abs, tol = 1e-3);
+    }
+
+    #[test]
     fn householder_composition_left_multiply() {
         let storage = matrix![ 5.0,  3.0,  2.0;
                                2.0,  1.0,  3.0;
@@ -391,7 +453,7 @@ mod tests {
         // let q = matrix![7.0/9.0, -28.0/45.0,   4.0/45.0;
         //                -4.0/9.0, - 4.0/ 9.0,   7.0/ 9.0;
         //                 4.0/9.0,  29.0/45.0,  28.0/45.0];
-        let composition = create_composition(&storage, &tau);
+        let composition = create_composition(&storage, &tau, 0);
 
         {
             // Square
@@ -437,7 +499,7 @@ mod tests {
                                2.0,  1.0,  3.0;
                               -2.0,  3.0, -2.0];
         let tau = vec![2.0/9.0, 1.0 / 5.0, 2.0];
-        let composition = create_composition(&storage, &tau);
+        let composition = create_composition(&storage, &tau, 0);
 
         // This corresponds to the following `Q` matrix
         let q = matrix![7.0/9.0, -28.0/45.0,   4.0/45.0;

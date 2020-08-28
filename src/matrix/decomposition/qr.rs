@@ -206,7 +206,7 @@ impl<T> HouseholderQr<T> where T: Float {
             // gets shorter for each iteration, so we truncate the buffer
             // to the appropriate length.
             buffer.truncate(m - j);
-            multiply_buffer.truncate(bottom_right.cols());
+
             bottom_right.col(0).clone_into_slice(&mut buffer);
 
             let house = HouseholderReflection::compute(Vector::new(buffer));
@@ -226,7 +226,7 @@ impl<T> HouseholderQr<T> where T: Float {
     /// [HouseholderComposition](struct.HouseholderComposition.html)
     /// operator.
     pub fn q(&self) -> HouseholderComposition<T> {
-        householder::create_composition(&self.qr, &self.tau)
+        householder::create_composition(&self.qr, &self.tau, 0)
     }
 
     /// Computes the *thin* (or reduced) QR decomposition.
@@ -264,7 +264,7 @@ impl<T> HouseholderQr<T> where T: Float {
                 r1: qr.r
             }
         } else {
-            let composition = householder::create_composition(&self.qr, &self.tau);
+            let composition = householder::create_composition(&self.qr, &self.tau, 0);
             let q1 = composition.first_k_columns(n);
             let r1 = extract_r1(&self.qr);
             ThinQR {
@@ -291,7 +291,7 @@ impl<T: Float> Decomposition for HouseholderQr<T> {
 
 fn assemble_q<T: Float>(qr: &Matrix<T>, tau: &Vec<T>) -> Matrix<T> {
     let m = qr.rows();
-    let q_operator = householder::create_composition(qr, tau);
+    let q_operator = householder::create_composition(qr, tau, 0);
     q_operator.first_k_columns(m)
 }
 
