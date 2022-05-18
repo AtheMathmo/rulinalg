@@ -16,8 +16,8 @@ impl<'a, T> Iterator for $slice_iter<'a, T> {
         let end = self.slice_rows * self.row_stride;
         // Set the position of the next element
         if offset < end {
-            unsafe {
-                let iter_ptr = self.slice_start.offset(offset as isize);
+            
+                let iter_ptr = unsafe { self.slice_start.offset(offset as isize) };
 
                 // If end of row, set to start of next row
                 if self.col_pos + 1 == self.slice_cols {
@@ -27,8 +27,8 @@ impl<'a, T> Iterator for $slice_iter<'a, T> {
                     self.col_pos += 1usize;
                 }
 
-                Some(mem::transmute(iter_ptr))
-            }
+                Some(unsafe { mem::transmute(iter_ptr) })
+            
         } else {
             None
         }
@@ -119,12 +119,12 @@ impl<'a, T> Iterator for $cols<'a, T> {
         }
 
         let column: $col_type;
-        unsafe {
-            let ptr = self.slice_start.offset(self.col_pos as isize);
+        
+            let ptr = unsafe { self.slice_start.offset(self.col_pos as isize) };
             column  = $col_base {
-                col: $slice_base::from_raw_parts(ptr, self.slice_rows, 1, self.row_stride as usize)
+                col: unsafe { $slice_base::from_raw_parts(ptr, self.slice_rows, 1, self.row_stride as usize) }
             };
-        }
+        
         self.col_pos += 1;
         Some(column)
     }

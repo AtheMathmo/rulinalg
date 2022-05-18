@@ -616,10 +616,10 @@ pub trait BaseMatrix<T>: Sized {
         }
 
         for row_idx in row_iter.clone() {
-            unsafe {
-                let row = self.row_unchecked(*row_idx);
+            
+                let row = unsafe { self.row_unchecked(*row_idx) };
                 mat_vec.extend_from_slice(row.raw_slice());
-            }
+            
         }
 
         Matrix {
@@ -1398,20 +1398,20 @@ pub trait BaseMatrixMut<T>: BaseMatrix<T> {
                 format!("Row index {0} larger than row count {1}", b, self.rows()));
 
         if a != b {
-            unsafe {
-                let row_a = slice::from_raw_parts_mut(self.as_mut_ptr()
+            
+                let row_a = unsafe { slice::from_raw_parts_mut(self.as_mut_ptr()
                                                           .offset((self.row_stride() * a) as
                                                                   isize),
-                                                      self.cols());
-                let row_b = slice::from_raw_parts_mut(self.as_mut_ptr()
+                                                      self.cols()) };
+                let row_b = unsafe { slice::from_raw_parts_mut(self.as_mut_ptr()
                                                           .offset((self.row_stride() * b) as
                                                                   isize),
-                                                      self.cols());
+                                                      self.cols()) };
 
                 for (x, y) in row_a.into_iter().zip(row_b.into_iter()) {
                     mem::swap(x, y);
                 }
-            }
+            
         }
 
     }
